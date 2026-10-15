@@ -114,26 +114,26 @@ Any `path` argument must equal one of the stored link values, otherwise throw. V
 
 ## Phase 2 — Core services (no UI yet)
 
-- [ ] `http.ts`
+- [x] `http.ts`
   - `configureFetch(impl)`. Default is global `fetch`; `main/index.ts` swaps in `net.fetch` so the OS certificate store is used.
   - `getJson` with a 30 s timeout, `HttpError(status, message)`, tolerant of empty bodies and 204.
   - `parseLink(header)` returning `{ next, last }`.
   - `paginate(url, headers)` following `rel="next"`, capped at 100 pages.
   - `countItems(url, headers)`: request with `per_page=1`. Use `x-total` if present, else the `page` param of `rel="last"`, else array length. If `next` exists but neither total nor last does, return `null`.
-- [ ] `tls.ts`: set of insecure hostnames, `setCertificateVerifyProc` returning 0 for allowlisted hosts and -3 (default verification) otherwise, and a helper to allow a host temporarily while testing an unsaved account.
-- [ ] `store.ts`
+- [x] `tls.ts`: set of insecure hostnames, `setCertificateVerifyProc` returning 0 for allowlisted hosts and -3 (default verification) otherwise, and a helper to allow a host temporarily while testing an unsaved account.
+- [x] `store.ts`
   - `config.json` holds accounts, encrypted tokens and repo-to-folder links. `cache.json` holds repo lists and summaries.
   - Tokens are encrypted with `safeStorage` and stored as base64. If encryption is unavailable, refuse to store the token and show a clear error.
   - Atomic writes (write temp file, rename). Removing an account also removes its tokens, cache and links.
-- [ ] `gitAuth.ts`: build env for git using `GIT_CONFIG_COUNT/KEY_0/VALUE_0` with key `http.<origin>/.extraHeader` and value `Authorization: Basic base64(user:token)`. User is `x-access-token` for GitHub and `oauth2` for GitLab. Add `GIT_SSL_NO_VERIFY=true` only when the account allows insecure TLS. This scopes the token to one host and keeps it out of argv and `.git/config`.
-- [ ] `git.ts` (CLI via `execFile`, never a shell; env `GIT_TERMINAL_PROMPT=0`, `LC_ALL=C`)
+- [x] `gitAuth.ts`: build env for git using `GIT_CONFIG_COUNT/KEY_0/VALUE_0` with key `http.<origin>/.extraHeader` and value `Authorization: Basic base64(user:token)`. User is `x-access-token` for GitHub and `oauth2` for GitLab. Add `GIT_SSL_NO_VERIFY=true` only when the account allows insecure TLS. This scopes the token to one host and keeps it out of argv and `.git/config`.
+- [x] `git.ts` (CLI via `execFile`, never a shell; env `GIT_TERMINAL_PROMPT=0`, `LC_ALL=C`)
   - `repoRoot(dir)` via `rev-parse --show-toplevel`
   - `getGraph(cwd, skip, limit)`: `git log --branches --remotes --tags --topo-order --decorate=full --format=<fields joined by %x1f + %x1e> --skip N -n M`. Parse decorations from full ref names (`refs/heads/`, `refs/remotes/`, `tag: refs/tags/`, `HEAD -> ...`), drop `*/HEAD` and stash. Return `[]` for an empty repo. Verify that `%D` really honours `--decorate=full` with the installed git, and adapt if not.
   - `getLocalInfo(cwd)` using `symbolic-ref`, `rev-parse`, `remote -v`, `for-each-ref`, `tag --sort=-creatordate`, `rev-list --count HEAD`, `status --porcelain`, `rev-list --left-right --count @{upstream}...HEAD`, `count-objects -v`. Individual failures yield null, not a thrown error. Strip credentials from remote URLs.
   - `getCommitDetail(cwd, hash)`: `show -s --format=%B` plus `-c core.quotepath=false show -m --first-parent --numstat --format=`.
   - `gitFetch(cwd, env)` with `fetch --all --prune`.
   - `cloneRepo(url, dest, env, onLine)` via `spawn` with `--progress`, splitting stderr on `\r` and `\n`.
-- [ ] `shared/graph-layout.ts`: see **Graph algorithm** below.
+- [x] `shared/graph-layout.ts`: see **Graph algorithm** below.
 
 **Verify:** `tests/` using `node:test` + `tsx` (`npm test`):
 - `git.test.ts`: create temp repos with `git init`, including a repo with branches, a merge commit, tags and an empty repo. Assert graph output, parsed refs, local info, commit detail.

@@ -11,13 +11,13 @@ Task list derived from [PLAN.md](PLAN.md). Tick a box when the task is done and 
 
 ## Phase 2 — Core services
 
-- [ ] `http.ts`: configureFetch, getJson, HttpError, parseLink, paginate, countItems
-- [ ] `tls.ts`: insecure host allowlist + certificate verify proc
-- [ ] `store.ts`: config.json/cache.json, safeStorage token encryption, atomic writes
-- [ ] `gitAuth.ts`: scoped GIT_CONFIG extraHeader env per host
-- [ ] `git.ts`: repoRoot, getGraph, getLocalInfo, getCommitDetail, gitFetch, cloneRepo
-- [ ] `shared/graph-layout.ts`: stateful lane assignment algorithm
-- [ ] Tests: `git.test.ts`, `graph-layout.test.ts`, `http.test.ts` (node:test via tsx)
+- [x] `http.ts`: configureFetch, getJson, HttpError, parseLink, paginate, countItems
+- [x] `tls.ts`: insecure host allowlist + certificate verify proc
+- [x] `store.ts`: config.json/cache.json, safeStorage token encryption, atomic writes
+- [x] `gitAuth.ts`: scoped GIT_CONFIG extraHeader env per host
+- [x] `git.ts`: repoRoot, getGraph, getLocalInfo, getCommitDetail, gitFetch, cloneRepo
+- [x] `shared/graph-layout.ts`: stateful lane assignment algorithm
+- [x] Tests: `git.test.ts`, `graph-layout.test.ts`, `http.test.ts` (node:test via tsx)
 
 ## Phase 3 — Providers
 
