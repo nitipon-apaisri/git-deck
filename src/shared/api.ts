@@ -1,4 +1,4 @@
-import type { Account, AccountInput, Cached, CommitDetail, GraphCommit, LocalInfo, Repo, RepoSummary } from './types'
+import type { Account, AccountInput, Cached, CommitDetail, GraphCommit, LocalInfo, LocalStatus, Repo, RepoSummary } from './types'
 
 export interface CloneProgress {
   repoKey: string
@@ -35,6 +35,8 @@ export interface Api {
     unlink(repoKey: string): Promise<void>
     clone(repoKey: string, protocol: 'https' | 'ssh'): Promise<string | null>
     info(path: string): Promise<LocalInfo>
+    /** Status of every linked folder, read in parallel. Never throws for a single bad folder. */
+    statusAll(): Promise<LocalStatus[]>
     graph(path: string, skip: number, limit: number): Promise<GraphCommit[]>
     commit(path: string, hash: string): Promise<CommitDetail>
     fetch(path: string): Promise<void>

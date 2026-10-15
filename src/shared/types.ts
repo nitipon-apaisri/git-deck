@@ -111,3 +111,11 @@ export interface LocalInfo {
   behind: number | null
   sizeKb: number | null
 }
+
+/** Local state of one linked repository, for the dashboard. `info` is null when it could not be read. */
+export interface LocalStatus {
+  repoKey: string
+  path: string
+  info: LocalInfo | null
+  error: string | null
+}

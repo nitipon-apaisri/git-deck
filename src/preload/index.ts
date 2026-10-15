@@ -22,6 +22,7 @@ const api: Api = {
     unlink: call('local:unlink'),
     clone: call('local:clone'),
     info: call('local:info'),
+    statusAll: call('local:statusAll'),
     graph: call('local:graph'),
     commit: call('local:commit'),
     fetch: call('local:fetch'),

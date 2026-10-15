@@ -22,6 +22,7 @@ interface Props {
   searchRef: React.RefObject<HTMLInputElement | null>
   onSearch: (q: string) => void
   onSelect: (repoKey: string) => void
+  onDashboard: () => void
   onManageAccounts: () => void
   onRetry: (accountId: string) => void
 }
@@ -87,6 +88,11 @@ export function Sidebar(p: Props): React.JSX.Element {
       </div>
 
       <div className="tree">
+        <div className={`row dash-link${p.selected === null ? ' selected' : ''}`} onClick={p.onDashboard}>
+          <Icon name="home" size={14} />
+          <span>Dashboard</span>
+        </div>
+
         {p.accounts.length === 0 && (
           <div className="empty">
             <p>No accounts connected yet.</p>

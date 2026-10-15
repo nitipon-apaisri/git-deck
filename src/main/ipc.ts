@@ -3,7 +3,8 @@ import { existsSync, readdirSync } from 'node:fs'
 import { basename, join, resolve } from 'node:path'
 import { BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import type { Api, CloneProgress } from '../shared/api'
-import type { Account, AccountInput, Repo } from '../shared/types'
+import { mapLimit } from '../shared/pool'
+import type { Account, AccountInput, LocalStatus, Repo } from '../shared/types'
 import { buildGitAuthEnv } from './gitAuth'
 import { HASH_RE, cloneRepo, getCommitDetail, getGraph, getLocalInfo, gitFetch, repoRoot } from './git'
 import { createProvider, normalizeBaseUrl } from './providers'
@@ -243,6 +244,16 @@ export function registerIpc(store: Store, getWindow: () => BrowserWindow | null)
         return getLocalInfo(path)
       },
 
+      statusAll: async () =>
+        mapLimit(Object.entries(store.getLinks()), 4, async ([repoKey, path]): Promise<LocalStatus> => {
+          if (!existsSync(path)) return { repoKey, path, info: null, error: 'Folder not found' }
+          try {
+            return { repoKey, path, info: await getLocalInfo(path), error: null }
+          } catch (e) {
+            return { repoKey, path, info: null, error: plainMessage(e) }
+          }
+        }),
+
       graph: async (path, skip, limit) => {
         linkedRepoKey(path)
         if (!Number.isInteger(skip) || skip < 0 || !Number.isInteger(limit) || limit < 1 || limit > 5000) {
@@ -301,6 +312,7 @@ export function registerIpc(store: Store, getWindow: () => BrowserWindow | null)
   reg('local:unlink', handlers.local.unlink)
   reg('local:clone', handlers.local.clone)
   reg('local:info', handlers.local.info)
+  reg('local:statusAll', handlers.local.statusAll)
   reg('local:graph', handlers.local.graph)
   reg('local:commit', handlers.local.commit)
   reg('local:fetch', handlers.local.fetch)

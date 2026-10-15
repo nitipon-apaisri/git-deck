@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Account, Repo } from '@shared/types'
 import { AccountsDialog } from './components/AccountsDialog'
+import { Dashboard } from './components/Dashboard'
 import { RepoView } from './components/RepoView'
 import { Sidebar, type AccountState } from './components/Sidebar'
 import { errorMessage } from './lib/errors'
@@ -15,11 +16,24 @@ function loadSelected(): string | null {
   }
 }
 
+const RECENT_KEY = 'gitdeck.recent'
+const RECENT_MAX = 5
+
+function loadRecent(): string[] {
+  try {
+    const v: unknown = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]')
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string').slice(0, RECENT_MAX) : []
+  } catch {
+    return []
+  }
+}
+
 export default function App(): React.JSX.Element {
   const [accounts, setAccounts] = useState<Account[]>([])
   const [states, setStates] = useState<Record<string, AccountState>>({})
   const [links, setLinks] = useState<Record<string, string>>({})
   const [selected, setSelected] = useState<string | null>(loadSelected)
+  const [recent, setRecent] = useState<string[]>(loadRecent)
   const [search, setSearch] = useState('')
   const [dialog, setDialog] = useState(false)
   const [ready, setReady] = useState(false)
@@ -64,6 +78,19 @@ export default function App(): React.JSX.Element {
   }, [selected])
 
   useEffect(() => {
+    if (!selected) return
+    setRecent((r) => [selected, ...r.filter((k) => k !== selected)].slice(0, RECENT_MAX))
+  }, [selected])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(RECENT_KEY, JSON.stringify(recent))
+    } catch {
+      /* storage unavailable */
+    }
+  }, [recent])
+
+  useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault()
@@ -89,6 +116,7 @@ export default function App(): React.JSX.Element {
         searchRef={searchRef}
         onSearch={setSearch}
         onSelect={setSelected}
+        onDashboard={() => setSelected(null)}
         onManageAccounts={() => setDialog(true)}
         onRetry={(id) => void loadAccount(id)}
       />
@@ -107,7 +135,14 @@ export default function App(): React.JSX.Element {
             }
           />
         ) : (
-          <div className="placeholder muted">Select a repository</div>
+          <Dashboard
+            accounts={accounts}
+            repos={allRepos}
+            links={links}
+            recent={recent}
+            onOpen={setSelected}
+            onManageAccounts={() => setDialog(true)}
+          />
         )}
       </main>
       {dialog && (

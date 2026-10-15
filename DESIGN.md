@@ -94,6 +94,7 @@ Ref badges: local branch uses `--accent-soft`/`--accent-strong`, remote `#eef2f6
 | Banner `.banner` | Icon plus message, with a Retry button for errors. |
 | Skeleton `.skeleton` | Warm shimmer, 1.4 s. |
 | Dialog `.dialog` | 520 px max, 16 px radius, warm blurred overlay. Esc and overlay click close it. |
+| Dashboard `.dashboard` | Home view when no repo is selected: stat cards, "Needs attention" list of linked repos, then recently opened and recently active. Rows are `.dash-row`; status pills are `.flag-warn`, `.flag-info`, `.flag-error`. |
 | Avatar | Image, or initials on a soft tint when missing or broken. |
 | Icon | Inline feather-style SVG, 2 px stroke, `currentColor`. No emoji as icons. |
 
