@@ -36,10 +36,10 @@ Task list derived from [PLAN.md](PLAN.md). Tick a box when the task is done and 
 
 ## Phase 5 — Renderer: shell, accounts, sidebar
 
-- [ ] UI foundation: dark theme, two-column layout, icon set, Avatar
-- [ ] Accounts dialog: presets, token workflow, test connection, secure-storage warning
-- [ ] Sidebar: host → namespace → repos, search, badges, empty state
-- [ ] App state: stale-while-revalidate, persisted selection, error prefix cleanup
+- [x] UI foundation: dark theme, two-column layout, icon set, Avatar
+- [x] Accounts dialog: presets, token workflow, test connection, secure-storage warning
+- [x] Sidebar: host → namespace → repos, search, badges, empty state
+- [x] App state: stale-while-revalidate, persisted selection, error prefix cleanup
 
 ## Phase 6 — Repo view, overview, info
 
