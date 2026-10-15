@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Account, Repo } from '@shared/types'
 import { AccountsDialog } from './components/AccountsDialog'
+import { RepoView } from './components/RepoView'
 import { Sidebar, type AccountState } from './components/Sidebar'
 import { errorMessage } from './lib/errors'
 
@@ -75,7 +76,7 @@ export default function App(): React.JSX.Element {
   }, [])
 
   const allRepos: Repo[] = Object.values(states).flatMap((s) => s.repos)
-  const repo = allRepos.find((r) => r.key === selected) ?? null
+  const repo = allRepos.find((r) => r.key === selected && accounts.some((a) => a.id === r.accountId)) ?? null
 
   return (
     <div className="app">
@@ -92,10 +93,18 @@ export default function App(): React.JSX.Element {
       />
       <main className="main">
         {!ready ? null : repo ? (
-          <div className="placeholder">
-            <h1>{repo.fullName}</h1>
-            <p className="muted">{repo.description || 'No description'}</p>
-          </div>
+          <RepoView
+            key={repo.key}
+            repo={repo}
+            account={accounts.find((a) => a.id === repo.accountId)!}
+            linkedPath={links[repo.key] ?? null}
+            onLinkChange={(key, path) =>
+              setLinks((l) => {
+                const { [key]: _old, ...rest } = l
+                return path ? { ...rest, [key]: path } : rest
+              })
+            }
+          />
         ) : (
           <div className="placeholder muted">Select a repository</div>
         )}

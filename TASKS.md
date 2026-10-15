@@ -43,9 +43,9 @@ Task list derived from [PLAN.md](PLAN.md). Tick a box when the task is done and 
 
 ## Phase 6 — Repo view, overview, info
 
-- [ ] Repo header and local actions (clone, link, open, fetch, unlink)
-- [ ] Summary hook and Overview tab
-- [ ] Info tab (remote + local)
+- [x] Repo header and local actions (clone, link, open, fetch, unlink)
+- [x] Summary hook and Overview tab
+- [x] Info tab (remote + local)
 
 ## Phase 7 — Commit graph
 
