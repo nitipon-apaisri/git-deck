@@ -90,6 +90,7 @@ export default function App(): React.JSX.Element {
         onSearch={setSearch}
         onSelect={setSelected}
         onManageAccounts={() => setDialog(true)}
+        onRetry={(id) => void loadAccount(id)}
       />
       <main className="main">
         {!ready ? null : repo ? (

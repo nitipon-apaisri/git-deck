@@ -49,13 +49,13 @@ Task list derived from [PLAN.md](PLAN.md). Tick a box when the task is done and 
 
 ## Phase 7 — Commit graph
 
-- [ ] `GitGraph`: toolbar, paginated loading, virtualised list
-- [ ] Graph row rendering: SVG lanes, ref badges, metadata columns
-- [ ] Commit detail panel and empty/error states
+- [x] `GitGraph`: toolbar, paginated loading, virtualised list
+- [x] Graph row rendering: SVG lanes, ref badges, metadata columns
+- [x] Commit detail panel and empty/error states
 
 ## Phase 8 — Polish and docs
 
-- [ ] Loading skeletons and error banners with retry
-- [ ] Keyboard: Ctrl/Cmd+K search focus, arrow keys in graph
-- [ ] `README.md`
-- [ ] Final pass: `npm run typecheck`, `npm test`, `npm run build` all green
+- [x] Loading skeletons and error banners with retry
+- [x] Keyboard: Ctrl/Cmd+K search focus, arrow keys in graph
+- [x] `README.md`
+- [x] Final pass: `npm run typecheck`, `npm test`, `npm run build` all green

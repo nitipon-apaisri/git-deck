@@ -45,6 +45,7 @@ interface Props {
 export function Info({ repo, host, summary, linkedPath, reloadToken }: Props): React.JSX.Element {
   const [local, setLocal] = useState<LocalInfo | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     let live = true
@@ -59,7 +60,7 @@ export function Info({ repo, host, summary, linkedPath, reloadToken }: Props): R
     return () => {
       live = false
     }
-  }, [linkedPath, reloadToken])
+  }, [linkedPath, reloadToken, attempt])
 
   const ts = (v: number | null): string => (v == null ? '—' : formatDate(v))
 
@@ -95,6 +96,7 @@ export function Info({ repo, host, summary, linkedPath, reloadToken }: Props): R
         ) : error ? (
           <div className="banner banner-error inline-banner">
             <Icon name="alert" /> <span>{error}</span>
+            <button className="btn" onClick={() => setAttempt((n) => n + 1)}>Retry</button>
           </div>
         ) : !local ? (
           <div className="skeleton" />

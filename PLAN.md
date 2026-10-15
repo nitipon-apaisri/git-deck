@@ -208,21 +208,21 @@ Any `path` argument must equal one of the stored link values, otherwise throw. V
 
 ## Phase 7 — Commit graph
 
-- [ ] `GitGraph` component with a toolbar (Reload, Fetch, "N commits loaded").
-- [ ] Load pages of 500 via `local.graph(path, skip, 500)` and keep one stateful `GraphLayout` instance. Use a generation counter so a path change or reload cannot apply stale results. Load the next page when scrolled within about 20 rows of the end, and also when the content is shorter than the viewport.
-- [ ] Virtualised list: fixed row height 28 px, render only visible rows plus 10 overscan above and below, spacer element for total height, `ResizeObserver` for the viewport height.
-- [ ] Each row is a small SVG (graph lanes) followed by ref badges + subject, author with initials avatar, relative date (full date in tooltip) and short hash. Lane width 16 px, node radius about 4.5, 8-colour palette. HEAD gets a ring.
-- [ ] Row SVG: draw `through` edges as vertical lines, `top` and `bottom` edges as S-curves (cubic Bézier with control points at the vertical midpoint), nodes last.
-- [ ] Ref badges: local branch, remote branch and tag styled differently, current branch emphasised, show up to 4 then "+n".
-- [ ] Selecting a row opens a detail panel (`local.commit`): full hash with copy, author and email, date, refs, message body, changed files with +/- counts (binary shown as "binary").
-- [ ] Empty states: not linked ("Use Clone or Link above"), empty repository, git error with message.
+- [x] `GitGraph` component with a toolbar (Reload, Fetch, "N commits loaded").
+- [x] Load pages of 500 via `local.graph(path, skip, 500)` and keep one stateful `GraphLayout` instance. Use a generation counter so a path change or reload cannot apply stale results. Load the next page when scrolled within about 20 rows of the end, and also when the content is shorter than the viewport.
+- [x] Virtualised list: fixed row height 28 px, render only visible rows plus 10 overscan above and below, spacer element for total height, `ResizeObserver` for the viewport height.
+- [x] Each row is a small SVG (graph lanes) followed by ref badges + subject, author with initials avatar, relative date (full date in tooltip) and short hash. Lane width 16 px, node radius about 4.5, 8-colour palette. HEAD gets a ring.
+- [x] Row SVG: draw `through` edges as vertical lines, `top` and `bottom` edges as S-curves (cubic Bézier with control points at the vertical midpoint), nodes last.
+- [x] Ref badges: local branch, remote branch and tag styled differently, current branch emphasised, show up to 4 then "+n".
+- [x] Selecting a row opens a detail panel (`local.commit`): full hash with copy, author and email, date, refs, message body, changed files with +/- counts (binary shown as "binary").
+- [x] Empty states: not linked ("Use Clone or Link above"), empty repository, git error with message.
 
 ## Phase 8 — Polish and docs
 
-- [ ] Loading skeletons and error banners with a retry button everywhere data is fetched.
-- [ ] Keyboard: `Ctrl/Cmd+K` focuses search, arrow keys move through the graph rows.
-- [ ] `README.md`: what it is, requirements (Node >= 22.12, git on PATH), `npm install`, `npm run dev`, `npm run build`, `npm test`, token scopes (GitHub classic `repo` or fine-grained read access to metadata and contents; GitLab `read_api` + `read_repository`), self-hosted notes (internal CAs work through the OS store, the self-signed toggle is per host), architecture overview, security model (token encryption, scoped git auth, validated IPC), known limits and roadmap, how to package later with electron-builder.
-- [ ] Final pass: `npm run typecheck`, `npm test`, `npm run build` all green.
+- [x] Loading skeletons and error banners with a retry button everywhere data is fetched.
+- [x] Keyboard: `Ctrl/Cmd+K` focuses search, arrow keys move through the graph rows.
+- [x] `README.md`: what it is, requirements (Node >= 22.12, git on PATH), `npm install`, `npm run dev`, `npm run build`, `npm test`, token scopes (GitHub classic `repo` or fine-grained read access to metadata and contents; GitLab `read_api` + `read_repository`), self-hosted notes (internal CAs work through the OS store, the self-signed toggle is per host), architecture overview, security model (token encryption, scoped git auth, validated IPC), known limits and roadmap, how to package later with electron-builder.
+- [x] Final pass: `npm run typecheck`, `npm test`, `npm run build` all green.
 
 ---
 

@@ -19,6 +19,7 @@ interface Props {
   onSearch: (q: string) => void
   onSelect: (repoKey: string) => void
   onManageAccounts: () => void
+  onRetry: (accountId: string) => void
 }
 
 interface Group {
@@ -103,11 +104,26 @@ export function Sidebar(p: Props): React.JSX.Element {
                 <span className="count">{total}</span>
                 {st?.loading && <span className="spinner" title="Loading…" />}
                 {st?.error && (
-                  <span className="err" title={st.error}>
+                  <button
+                    className="icon-btn err"
+                    title={`${st.error} (click to retry)`}
+                    aria-label="Retry loading repositories"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      p.onRetry(account.id)
+                    }}
+                  >
                     <Icon name="alert" size={14} />
-                  </span>
+                  </button>
                 )}
               </div>
+              {open && total === 0 && st?.loading && (
+                <div className="sk-rows">
+                  <div className="skeleton sk-line" />
+                  <div className="skeleton sk-line" />
+                  <div className="skeleton sk-line" />
+                </div>
+              )}
               {open &&
                 groups.map((g) => {
                   const gKey = `${account.id}/${g.namespace}`

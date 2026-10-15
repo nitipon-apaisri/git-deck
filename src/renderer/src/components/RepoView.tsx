@@ -3,11 +3,12 @@ import type { Account, Repo } from '@shared/types'
 import { useSummary } from '../hooks/useSummary'
 import { timeAgo } from '../lib/format'
 import { Icon } from './Icon'
+import { GitGraph } from './GitGraph'
 import { Info } from './Info'
 import { Overview } from './Overview'
 import { RepoHeader } from './RepoHeader'
 
-type Tab = 'overview' | 'info'
+type Tab = 'overview' | 'graph' | 'info'
 
 interface Props {
   repo: Repo
@@ -26,9 +27,9 @@ export function RepoView({ repo, account, linkedPath, onLinkChange }: Props): Re
       <RepoHeader repo={repo} linkedPath={linkedPath} onLinkChange={onLinkChange} onFetched={() => setReloadToken((n) => n + 1)} />
 
       <nav className="tabs">
-        {(['overview', 'info'] as const).map((t) => (
+        {(['overview', 'graph', 'info'] as const).map((t) => (
           <button key={t} className={`tab${tab === t ? ' tab-active' : ''}`} onClick={() => setTab(t)}>
-            {t === 'overview' ? 'Overview' : 'Info'}
+            {t === 'overview' ? 'Overview' : t === 'graph' ? 'Graph' : 'Info'}
           </button>
         ))}
         <span className="spacer" />
@@ -48,8 +49,12 @@ export function RepoView({ repo, account, linkedPath, onLinkChange }: Props): Re
       )}
 
       <div className="tab-body">
-        {tab === 'overview' ? (
+        {tab === 'overview' && !summary && loading ? (
+          <div className="skeleton sk-block" />
+        ) : tab === 'overview' ? (
           <Overview repo={repo} summary={summary?.data ?? null} provider={account.type} />
+        ) : tab === 'graph' ? (
+          <GitGraph path={linkedPath} reloadToken={reloadToken} onFetched={() => setReloadToken((n) => n + 1)} />
         ) : (
           <Info repo={repo} host={account.host} summary={summary?.data ?? null} linkedPath={linkedPath} reloadToken={reloadToken} />
         )}
