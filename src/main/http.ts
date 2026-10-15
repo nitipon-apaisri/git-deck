@@ -60,6 +60,15 @@ export async function getJson<T>(url: string, headers: Record<string, string> = 
   return readJson<T>(await request(url, headers))
 }
 
+/** Like getJson, but also returns the response headers (x-total, link, ...). */
+export async function getJsonWithHeaders<T>(
+  url: string,
+  headers: Record<string, string> = {}
+): Promise<{ data: T; headers: Headers }> {
+  const res = await request(url, headers)
+  return { data: await readJson<T>(res), headers: res.headers }
+}
+
 export function parseLink(header: string | null | undefined): { next?: string; last?: string } {
   const out: { next?: string; last?: string } = {}
   if (!header) return out

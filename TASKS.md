@@ -21,10 +21,10 @@ Task list derived from [PLAN.md](PLAN.md). Tick a box when the task is done and 
 
 ## Phase 3 — Providers
 
-- [ ] `GitProvider` interface + `createProvider` factory with base URL normalisation
-- [ ] GitHub provider: verify, listRepos, getSummary (allSettled)
-- [ ] GitLab provider: verify, listRepos, getSummary (allSettled, stats fallback)
-- [ ] `providers.test.ts` against local mock server (pagination, 409, 403, path-prefix base URL)
+- [x] `GitProvider` interface + `createProvider` factory with base URL normalisation
+- [x] GitHub provider: verify, listRepos, getSummary (allSettled)
+- [x] GitLab provider: verify, listRepos, getSummary (allSettled, stats fallback)
+- [x] `providers.test.ts` against local mock server (pagination, 409, 403, path-prefix base URL)
 
 ## Phase 4 — IPC and main wiring
 

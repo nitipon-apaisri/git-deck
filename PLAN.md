@@ -142,8 +142,8 @@ Any `path` argument must equal one of the stored link values, otherwise throw. V
 
 ## Phase 3 — Providers
 
-- [ ] `GitProvider`: `verify()`, `listRepos()`, `getSummary(repo)`. Each provider is constructed with `(accountId, baseUrl, token)` and returns complete `Repo` objects.
-- [ ] **GitHub** (`api.github.com` for github.com, otherwise `<origin>/api/v3` for GitHub Enterprise). Headers: `Authorization: Bearer`, `Accept: application/vnd.github+json`, `X-GitHub-Api-Version: 2022-11-28`.
+- [x] `GitProvider`: `verify()`, `listRepos()`, `getSummary(repo)`. Each provider is constructed with `(accountId, baseUrl, token)` and returns complete `Repo` objects.
+- [x] **GitHub** (`api.github.com` for github.com, otherwise `<origin>/api/v3` for GitHub Enterprise). Headers: `Authorization: Bearer`, `Accept: application/vnd.github+json`, `X-GitHub-Api-Version: 2022-11-28`.
   - verify: `GET /user`
   - list: `GET /user/repos?per_page=100&sort=updated&affiliation=owner,collaborator,organization_member`, paginated
   - summary (run with `Promise.allSettled`, a failed piece becomes null/empty, not an error):
@@ -153,7 +153,7 @@ Any `path` argument must equal one of the stored link values, otherwise throw. V
     - languages: `/languages` (bytes → percent, top 8)
     - branches and tags: `countItems`
     - open PRs: `countItems(.../pulls?state=open)`
-- [ ] **GitLab** (`<baseUrl>/api/v4`, header `PRIVATE-TOKEN`). Make relative avatar URLs absolute using the base URL.
+- [x] **GitLab** (`<baseUrl>/api/v4`, header `PRIVATE-TOKEN`). Make relative avatar URLs absolute using the base URL.
   - verify: `GET /user`
   - list: `GET /projects?membership=true&per_page=100&order_by=last_activity_at&sort=desc`, paginated
   - summary (same `allSettled` rule):
@@ -161,7 +161,7 @@ Any `path` argument must equal one of the stored link values, otherwise throw. V
     - contributors: `/repository/contributors?order_by=commits&sort=desc&per_page=100`; use `x-total` if sent, else the array length. Show the top 25.
     - languages: `/languages` (already percentages)
     - branches, tags, open MRs (`/merge_requests?state=opened`): `countItems`
-- [ ] `createProvider(account, token)` factory. Normalise the base URL (default per type, add `https://` if missing, http/https only, strip trailing slash).
+- [x] `createProvider(account, token)` factory. Normalise the base URL (default per type, add `https://` if missing, http/https only, strip trailing slash).
 
 **Verify:** `tests/providers.test.ts` runs both providers against a local mock server that mimics paginated lists, `Link` and `X-Total` headers, a 409 empty-repo response, and a 403 on contributors. Cover self-hosted base URLs with a path prefix.
 
