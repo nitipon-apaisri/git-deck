@@ -121,7 +121,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1
 .dialog-body label.check { display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .hint { margin: -6px 0 0; font-size: 12px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { padding: 3px 11px; border-radius: 14px; border: 1px solid var(--border-strong); background: var(--surface); transition: all var(--ease); }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 11px; border-radius: 14px; border: 1px solid var(--border-strong); background: var(--surface); transition: all var(--ease); }
 button.chip:hover { border-color: var(--accent); }
 .chip-active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); font-weight: 500; }
 .actions { display: flex; align-items: center; gap: 8px; }

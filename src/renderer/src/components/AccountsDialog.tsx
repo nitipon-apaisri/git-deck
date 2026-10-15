@@ -3,6 +3,7 @@ import type { Account } from '@shared/types'
 import { errorMessage } from '../lib/errors'
 import { PRESETS, tokenPageUrl } from '../lib/presets'
 import { Avatar } from './Avatar'
+import { ProviderIcon } from './BrandIcons'
 import { Icon } from './Icon'
 import {
   AlertDialog,
@@ -145,6 +146,7 @@ export function AccountsDialog({ accounts, onClose, onAdded, onRemoved }: Props)
                 className={`chip${p.id === presetId ? ' chip-active' : ''}`}
                 onClick={() => choosePreset(p.id)}
               >
+                <ProviderIcon type={p.type} size={14} />
                 {p.label}
               </button>
             ))}

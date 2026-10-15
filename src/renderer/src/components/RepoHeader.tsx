@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react'
-import type { Repo } from '@shared/types'
+import type { ProviderType, Repo } from '@shared/types'
 import { errorMessage } from '../lib/errors'
+import { ProviderIcon } from './BrandIcons'
 import { Icon } from './Icon'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
 interface Props {
   repo: Repo
+  provider: ProviderType
   linkedPath: string | null
   onLinkChange: (repoKey: string, path: string | null) => void
   onFetched: () => void
 }
 
-export function RepoHeader({ repo, linkedPath, onLinkChange, onFetched }: Props): React.JSX.Element {
+export function RepoHeader({ repo, provider, linkedPath, onLinkChange, onFetched }: Props): React.JSX.Element {
   const [busy, setBusy] = useState<null | 'clone' | 'link' | 'fetch'>(null)
   const [progress, setProgress] = useState<{ line: string; percent: number | null } | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -74,7 +76,7 @@ export function RepoHeader({ repo, linkedPath, onLinkChange, onFetched }: Props)
         {repo.fork && <Badge>fork</Badge>}
         <span className="spacer" />
         <Button variant="outline" onClick={() => void window.api.openExternal(repo.webUrl)}>
-          <Icon name="external" /> Open on web
+          <ProviderIcon type={provider} size={14} /> Open on web
         </Button>
       </div>
       <p className="muted repo-desc">{repo.description || 'No description'}</p>

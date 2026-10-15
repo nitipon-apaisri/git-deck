@@ -27,7 +27,7 @@ export function RepoView({ repo, account, linkedPath, onLinkChange }: Props): Re
 
   return (
     <div className="repo-view">
-      <RepoHeader repo={repo} linkedPath={linkedPath} onLinkChange={onLinkChange} onFetched={() => setReloadToken((n) => n + 1)} />
+      <RepoHeader repo={repo} provider={account.type} linkedPath={linkedPath} onLinkChange={onLinkChange} onFetched={() => setReloadToken((n) => n + 1)} />
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="tabs-bar">
         <TabsList>

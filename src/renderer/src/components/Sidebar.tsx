@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { Account, Repo } from '@shared/types'
 import { Avatar } from './Avatar'
+import { ProviderIcon } from './BrandIcons'
 import { Icon } from './Icon'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -102,7 +103,7 @@ export function Sidebar(p: Props): React.JSX.Element {
             <section key={account.id}>
               <div className="row host" onClick={() => toggle(account.id)}>
                 <Icon name={open ? 'chevronDown' : 'chevronRight'} size={14} />
-                <Icon name={account.type === 'github' ? 'github' : 'gitlab'} size={14} />
+                <ProviderIcon type={account.type} size={15} />
                 <span className="host-label">{account.label}</span>
                 <span className="count">{total}</span>
                 {st?.loading && <span className="spinner" title="Loading…" />}
