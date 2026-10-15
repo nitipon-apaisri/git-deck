@@ -1,5 +1,9 @@
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, net, safeStorage, session, shell } from 'electron'
 import { join } from 'node:path'
+import { configureFetch } from './http'
+import { registerIpc } from './ipc'
+import { Store } from './store'
+import { installCertificateVerifier } from './tls'
 
 const isHttpUrl = (url: string): boolean => {
   try {
@@ -63,6 +67,10 @@ if (!app.requestSingleInstanceLock()) {
   })
 
   void app.whenReady().then(() => {
+    // net.fetch uses Chromium's network stack, so the OS certificate store applies.
+    configureFetch((input, init) => net.fetch(input, init))
+    installCertificateVerifier(session.defaultSession)
+    registerIpc(new Store(app.getPath('userData'), safeStorage), () => mainWindow)
     createWindow()
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow()

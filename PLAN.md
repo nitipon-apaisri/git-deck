@@ -167,7 +167,7 @@ Any `path` argument must equal one of the stored link values, otherwise throw. V
 
 ## Phase 4 — IPC and main wiring
 
-- [ ] `ipc.ts` implements the full `Api` above.
+- [x] `ipc.ts` implements the full `Api` above.
   - Normalise and validate `AccountInput`. `accounts:add` verifies the token against the host first and rejects duplicates (same type, base URL and username).
   - De-duplicate in-flight requests per account and per repo.
   - Link: folder picker, `repoRoot`, then if no remote URL contains the repo's `fullName` (case-insensitive) show a "Link anyway?" confirmation.
@@ -175,8 +175,8 @@ Any `path` argument must equal one of the stored link values, otherwise throw. V
   - Local fetch: look up the account from the linked repo and pass the scoped auth env.
   - `openExternal` accepts http/https only.
   - Errors thrown to the renderer carry plain, token-free messages.
-- [ ] `preload/index.ts` exposes `window.api` with `contextBridge`. Add `src/renderer/src/env.d.ts` declaring `window.api: Api`.
-- [ ] `main/index.ts`: configure fetch with `net.fetch`, install the certificate verifier, sync insecure hosts from stored accounts on start and after add/remove, register IPC.
+- [x] `preload/index.ts` exposes `window.api` with `contextBridge`. Add `src/renderer/src/env.d.ts` declaring `window.api: Api`.
+- [x] `main/index.ts`: configure fetch with `net.fetch`, install the certificate verifier, sync insecure hosts from stored accounts on start and after add/remove, register IPC.
 
 **Verify:** typecheck passes, `electron-vite build` succeeds, and the full test suite is green.
 

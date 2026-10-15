@@ -28,9 +28,9 @@ Task list derived from [PLAN.md](PLAN.md). Tick a box when the task is done and 
 
 ## Phase 4 — IPC and main wiring
 
-- [ ] Shared domain types and IPC contract (`shared/types.ts`, `shared/api.ts`)
-- [ ] `ipc.ts`: account and repo handlers, link, clone, fetch, openExternal
-- [ ] Preload bridge, `env.d.ts`, `main/index.ts` wiring (net.fetch, cert verifier, insecure host sync)
+- [x] Shared domain types and IPC contract (`shared/types.ts`, `shared/api.ts`)
+- [x] `ipc.ts`: account and repo handlers, link, clone, fetch, openExternal
+- [x] Preload bridge, `env.d.ts`, `main/index.ts` wiring (net.fetch, cert verifier, insecure host sync)
 
 **Verify:** typecheck, `electron-vite build`, full test suite green.
 
