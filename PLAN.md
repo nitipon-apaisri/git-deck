@@ -107,7 +107,7 @@ Any `path` argument must equal one of the stored link values, otherwise throw. V
 
 ## Phase 1 — Scaffold
 
-- [ ] package.json, tsconfigs, `electron.vite.config.ts`, `.gitignore` (node_modules, out, dist), minimal main/preload/renderer that opens a window showing "GitDeck".
+- [x] package.json, tsconfigs, `electron.vite.config.ts`, `.gitignore` (node_modules, out, dist), minimal main/preload/renderer that opens a window showing "GitDeck".
 - Window security: `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`, `setWindowOpenHandler` that denies and opens http(s) links externally, `will-navigate` blocked for foreign URLs, single-instance lock.
 
 **Verify:** `npm run typecheck` passes and `npx electron-vite build` produces `out/main`, `out/preload`, `out/renderer`.

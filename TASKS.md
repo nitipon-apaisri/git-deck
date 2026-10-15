@@ -4,8 +4,8 @@ Task list derived from [PLAN.md](PLAN.md). Tick a box when the task is done and 
 
 ## Phase 1 — Scaffold
 
-- [ ] Scaffold: package.json, tsconfigs, `electron.vite.config.ts`, minimal main/preload/renderer window
-- [ ] Window security: contextIsolation, sandbox, window-open handler, will-navigate block, single-instance lock
+- [x] Scaffold: package.json, tsconfigs, `electron.vite.config.ts`, minimal main/preload/renderer window
+- [x] Window security: contextIsolation, sandbox, window-open handler, will-navigate block, single-instance lock
 
 **Verify:** `npm run typecheck`; `electron-vite build` produces `out/main`, `out/preload`, `out/renderer`.
 
