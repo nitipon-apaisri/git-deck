@@ -5,6 +5,8 @@ import { formatCount } from '../lib/format'
 import { Avatar } from './Avatar'
 import { Icon } from './Icon'
 import { RefBadges } from './RefBadges'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export function CommitDetailPanel({ path, commit, onClose }: { path: string; commit: GraphCommit; onClose: () => void }): React.JSX.Element {
   const [detail, setDetail] = useState<CommitDetail | null>(null)
@@ -29,17 +31,17 @@ export function CommitDetailPanel({ path, commit, onClose }: { path: string; com
     <aside className="commit-panel">
       <div className="commit-panel-head">
         <strong className="ellipsis">{commit.subject}</strong>
-        <button className="icon-btn" onClick={onClose} aria-label="Close details">
+        <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close details">
           <Icon name="x" />
-        </button>
+        </Button>
       </div>
       <div className="commit-meta">
         <div className="copy-row">
           <code className="ellipsis">{commit.hash}</code>
-          <button
-            className="icon-btn"
-            aria-label="Copy hash"
-            onClick={() =>
+          <Button variant="ghost" size="icon"
+ 
+ aria-label="Copy hash"
+ onClick={() =>
               void navigator.clipboard.writeText(commit.hash).then(() => {
                 setCopied(true)
                 setTimeout(() => setCopied(false), 1200)
@@ -47,7 +49,7 @@ export function CommitDetailPanel({ path, commit, onClose }: { path: string; com
             }
           >
             <Icon name={copied ? 'check' : 'copy'} size={14} />
-          </button>
+          </Button>
         </div>
         <div className="author-line">
           <Avatar name={commit.author} size={20} />
@@ -61,10 +63,10 @@ export function CommitDetailPanel({ path, commit, onClose }: { path: string; com
       {error ? (
         <div className="banner banner-error inline-banner">
           <Icon name="alert" /> <span>{error}</span>
-          <button className="btn" onClick={() => setAttempt((n) => n + 1)}>Retry</button>
+          <Button variant="outline" onClick={() => setAttempt((n) => n + 1)}>Retry</Button>
         </div>
       ) : !detail ? (
-        <div className="skeleton" />
+        <Skeleton className="h-[120px]" />
       ) : (
         <>
           {detail.body && <pre className="commit-body">{detail.body}</pre>}

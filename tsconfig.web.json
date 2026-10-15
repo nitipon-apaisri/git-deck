@@ -13,7 +13,7 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "baseUrl": ".",
-    "paths": { "@shared/*": ["src/shared/*"] },
+    "paths": { "@shared/*": ["src/shared/*"], "@/*": ["src/renderer/src/*"] },
     "tsBuildInfoFile": "node_modules/.tmp/tsconfig.web.tsbuildinfo"
   },
   "include": ["src/renderer/src/**/*", "src/shared/**/*"]

@@ -4,6 +4,18 @@ import { errorMessage } from '../lib/errors'
 import { PRESETS, tokenPageUrl } from '../lib/presets'
 import { Avatar } from './Avatar'
 import { Icon } from './Icon'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 
 interface Props {
   accounts: Account[]
@@ -24,18 +36,11 @@ export function AccountsDialog({ accounts, onClose, onAdded, onRemoved }: Props)
   const [busy, setBusy] = useState(false)
   const [status, setStatus] = useState<Status>(null)
   const [secure, setSecure] = useState(true)
+  const [pendingRemove, setPendingRemove] = useState<Account | null>(null)
 
   useEffect(() => {
     void window.api.secureStorageAvailable().then(setSecure)
   }, [])
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
 
   const choosePreset = (id: string): void => {
     const p = PRESETS.find((x) => x.id === id) ?? PRESETS[0]
@@ -84,7 +89,6 @@ export function AccountsDialog({ accounts, onClose, onAdded, onRemoved }: Props)
   }
 
   const remove = async (a: Account): Promise<void> => {
-    if (!window.confirm(`Remove ${a.label} (${a.username})? Its token, cache and local links are deleted.`)) return
     try {
       await window.api.accounts.remove(a.id)
       onRemoved(a.id)
@@ -94,14 +98,11 @@ export function AccountsDialog({ accounts, onClose, onAdded, onRemoved }: Props)
   }
 
   return (
-    <div className="overlay" onMouseDown={onClose}>
-      <div className="dialog" role="dialog" aria-label="Accounts" onMouseDown={(e) => e.stopPropagation()}>
-        <header className="dialog-head">
-          <h2>Accounts</h2>
-          <button className="icon-btn" onClick={onClose} aria-label="Close">
-            <Icon name="x" />
-          </button>
-        </header>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent aria-describedby={undefined}>
+        <DialogHeader>
+          <DialogTitle className="text-[15px] font-semibold">Accounts</DialogTitle>
+        </DialogHeader>
 
         {!secure && (
           <div className="banner banner-warn">
@@ -120,9 +121,9 @@ export function AccountsDialog({ accounts, onClose, onAdded, onRemoved }: Props)
                     {a.username} · {a.host}
                   </span>
                 </div>
-                <button className="icon-btn" onClick={() => void remove(a)} aria-label={`Remove ${a.label}`}>
+                <Button variant="ghost" size="icon" onClick={() => setPendingRemove(a)} aria-label={`Remove ${a.label}`}>
                   <Icon name="trash" />
-                </button>
+                </Button>
               </li>
             ))}
           </ul>
@@ -151,11 +152,11 @@ export function AccountsDialog({ accounts, onClose, onAdded, onRemoved }: Props)
 
           <label>
             Label
-            <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder={preset.label} />
+            <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder={preset.label} />
           </label>
           <label>
             Server URL
-            <input
+            <Input
               value={baseUrl}
               disabled={preset.fixedUrl}
               onChange={(e) => setBaseUrl(e.target.value)}
@@ -165,7 +166,7 @@ export function AccountsDialog({ accounts, onClose, onAdded, onRemoved }: Props)
           </label>
           <label>
             Access token
-            <input
+            <Input
               type="password"
               value={token}
               onChange={(e) => setToken(e.target.value)}
@@ -192,19 +193,40 @@ export function AccountsDialog({ accounts, onClose, onAdded, onRemoved }: Props)
           )}
 
           <div className="actions">
-            <button type="button" className="btn" onClick={createToken}>
+            <Button variant="outline" type="button" onClick={createToken}>
               <Icon name="external" /> Create token
-            </button>
+            </Button>
             <span className="spacer" />
-            <button type="button" className="btn" disabled={!canSubmit} onClick={() => void test()}>
+            <Button variant="outline" type="button" disabled={!canSubmit} onClick={() => void test()}>
               Test connection
-            </button>
-            <button type="submit" className="btn btn-primary" disabled={!canSubmit || !secure}>
+            </Button>
+            <Button type="submit" disabled={!canSubmit || !secure}>
               {busy ? 'Working…' : 'Add account'}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
-    </div>
+
+        <AlertDialog open={pendingRemove !== null} onOpenChange={(open) => !open && setPendingRemove(null)}>
+          <AlertDialogContent>
+            <AlertDialogTitle className="text-[15px] font-semibold">Remove {pendingRemove?.label}?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              {pendingRemove?.username} will be disconnected. Its token, cached data and local links are deleted.
+            </AlertDialogDescription>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  const a = pendingRemove
+                  setPendingRemove(null)
+                  if (a) void remove(a)
+                }}
+              >
+                Remove
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </DialogContent>
+    </Dialog>
   )
 }

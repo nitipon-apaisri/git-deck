@@ -23,7 +23,7 @@ function createWindow(): void {
     minWidth: 900,
     minHeight: 560,
     show: false,
-    backgroundColor: '#0d1117',
+    backgroundColor: '#ffffff',
     title: 'GitDeck',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),

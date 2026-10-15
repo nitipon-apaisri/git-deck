@@ -7,7 +7,7 @@ Work through the phases below in order. Do not stop to ask for confirmation betw
 ## How to work
 
 - Build one phase at a time. At the end of each phase run its **Verify** steps, fix failures, then commit with a clear message and tick the phase's checkbox in this file.
-- Keep dependencies minimal. Runtime deps are `react` and `react-dom` only. No UI kit, no state library, no native modules (no SQLite, no keytar). Persist with JSON files.
+- Keep dependencies minimal. Runtime deps are `react`, `react-dom` and the shadcn/ui stack (`radix-ui`, `class-variance-authority`, `clsx`, `tailwind-merge`; Tailwind v4 and `tw-animate-css` are dev deps). No other UI kit, no state library, no native modules (no SQLite, no keytar). Persist with JSON files.
 - Prefer small, typed, pure modules. Anything that does not need Electron must not import `electron`, so it can be tested in plain Node.
 - Treat Electron GUI launch as unavailable if there is no display. Verify with typecheck, build and tests, and say clearly at the end what was not run visually.
 - Never write secrets (tokens) to logs, error messages, or git config files.

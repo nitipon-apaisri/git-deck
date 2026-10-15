@@ -3,6 +3,8 @@ import type { LocalInfo, Repo, RepoSummary } from '@shared/types'
 import { errorMessage } from '../lib/errors'
 import { formatCount, formatDate, formatSize } from '../lib/format'
 import { Icon } from './Icon'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 
 function Row({ label, children }: { label: string; children: React.ReactNode }): React.JSX.Element {
   return (
@@ -18,10 +20,10 @@ function Copy({ text }: { text: string }): React.JSX.Element {
   return (
     <span className="copy-row">
       <code className="ellipsis">{text}</code>
-      <button
-        className="icon-btn"
-        aria-label="Copy"
-        onClick={() => {
+      <Button variant="ghost" size="icon"
+ 
+ aria-label="Copy"
+ onClick={() => {
           void navigator.clipboard.writeText(text).then(() => {
             setDone(true)
             setTimeout(() => setDone(false), 1200)
@@ -29,7 +31,7 @@ function Copy({ text }: { text: string }): React.JSX.Element {
         }}
       >
         <Icon name={done ? 'check' : 'copy'} size={14} />
-      </button>
+      </Button>
     </span>
   )
 }
@@ -96,10 +98,10 @@ export function Info({ repo, host, summary, linkedPath, reloadToken }: Props): R
         ) : error ? (
           <div className="banner banner-error inline-banner">
             <Icon name="alert" /> <span>{error}</span>
-            <button className="btn" onClick={() => setAttempt((n) => n + 1)}>Retry</button>
+            <Button variant="outline" onClick={() => setAttempt((n) => n + 1)}>Retry</Button>
           </div>
         ) : !local ? (
-          <div className="skeleton" />
+          <Skeleton className="h-[120px]" />
         ) : (
           <dl>
             <Row label="Path">{local.path}</Row>

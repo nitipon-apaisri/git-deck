@@ -7,6 +7,9 @@ import { GitGraph } from './GitGraph'
 import { Info } from './Info'
 import { Overview } from './Overview'
 import { RepoHeader } from './RepoHeader'
+import { Button } from '@/components/ui/button'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Skeleton } from '@/components/ui/skeleton'
 
 type Tab = 'overview' | 'graph' | 'info'
 
@@ -26,31 +29,31 @@ export function RepoView({ repo, account, linkedPath, onLinkChange }: Props): Re
     <div className="repo-view">
       <RepoHeader repo={repo} linkedPath={linkedPath} onLinkChange={onLinkChange} onFetched={() => setReloadToken((n) => n + 1)} />
 
-      <nav className="tabs">
-        {(['overview', 'graph', 'info'] as const).map((t) => (
-          <button key={t} className={`tab${tab === t ? ' tab-active' : ''}`} onClick={() => setTab(t)}>
-            {t === 'overview' ? 'Overview' : t === 'graph' ? 'Graph' : 'Info'}
-          </button>
-        ))}
+      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="tabs-bar">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="graph">Graph</TabsTrigger>
+          <TabsTrigger value="info">Info</TabsTrigger>
+        </TabsList>
         <span className="spacer" />
         <span className="muted updated">
           {loading ? 'Updating…' : summary ? `Updated ${timeAgo(summary.fetchedAt)}` : ''}
         </span>
-        <button className="icon-btn" onClick={reload} disabled={loading} aria-label="Reload summary" title="Reload summary">
+        <Button variant="ghost" size="icon" onClick={reload} disabled={loading} aria-label="Reload summary" title="Reload summary">
           <Icon name="refresh" />
-        </button>
-      </nav>
+        </Button>
+      </Tabs>
 
       {error && (
         <div className="banner banner-error inline-banner">
           <Icon name="alert" /> <span>{error}</span>
-          <button className="btn" onClick={reload}>Retry</button>
+          <Button variant="outline" onClick={reload}>Retry</Button>
         </div>
       )}
 
       <div className="tab-body">
         {tab === 'overview' && !summary && loading ? (
-          <div className="skeleton sk-block" />
+          <Skeleton className="sk-block" />
         ) : tab === 'overview' ? (
           <Overview repo={repo} summary={summary?.data ?? null} provider={account.type} />
         ) : tab === 'graph' ? (

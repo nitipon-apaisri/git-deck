@@ -1,6 +1,7 @@
 import { resolve } from 'node:path'
 import { defineConfig } from 'electron-vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import type { Plugin } from 'vite'
 
 // Vite's dev server injects inline scripts (React refresh), which the strict CSP
@@ -19,7 +20,7 @@ export default defineConfig({
   main: {},
   preload: {},
   renderer: {
-    resolve: { alias: { '@shared': resolve('src/shared') } },
-    plugins: [react(), stripCspInDev()]
+    resolve: { alias: { '@shared': resolve('src/shared'), '@': resolve('src/renderer/src') } },
+    plugins: [react(), tailwindcss(), stripCspInDev()]
   }
 })

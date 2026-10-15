@@ -2,8 +2,9 @@ import { useState } from 'react'
 import type { ProviderType, Repo, RepoSummary } from '@shared/types'
 import { formatCount } from '../lib/format'
 import { Avatar } from './Avatar'
+import { Button } from '@/components/ui/button'
 
-const LANG_COLORS = ['#539bf5', '#57ab5a', '#c69026', '#e275ad', '#986ee2', '#39c5cf', '#f69d50', '#e5534b']
+const LANG_COLORS = ['#ff6b35', '#3d7ea6', '#5ba37a', '#b8860b', '#9a6fb0', '#d6577a', '#2f9ea0', '#8a8f98']
 
 export function Overview({ repo, summary, provider }: { repo: Repo; summary: RepoSummary | null; provider: ProviderType }): React.JSX.Element {
   const [showAll, setShowAll] = useState(false)
@@ -68,9 +69,9 @@ export function Overview({ repo, summary, provider }: { repo: Repo; summary: Rep
             ))}
           </ul>
           {contributors.length > 10 && (
-            <button className="btn" onClick={() => setShowAll((v) => !v)}>
+            <Button variant="outline" onClick={() => setShowAll((v) => !v)}>
               {showAll ? 'Show less' : `Show more (${contributors.length - 10})`}
-            </button>
+            </Button>
           )}
         </section>
       )}

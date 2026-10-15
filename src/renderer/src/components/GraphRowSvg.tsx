@@ -4,7 +4,7 @@ import type { GraphRow } from '@shared/graph-layout'
 export const ROW_HEIGHT = 28
 export const LANE_WIDTH = 16
 const NODE_RADIUS = 4.5
-export const GRAPH_COLORS = ['#539bf5', '#57ab5a', '#c69026', '#e275ad', '#986ee2', '#39c5cf', '#f69d50', '#e5534b']
+export const GRAPH_COLORS = ['#ff6b35', '#3d7ea6', '#5ba37a', '#b8860b', '#9a6fb0', '#d6577a', '#2f9ea0', '#8a8f98']
 
 const x = (lane: number): number => lane * LANE_WIDTH + LANE_WIDTH / 2
 const mid = ROW_HEIGHT / 2

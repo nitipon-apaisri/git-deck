@@ -51,7 +51,7 @@ tests/        node:test suites
 ```
 
 - Anything that does not need Electron (`http`, `git`, `store`, providers, graph layout) does not import `electron`, so it is tested in plain Node. Electron's `safeStorage` is injected into the store.
-- Runtime dependencies are `react` and `react-dom` only. State is persisted in `config.json` and `cache.json` under the app's user data folder.
+- The UI uses React with shadcn/ui components (Radix UI + Tailwind v4) in `src/renderer/src/components/ui/`. See `DESIGN.md`. State is persisted in `config.json` and `cache.json` under the app's user data folder.
 - The renderer shows cached data first and refreshes from the network in the background.
 - Git runs through `execFile` without a shell, with `GIT_TERMINAL_PROMPT=0`.
 

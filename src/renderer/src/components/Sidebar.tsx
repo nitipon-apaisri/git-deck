@@ -2,6 +2,9 @@ import { useMemo, useState } from 'react'
 import type { Account, Repo } from '@shared/types'
 import { Avatar } from './Avatar'
 import { Icon } from './Icon'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export interface AccountState {
   repos: Repo[]
@@ -77,18 +80,18 @@ export function Sidebar(p: Props): React.JSX.Element {
             spellCheck={false}
           />
         </div>
-        <button className="icon-btn" onClick={p.onManageAccounts} aria-label="Accounts" title="Accounts">
+        <Button variant="ghost" size="icon" onClick={p.onManageAccounts} aria-label="Accounts" title="Accounts">
           <Icon name="settings" />
-        </button>
+        </Button>
       </div>
 
       <div className="tree">
         {p.accounts.length === 0 && (
           <div className="empty">
             <p>No accounts connected yet.</p>
-            <button className="btn btn-primary" onClick={p.onManageAccounts}>
+            <Button onClick={p.onManageAccounts}>
               <Icon name="plus" /> Connect GitHub / GitLab
-            </button>
+            </Button>
           </div>
         )}
 
@@ -104,24 +107,24 @@ export function Sidebar(p: Props): React.JSX.Element {
                 <span className="count">{total}</span>
                 {st?.loading && <span className="spinner" title="Loading…" />}
                 {st?.error && (
-                  <button
-                    className="icon-btn err"
-                    title={`${st.error} (click to retry)`}
-                    aria-label="Retry loading repositories"
-                    onClick={(e) => {
+                  <Button variant="ghost" size="icon" className="size-6 text-destructive hover:text-destructive"
+ 
+ title={`${st.error} (click to retry)`}
+ aria-label="Retry loading repositories"
+ onClick={(e) => {
                       e.stopPropagation()
                       p.onRetry(account.id)
                     }}
                   >
                     <Icon name="alert" size={14} />
-                  </button>
+                  </Button>
                 )}
               </div>
               {open && total === 0 && st?.loading && (
                 <div className="sk-rows">
-                  <div className="skeleton sk-line" />
-                  <div className="skeleton sk-line" />
-                  <div className="skeleton sk-line" />
+                  <Skeleton className="sk-line" />
+                  <Skeleton className="sk-line" />
+                  <Skeleton className="sk-line" />
                 </div>
               )}
               {open &&
@@ -146,8 +149,8 @@ export function Sidebar(p: Props): React.JSX.Element {
                           >
                             <span className="ellipsis">{r.name}</span>
                             {r.visibility !== 'public' && <Icon name="lock" size={12} />}
-                            {r.archived && <span className="badge">archived</span>}
-                            {r.fork && <span className="badge">fork</span>}
+                            {r.archived && <Badge>archived</Badge>}
+                            {r.fork && <Badge>fork</Badge>}
                             {p.links[r.key] && <span className="dot" title="Linked to a local clone" />}
                           </div>
                         ))}

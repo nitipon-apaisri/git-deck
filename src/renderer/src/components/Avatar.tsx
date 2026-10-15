@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
-const COLORS = ['#e5534b', '#c69026', '#57ab5a', '#39c5cf', '#539bf5', '#986ee2', '#e275ad', '#f69d50']
+// Soft tints with dark text keep initials readable and the UI calm.
+const HUES = [18, 30, 42, 150, 190, 215, 270, 335]
 
 function hash(s: string): number {
   let h = 0
@@ -22,7 +23,7 @@ export function Avatar({ name, url, size = 20 }: { name: string; url?: string; s
     return <img className="avatar" style={style} src={url} alt="" onError={() => setFailed(true)} />
   }
   return (
-    <span className="avatar avatar-fallback" style={{ ...style, background: COLORS[hash(name) % COLORS.length] }}>
+    <span className="avatar avatar-fallback" style={{ ...style, background: `hsl(${HUES[hash(name) % HUES.length]} 70% 90%)`, color: `hsl(${HUES[hash(name) % HUES.length]} 50% 26%)` }}>
       {initials(name)}
     </span>
   )

@@ -7,6 +7,8 @@ import { CommitDetailPanel } from './CommitDetailPanel'
 import { LANE_WIDTH, ROW_HEIGHT, GraphRowSvg } from './GraphRowSvg'
 import { Icon } from './Icon'
 import { RefBadges } from './RefBadges'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const PAGE = 500
 const OVERSCAN = 10
@@ -139,12 +141,12 @@ export function GitGraph({ path, reloadToken, onFetched }: Props): React.JSX.Ele
   return (
     <div className="git-graph">
       <div className="graph-toolbar">
-        <button className="btn" onClick={() => setReloads((n) => n + 1)} disabled={loading}>
+        <Button variant="outline" onClick={() => setReloads((n) => n + 1)} disabled={loading}>
           <Icon name="refresh" /> Reload
-        </button>
-        <button className="btn" onClick={() => void doFetch()} disabled={fetching}>
+        </Button>
+        <Button variant="outline" onClick={() => void doFetch()} disabled={fetching}>
           {fetching ? 'Fetching…' : 'Fetch'}
-        </button>
+        </Button>
         <span className="muted">
           {rows.length.toLocaleString()} commit{rows.length === 1 ? '' : 's'} loaded{loading ? '…' : done ? '' : '+'}
         </span>
@@ -153,7 +155,7 @@ export function GitGraph({ path, reloadToken, onFetched }: Props): React.JSX.Ele
       {error && (
         <div className="banner banner-error inline-banner">
           <Icon name="alert" /> <span>{error}</span>
-          <button className="btn" onClick={() => (rows.length === 0 ? setReloads((n) => n + 1) : void loadPage())}>Retry</button>
+          <Button variant="outline" onClick={() => (rows.length === 0 ? setReloads((n) => n + 1) : void loadPage())}>Retry</Button>
         </div>
       )}
 
@@ -166,7 +168,7 @@ export function GitGraph({ path, reloadToken, onFetched }: Props): React.JSX.Ele
           onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
         >
           {rows.length === 0 && done && !error && <div className="graph-empty muted">This repository has no commits yet.</div>}
-          {rows.length === 0 && loading && <div className="skeleton graph-skeleton" />}
+          {rows.length === 0 && loading && <Skeleton className="graph-" />}
           <div style={{ height: rows.length * ROW_HEIGHT, position: 'relative' }}>
             {rows.slice(first, last).map((row, k) => {
               const i = first + k

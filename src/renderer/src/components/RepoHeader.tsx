@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import type { Repo } from '@shared/types'
 import { errorMessage } from '../lib/errors'
 import { Icon } from './Icon'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 interface Props {
   repo: Repo
@@ -67,43 +69,43 @@ export function RepoHeader({ repo, linkedPath, onLinkChange, onFetched }: Props)
     <header className="repo-header">
       <div className="repo-title">
         <h1 className="ellipsis">{repo.fullName}</h1>
-        <span className="badge">{repo.visibility}</span>
-        {repo.archived && <span className="badge">archived</span>}
-        {repo.fork && <span className="badge">fork</span>}
+        <Badge>{repo.visibility}</Badge>
+        {repo.archived && <Badge>archived</Badge>}
+        {repo.fork && <Badge>fork</Badge>}
         <span className="spacer" />
-        <button className="btn" onClick={() => void window.api.openExternal(repo.webUrl)}>
+        <Button variant="outline" onClick={() => void window.api.openExternal(repo.webUrl)}>
           <Icon name="external" /> Open on web
-        </button>
+        </Button>
       </div>
       <p className="muted repo-desc">{repo.description || 'No description'}</p>
 
       <div className="actions local-actions">
         {linkedPath ? (
           <>
-            <button className="btn" onClick={() => void window.api.local.reveal(linkedPath).catch((e) => setError(errorMessage(e)))}>
+            <Button variant="outline" onClick={() => void window.api.local.reveal(linkedPath).catch((e) => setError(errorMessage(e)))}>
               Open folder
-            </button>
-            <button className="btn" disabled={busy !== null} onClick={() => void fetchLocal()}>
+            </Button>
+            <Button variant="outline" disabled={busy !== null} onClick={() => void fetchLocal()}>
               <Icon name="refresh" /> {busy === 'fetch' ? 'Fetching…' : 'Fetch'}
-            </button>
-            <button className="btn" disabled={busy !== null} onClick={() => void unlink()}>
+            </Button>
+            <Button variant="outline" disabled={busy !== null} onClick={() => void unlink()}>
               Unlink
-            </button>
+            </Button>
             <span className="muted ellipsis" title={linkedPath}>
               {linkedPath}
             </span>
           </>
         ) : (
           <>
-            <button className="btn btn-primary" disabled={busy !== null} onClick={() => void clone('https')}>
+            <Button disabled={busy !== null} onClick={() => void clone('https')}>
               Clone (HTTPS)
-            </button>
-            <button className="btn" disabled={busy !== null} onClick={() => void clone('ssh')}>
+            </Button>
+            <Button variant="outline" disabled={busy !== null} onClick={() => void clone('ssh')}>
               Clone (SSH)
-            </button>
-            <button className="btn" disabled={busy !== null} onClick={() => void link()}>
+            </Button>
+            <Button variant="outline" disabled={busy !== null} onClick={() => void link()}>
               Link existing folder
-            </button>
+            </Button>
           </>
         )}
       </div>
