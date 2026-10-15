@@ -141,9 +141,9 @@ export function Dashboard({ accounts, repos, links, recent, onOpen, onManageAcco
           <p className="muted">Across {accounts.length} {accounts.length === 1 ? 'account' : 'accounts'}</p>
         </div>
         <span className="spacer" />
-        <Button variant="outline" onClick={() => void fetchAll()} disabled={fetching || loading || linkCount === 0}>
+        {/* <Button variant="outline" onClick={() => void fetchAll()} disabled={fetching || loading || linkCount === 0}>
           <Icon name="refresh" /> {fetching ? 'Fetching…' : 'Fetch all'}
-        </Button>
+        </Button> */}
         <Button variant="ghost" size="icon" onClick={() => void load()} disabled={loading || fetching} aria-label="Refresh status" title="Refresh status">
           <Icon name="refresh" />
         </Button>
