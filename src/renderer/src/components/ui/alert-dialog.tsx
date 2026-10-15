@@ -13,7 +13,7 @@ function AlertDialogContent({ className, ...props }: React.ComponentProps<typeof
       <AlertDialogPrimitive.Overlay className="fixed inset-0 z-[60] bg-[rgba(42,24,12,0.25)] backdrop-blur-xs data-[state=open]:animate-in data-[state=open]:fade-in-0" />
       <AlertDialogPrimitive.Content
         className={cn(
-          'fixed top-1/2 left-1/2 z-[60] grid w-[min(420px,94vw)] -translate-x-1/2 -translate-y-1/2 gap-2 rounded-2xl border border-border bg-background p-5 shadow-lg outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-98',
+          'fixed top-1/2 left-1/2 z-[60] grid w-[min(420px,94vw)] -translate-x-1/2 -translate-y-1/2 gap-2 rounded-3xl bg-white/80 p-5 backdrop-blur-2xl outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-98',
           className
         )}
         {...props}

@@ -6,7 +6,7 @@ const badgeVariants = cva('inline-flex w-fit shrink-0 items-center rounded-full 
   variants: {
     variant: {
       default: 'bg-accent text-accent-foreground',
-      outline: 'border border-border-strong text-muted-foreground'
+      outline: 'bg-secondary text-muted-foreground'
     }
   },
   defaultVariants: { variant: 'outline' }

@@ -14,7 +14,7 @@ function DialogContent({ className, children, ...props }: React.ComponentProps<t
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          'fixed top-1/2 left-1/2 z-50 max-h-[90vh] w-[min(520px,94vw)] -translate-x-1/2 -translate-y-1/2 overflow-auto rounded-2xl border border-border bg-background shadow-lg outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-98 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-98',
+          'fixed top-1/2 left-1/2 z-50 max-h-[90vh] w-[min(520px,94vw)] -translate-x-1/2 -translate-y-1/2 overflow-auto rounded-3xl bg-white/80 backdrop-blur-2xl outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-98 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-98',
           className
         )}
         {...props}
@@ -27,11 +27,11 @@ function DialogContent({ className, children, ...props }: React.ComponentProps<t
 
 function DialogHeader({ className, children, ...props }: React.ComponentProps<'header'>): React.JSX.Element {
   return (
-    <header className={cn('flex items-center justify-between border-b border-border px-[18px] py-3.5', className)} {...props}>
+    <header className={cn('flex items-center justify-between px-[18px] py-3.5', className)} {...props}>
       {children}
       <DialogPrimitive.Close
         aria-label="Close"
-        className="inline-grid size-8 cursor-pointer place-items-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring"
+        className="inline-grid size-8 cursor-pointer place-items-center rounded-xl text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring"
       >
         <Icon name="x" />
       </DialogPrimitive.Close>

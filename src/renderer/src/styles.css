@@ -20,23 +20,30 @@
 
 :root {
     color-scheme: light;
-    --bg: #ffffff;
+    --bg: #fff8f4;
+    /* Glass: panels are 10% white over the ambient backdrop. Raised parts
+       (inputs, cards, buttons) and dialogs need more fill to stay readable. */
+    --glass: rgba(255, 255, 255, 0.1);
+    --glass-raised: rgba(255, 255, 255, 0.5);
+    --glass-strong: rgba(255, 255, 255, 0.8);
+    --blur: blur(24px) saturate(160%);
     --surface: #ffffff;
-    --surface-2: #faf6f3;
-    --surface-3: #f4ede8;
-    --border: #efe7e1;
-    --border-strong: #e0d3ca;
+    --surface-2: rgba(255, 107, 53, 0.06);
+    --surface-3: rgba(255, 107, 53, 0.12);
+    --border: transparent;
+    --border-strong: transparent;
     --fg: #1f1a17;
-    --muted: #7a6f68;
+    --muted: #62574f;
     --accent: #ff6b35;
     --accent-strong: #c2410c; /* orange for text/links: 5:1 on white */
-    --accent-soft: #fff0e8;
+    --accent-soft: rgba(255, 107, 53, 0.12);
     --accent-ink: #2a1206; /* text on --accent: 7:1 */
     --ok: #2f855a;
     --danger: #c53030;
-    --radius: 10px;
-    --shadow-sm: 0 1px 2px rgba(60, 30, 10, 0.05);
-    --shadow-lg: 0 12px 40px rgba(60, 30, 10, 0.14);
+    --radius: 14px;
+    --radius-panel: 24px;
+    --shadow-sm: none;
+    --shadow-lg: none;
     --ease: 160ms ease;
 }
 
@@ -114,12 +121,20 @@ code {
 .app {
     display: grid;
     grid-template-columns: 300px 1fr;
+    gap: 12px;
+    padding: 12px;
     height: 100%;
-    background: radial-gradient(60rem 36rem at 100% -12%, rgba(255, 107, 53, 0.11), transparent 62%), radial-gradient(44rem 30rem at -8% 112%, rgba(255, 107, 53, 0.07), transparent 60%), var(--bg);
+    background:
+        radial-gradient(52rem 34rem at 100% -10%, rgba(255, 107, 53, 0.3), transparent 65%),
+        radial-gradient(40rem 30rem at -10% 110%, rgba(255, 107, 53, 0.24), transparent 62%),
+        radial-gradient(34rem 26rem at 45% 55%, rgba(255, 190, 120, 0.2), transparent 65%),
+        var(--bg);
 }
 .main {
     overflow: auto;
     min-width: 0;
+    border-radius: var(--radius-panel);
+    background: var(--surface);
 }
 .placeholder {
     padding: 48px;
@@ -130,9 +145,9 @@ code {
 
 /* sidebar */
 .sidebar {
-    background: rgba(255, 250, 246, 0.7);
-    backdrop-filter: blur(16px);
-    border-right: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius-panel);
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -140,8 +155,8 @@ code {
 .sidebar-top {
     display: flex;
     gap: 6px;
-    padding: 14px 12px 10px;
     align-items: center;
+    padding: 14px 12px 10px;
 }
 .search {
     flex: 1;
@@ -150,12 +165,9 @@ code {
     gap: 8px;
     padding: 0 10px;
     background: var(--surface);
-    border: 1px solid var(--border);
     border-radius: var(--radius);
     color: var(--muted);
-    transition:
-        border-color var(--ease),
-        box-shadow var(--ease);
+    transition: box-shadow var(--ease);
 }
 .search input {
     flex: 1;
@@ -166,7 +178,6 @@ code {
     min-width: 0;
 }
 .search:focus-within {
-    border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-soft);
 }
 .tree {
@@ -202,7 +213,6 @@ code {
 }
 .row.repo.selected {
     background: var(--accent-soft);
-    /* box-shadow: inset 2px 0 0 var(--accent); */
     font-weight: 500;
 }
 .host-label {
@@ -242,7 +252,7 @@ code {
 .spinner {
     width: 12px;
     height: 12px;
-    border: 2px solid var(--border-strong);
+    border: 2px solid rgba(255, 107, 53, 0.2);
     border-top-color: var(--accent);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
@@ -299,16 +309,14 @@ code {
     gap: 6px;
     padding: 3px 11px;
     border-radius: 14px;
-    border: 1px solid var(--border-strong);
     background: var(--surface);
     transition: all var(--ease);
 }
 button.chip:hover {
-    border-color: var(--accent);
+    background: var(--accent-soft);
 }
 .chip-active {
     background: var(--accent-soft);
-    border-color: var(--accent);
     color: var(--accent-strong);
     font-weight: 500;
 }
@@ -321,7 +329,6 @@ button.chip:hover {
     list-style: none;
     margin: 0;
     padding: 10px 18px;
-    border-bottom: 1px solid var(--border);
     display: grid;
     gap: 8px;
 }
@@ -426,10 +433,8 @@ section h3 {
 }
 .stat {
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 18px;
     padding: 14px;
-    box-shadow: var(--shadow-sm);
 }
 .stat-value {
     font-size: 24px;
@@ -496,7 +501,6 @@ dl {
     grid-template-columns: 160px 1fr;
     gap: 12px;
     padding: 8px 0;
-    border-bottom: 1px solid var(--border);
 }
 .kv dd {
     margin: 0;
@@ -548,11 +552,9 @@ dl {
     flex: 1;
     display: flex;
     min-height: 0;
-    border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 18px;
     overflow: hidden;
     background: var(--surface);
-    box-shadow: var(--shadow-sm);
 }
 .graph-list {
     flex: 1;
@@ -633,8 +635,7 @@ dl {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    border: 1px solid transparent;
-}
+    }
 .ref-branch {
     background: var(--accent-soft);
     color: var(--accent-strong);
@@ -653,7 +654,6 @@ dl {
 }
 .ref-current {
     font-weight: 700;
-    border-color: currentColor;
 }
 .ref-more {
     background: var(--surface-3);
@@ -662,7 +662,6 @@ dl {
 .commit-panel {
     width: 360px;
     flex: none;
-    border-left: 1px solid var(--border);
     background: var(--surface-2);
     overflow: auto;
     padding: 14px;
@@ -736,7 +735,6 @@ input[type="checkbox"] {
     display: flex;
     align-items: center;
     gap: 2px;
-    border-bottom: 1px solid var(--border);
 }
 
 /* dashboard */
@@ -854,4 +852,18 @@ input[type="checkbox"] {
     font-weight: 600;
     padding-top: 7px;
     padding-bottom: 7px;
+}
+
+/* the main pane is one white container, so inner blocks are tinted instead of white */
+.stat {
+    background: var(--surface-2);
+}
+.dash-row:hover:not(:disabled) {
+    background: var(--accent-soft);
+}
+.sidebar-top .search {
+    background: var(--surface-2);
+}
+.dashboard .stat-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }

@@ -1,6 +1,6 @@
 # GitDeck design system
 
-Minimal, clean, ambient. White surfaces, one orange accent, soft shadows and quiet motion. The source of truth is the CSS variables in `src/renderer/src/styles.css`; this file explains how to use them.
+Minimal, clean, ambient. Floating rounded glass panels over an orange glow: no borders, no shadows, one orange accent and quiet motion. The source of truth is the CSS variables in `src/renderer/src/styles.css`; this file explains how to use them.
 
 ## shadcn/ui
 
@@ -21,7 +21,7 @@ Used so far: Button (`default`, `outline`, `ghost`; sizes `default`, `sm`, `icon
 ## Principles
 
 1. **One accent.** Orange `#FF6B35` marks what is active, selected or primary. Everything else is neutral.
-2. **Ambient, not decorative.** Depth comes from a faint orange glow behind the window, translucent surfaces and soft shadows. No gradients on controls, no heavy borders.
+2. **Floating panels.** The sidebar and main pane are separate solid white rounded panels (24 px radius, 12 px gap) floating over the orange glow. The glow is the only thing behind them; there are no borders or shadows. Inside the main pane, blocks are tinted (`--surface-2`) rather than white. Dialogs use `--glass-strong` (80 % white) with backdrop blur. `--glass` (10 % white) is kept as a token for any future translucent surface.
 3. **Quiet motion.** Transitions are 160 ms ease and only change colour, background or a 1 px press. Reduced motion disables them.
 4. **Content first.** Chrome is light, text is dark warm grey, and data (commits, counts) gets the space.
 
@@ -29,17 +29,18 @@ Used so far: Button (`default`, `outline`, `ghost`; sizes `default`, `sm`, `icon
 
 | Token | Value | Use |
 |---|---|---|
-| `--bg` | `#ffffff` | Window and surface base |
-| `--surface` | `#ffffff` | Cards, inputs, dialogs, graph panel |
-| `--surface-2` | `#faf6f3` | Hover rows, commit panel, disabled inputs |
-| `--surface-3` | `#f4ede8` | Tracks (progress, language bar), skeleton |
-| `--border` | `#efe7e1` | Hairlines and card outlines |
-| `--border-strong` | `#e0d3ca` | Inputs, buttons, chips |
+| `--bg` | `#fff8f4` | Window base under the glow |
+| `--glass` | `rgba(255,255,255,.10)` | Unused for now; reserved for translucent surfaces |
+| `--surface` | `#ffffff` | Sidebar, main pane, inputs, chips |
+| `--glass-strong` | `rgba(255,255,255,.80)` | Dialogs |
+| `--surface-2` | `rgba(255,107,53,.06)` | Hover rows, commit panel |
+| `--surface-3` | `rgba(255,107,53,.12)` | Tracks (progress, language bar), skeleton |
+| `--border`, `--border-strong` | `transparent` | Kept only so shadcn classes resolve |
 | `--fg` | `#1f1a17` | Primary text |
-| `--muted` | `#7a6f68` | Secondary text (4.9:1 on white) |
+| `--muted` | `#62574f` | Secondary text |
 | `--accent` | `#ff6b35` | Fills, indicators, focus ring, nodes |
 | `--accent-strong` | `#c2410c` | Orange **text** (5:1 on white) |
-| `--accent-soft` | `#fff0e8` | Selected and hover backgrounds |
+| `--accent-soft` | `rgba(255,107,53,.12)` | Selected and hover backgrounds |
 | `--accent-ink` | `#2a1206` | Text on an orange fill (7:1) |
 | `--ok` / `--danger` | `#2f855a` / `#c53030` | Additions, deletions, errors |
 
@@ -55,7 +56,7 @@ Graph lanes and the language bar share one palette, orange first:
 
 Defined in `GraphRowSvg.tsx` (`GRAPH_COLORS`) and `Overview.tsx` (`LANG_COLORS`). Keep the two in sync. Avatar fallbacks use a soft tint (`hsl(h 70% 90%)`) with dark text (`hsl(h 50% 26%)`).
 
-Ref badges: local branch uses `--accent-soft`/`--accent-strong`, remote `#eef2f6`/`#3f5a73`, tag `#fff4d6`/`#7a4d00`. The current branch is bold with a border.
+Ref badges: local branch uses `--accent-soft`/`--accent-strong`, remote `#eef2f6`/`#3f5a73`, tag `#fff4d6`/`#7a4d00`. The current branch is bold.
 
 ## Typography
 
@@ -68,13 +69,13 @@ Ref badges: local branch uses `--accent-soft`/`--accent-strong`, remote `#eef2f6
 ## Spacing, radius, elevation
 
 - Spacing is a 4 px grid in practice: 4, 6, 8, 10, 12, 14, 18, 24, 28, 32.
-- Radius: controls `--radius` (10 px), cards 12 px, dialog 16 px, pills 10–14 px.
-- Elevation: `--shadow-sm` for cards and buttons, `--shadow-lg` for the dialog only. Borders and shadows are warm-tinted, never pure black.
+- Radius: controls `--radius` (14 px), cards 18 px, panels `--radius-panel` (24 px), dialogs 24 px, pills fully round.
+- No borders or shadows. `--border`, `--border-strong`, `--shadow-sm` and `--shadow-lg` are kept as tokens (transparent / none) so shadcn classes still resolve. Focus rings are the only box-shadow allowed, for accessibility.
 
 ## Layout
 
-- Two columns: 300 px translucent sidebar (`rgba(255,250,246,.7)` with a 16 px blur), flexible main pane.
-- Background glow: two radial orange gradients (11 % top-right, 7 % bottom-left) on `.app`.
+- Two floating white panels on a 12 px gutter: a 300 px sidebar and a flexible main pane, both 24 px radius.
+- Background glow: three radial gradients on `.app` (orange 30 % top-right, orange 24 % bottom-left, amber 20 % centre). The glow is what the panels float on, so keep it.
 - Repo view: header, tab bar, tab body. The Graph tab fills the remaining height, and the commit panel is 360 px on the right.
 - Graph rows are fixed at 28 px and lanes at 16 px (`ROW_HEIGHT`, `LANE_WIDTH`), because the virtualised list depends on them.
 
@@ -82,18 +83,18 @@ Ref badges: local branch uses `--accent-soft`/`--accent-strong`, remote `#eef2f6
 
 | Component | Notes |
 |---|---|
-| Button `.btn` | 32 px min height, white with a strong border. Hover turns the border orange and the fill `--accent-soft`. |
+| Button `.btn` | 32 px min height, 50 % white fill, no border. Hover fills with `--accent-soft`. |
 | Primary `.btn-primary` | Orange fill, `--accent-ink` text, weight 600. One per view where possible. |
 | Icon button `.icon-btn` | Transparent, muted. Hover uses `--accent-soft` and `--accent-strong`. Always needs an `aria-label`. |
-| Input | White, strong border. Focus: orange border plus a 3 px `--accent-soft` ring. |
-| Chip `.chip` | Pill. Active state uses orange border, soft fill and `--accent-strong` text. |
-| Badge `.badge` | 10 px outlined pill for archived, fork, visibility. |
-| Tab `.tab` | Muted text, 2 px orange underline when active. |
-| Row `.row` | 8 px radius. Selected repo gets `--accent-soft` plus a 2 px inset orange bar. |
-| Stat card `.stat` | White, hairline border, small shadow, 24 px value. |
+| Input | 55 % white fill, no border. Focus: 2 px orange ring. |
+| Chip `.chip` | Pill. Active state uses a soft orange fill and `--accent-strong` text. |
+| Badge `.badge` | 10 px tinted pill for archived, fork, visibility. |
+| Tab `.tab` | Muted text. Active tab is a soft orange pill with `--accent-strong` text. |
+| Row `.row` | 8 px radius. Selected repo gets an `--accent-soft` fill. |
+| Stat card `.stat` | 50 % white fill, 18 px radius, 24 px value. |
 | Banner `.banner` | Icon plus message, with a Retry button for errors. |
 | Skeleton `.skeleton` | Warm shimmer, 1.4 s. |
-| Dialog `.dialog` | 520 px max, 16 px radius, warm blurred overlay. Esc and overlay click close it. |
+| Dialog `.dialog` | 520 px max, 24 px radius, 80 % white with backdrop blur, warm blurred overlay. Esc and overlay click close it. |
 | Dashboard `.dashboard` | Home view when no repo is selected: stat cards, "Needs attention" list of linked repos, then recently opened and recently active. Rows are `.dash-row`; status pills are `.flag-warn`, `.flag-info`, `.flag-error`. |
 | Avatar | Image, or initials on a soft tint when missing or broken. |
 | Icon | Inline feather-style SVG, 2 px stroke, `currentColor`. No emoji as icons. |
