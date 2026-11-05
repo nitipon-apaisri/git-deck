@@ -11,7 +11,7 @@ interface ProjectIconProps {
   icon: string
   /** One of the eight palette ids: blue, teal, violet, amber, rose, green, pink, gray. */
   color: string
-  size?: 'md' | 'sm'
+  size?: 'lg' | 'md' | 'sm'
 }
 
 /** The tile that names a project. Pair it with the name: colour alone never does. */

@@ -22,6 +22,8 @@ export type MenuEntry =
       trailing?: ReactNode
       /** Set for a checkable item: it is then a `menuitemcheckbox`. */
       checked?: boolean
+      /** With `checked`: one choice out of several, so a `menuitemradio`. */
+      radio?: boolean
       /** Several toggles in a row: the menu stays open after this one. */
       keepOpen?: boolean
       danger?: boolean
@@ -37,6 +39,8 @@ interface MenuProps {
   /** Where the top-left corner goes, in viewport pixels. It is moved to stay on screen. */
   at: { x: number; y: number }
   entries: readonly MenuEntry[]
+  /** At least this wide, for a menu that hangs under a button. */
+  minWidth?: number
   onClose: () => void
 }
 
@@ -48,7 +52,7 @@ const MARGIN = 8
  * opener when the menu goes. It renders into `document.body`, so it is not clipped by the
  * island it was opened from. It must not be opened from inside a modal dialog.
  */
-export function Menu({ label, at, entries, onClose }: MenuProps) {
+export function Menu({ label, at, entries, minWidth, onClose }: MenuProps) {
   const ref = useRef<HTMLDivElement>(null)
   const closeRef = useRef(onClose)
   useEffect(() => {
@@ -124,7 +128,7 @@ export function Menu({ label, at, entries, onClose }: MenuProps) {
       role="menu"
       aria-label={label}
       className={styles.menu}
-      style={position}
+      style={minWidth ? { ...position, minWidth } : position}
       onKeyDown={onKeyDown}
       onContextMenu={(e) => e.preventDefault()}
     >
@@ -144,7 +148,7 @@ export function Menu({ label, at, entries, onClose }: MenuProps) {
           <button
             key={entry.id}
             type="button"
-            role={checkable ? 'menuitemcheckbox' : 'menuitem'}
+            role={checkable ? (entry.radio ? 'menuitemradio' : 'menuitemcheckbox') : 'menuitem'}
             aria-checked={checkable ? entry.checked : undefined}
             disabled={entry.disabled}
             className={`${styles.item} ${entry.danger ? styles.danger : ''}`}

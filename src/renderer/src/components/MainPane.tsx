@@ -1,9 +1,11 @@
+import type { ReactNode } from 'react'
 import type { Account, Repo } from '@shared/types'
 import type { PaneId } from '../lib/splitState'
 import type { Split } from '../state/useSplit'
 import { RepoPane } from './repo/RepoPane'
 import { EmptyPane, type EmptyKind } from './split/EmptyPane'
 import { SplitView } from './split/SplitView'
+import { Island } from './ui'
 import styles from './MainPane.module.css'
 
 interface MainPaneProps {
@@ -16,6 +18,8 @@ interface MainPaneProps {
   /** Some account is still loading its repositories. */
   loading: boolean
   onLinksChanged: () => void
+  /** The project overview. It replaces the panes while it shows. */
+  overview: ReactNode
 }
 
 /**
@@ -29,7 +33,8 @@ export function MainPane({
   accounts,
   links,
   loading,
-  onLinksChanged
+  onLinksChanged,
+  overview
 }: MainPaneProps) {
   const { state } = split
 
@@ -72,6 +77,14 @@ export function MainPane({
         onActivate={() => split.setActive(id)}
         onClose={state.enabled ? () => split.close(id) : undefined}
       />
+    )
+  }
+
+  if (overview) {
+    return (
+      <main className={styles.main} aria-label="Project overview">
+        <Island className={styles.overview}>{overview}</Island>
+      </main>
     )
   }
 

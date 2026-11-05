@@ -146,3 +146,38 @@ export function partialNote(summary: ProjectSummary): string | null {
   }
   return 'Some counts could not be read from the host. Totals count only what is known.'
 }
+
+export interface Coverage {
+  commits: number
+  contributors: number
+  open: number
+  /** Repositories whose last activity is known. */
+  activity: number
+}
+
+/** How many repositories have a known value for each figure. */
+export function coverage(rows: readonly ProjectRow[]): Coverage {
+  const result: Coverage = { commits: 0, contributors: 0, open: 0, activity: 0 }
+  for (const { summary } of rows) {
+    if (!summary) continue
+    if (summary.commitCount !== null) result.commits++
+    if (summary.contributorCount !== null) result.contributors++
+    if (summary.openChangeRequests !== null) result.open++
+    if (summary.lastActivityAt) result.activity++
+  }
+  return result
+}
+
+/** The repository with the newest activity, for the "Last activity" card. */
+export function latestActivity(rows: readonly ProjectRow[]): ProjectRow | null {
+  let best: ProjectRow | null = null
+  let bestMs = -Infinity
+  for (const row of rows) {
+    const ms = row.summary?.lastActivityAt ? Date.parse(row.summary.lastActivityAt) : NaN
+    if (!Number.isNaN(ms) && ms > bestMs) {
+      best = row
+      bestMs = ms
+    }
+  }
+  return best
+}

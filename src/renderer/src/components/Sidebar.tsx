@@ -1,11 +1,15 @@
 import { useMemo, useState } from 'react'
-import type { Account } from '@shared/types'
+import type { Account, Project, Repo } from '@shared/types'
 import { timeAgo } from '../lib/format'
 import { hostTileOf } from '../lib/presets'
+import { remoteIdOf } from '../lib/projectForm'
+import type { ProjectView } from '../lib/projectScope'
 import { buildTree, flattenTree, type AccountNode, type TreeRow as Row } from '../lib/sidebarTree'
 import type { AccountRepos } from '../lib/workspaceReducer'
 import { readStored, writeStored } from '../state/storage'
 import { useNow } from '../state/useNow'
+import { RepoProjectMenu } from './projects/RepoProjectMenu'
+import { ScopeSwitcher } from './projects/ScopeSwitcher'
 import { Button, HostTile, Icon, IconButton, Island, Spinner, TreeRow } from './ui'
 import styles from './Sidebar.module.css'
 
@@ -18,6 +22,28 @@ function readCollapsed(): Set<string> {
   } catch {
     return new Set()
   }
+}
+
+/** Everything the sidebar needs to know about projects. */
+export interface SidebarProjects {
+  projects: Project[]
+  /** The active project, or `null` for "All repositories". */
+  scope: Project | null
+  /** The project's repositories and unavailable keys. `null` without a project scope. */
+  view: ProjectView | null
+  overviewActive: boolean
+  /** The last project change that failed, in words. */
+  error: string | null
+  onDismissError: () => void
+  /** `null` picks "All repositories". */
+  onScope: (projectId: string | null) => void
+  onNewProject: (repoKeys?: string[]) => void
+  onManage: () => void
+  /** Opens the project's form, where repositories are added. */
+  onEditScope: () => void
+  onOverview: () => void
+  onToggleMember: (projectId: string, repoKey: string, member: boolean) => void
+  onRemoveUnavailable: (repoKey: string) => void
 }
 
 interface SidebarProps {
@@ -33,6 +59,7 @@ interface SidebarProps {
   onConnect: () => void
   onRefresh: (accountId: string) => void
   onRefreshAll: () => void
+  projects: SidebarProjects
 }
 
 export function Sidebar({
@@ -45,17 +72,26 @@ export function Sidebar({
   onOpenInSplit,
   onConnect,
   onRefresh,
-  onRefreshAll
+  onRefreshAll,
+  projects: proj
 }: SidebarProps) {
   const [query, setQuery] = useState('')
+  const [menu, setMenu] = useState<{ repo: Repo; x: number; y: number } | null>(null)
   const [collapsed, setCollapsed] = useState<Set<string>>(readCollapsed)
   const now = useNow()
   const searching = query.trim() !== ''
 
+  const { scope, view } = proj
   const nodes = useMemo(() => {
-    const repos = Object.fromEntries(Object.entries(byAccount).map(([id, a]) => [id, a.repos]))
+    const repos = view
+      ? view.reposByAccount
+      : Object.fromEntries(Object.entries(byAccount).map(([id, a]) => [id, a.repos]))
     return buildTree(accounts, repos, query)
-  }, [accounts, byAccount, query])
+  }, [accounts, byAccount, query, view])
+  // Keys the lists cannot show. A search only keeps the ones whose id matches.
+  const unavailable = (view?.unavailable ?? []).filter(
+    (key) => !searching || key.toLowerCase().includes(query.trim().toLowerCase())
+  )
   const rows = useMemo(
     () => flattenTree(nodes, collapsed, searching),
     [nodes, collapsed, searching]
@@ -80,7 +116,7 @@ export function Sidebar({
 
   return (
     <Island as="aside" aria-label="Repositories" className={styles.sidebar}>
-      {accounts.length === 0 ? (
+      {accounts.length === 0 && !scope ? (
         <div className={styles.empty}>
           <h2 className={styles.emptyTitle}>No accounts yet</h2>
           <p className={styles.emptyText}>
@@ -93,17 +129,42 @@ export function Sidebar({
       ) : (
         <>
           <div className={styles.search}>
+            <ScopeSwitcher
+              projects={proj.projects}
+              scope={scope}
+              onSelect={proj.onScope}
+              onNew={() => proj.onNewProject()}
+              onManage={proj.onManage}
+            />
             <label className={styles.searchBox}>
               <Icon name="search" size="sm" />
               <input
                 type="search"
                 className={styles.searchInput}
-                aria-label="Filter repositories"
-                placeholder="Filter repositories"
+                aria-label={scope ? 'Filter repositories in this project' : 'Filter repositories'}
+                placeholder={scope ? 'Filter in project' : 'Filter repositories'}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
             </label>
+            {proj.error ? (
+              <div role="alert" className={styles.notice}>
+                <Icon name="alert" size="sm" />
+                <span className={styles.noticeText}>{proj.error}</span>
+                <IconButton label="Dismiss" icon="x" onClick={proj.onDismissError} />
+              </div>
+            ) : null}
+            {scope ? (
+              <button
+                type="button"
+                className={styles.overview}
+                aria-pressed={proj.overviewActive}
+                onClick={proj.onOverview}
+              >
+                <Icon name="layers" size="sm" />
+                Project overview
+              </button>
+            ) : null}
           </div>
           <nav className={styles.list} aria-label="Accounts and repositories">
             {rows.map((row) => (
@@ -119,18 +180,57 @@ export function Sidebar({
                 onOpenInSplit={onOpenInSplit}
                 onToggle={toggle}
                 onRefresh={onRefresh}
+                onMenu={(repo, x, y) => setMenu({ repo, x, y })}
               />
             ))}
-            {searching && nodes.length === 0 ? (
-              <p className={styles.noMatch}>No repositories match “{query.trim()}”.</p>
+            {unavailable.length > 0 ? (
+              <>
+                <div className={styles.unavailableHead}>
+                  <Icon name="alert" size="sm" />
+                  Unavailable ({unavailable.length})
+                </div>
+                {unavailable.map((key) => (
+                  <TreeRow
+                    key={key}
+                    level="repo"
+                    onClick={() => undefined}
+                    title="No loaded repository list has this one: access lost or account removed"
+                    leading={<Icon name="repo" size="sm" />}
+                    trailing={
+                      <IconButton
+                        label={`Remove ${remoteIdOf(key)} from project`}
+                        icon="x"
+                        className={styles.rowAction}
+                        onClick={() => proj.onRemoveUnavailable(key)}
+                      />
+                    }
+                  >
+                    <span className={styles.dim}>{remoteIdOf(key)}</span>
+                  </TreeRow>
+                ))}
+              </>
+            ) : null}
+            {scope && !searching && scope.repoKeys.length === 0 ? (
+              <p className={styles.noMatch}>This project has no repositories yet.</p>
+            ) : null}
+            {searching && nodes.length === 0 && unavailable.length === 0 ? (
+              <p className={styles.noMatch}>
+                No repositories match “{query.trim()}”{scope ? ' in this project' : ''}.
+              </p>
             ) : null}
           </nav>
         </>
       )}
       <div className={styles.footer}>
-        <Button variant="ghost" icon="plus" onClick={onConnect}>
-          Connect account
-        </Button>
+        {scope ? (
+          <Button variant="ghost" icon="plus" onClick={proj.onEditScope}>
+            Add repositories
+          </Button>
+        ) : (
+          <Button variant="ghost" icon="plus" onClick={onConnect}>
+            Connect account
+          </Button>
+        )}
         <span
           className={styles.updated}
           title={lastFetched !== null ? `Updated ${timeAgo(lastFetched, now)}` : undefined}
@@ -141,6 +241,17 @@ export function Sidebar({
           <IconButton label="Refresh all" icon="refresh" onClick={onRefreshAll} />
         ) : null}
       </div>
+      {menu ? (
+        <RepoProjectMenu
+          repo={menu.repo}
+          at={{ x: menu.x, y: menu.y }}
+          projects={proj.projects}
+          scope={scope}
+          onToggle={(projectId, member) => proj.onToggleMember(projectId, menu.repo.key, member)}
+          onNewProject={() => proj.onNewProject([menu.repo.key])}
+          onClose={() => setMenu(null)}
+        />
+      ) : null}
     </Island>
   )
 }
@@ -156,6 +267,7 @@ interface SidebarRowProps {
   onOpenInSplit: (repoKey: string) => void
   onToggle: (key: string) => void
   onRefresh: (accountId: string) => void
+  onMenu: (repo: Repo, x: number, y: number) => void
 }
 
 function SidebarRow({
@@ -168,7 +280,8 @@ function SidebarRow({
   onSelect,
   onOpenInSplit,
   onToggle,
-  onRefresh
+  onRefresh,
+  onMenu
 }: SidebarRowProps) {
   if (row.kind === 'host') {
     const { account } = row.node
@@ -204,13 +317,29 @@ function SidebarRow({
       onClick={() => onSelect(repo.key)}
       title={repo.fullName}
       leading={<Icon name="repo" size="sm" />}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        onMenu(repo, e.clientX, e.clientY)
+      }}
       action={
-        <IconButton
-          label={`Open ${repo.name} in split view`}
-          icon="columns"
-          className={styles.rowAction}
-          onClick={() => onOpenInSplit(repo.key)}
-        />
+        <>
+          <IconButton
+            label={`Project options for ${repo.name}`}
+            icon="more"
+            className={styles.rowAction}
+            aria-haspopup="menu"
+            onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect()
+              onMenu(repo, rect.left, rect.bottom + 4)
+            }}
+          />
+          <IconButton
+            label={`Open ${repo.name} in split view`}
+            icon="columns"
+            className={styles.rowAction}
+            onClick={() => onOpenInSplit(repo.key)}
+          />
+        </>
       }
       trailing={
         <>
