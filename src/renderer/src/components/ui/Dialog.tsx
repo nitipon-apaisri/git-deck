@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, type ReactNode } from 'react'
 import { IconButton } from './Button'
 import styles from './Dialog.module.css'
 
@@ -16,8 +16,8 @@ interface DialogProps {
 }
 
 /**
- * Uses the native modal `<dialog>`, which traps focus, closes on Escape and puts
- * focus back on the opener. Mount it to open it, unmount it to close it.
+ * Uses the native modal `<dialog>`, which traps focus and closes on Escape. Focus goes
+ * back to the opener when it unmounts. Mount it to open it, unmount it to close it.
  */
 export function Dialog({
   title,
@@ -37,9 +37,12 @@ export function Dialog({
     closeRef.current = onClose
   })
 
-  useEffect(() => {
+  // A layout effect, so cleanup runs while the dialog is still in the page. React removes
+  // the element before passive cleanups, and a detached dialog cannot give focus back.
+  useLayoutEffect(() => {
     const dialog = ref.current
     if (!dialog) return
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
     dialog.showModal()
     dialog.querySelector<HTMLElement>('[data-autofocus]')?.focus()
     const onCancel = (event: Event): void => {
@@ -50,8 +53,9 @@ export function Dialog({
     dialog.addEventListener('cancel', onCancel)
     return () => {
       dialog.removeEventListener('cancel', onCancel)
-      // Closing before unmount is what returns focus to the opener.
       if (dialog.open) dialog.close()
+      // Put focus back on whatever opened the dialog, if it is still there.
+      if (opener?.isConnected) opener.focus()
     }
   }, [])
 
