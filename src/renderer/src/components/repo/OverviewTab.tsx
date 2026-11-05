@@ -33,7 +33,11 @@ export function OverviewTab({ repo, accountType, summary, loading }: OverviewTab
     <div className={styles.overview}>
       <div className={styles.stats}>
         {statItems(repo, summary, accountType, loading).map((item) => (
-          <StatCard key={item.id} label={item.label} value={item.value} />
+          <StatCard
+            key={item.id}
+            label={item.label}
+            value={typeof item.value === 'number' ? countText(item.value) : item.value}
+          />
         ))}
       </div>
 

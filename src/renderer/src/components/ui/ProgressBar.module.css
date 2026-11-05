@@ -1,7 +1,7 @@
 .track {
   height: 6px;
   overflow: hidden;
-  border-radius: var(--radius-round);
+  border-radius: var(--radius-xs);
   background: var(--neutral);
 }
 .fill {
