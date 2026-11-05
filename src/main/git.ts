@@ -1,11 +1,23 @@
 // Local git service. No electron import, so it runs under tsx tests.
 import { execFile, spawn } from 'node:child_process'
-import type { CommitDetail, CommitFile, GraphCommit, GraphRef, LocalInfo } from '../shared/types'
+import { Semaphore } from './semaphore'
+import type {
+  CommitDetail,
+  CommitFile,
+  GraphCommit,
+  GraphRef,
+  LocalInfo,
+  LocalRemote
+} from '../shared/types'
 
 const MAX_BUFFER = 64 * 1024 * 1024
 const HASH_RE = /^[0-9a-f]{7,64}$/i
 const FS = '\x1f'
 const RS = '\x1e'
+
+// Two panes and "Fetch all" can start work together, so cap child processes.
+const MAX_GIT_PROCESSES = 4
+const slots = new Semaphore(MAX_GIT_PROCESSES)
 
 function gitEnv(extra: Record<string, string> = {}): NodeJS.ProcessEnv {
   return { ...process.env, ...extra, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C' }
@@ -13,17 +25,20 @@ function gitEnv(extra: Record<string, string> = {}): NodeJS.ProcessEnv {
 
 // execFile, never a shell: arguments are not interpreted.
 function run(cwd: string, args: string[], env: Record<string, string> = {}): Promise<string> {
-  return new Promise((resolve, reject) => {
-    execFile(
-      'git',
-      args,
-      { cwd, env: gitEnv(env), maxBuffer: MAX_BUFFER, encoding: 'utf8' },
-      (err, stdout, stderr) => {
-        if (err) reject(new Error(stderr.trim() || err.message))
-        else resolve(stdout)
-      }
-    )
-  })
+  return slots.run(
+    () =>
+      new Promise((resolve, reject) => {
+        execFile(
+          'git',
+          args,
+          { cwd, env: gitEnv(env), maxBuffer: MAX_BUFFER, encoding: 'utf8' },
+          (err, stdout, stderr) => {
+            if (err) reject(new Error(stderr.trim() || err.message))
+            else resolve(stdout)
+          }
+        )
+      })
+  )
 }
 
 async function tryRun(cwd: string, args: string[]): Promise<string | null> {
@@ -115,16 +130,21 @@ async function countLines(cwd: string, args: string[]): Promise<number | null> {
   return out === null ? null : out.split('\n').filter(Boolean).length
 }
 
-export async function getLocalInfo(cwd: string): Promise<LocalInfo> {
-  const branch = await tryRun(cwd, ['symbolic-ref', '--short', '-q', 'HEAD'])
-  const head = await tryRun(cwd, ['rev-parse', '--verify', '-q', 'HEAD'])
-
-  const remotesRaw = await tryRun(cwd, ['remote', '-v'])
+/** Fetch remotes with credentials stripped. Empty when git cannot list them. */
+export async function getRemotes(cwd: string): Promise<LocalRemote[]> {
+  const raw = await tryRun(cwd, ['remote', '-v'])
   const remotes = new Map<string, string>()
-  for (const line of (remotesRaw ?? '').split('\n')) {
+  for (const line of (raw ?? '').split('\n')) {
     const m = /^(\S+)\t(\S+) \(fetch\)$/.exec(line)
     if (m) remotes.set(m[1], stripCredentials(m[2]))
   }
+  return [...remotes].map(([name, url]) => ({ name, url }))
+}
+
+export async function getLocalInfo(cwd: string): Promise<LocalInfo> {
+  const branch = await tryRun(cwd, ['symbolic-ref', '--short', '-q', 'HEAD'])
+  const head = await tryRun(cwd, ['rev-parse', '--verify', '-q', 'HEAD'])
+  const remotes = new Map((await getRemotes(cwd)).map((r) => [r.name, r.url] as const))
 
   const tagsRaw = await tryRun(cwd, ['tag', '--sort=-creatordate'])
   const tagList = tagsRaw ? tagsRaw.split('\n').filter(Boolean) : []
@@ -210,6 +230,15 @@ export function cloneRepo(
   dest: string,
   env: Record<string, string> = {},
   onLine: (line: string) => void = () => {}
+): Promise<void> {
+  return slots.run(() => cloneProcess(url, dest, env, onLine))
+}
+
+function cloneProcess(
+  url: string,
+  dest: string,
+  env: Record<string, string>,
+  onLine: (line: string) => void
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const child = spawn('git', ['clone', '--progress', '--', url, dest], { env: gitEnv(env) })

@@ -1,21 +1,24 @@
 import { join } from 'node:path'
-import { app, BrowserWindow, net, session, shell } from 'electron'
+import { app, BrowserWindow, net, safeStorage, session, shell } from 'electron'
 import { configureFetch } from './http'
+import { registerIpc } from './ipc'
+import { Store, type TokenCrypto } from './store'
 import { installCertVerifyProc } from './tls'
-
-const isHttp = (url: string): boolean => {
-  try {
-    const { protocol } = new URL(url)
-    return protocol === 'http:' || protocol === 'https:'
-  } catch {
-    return false
-  }
-}
+import { isAppUrl as isAppUrlFor, isHttp } from './urls'
 
 // Only the dev server origin (dev) or our own bundle (prod) may be navigated to.
 const devUrl = process.env['ELECTRON_RENDERER_URL']
-const isAppUrl = (url: string): boolean =>
-  devUrl ? url.startsWith(devUrl) : url.startsWith('file://')
+const isAppUrl = (url: string): boolean => isAppUrlFor(url, devUrl)
+
+// Linux without a keyring falls back to a plaintext "basic_text" backend. That is
+// not safe storage for a token, so treat it as unavailable.
+const tokenCrypto: TokenCrypto = {
+  isAvailable: () =>
+    safeStorage.isEncryptionAvailable() &&
+    !(process.platform === 'linux' && safeStorage.getSelectedStorageBackend() === 'basic_text'),
+  encrypt: (plain) => safeStorage.encryptString(plain),
+  decrypt: (data) => safeStorage.decryptString(data)
+}
 
 function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
@@ -62,10 +65,14 @@ if (!app.requestSingleInstanceLock()) {
     win.focus()
   })
 
-  void app.whenReady().then(() => {
+  void app.whenReady().then(async () => {
     // net.fetch uses the OS certificate store, so internal CAs work.
     configureFetch((input, init) => net.fetch(input, init))
     installCertVerifyProc(session.defaultSession)
+    const store = new Store(app.getPath('userData'), tokenCrypto)
+    await store.load()
+    // Register before the window exists so the first renderer call finds a handler.
+    registerIpc(store)()
     createWindow()
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow()
