@@ -4,23 +4,3 @@
   min-width: 0;
   min-height: 0;
 }
-.main > * {
-  flex: 1;
-}
-.empty {
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
-  padding: var(--space-6);
-  text-align: center;
-}
-.emptyTitle {
-  margin: 0;
-  font-size: 15px;
-  line-height: 22px;
-  font-weight: 600;
-}
-.emptyText {
-  margin: 0;
-  color: var(--text-muted);
-}

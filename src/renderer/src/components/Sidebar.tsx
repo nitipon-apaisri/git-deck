@@ -26,7 +26,10 @@ interface SidebarProps {
   /** repo key -> local folder */
   links: Record<string, string>
   selectedKey: string | null
+  /** repo key -> the pane (1 or 2) that shows it. Empty when split view is off. */
+  paneMarks: Record<string, 1 | 2>
   onSelect: (repoKey: string) => void
+  onOpenInSplit: (repoKey: string) => void
   onConnect: () => void
   onRefresh: (accountId: string) => void
   onRefreshAll: () => void
@@ -37,7 +40,9 @@ export function Sidebar({
   byAccount,
   links,
   selectedKey,
+  paneMarks,
   onSelect,
+  onOpenInSplit,
   onConnect,
   onRefresh,
   onRefreshAll
@@ -109,7 +114,9 @@ export function Sidebar({
                 byAccount={byAccount}
                 links={links}
                 selectedKey={selectedKey}
+                paneMarks={paneMarks}
                 onSelect={onSelect}
+                onOpenInSplit={onOpenInSplit}
                 onToggle={toggle}
                 onRefresh={onRefresh}
               />
@@ -144,7 +151,9 @@ interface SidebarRowProps {
   byAccount: Record<string, AccountRepos>
   links: Record<string, string>
   selectedKey: string | null
+  paneMarks: Record<string, 1 | 2>
   onSelect: (repoKey: string) => void
+  onOpenInSplit: (repoKey: string) => void
   onToggle: (key: string) => void
   onRefresh: (accountId: string) => void
 }
@@ -155,7 +164,9 @@ function SidebarRow({
   byAccount,
   links,
   selectedKey,
+  paneMarks,
   onSelect,
+  onOpenInSplit,
   onToggle,
   onRefresh
 }: SidebarRowProps) {
@@ -185,6 +196,7 @@ function SidebarRow({
     )
   }
   const { repo } = row
+  const mark = paneMarks[repo.key]
   return (
     <TreeRow
       level="repo"
@@ -192,8 +204,26 @@ function SidebarRow({
       onClick={() => onSelect(repo.key)}
       title={repo.fullName}
       leading={<Icon name="repo" size="sm" />}
+      action={
+        <IconButton
+          label={`Open ${repo.name} in split view`}
+          icon="columns"
+          className={styles.rowAction}
+          onClick={() => onOpenInSplit(repo.key)}
+        />
+      }
       trailing={
         <>
+          {mark ? (
+            <span
+              className={styles.paneMark}
+              role="img"
+              aria-label={`Shown in pane ${mark}`}
+              title={`Shown in pane ${mark}`}
+            >
+              {mark}
+            </span>
+          ) : null}
           {repo.archived ? <span className={styles.pill}>archived</span> : null}
           {repo.fork ? <span className={styles.pill}>fork</span> : null}
           {repo.visibility === 'private' ? <Icon name="lock" size="sm" label="Private" /> : null}

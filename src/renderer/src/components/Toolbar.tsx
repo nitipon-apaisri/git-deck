@@ -1,14 +1,28 @@
 import type { Account } from '@shared/types'
 import { hostTileOf } from '../lib/presets'
-import { HostTile, Icon } from './ui'
+import type { Orientation } from '../lib/splitState'
+import { HostTile, Icon, IconButton } from './ui'
 import styles from './Toolbar.module.css'
 
 interface ToolbarProps {
   accounts: Account[]
   onOpenAccounts: () => void
+  splitEnabled: boolean
+  orientation: Orientation
+  onToggleSplit: () => void
+  onToggleOrientation: () => void
+  onSwap: () => void
 }
 
-export function Toolbar({ accounts, onOpenAccounts }: ToolbarProps) {
+export function Toolbar({
+  accounts,
+  onOpenAccounts,
+  splitEnabled,
+  orientation,
+  onToggleSplit,
+  onToggleOrientation,
+  onSwap
+}: ToolbarProps) {
   const names = accounts.map((a) => a.label).join(', ')
   return (
     <header className={styles.toolbar}>
@@ -19,6 +33,29 @@ export function Toolbar({ accounts, onOpenAccounts }: ToolbarProps) {
         <span className={styles.name}>GitDeck</span>
       </div>
       <span className={styles.spacer} />
+      <div className={styles.split} role="group" aria-label="Split view">
+        {splitEnabled ? (
+          <>
+            <IconButton
+              label={
+                orientation === 'horizontal'
+                  ? 'Stack the panes on top of each other'
+                  : 'Put the panes side by side'
+              }
+              icon="rotate"
+              onClick={onToggleOrientation}
+            />
+            <IconButton label="Swap the panes" icon="swap" onClick={onSwap} />
+          </>
+        ) : null}
+        <IconButton
+          label="Split view (Ctrl/Cmd+Alt+S)"
+          icon="columns"
+          active={splitEnabled}
+          aria-pressed={splitEnabled}
+          onClick={onToggleSplit}
+        />
+      </div>
       {accounts.length > 0 ? (
         <button
           type="button"

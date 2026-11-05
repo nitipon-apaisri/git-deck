@@ -16,9 +16,17 @@ interface OverviewTabProps {
   accountType: AccountType
   summary: RepoSummary | null
   loading: boolean
+  /** A narrow pane: two columns of stat cards. */
+  narrow?: boolean
 }
 
-export function OverviewTab({ repo, accountType, summary, loading }: OverviewTabProps) {
+export function OverviewTab({
+  repo,
+  accountType,
+  summary,
+  loading,
+  narrow = false
+}: OverviewTabProps) {
   // Per pane, so showing more in one pane never expands another.
   const id = useId()
   const [expanded, setExpanded] = useState(false)
@@ -31,7 +39,7 @@ export function OverviewTab({ repo, accountType, summary, loading }: OverviewTab
 
   return (
     <div className={styles.overview}>
-      <div className={styles.stats}>
+      <div className={styles.stats} data-narrow={narrow ? 'true' : undefined}>
         {statItems(repo, summary, accountType, loading).map((item) => (
           <StatCard
             key={item.id}

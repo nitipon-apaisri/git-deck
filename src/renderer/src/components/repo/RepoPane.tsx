@@ -2,7 +2,10 @@ import { useId, useState } from 'react'
 import type { Account, Repo } from '@shared/types'
 import { errorMessage } from '../../lib/errors'
 import { timeAgo } from '../../lib/format'
+import { isNarrow } from '../../lib/splitLayout'
+import type { TabName } from '../../lib/splitState'
 import { useLocalInfo, useRepoSummary } from '../../state/repoData'
+import { useElementSize } from '../../state/useElementSize'
 import { useLocalActions } from '../../state/useLocalActions'
 import { useNow } from '../../state/useNow'
 import { Icon, IconButton, Island, Spinner, Tabs, panelId, tabId } from '../ui'
@@ -12,8 +15,6 @@ import { LocalActions } from './LocalActions'
 import { OverviewTab } from './OverviewTab'
 import { RepoHeader } from './RepoHeader'
 import styles from './RepoPane.module.css'
-
-type TabName = 'overview' | 'graph' | 'info'
 
 const TABS: { id: TabName; label: string }[] = [
   { id: 'overview', label: 'Overview' },
@@ -27,11 +28,20 @@ interface RepoPaneProps {
   account: Account | null
   /** Local folder this repository is linked to, if any. */
   linkedPath: string | undefined
-  /** This pane has the focus in Split View. Phase 8 styles it. */
+  /** This pane has the focus in Split View. */
   active: boolean
+  /** The open tab. Split View keeps it, so it survives a restart. */
+  tab: TabName
+  onTabChange: (tab: TabName) => void
   onActivate: () => void
   /** Called after a clone, link or unlink, so the workspace re-reads the links. */
   onLinksChanged: () => void
+  /** 1 or 2: which pane this is. */
+  paneNumber: 1 | 2
+  /** Split View is on, so the pane says which one it is and can be closed. */
+  split: boolean
+  /** The close button's action (Split View only). */
+  onClose?: () => void
   className?: string
 }
 
@@ -45,16 +55,23 @@ export function RepoPane({
   account,
   linkedPath,
   active,
+  tab,
+  onTabChange,
   onActivate,
   onLinksChanged,
+  paneNumber,
+  split,
+  onClose,
   className
 }: RepoPaneProps) {
   const idPrefix = useId()
   const now = useNow()
-  const [tab, setTab] = useState<TabName>('overview')
+  const { ref, width } = useElementSize<HTMLElement>()
+  const narrow = isNarrow(width)
   // The graph mounts on the first visit and then stays, so its scroll position, loaded
   // pages and selected commit survive a trip to another tab.
-  const [graphSeen, setGraphSeen] = useState(false)
+  const [graphSeen, setGraphSeen] = useState(tab === 'graph')
+  if (tab === 'graph' && !graphSeen) setGraphSeen(true)
   const [webError, setWebError] = useState<string | null>(null)
 
   const { summary, fetchedAt, loading, error, reload } = useRepoSummary(repo.key)
@@ -85,15 +102,25 @@ export function RepoPane({
   return (
     <Island
       as="section"
-      aria-label={repo.fullName}
+      ref={ref}
+      aria-label={split ? `Pane ${paneNumber}: ${repo.fullName}` : repo.fullName}
+      tabIndex={-1}
+      data-pane={paneNumber - 1}
+      data-narrow={narrow ? 'true' : undefined}
       className={[styles.pane, className ?? ''].filter(Boolean).join(' ')}
       data-active={active}
       onPointerDownCapture={onActivate}
       onFocusCapture={onActivate}
     >
       <div className={styles.top}>
-        <RepoHeader repo={repo} account={account} onOpenWeb={() => void openWeb()} />
-        <LocalActions repo={repo} linkedPath={linkedPath} actions={actions} />
+        <RepoHeader
+          repo={repo}
+          account={account}
+          compact={narrow}
+          onOpenWeb={() => void openWeb()}
+          onClose={split ? onClose : undefined}
+        />
+        <LocalActions repo={repo} linkedPath={linkedPath} actions={actions} compact={narrow} />
         {problem ? (
           <p className={styles.notice} role="alert">
             <Icon name="alert" size="sm" />
@@ -106,10 +133,7 @@ export function RepoPane({
         <Tabs
           tabs={TABS}
           value={tab}
-          onChange={(id) => {
-            setTab(id as TabName)
-            if (id === 'graph') setGraphSeen(true)
-          }}
+          onChange={(id) => onTabChange(id as TabName)}
           label="Repository"
           idPrefix={idPrefix}
           trailing={
@@ -156,6 +180,7 @@ export function RepoPane({
               reloadToken={actions.reloadToken}
               fetching={actions.busy === 'fetch'}
               onFetch={actions.fetch}
+              narrow={narrow}
             />
           </div>
         ) : null}
@@ -165,6 +190,7 @@ export function RepoPane({
             accountType={account?.type ?? 'github'}
             summary={summary}
             loading={loading}
+            narrow={narrow}
           />
         ) : tab === 'info' ? (
           <InfoTab

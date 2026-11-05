@@ -102,6 +102,28 @@ const SHAPES = {
       <path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />
     </>
   ),
+  columns: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M12 5v14" />
+    </>
+  ),
+  rotate: (
+    <>
+      <path d="M4 12a8 8 0 0 1 13.7-5.7L20 8.5" />
+      <path d="M20 4v4.5h-4.5" />
+      <path d="M20 12a8 8 0 0 1-13.7 5.7L4 15.5" />
+      <path d="M4 20v-4.5h4.5" />
+    </>
+  ),
+  swap: (
+    <>
+      <path d="M4 8h14" />
+      <path d="M14 4l4 4-4 4" />
+      <path d="M20 16H6" />
+      <path d="M10 12l-4 4 4 4" />
+    </>
+  ),
   trash: (
     <>
       <path d="M4 7h16" />
