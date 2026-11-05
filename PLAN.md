@@ -347,10 +347,10 @@ A **Project is a named group of repos from any connected host or account, with a
 
 ## Phase 10 — Polish and docs
 
-- [ ] Loading skeletons and error banners with a retry button everywhere data is fetched.
-- [ ] Keyboard: `Ctrl/Cmd+K` focuses search, arrow keys move through the graph rows, plus the Split View shortcuts from Phase 8. List all shortcuts in the README.
-- [ ] `README.md`: what it is, features (host integrations, graph, Projects, Split View), requirements (Node >= 22.12, git on PATH), `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm test`, token scopes (GitHub classic `repo` or fine-grained read access to metadata and contents; GitLab `read_api` + `read_repository`), self-hosted notes (internal CAs work through the OS store, the self-signed toggle is per host), architecture overview, security model (token encryption, scoped git auth, validated IPC), known limits and roadmap, how to package later with electron-builder.
-- [ ] Final pass: `pnpm typecheck`, `pnpm test`, `pnpm build` all green.
+- [x] Loading skeletons and error banners with a retry button everywhere data is fetched.
+- [x] Keyboard: `Ctrl/Cmd+K` focuses search, arrow keys move through the graph rows, plus the Split View shortcuts from Phase 8. List all shortcuts in the README.
+- [x] `README.md`: what it is, features (host integrations, graph, Projects, Split View), requirements (Node >= 22.12, git on PATH), `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm test`, token scopes (GitHub classic `repo` or fine-grained read access to metadata and contents; GitLab `read_api` + `read_repository`), self-hosted notes (internal CAs work through the OS store, the self-signed toggle is per host), architecture overview, security model (token encryption, scoped git auth, validated IPC), known limits and roadmap, how to package later with electron-builder.
+- [x] Final pass: `pnpm typecheck`, `pnpm test`, `pnpm build` all green.
 
 ---
 
