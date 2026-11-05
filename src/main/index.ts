@@ -1,5 +1,7 @@
 import { join } from 'node:path'
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, net, session, shell } from 'electron'
+import { configureFetch } from './http'
+import { installCertVerifyProc } from './tls'
 
 const isHttp = (url: string): boolean => {
   try {
@@ -61,6 +63,9 @@ if (!app.requestSingleInstanceLock()) {
   })
 
   void app.whenReady().then(() => {
+    // net.fetch uses the OS certificate store, so internal CAs work.
+    configureFetch((input, init) => net.fetch(input, init))
+    installCertVerifyProc(session.defaultSession)
     createWindow()
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow()
