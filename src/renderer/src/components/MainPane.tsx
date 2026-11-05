@@ -1,44 +1,44 @@
-import type { Repo } from '@shared/types'
-import { Icon, Island, Spinner } from './ui'
+import type { Account, Repo } from '@shared/types'
+import { RepoPane } from './repo/RepoPane'
+import { Island, Spinner } from './ui'
 import styles from './MainPane.module.css'
 
 interface MainPaneProps {
   hasAccounts: boolean
   repo: Repo | null
+  account: Account | null
   /** A repository is selected but the lists have not loaded it yet. */
   waiting: boolean
   linkedPath: string | undefined
+  onLinksChanged: () => void
 }
 
-export function MainPane({ hasAccounts, repo, waiting, linkedPath }: MainPaneProps) {
+const noop = (): void => undefined
+
+/** The single-repository view. Phase 8 swaps this for the split layout. */
+export function MainPane({
+  hasAccounts,
+  repo,
+  account,
+  waiting,
+  linkedPath,
+  onLinksChanged
+}: MainPaneProps) {
   return (
-    <Island as="main" aria-label="Repository" className={styles.main}>
+    <main className={styles.main} aria-label="Repository">
       {repo ? (
-        <div className={styles.header}>
-          <h1 className={styles.title}>{repo.fullName}</h1>
-          <p className={styles.meta}>
-            <span className={styles.metaItem}>
-              {repo.visibility === 'private' ? <Icon name="lock" size="sm" /> : null}
-              {repo.visibility === 'private'
-                ? 'Private'
-                : repo.visibility === 'internal'
-                  ? 'Internal'
-                  : 'Public'}
-            </span>
-            {repo.archived ? <span>Archived</span> : null}
-            {repo.fork ? <span>Fork</span> : null}
-            {repo.defaultBranch ? (
-              <span className={styles.metaItem}>
-                <Icon name="git-branch" size="sm" />
-                <span className="hash">{repo.defaultBranch}</span>
-              </span>
-            ) : null}
-            <span>{linkedPath ? 'Cloned locally' : 'Not cloned'}</span>
-          </p>
-          {repo.description ? <p className={styles.description}>{repo.description}</p> : null}
-        </div>
+        // Keyed so that switching repository starts with fresh pane state.
+        <RepoPane
+          key={repo.key}
+          repo={repo}
+          account={account}
+          linkedPath={linkedPath}
+          active
+          onActivate={noop}
+          onLinksChanged={onLinksChanged}
+        />
       ) : (
-        <div className={styles.empty}>
+        <Island className={styles.empty}>
           {waiting ? (
             <>
               <Spinner label="Loading repositories" />
@@ -57,8 +57,8 @@ export function MainPane({ hasAccounts, repo, waiting, linkedPath }: MainPanePro
               </p>
             </>
           )}
-        </div>
+        </Island>
       )}
-    </Island>
+    </main>
   )
 }

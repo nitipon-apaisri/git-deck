@@ -56,3 +56,8 @@ code {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Hashes, paths and URLs: a ligature such as "://" would hide what is actually there. */
+.hash {
+  font-variant-ligatures: none;
+}

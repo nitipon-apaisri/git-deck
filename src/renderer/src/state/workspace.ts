@@ -11,6 +11,8 @@ export interface Workspace {
   /** Re-fetch one account's repositories from the host. */
   refresh: (accountId: string) => Promise<void>
   refreshAll: () => Promise<void>
+  /** Re-read which repositories are linked to a folder, after a clone, link or unlink. */
+  refreshLinks: () => Promise<void>
   /** Call after the dialog added an account: shows it and loads its repositories. */
   accountAdded: (account: Account) => void
   /** Removes through main, then forgets the account here. Rejects with a plain message. */
@@ -72,6 +74,14 @@ export function useWorkspace(): Workspace {
     [state.accounts, refresh]
   )
 
+  const refreshLinks = useCallback(async () => {
+    try {
+      dispatch({ type: 'links', links: await window.api.local.links() })
+    } catch {
+      // Keep the links we have: the sidebar dot is a hint, not something to fail on.
+    }
+  }, [])
+
   const accountAdded = useCallback(
     (account: Account) => {
       dispatch({ type: 'accountAdded', account })
@@ -89,5 +99,5 @@ export function useWorkspace(): Workspace {
     dispatch({ type: 'accountRemoved', accountId })
   }, [])
 
-  return { state, refresh, refreshAll, accountAdded, removeAccount }
+  return { state, refresh, refreshAll, refreshLinks, accountAdded, removeAccount }
 }

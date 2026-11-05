@@ -16,7 +16,7 @@ type DialogName = 'accounts' | 'preferences' | null
 const SIDEBAR_KEY = 'gitdeck.sidebar'
 
 export function App() {
-  const { state, refresh, refreshAll, accountAdded, removeAccount } = useWorkspace()
+  const { state, refresh, refreshAll, refreshLinks, accountAdded, removeAccount } = useWorkspace()
   const { selectedKey, select } = useSelection()
   const { setting, setSetting } = useTheme()
   const [dialog, setDialog] = useState<DialogName>(null)
@@ -59,7 +59,9 @@ export function App() {
           hasAccounts={state.accounts.length > 0}
           repo={selectedRepo}
           waiting={selectedKey !== null && selectedRepo === null && anyLoading}
+          account={state.accounts.find((a) => a.id === selectedRepo?.accountId) ?? null}
           linkedPath={selectedRepo ? state.links[selectedRepo.key] : undefined}
+          onLinksChanged={() => void refreshLinks()}
         />
       </div>
 

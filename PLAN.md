@@ -251,12 +251,12 @@ Any `path` argument must equal one of the stored link values, otherwise throw. V
 
 ## Phase 6 — Renderer: repo view, overview, info
 
-- [ ] Build this phase as one self-contained `RepoPane` component with props `{ repo, active, onActivate }` that owns its tab state, summary hook and clone/fetch state. Everything below renders inside it.
-- [ ] Repo header: name, visibility badge, archived/fork badges, description, "Open on web".
-- [ ] Local actions: when not linked show **Clone (HTTPS)**, **Clone (SSH)**, **Link existing folder** with a progress bar during clone. When linked show **Open folder**, **Fetch**, **Unlink**. Fetch bumps a reload token so tabs refresh.
-- [ ] Summary hook: show the cached summary immediately, refresh in the background, show a subtle "updated … ago" and a reload button.
-- [ ] **Overview**: stat cards (commits, contributors, branches, tags, open PRs or MRs depending on provider, stars, forks, open issues; `—` for null), top-10 contributors with proportional bars and a "show more", a stacked language bar with legend, topic chips.
-- [ ] **Info**: remote section (full name, host, visibility, default branch, created, last activity, license, size, web URL, HTTPS and SSH clone URLs with copy buttons) and local section from `LocalInfo` (path, branch or detached HEAD, remotes, branch and tag counts with latest tags, commit count, first and last commit, uncommitted file count, ahead/behind, `.git` size).
+- [x] Build this phase as one self-contained `RepoPane` component with props `{ repo, active, onActivate }` that owns its tab state, summary hook and clone/fetch state. Everything below renders inside it.
+- [x] Repo header: name, visibility badge, archived/fork badges, description, "Open on web".
+- [x] Local actions: when not linked show **Clone (HTTPS)**, **Clone (SSH)**, **Link existing folder** with a progress bar during clone. When linked show **Open folder**, **Fetch**, **Unlink**. Fetch bumps a reload token so tabs refresh.
+- [x] Summary hook: show the cached summary immediately, refresh in the background, show a subtle "updated … ago" and a reload button.
+- [x] **Overview**: stat cards (commits, contributors, branches, tags, open PRs or MRs depending on provider, stars, forks, open issues; `—` for null), top-10 contributors with proportional bars and a "show more", a stacked language bar with legend, topic chips.
+- [x] **Info**: remote section (full name, host, visibility, default branch, created, last activity, license, size, web URL, HTTPS and SSH clone URLs with copy buttons) and local section from `LocalInfo` (path, branch or detached HEAD, remotes, branch and tag counts with latest tags, commit count, first and last commit, uncommitted file count, ahead/behind, `.git` size).
 
 ## Phase 7 — Commit graph
 
