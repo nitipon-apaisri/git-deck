@@ -20,6 +20,12 @@ export interface AccountInput {
   allowInsecureTls: boolean
 }
 
+/** Who a token belongs to, as reported by the host. */
+export interface VerifiedUser {
+  username: string
+  avatarUrl?: string
+}
+
 export interface Repo {
   /** `accountId:remoteId` */
   key: string

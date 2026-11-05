@@ -1,9 +1,6 @@
-import type { Repo, RepoSummary } from '../../shared/types'
+import type { Repo, RepoSummary, VerifiedUser } from '../../shared/types'
 
-export interface VerifiedUser {
-  username: string
-  avatarUrl?: string
-}
+export type { VerifiedUser }
 
 export interface GitProvider {
   /** Checks the token and returns who it belongs to. Throws `HttpError` on failure. */
