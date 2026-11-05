@@ -124,12 +124,11 @@ export function Sidebar({
         <Button variant="ghost" icon="plus" onClick={onConnect}>
           Connect account
         </Button>
-        <span className={styles.updated}>
-          {anyLoading
-            ? 'Updating…'
-            : lastFetched !== null
-              ? `Updated ${timeAgo(lastFetched, now)}`
-              : ''}
+        <span
+          className={styles.updated}
+          title={lastFetched !== null ? `Updated ${timeAgo(lastFetched, now)}` : undefined}
+        >
+          {anyLoading ? 'Updating…' : lastFetched !== null ? timeAgo(lastFetched, now) : ''}
         </span>
         {accounts.length > 0 ? (
           <IconButton label="Refresh all" icon="refresh" onClick={onRefreshAll} />
