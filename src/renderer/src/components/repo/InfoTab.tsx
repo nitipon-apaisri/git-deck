@@ -11,7 +11,7 @@ import {
   unixDateText,
   visibilityLabel
 } from '../../lib/repoView'
-import { CopyButton, RefBadge, Spinner } from '../ui'
+import { CopyButton, ErrorBanner, RefBadge, Skeleton, Spinner } from '../ui'
 import styles from './InfoTab.module.css'
 
 interface InfoTabProps {
@@ -19,7 +19,12 @@ interface InfoTabProps {
   account: Account | null
   summary: RepoSummary | null
   linkedPath: string | undefined
-  local: { info: LocalInfo | null; loading: boolean; error: string | null }
+  local: {
+    info: LocalInfo | null
+    loading: boolean
+    error: string | null
+    reload: () => void
+  }
 }
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
@@ -75,22 +80,22 @@ export function InfoTab({ repo, account, summary, linkedPath, local }: InfoTabPr
 
       <section className={styles.section} aria-label="Local clone">
         <h2 className={styles.heading}>
-          Local clone {local.loading ? <Spinner label="Reading the folder" /> : null}
+          Local clone {local.loading && info ? <Spinner label="Reading the folder" /> : null}
         </h2>
         {!linkedPath ? (
           <p className={styles.muted}>
             Not cloned on this computer. Use Clone or Link existing folder above.
           </p>
         ) : local.error && !info ? (
-          <p className={styles.muted} role="alert">
+          <ErrorBanner onRetry={local.reload} retrying={local.loading}>
             Could not read the folder: {local.error}
-          </p>
+          </ErrorBanner>
         ) : info ? (
           <>
             {local.error ? (
-              <p className={styles.muted} role="alert">
+              <ErrorBanner onRetry={local.reload} retrying={local.loading}>
                 Could not refresh: {local.error}
-              </p>
+              </ErrorBanner>
             ) : null}
             <dl className={styles.list}>
               <Row label="Path">
@@ -133,7 +138,12 @@ export function InfoTab({ repo, account, summary, linkedPath, local }: InfoTabPr
             </dl>
           </>
         ) : (
-          <p className={styles.muted}>Reading the folder…</p>
+          <div className={styles.skeletons}>
+            <Skeleton label="Reading the folder" width="40%" />
+            <Skeleton width="70%" />
+            <Skeleton width="55%" />
+            <Skeleton width="65%" />
+          </div>
         )}
       </section>
     </div>

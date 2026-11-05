@@ -36,3 +36,9 @@
   line-height: 18px;
   font-weight: 500;
 }
+
+.skeleton {
+  display: flex;
+  align-items: center;
+  height: 30px;
+}

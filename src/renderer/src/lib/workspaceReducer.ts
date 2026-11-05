@@ -22,6 +22,7 @@ export interface WorkspaceState {
 
 export type Action =
   | { type: 'loaded'; secureStorage: boolean; accounts: Account[]; links: Record<string, string> }
+  | { type: 'loadStart' }
   | { type: 'loadFailed'; error: string }
   | { type: 'repos'; accountId: string; repos: Repo[]; fetchedAt: number }
   | { type: 'loading'; accountId: string }
@@ -66,6 +67,9 @@ export function reducer(state: WorkspaceState, action: Action): WorkspaceState {
         links: action.links,
         loadError: null
       }
+    case 'loadStart':
+      // A retry of the first load: show the loading state again, not the old error.
+      return { ...state, ready: false, loadError: null }
     case 'loadFailed':
       return { ...state, ready: true, loadError: action.error }
     case 'repos':

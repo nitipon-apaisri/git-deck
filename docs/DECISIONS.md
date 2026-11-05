@@ -8,6 +8,18 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-06: Phase 10 choices not fixed by PLAN.md
+
+- **Question:** What "everywhere data is fetched" covers, how a failed summary should behave, which keys count as shortcuts, and what the README may claim.
+- **Options considered:** a banner everywhere or only on the main views; leaving the providers returning an empty summary when every request fails; `Mod+K` global or only outside inputs; claiming Windows and Linux support.
+- **Decision and why:**
+  - One `ErrorBanner` (message plus Retry) and one `Skeleton` are the only loading and error patterns. They are used for the repo summary, the folder info, the commit detail, the first load of accounts, the project list, and failed project summaries (retry only those). The graph already had its own "Try again" and was left alone. Per-account list errors keep their alert button in the host row, which retries.
+  - **Bug found and fixed:** when every request for a summary failed (host down, token refused, repo gone), both providers returned an all-null summary. The service cached it over the good one and the pane showed "Unavailable" with no error. `throwIfAllFailed` now rejects, so the saved data stays and the banner offers Retry. A partial failure (a 403 on contributors) still becomes a null, as PLAN.md Phase 3 says. One Phase 3 test asserted the old behaviour for a repo whose every request 404s: it now expects the rejection.
+  - The sidebar used to show "No accounts yet" for a moment at start, before the account list had loaded. It now shows a skeleton until the first load finishes, and an error banner with Retry if that load fails (`loadError` was set but never shown).
+  - `Mod+K` works from anywhere except while a modal dialog is open, and opens the sidebar if it was closed. `Esc` clears the filter first, then leaves it. Arrow keys, Page and Home/End in the graph were already built in Phase 7.
+  - The README states what was and was not run: macOS only, mock hosts only. Packaging is described, not set up, since adding electron-builder was not asked for.
+- **Not verified:** the first-load skeleton and the first-load error banner (both finish in milliseconds against a local main process, and there is no way to make the real load fail from the window). The folder-info error banner: `getLocalInfo` tolerates a missing folder, so it could not be provoked. The Retry banners for the summary and for failed project summaries were run against a mock host that was stopped and restarted. Windows and Linux.
+
 ## 2026-11-06: Phase 9 choices not fixed by PLAN.md
 
 - **Question:** How the scope, the overview and the menus behave where the plan is silent: what creating a project does to the scope, when a key counts as unavailable, whether the overview replaces or hides the panes, where summaries are held, and what the rail's Projects button does.

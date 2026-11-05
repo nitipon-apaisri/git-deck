@@ -14,6 +14,8 @@ export interface ProjectSummaries {
   progress: LoadProgress | null
   /** Fetch every available repository again, ignoring how fresh its summary is. */
   refreshAll: () => void
+  /** Fetch again only the repositories whose last fetch failed. */
+  retryFailed: () => void
 }
 
 /**
@@ -88,12 +90,21 @@ export function useProjectSummaries(
     void fetchKeys(todo, generation.current)
   }, [availableList, fetchKeys])
 
+  const failedKeys = Object.keys(store.failed).join('\n')
+  const retryFailed = useCallback(() => {
+    generation.current += 1
+    const usable = new Set(availableList === '' ? [] : availableList.split('\n'))
+    const todo = (failedKeys === '' ? [] : failedKeys.split('\n')).filter((k) => usable.has(k))
+    void fetchKeys(todo, generation.current)
+  }, [failedKeys, availableList, fetchKeys])
+
   const pending = useMemo(() => new Set(store.pending), [store.pending])
   return {
     entries: store.entries,
     failed: store.failed,
     pending,
     progress: progressOf(store),
-    refreshAll
+    refreshAll,
+    retryFailed
   }
 }

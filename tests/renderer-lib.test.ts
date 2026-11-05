@@ -336,3 +336,13 @@ test('workspace reducer: adding an account twice keeps one, load failure still m
   assert.equal(failed.ready, true)
   assert.equal(failed.loadError, 'boom')
 })
+
+test('workspace reducer: retrying the first load clears the error and shows loading again', () => {
+  const failed = reducer(initial, { type: 'loadFailed', error: 'boom' })
+  const retry = reducer(failed, { type: 'loadStart' })
+  assert.equal(retry.ready, false)
+  assert.equal(retry.loadError, null)
+  const loaded = reducer(retry, { type: 'loaded', secureStorage: true, accounts: [], links: {} })
+  assert.equal(loaded.ready, true)
+  assert.equal(loaded.loadError, null)
+})

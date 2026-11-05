@@ -8,7 +8,7 @@ import {
   plural,
   statItems
 } from '../../lib/repoView'
-import { Avatar, Button, StatCard } from '../ui'
+import { Avatar, Button, Skeleton, StatCard } from '../ui'
 import styles from './OverviewTab.module.css'
 
 interface OverviewTabProps {
@@ -30,7 +30,8 @@ export function OverviewTab({
   // Per pane, so showing more in one pane never expands another.
   const id = useId()
   const [expanded, setExpanded] = useState(false)
-  const empty = loading ? 'Loading…' : 'Unavailable'
+  const pending = loading && summary === null
+  const empty = 'Unavailable'
 
   const rows = summary ? contributorRows(summary.contributors, summary.contributors.length) : []
   const shown = expanded ? rows : rows.slice(0, TOP_CONTRIBUTORS)
@@ -45,6 +46,7 @@ export function OverviewTab({
             key={item.id}
             label={item.label}
             value={typeof item.value === 'number' ? countText(item.value) : item.value}
+            loading={pending && item.value === '—'}
           />
         ))}
       </div>
@@ -86,6 +88,22 @@ export function OverviewTab({
               ) : null}
             </div>
           </>
+        ) : pending ? (
+          <ul className={styles.contributors} aria-label="Loading contributors">
+            {[0, 1, 2, 3].map((i) => (
+              <li key={i} className={styles.contributor}>
+                <Skeleton
+                  width={24}
+                  height={24}
+                  circle
+                  label={i === 0 ? 'Loading contributors' : undefined}
+                />
+                <Skeleton width={`${70 - i * 10}%`} />
+                <Skeleton height={6} />
+                <Skeleton width={56} />
+              </li>
+            ))}
+          </ul>
         ) : (
           <p className={styles.muted}>{summary ? 'No contributor data from the host.' : empty}</p>
         )}
@@ -122,6 +140,11 @@ export function OverviewTab({
               ))}
             </ul>
           </>
+        ) : pending ? (
+          <div className={styles.languageSkeleton}>
+            <Skeleton height={8} label="Loading languages" />
+            <Skeleton width="50%" />
+          </div>
         ) : (
           <p className={styles.muted}>{summary ? 'No language data from the host.' : empty}</p>
         )}

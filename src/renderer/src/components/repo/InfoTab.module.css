@@ -80,3 +80,9 @@
   flex-wrap: wrap;
   gap: var(--space-2);
 }
+
+.skeletons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}

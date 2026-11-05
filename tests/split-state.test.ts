@@ -389,6 +389,15 @@ test('Ctrl/Cmd+1 and +2 focus a pane', () => {
   assert.equal(shortcutOf(key('Digit2', { metaKey: true })), 'pane2')
 })
 
+test('Ctrl/Cmd+K focuses the search, on either modifier', () => {
+  assert.equal(shortcutOf(key('KeyK', { ctrlKey: true })), 'search')
+  assert.equal(shortcutOf(key('KeyK', { metaKey: true })), 'search')
+  assert.equal(shortcutOf(key('KeyK')), null) // typing a k
+  assert.equal(shortcutOf(key('KeyK', { ctrlKey: true, shiftKey: true })), null)
+  assert.equal(shortcutOf(key('KeyK', { ctrlKey: true, altKey: true })), null)
+  assert.equal(shortcutOf(key('KeyK', { ctrlKey: true, metaKey: true })), null)
+})
+
 test('other chords are not shortcuts', () => {
   assert.equal(shortcutOf(key('KeyS', { ctrlKey: true })), null) // save, not ours
   assert.equal(shortcutOf(key('KeyS', { altKey: true })), null)

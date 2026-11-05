@@ -1,7 +1,7 @@
 import { countItems, getJson, HttpError, paginate } from '../http'
 import type { Contributor, LanguageShare, Repo, RepoSummary, Visibility } from '../../shared/types'
 import { MAX_CONTRIBUTORS, MAX_LANGUAGES, type GitProvider, type VerifiedUser } from './types'
-import { encodePath, ok, percent, required } from './util'
+import { encodePath, ok, percent, required, throwIfAllFailed } from './util'
 
 interface GhUser {
   login: string
@@ -105,21 +105,22 @@ export class GitHubProvider implements GitProvider {
   async getSummary(repo: Repo): Promise<RepoSummary> {
     const base = `${this.root}/repos/${encodePath(repo.fullName)}`
     const h = this.headers
-    const [info, commits, contribList, contribCount, langs, branches, tags, prs] =
-      await Promise.allSettled([
-        getJson<GhRepo>(base, h),
-        // 409 means an empty repository, which has zero commits.
-        countItems(`${base}/commits`, h).catch((err: unknown) => {
-          if (err instanceof HttpError && err.status === 409) return 0
-          throw err
-        }),
-        getJson<GhContributor[]>(`${base}/contributors?per_page=${MAX_CONTRIBUTORS}`, h),
-        countItems(`${base}/contributors`, h),
-        getJson<Record<string, number>>(`${base}/languages`, h),
-        countItems(`${base}/branches`, h),
-        countItems(`${base}/tags`, h),
-        countItems(`${base}/pulls?state=open`, h)
-      ])
+    const settled = await Promise.allSettled([
+      getJson<GhRepo>(base, h),
+      // 409 means an empty repository, which has zero commits.
+      countItems(`${base}/commits`, h).catch((err: unknown) => {
+        if (err instanceof HttpError && err.status === 409) return 0
+        throw err
+      }),
+      getJson<GhContributor[]>(`${base}/contributors?per_page=${MAX_CONTRIBUTORS}`, h),
+      countItems(`${base}/contributors`, h),
+      getJson<Record<string, number>>(`${base}/languages`, h),
+      countItems(`${base}/branches`, h),
+      countItems(`${base}/tags`, h),
+      countItems(`${base}/pulls?state=open`, h)
+    ])
+    throwIfAllFailed(settled)
+    const [info, commits, contribList, contribCount, langs, branches, tags, prs] = settled
 
     const meta = ok(info, null)
     const list = ok(contribList, null)

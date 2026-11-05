@@ -83,6 +83,8 @@ export interface CommitDetailState {
   detail: CommitDetail | null
   loading: boolean
   error: string | null
+  /** Ask for this commit again. */
+  reload: () => void
 }
 
 /** Message body and changed files of one commit. `null` when nothing is selected. */
@@ -93,6 +95,8 @@ export function useCommitDetail(path: string | null, hash: string | null): Commi
     emptyResource<CommitDetail>
   )
   const key = path !== null && hash !== null ? `${path}\n${hash}` : null
+  const [nonce, setNonce] = useState(0)
+  const reload = useCallback(() => setNonce((n) => n + 1), [])
 
   useEffect(() => {
     if (path === null || hash === null || key === null) return
@@ -109,13 +113,14 @@ export function useCommitDetail(path: string | null, hash: string | null): Commi
     return () => {
       cancelled = true
     }
-  }, [path, hash, key])
+  }, [path, hash, key, nonce])
 
   const current: Resource<CommitDetail> = state.key === key ? state : emptyResource()
-  if (key === null) return { detail: null, loading: false, error: null }
+  if (key === null) return { detail: null, loading: false, error: null, reload }
   return {
     detail: current.data,
     loading: current.key === null ? true : current.loading,
-    error: current.error
+    error: current.error,
+    reload
   }
 }

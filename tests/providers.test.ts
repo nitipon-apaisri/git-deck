@@ -286,14 +286,13 @@ test('GitHub: a 409 on commits means an empty repo (0), a 403 on contributors on
   assert.equal(s.license, 'MIT')
 })
 
-test('GitHub: a failing request becomes null, not an error', async () => {
+test('GitHub: a repository the host cannot find (every request 404s) is an error, not an empty summary', async () => {
   const p = new GitHubProvider('acc', base, TOKEN)
   const repo = { ...(await p.listRepos())[0], fullName: 'octo/missing' }
-  const s = await p.getSummary(repo)
-  assert.equal(s.commitCount, null)
-  assert.equal(s.license, null)
-  assert.equal(s.createdAt, null)
-  assert.deepEqual(s.topics, [])
+  await assert.rejects(
+    p.getSummary(repo),
+    (err: unknown) => err instanceof HttpError && err.status === 404
+  )
 })
 
 test('GitLab: verify uses PRIVATE-TOKEN and makes a relative avatar absolute', async () => {
@@ -359,6 +358,33 @@ test('GitLab: a 403 on every sub-resource leaves nulls and empties, not an error
   assert.equal(s.branchCount, null)
   assert.equal(s.openChangeRequests, null)
   assert.deepEqual(s.topics, ['ops'])
+})
+
+test('GitHub and GitLab: a summary where every piece failed rejects, so it is not cached as empty', async () => {
+  const good = new GitHubProvider('acc', base, TOKEN)
+  const ghRepoRow = (await good.listRepos())[0]
+  const glGood = new GitLabProvider('acc', `${base}/gitlab`, TOKEN)
+  const glRepoRow = (await glGood.listRepos())[0]
+  // A refused token fails every request.
+  const bad = 'wrong-token-xyz'
+  await assert.rejects(
+    new GitHubProvider('acc', base, bad).getSummary(ghRepoRow),
+    (err: unknown) => {
+      assert.ok(err instanceof HttpError)
+      assert.equal(err.status, 401)
+      assert.ok(!err.message.includes(bad))
+      return true
+    }
+  )
+  await assert.rejects(
+    new GitLabProvider('acc', `${base}/gitlab`, bad).getSummary(glRepoRow),
+    (err: unknown) => err instanceof HttpError && err.status === 401
+  )
+  // A host that is not there at all.
+  await assert.rejects(new GitHubProvider('acc', 'http://127.0.0.1:1', TOKEN).getSummary(ghRepoRow))
+  await assert.rejects(
+    new GitLabProvider('acc', 'http://127.0.0.1:1/gitlab', TOKEN).getSummary(glRepoRow)
+  )
 })
 
 test('createProvider normalises the base URL and picks the provider', async () => {

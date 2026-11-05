@@ -1,7 +1,7 @@
 import { countItems, getJson, getPage, paginate } from '../http'
 import type { Contributor, LanguageShare, Repo, RepoSummary, Visibility } from '../../shared/types'
 import { MAX_CONTRIBUTORS, MAX_LANGUAGES, type GitProvider, type VerifiedUser } from './types'
-import { ok, required } from './util'
+import { ok, required, throwIfAllFailed } from './util'
 
 interface GlUser {
   username: string
@@ -102,7 +102,7 @@ export class GitLabProvider implements GitProvider {
   async getSummary(repo: Repo): Promise<RepoSummary> {
     const base = `${this.root}/projects/${encodeURIComponent(repo.remoteId)}`
     const h = this.headers
-    const [info, contribs, langs, branches, tags, mrs] = await Promise.allSettled([
+    const settled = await Promise.allSettled([
       getJson<GlProject>(`${base}?statistics=true&license=true`, h),
       getPage<GlContributor>(
         `${base}/repository/contributors?order_by=commits&sort=desc&per_page=100`,
@@ -113,6 +113,8 @@ export class GitLabProvider implements GitProvider {
       countItems(`${base}/repository/tags`, h),
       countItems(`${base}/merge_requests?state=opened`, h)
     ])
+    throwIfAllFailed(settled)
+    const [info, contribs, langs, branches, tags, mrs] = settled
 
     const meta = ok(info, null)
     let commitCount: number | null = meta?.statistics?.commit_count ?? null

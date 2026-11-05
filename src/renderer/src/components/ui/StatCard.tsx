@@ -1,4 +1,5 @@
 import { Icon } from './Icon'
+import { Skeleton } from './Skeleton'
 import styles from './StatCard.module.css'
 
 interface StatCardProps {
@@ -13,6 +14,8 @@ interface StatCardProps {
   note?: string
   /** Why the figure is partial or approximate, as a tooltip. */
   explain?: string
+  /** The figure is on its way: a placeholder shows in its place. */
+  loading?: boolean
 }
 
 export function StatCard({
@@ -21,11 +24,16 @@ export function StatCard({
   partial = false,
   approximate = false,
   note,
-  explain
+  explain,
+  loading = false
 }: StatCardProps) {
   return (
     <div className={styles.card} title={explain}>
-      {value === null ? (
+      {loading ? (
+        <span className={styles.skeleton}>
+          <Skeleton width={64} height={24} label={`Loading ${label}`} />
+        </span>
+      ) : value === null ? (
         <span className={styles.unavailable}>Unavailable</span>
       ) : (
         <span className={styles.value}>
