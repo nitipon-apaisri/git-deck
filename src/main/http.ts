@@ -79,9 +79,28 @@ export async function paginate<T>(url: string, headers: Headers_ = {}): Promise<
     const res = await request(next, headers)
     const body = await readJson<T[]>(res)
     if (Array.isArray(body)) items.push(...body)
-    next = parseLink(res.headers.get('link')).next
+    const link = parseLink(res.headers.get('link')).next
+    // Resolve against the current page: relative links and path-prefixed installs.
+    next = link ? new URL(link, next).toString() : null
   }
   return items
+}
+
+export interface Page<T> {
+  items: T[]
+  /** From the `x-total` header when the server sends it, else `null`. */
+  total: number | null
+}
+
+/** One request: the array body plus the `x-total` header (GitLab). */
+export async function getPage<T>(url: string, headers: Headers_ = {}): Promise<Page<T>> {
+  const res = await request(url, headers)
+  const body = await readJson<T[]>(res)
+  const total = res.headers.get('x-total')
+  return {
+    items: Array.isArray(body) ? body : [],
+    total: total !== null && /^\d+$/.test(total) ? Number(total) : null
+  }
 }
 
 function withPerPageOne(url: string): string {
