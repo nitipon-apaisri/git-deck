@@ -14,6 +14,8 @@ interface TreeRowProps {
   children: ReactNode
   /** Counts and status marks. They stay visible when the label truncates. */
   trailing?: ReactNode
+  /** A button that shows on hover and keyboard focus, for example "Open in split view". */
+  action?: ReactNode
   title?: string
 }
 
@@ -26,6 +28,7 @@ export function TreeRow({
   leading,
   children,
   trailing,
+  action,
   title
 }: TreeRowProps) {
   const classes = [styles.row, styles[level], selected ? styles.selected : '']
@@ -44,6 +47,7 @@ export function TreeRow({
         {leading}
         <span className={styles.label}>{children}</span>
       </button>
+      {action ? <span className={styles.action}>{action}</span> : null}
       {trailing ? <span className={styles.trailing}>{trailing}</span> : null}
     </div>
   )

@@ -100,3 +100,20 @@
   color: var(--text-muted);
   font-size: 12px;
 }
+
+.list .rowAction {
+  width: 24px;
+  height: 24px;
+}
+.paneMark {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-xs);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}

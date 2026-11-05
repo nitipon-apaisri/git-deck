@@ -41,3 +41,10 @@
   margin: 0;
   overflow-wrap: anywhere;
 }
+
+.buttons {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-1);
+}

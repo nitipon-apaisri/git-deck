@@ -8,6 +8,27 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-06: Phase 8 choices not fixed by PLAN.md
+
+- **Question:** Where each pane's tab lives, what select and close do to the hidden pane, how panes keep their state across a swap, what "too narrow" measures, and which optional items to skip.
+- **Options considered:** tab inside `RepoPane` or in the split state; panes keyed by slot or by repository; a JS or a CSS test for side by side; building the collapse control.
+- **Decision and why:**
+  - The tab lives in `SplitState` (as the plan's type says), so it survives a restart. `RepoPane` takes `tab` and `onTabChange`. `select` keeps the pane's tab, so a user flicking through repositories on the Graph tab stays there.
+  - Panes are keyed by repository, not slot. A swap moves the node instead of rebuilding it, so the loaded graph, selected commit and clone progress survive. Moving a node makes the browser reset its scroll offsets, so `GitGraph` and the `RepoPane` panel put their last scroll position back when their pane number changes (found in the real window).
+  - `select` for a repository the other pane already shows focuses that pane, whether or not split is on, so the same repository is never in both panes. `parseSplit` also refuses stored state with a duplicate.
+  - Turning split off keeps both repositories (the active one is on screen) and turning it on again brings the second one back. Closing a pane drops that pane and moves the other into the first slot. Only the pane on screen is mounted, so a pane that is hidden by the toggle stops its work.
+  - Turning split on makes an empty pane the active one, as the plan says. Each pane, empty or not, has a close button while split is on. `pruneRepos` runs once no list is loading. A pane is kept when its account's list failed or has never loaded, because then the list cannot say the repository is gone. A removed account's panes are emptied.
+  - "Too narrow" is measured on the split area, not the window, so a closed sidebar gives the room back. Below 2 x 360 px plus the 12 px divider the panes stack, and the saved orientation is untouched. A window narrower than `minWidth` (the emulated 1000 px in my run) is the only way to get there with the sidebar open, because the window now has `minWidth` 1100.
+  - The grid is `minmax(360px, nfr) 12px minmax(360px, mfr)`, so the browser reflows on a resize with no JS in the loop. JS only clamps what is saved while dragging (`fitRatio`). A saved ratio stays as it was and is clamped when drawn, so widening the window restores it.
+  - Pane width under 640 px uses a `ResizeObserver` hook on the pane itself (`useElementSize`), not the window. In that mode stat cards use 2 columns, the graph drops author and date, the detail panel is a drawer, and Open on web, Open folder and Fetch show only their icon. Clone, Link and Unlink keep their words, because two download icons would not say HTTPS from SSH.
+  - The commit detail drawer moved from a container query to the `narrow` prop, so the pane, not the graph box inside it, decides.
+  - Shortcuts match on `code`, not `key`, because Alt+S types "ß" on macOS. Ctrl or Cmd both work, and Ctrl+Alt+Cmd chords are ignored. Ctrl/Cmd+2 with split off does nothing.
+  - The old `gitdeck.selection` key is read once, as pane 1, when there is no `gitdeck.split.v1` yet.
+  - **Not built:** the optional per-pane collapse control. Divider drag, keys and double-click cover resizing, and 25 % is the smallest ratio.
+- **Known limits:** a stacked pane at the 240 px minimum has room for about one graph row, because the header and tabs fill it. A narrower pane than 360 px is not reachable. The two panes' tab order in the DOM follows the slot order.
+- **Not verified:** the window `minWidth` and `minHeight` themselves (set in `main/index.ts`, but I resized the page with CDP, not the window). A real second host or account. Removing an account while it is shown (covered by the reducer and `stillValid` tests only). Touch input on the divider. Windows and Linux key chords (the macOS path was run, and Ctrl was sent over CDP).
+- **Harness note:** the page stops producing frames when its window is not in front, which paused `ResizeObserver` and made pane sizes look stale. The checks above were run after `Page.bringToFront`.
+
 ## 2026-11-06: Phase 7 choices not fixed by PLAN.md
 
 - **Question:** Where the graph lives while another tab shows, how a narrow pane and a failed page behave, the column order, and how the selection survives a reload.

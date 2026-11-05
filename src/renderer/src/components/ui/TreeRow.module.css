@@ -65,3 +65,13 @@
 .repo .main {
   padding-left: var(--space-6);
 }
+
+.action {
+  display: flex;
+  flex: none;
+  opacity: 0;
+}
+.row:hover .action,
+.row:focus-within .action {
+  opacity: 1;
+}

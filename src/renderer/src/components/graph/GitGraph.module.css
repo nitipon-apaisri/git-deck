@@ -5,8 +5,6 @@
   gap: var(--space-3);
   min-width: 0;
   min-height: 0;
-  /* The detail panel switches between a side column and a drawer by pane width. */
-  container-type: inline-size;
 }
 .toolbar {
   display: flex;
@@ -89,15 +87,13 @@
 }
 
 /* A narrow pane: the detail covers the list as a drawer instead of squeezing it. */
-@container (max-width: 640px) {
-  .graph[data-detail='open'] .body {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .graph[data-detail='open'] .body > aside {
-    position: absolute;
-    inset: 0 0 0 auto;
-    width: min(360px, 100%);
-    z-index: 1;
-    box-shadow: var(--shadow-menu);
-  }
+.graph[data-narrow='true'][data-detail='open'] .body {
+  grid-template-columns: minmax(0, 1fr);
+}
+.graph[data-narrow='true'][data-detail='open'] .body > aside {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: min(360px, 100%);
+  z-index: 1;
+  box-shadow: var(--shadow-menu);
 }

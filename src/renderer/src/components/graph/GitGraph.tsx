@@ -26,6 +26,10 @@ interface GitGraphProps {
   reloadToken: number
   fetching: boolean
   onFetch: () => void
+  /** A narrow pane: no author or date column, and the detail opens as a drawer. */
+  narrow: boolean
+  /** Which pane this is. A swap changes it, and the scroll position is put back. */
+  place: 1 | 2
 }
 
 /**
@@ -38,7 +42,9 @@ export function GitGraph({
   visible,
   reloadToken,
   fetching,
-  onFetch
+  onFetch,
+  narrow,
+  place
 }: GitGraphProps) {
   const idPrefix = useId()
   const now = useNow()
@@ -72,10 +78,12 @@ export function GitGraph({
     return () => observer.disconnect()
   }, [linked])
 
+  // The browser resets a scroll position when the element is detached, which is what a
+  // tab change (display: none) and a pane swap (the DOM node moves) both do.
   useLayoutEffect(() => {
     const el = viewport.current
     if (visible && el) el.scrollTop = savedTop.current
-  }, [visible])
+  }, [visible, place])
 
   useEffect(() => {
     if (
@@ -139,7 +147,11 @@ export function GitGraph({
   const failedFirst = rows.length === 0 && error !== null
 
   return (
-    <div className={styles.graph} data-detail={selected ? 'open' : 'closed'}>
+    <div
+      className={styles.graph}
+      data-detail={selected ? 'open' : 'closed'}
+      data-narrow={narrow ? 'true' : undefined}
+    >
       <div className={styles.toolbar}>
         <IconButton label="Reload graph" icon="refresh" disabled={loading} onClick={reload} />
         <Button icon="download" disabled={fetching} onClick={onFetch}>
@@ -194,6 +206,7 @@ export function GitGraph({
                   lanes={lanes}
                   now={now}
                   defaultBranch={defaultBranch}
+                  compact={narrow}
                   selected={row.commit.hash === selectedHash}
                   onSelect={select}
                 />

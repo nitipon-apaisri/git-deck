@@ -273,7 +273,7 @@ Any `path` argument must equal one of the stored link values, otherwise throw. V
 
 Goal: the user can show two different repos side by side (or stacked), each fully working: overview, graph, info, clone, fetch.
 
-- [ ] `renderer/src/lib/splitState.ts`: a pure reducer, no React, so it can be unit tested.
+- [x] `renderer/src/lib/splitState.ts`: a pure reducer, no React, so it can be unit tested.
   ```ts
   type PaneId = 0 | 1
   interface PaneState {
@@ -290,18 +290,18 @@ Goal: the user can show two different repos side by side (or stacked), each full
   ```
   Actions: `select(repoKey)` loads the repo into the active pane; if it is already shown in the other pane, focus that pane instead (no duplicates). `openInSplit(repoKey)` enables split, puts the repo in the pane that is not active, and makes it active. `setActive`, `setTab(pane, tab)`, `close(pane)` (disables split and keeps the other pane's repo), `swap`, `setOrientation`, `setRatio` (clamped), `pruneRepos(validKeys)` (empties a pane whose repo no longer exists), `toggle`.
   Persist to localStorage under `gitdeck.split.v1`. Validate the shape on load and fall back to the default state on corrupt data.
-- [ ] `SplitView` component: CSS grid with a draggable divider (pointer events, `role="separator"`, `aria-valuenow`, arrow keys resize in 2 % steps, double-click resets to 50 %). Minimum pane size 360 px (side by side) or 240 px (stacked). Each pane is a `RepoPane`. The active pane has an accent outline; clicking inside a pane activates it. Sidebar selection loads into the active pane.
-- [ ] **Resizing.** The user can adjust the size of each repo view in several ways:
+- [x] `SplitView` component: CSS grid with a draggable divider (pointer events, `role="separator"`, `aria-valuenow`, arrow keys resize in 2 % steps, double-click resets to 50 %). Minimum pane size 360 px (side by side) or 240 px (stacked). Each pane is a `RepoPane`. The active pane has an accent outline; clicking inside a pane activates it. Sidebar selection loads into the active pane.
+- [x] **Resizing.** The user can adjust the size of each repo view in several ways:
   - drag the divider between the panes (the ratio persists across restarts)
   - arrow keys on the focused divider, and double-click to reset to 50 %
   - resizing or maximising the app window reflows the panes smoothly; the ratio is kept and the minimum pane sizes still apply
   - if the window gets too narrow for two side-by-side panes (under 2 x 360 px plus the divider), fall back to stacked automatically without changing the saved orientation, and restore side by side when there is room again
-  - optionally, a collapse/expand control on each pane that minimises it to a thin bar (a clamped ratio of 0.25 is the smallest normal size)
-- [ ] Empty pane: placeholder "Pick a repository from the sidebar" and it becomes the active pane.
-- [ ] Controls: a "Split view" toggle, an orientation toggle, and a swap button in the main toolbar; a close button on each pane. In the sidebar, each repo row gets a hover action "Open in split view", and repos currently shown get a small `1` / `2` marker.
-- [ ] Narrow panes: `RepoPane` measures its own width with a `ResizeObserver` hook. Under 640 px: stat cards use 2 columns, the graph hides the author and date columns, the commit detail opens as an overlay drawer instead of a side column, and header buttons become icon-only.
-- [ ] Main window: set `minWidth: 1100` and `minHeight: 700` so two panes stay usable.
-- [ ] Shortcuts: `Ctrl/Cmd+Alt+S` toggles split view, `Ctrl/Cmd+1` and `Ctrl/Cmd+2` focus pane 1 or 2.
+  - optionally, a collapse/expand control on each pane that minimises it to a thin bar (a clamped ratio of 0.25 is the smallest normal size) _(not built, see docs/DECISIONS.md)_
+- [x] Empty pane: placeholder "Pick a repository from the sidebar" and it becomes the active pane.
+- [x] Controls: a "Split view" toggle, an orientation toggle, and a swap button in the main toolbar; a close button on each pane. In the sidebar, each repo row gets a hover action "Open in split view", and repos currently shown get a small `1` / `2` marker.
+- [x] Narrow panes: `RepoPane` measures its own width with a `ResizeObserver` hook. Under 640 px: stat cards use 2 columns, the graph hides the author and date columns, the commit detail opens as an overlay drawer instead of a side column, and header buttons become icon-only.
+- [x] Main window: set `minWidth: 1100` and `minHeight: 700` so two panes stay usable.
+- [x] Shortcuts: `Ctrl/Cmd+Alt+S` toggles split view, `Ctrl/Cmd+1` and `Ctrl/Cmd+2` focus pane 1 or 2.
 
 **Verify:**
 

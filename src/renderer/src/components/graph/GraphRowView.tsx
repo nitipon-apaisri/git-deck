@@ -26,6 +26,8 @@ interface GraphRowViewProps {
   lanes: number
   now: number
   defaultBranch: string
+  /** No author or date column. */
+  compact: boolean
   selected: boolean
   id: string
   onSelect: (hash: string) => void
@@ -86,6 +88,7 @@ function GraphRowViewBase({
   lanes,
   now,
   defaultBranch,
+  compact,
   selected,
   id,
   onSelect
@@ -124,13 +127,20 @@ function GraphRowViewBase({
       <span className={styles.subject} title={commit.subject}>
         {commit.subject || '(no message)'}
       </span>
-      <span className={styles.author} title={commit.email ? `${author} <${commit.email}>` : author}>
-        <Avatar name={author} size={24} />
-        <span className={styles.authorName}>{author}</span>
-      </span>
-      <span className={styles.date} title={commitDateTitle(commit.date)}>
-        {commitDateText(commit.date, now)}
-      </span>
+      {compact ? null : (
+        <>
+          <span
+            className={styles.author}
+            title={commit.email ? `${author} <${commit.email}>` : author}
+          >
+            <Avatar name={author} size={24} />
+            <span className={styles.authorName}>{author}</span>
+          </span>
+          <span className={styles.date} title={commitDateTitle(commit.date)}>
+            {commitDateText(commit.date, now)}
+          </span>
+        </>
+      )}
       <span className={`${styles.hash} hash`}>{shortHash(commit.hash)}</span>
     </div>
   )

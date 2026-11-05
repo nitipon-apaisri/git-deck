@@ -24,8 +24,8 @@ function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
-    minWidth: 900,
-    minHeight: 600,
+    minWidth: 1100,
+    minHeight: 700,
     show: false,
     title: 'GitDeck',
     backgroundColor: '#000000',

@@ -1,16 +1,18 @@
 import type { Repo } from '@shared/types'
 import type { LocalActions as Actions } from '../../state/useLocalActions'
-import { Button, ProgressBar, Spinner } from '../ui'
+import { Button, IconButton, ProgressBar, Spinner } from '../ui'
 import styles from './LocalActions.module.css'
 
 interface LocalActionsProps {
   repo: Repo
   linkedPath: string | undefined
   actions: Actions
+  /** A narrow pane: Open folder and Fetch show only their icon. */
+  compact?: boolean
 }
 
 /** Clone, link, open, fetch and unlink for one repository. */
-export function LocalActions({ repo, linkedPath, actions }: LocalActionsProps) {
+export function LocalActions({ repo, linkedPath, actions, compact = false }: LocalActionsProps) {
   const { busy } = actions
   const working = busy !== null
 
@@ -26,12 +28,31 @@ export function LocalActions({ repo, linkedPath, actions }: LocalActionsProps) {
   if (linkedPath) {
     return (
       <div className={styles.row}>
-        <Button icon="folder" disabled={working} onClick={actions.openFolder}>
-          Open folder
-        </Button>
-        <Button icon="refresh" disabled={working} onClick={actions.fetch}>
-          {busy === 'fetch' ? 'Fetching…' : 'Fetch'}
-        </Button>
+        {compact ? (
+          <>
+            <IconButton
+              label="Open folder"
+              icon="folder"
+              disabled={working}
+              onClick={actions.openFolder}
+            />
+            <IconButton
+              label={busy === 'fetch' ? 'Fetching…' : 'Fetch'}
+              icon="refresh"
+              disabled={working}
+              onClick={actions.fetch}
+            />
+          </>
+        ) : (
+          <>
+            <Button icon="folder" disabled={working} onClick={actions.openFolder}>
+              Open folder
+            </Button>
+            <Button icon="refresh" disabled={working} onClick={actions.fetch}>
+              {busy === 'fetch' ? 'Fetching…' : 'Fetch'}
+            </Button>
+          </>
+        )}
         {busy === 'fetch' ? <Spinner label="Fetching" /> : null}
         <Button
           variant="ghost"

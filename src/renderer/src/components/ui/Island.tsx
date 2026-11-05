@@ -1,7 +1,8 @@
-import type { HTMLAttributes } from 'react'
+import type { HTMLAttributes, Ref } from 'react'
 import styles from './Island.module.css'
 
 interface IslandProps extends HTMLAttributes<HTMLElement> {
+  ref?: Ref<HTMLElement>
   as?: 'div' | 'aside' | 'main' | 'section'
   /** Adds the `space-5` padding. Lists that run edge to edge leave it off. */
   padded?: boolean
@@ -11,6 +12,7 @@ interface IslandProps extends HTMLAttributes<HTMLElement> {
 export function Island({
   as: Tag = 'div',
   padded = false,
+  ref,
   className,
   children,
   ...rest
@@ -19,7 +21,7 @@ export function Island({
     .filter(Boolean)
     .join(' ')
   return (
-    <Tag className={classes} {...rest}>
+    <Tag ref={ref as Ref<HTMLDivElement>} className={classes} {...rest}>
       {children}
     </Tag>
   )

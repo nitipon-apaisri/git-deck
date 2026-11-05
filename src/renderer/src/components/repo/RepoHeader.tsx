@@ -1,15 +1,25 @@
 import type { Account, Repo } from '@shared/types'
 import { visibilityLabel } from '../../lib/repoView'
-import { Badge, Button, Icon } from '../ui'
+import { Badge, Button, Icon, IconButton } from '../ui'
 import styles from './RepoHeader.module.css'
 
 interface RepoHeaderProps {
   repo: Repo
   account: Account | null
+  /** A narrow pane: buttons show only their icon. */
+  compact?: boolean
   onOpenWeb: () => void
+  /** Shows a close button when set (Split View only). */
+  onClose?: () => void
 }
 
-export function RepoHeader({ repo, account, onOpenWeb }: RepoHeaderProps) {
+export function RepoHeader({
+  repo,
+  account,
+  compact = false,
+  onOpenWeb,
+  onClose
+}: RepoHeaderProps) {
   return (
     <header className={styles.header}>
       <div className={styles.top}>
@@ -28,9 +38,16 @@ export function RepoHeader({ repo, account, onOpenWeb }: RepoHeaderProps) {
             {repo.fullName}
           </p>
         </div>
-        <Button icon="external" onClick={onOpenWeb}>
-          Open on web
-        </Button>
+        <div className={styles.buttons}>
+          {compact ? (
+            <IconButton label="Open on web" icon="external" onClick={onOpenWeb} />
+          ) : (
+            <Button icon="external" onClick={onOpenWeb}>
+              Open on web
+            </Button>
+          )}
+          {onClose ? <IconButton label="Close pane" icon="x" onClick={onClose} /> : null}
+        </div>
       </div>
       {repo.description ? <p className={styles.description}>{repo.description}</p> : null}
     </header>
