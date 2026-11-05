@@ -211,7 +211,7 @@ export function commitDateText(unixSeconds: number, now: number, locale = 'en-GB
 export function commitDateTitle(unixSeconds: number, locale = 'en-GB'): string {
   const date = new Date(unixSeconds * 1000)
   if (Number.isNaN(date.getTime())) return ''
-  return date.toLocaleString(locale)
+  return date.toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'medium' })
 }
 
 export const authorLabel = (name: string, email: string): string =>

@@ -147,7 +147,7 @@ export function GitGraph({
         </Button>
         {loading || fetching ? <Spinner label={fetching ? 'Fetching' : 'Loading commits'} /> : null}
         <span className={styles.count} aria-live="polite">
-          {loadedText(rows.length, done)}
+          {loadedText(rows.length, done || error !== null)}
         </span>
       </div>
 

@@ -67,7 +67,10 @@
 
 .badges {
   display: flex;
-  flex: none;
+  /* Badges give way first, so the subject keeps a readable stretch. */
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
   align-items: center;
   gap: var(--space-1);
 }
@@ -76,7 +79,7 @@
   font-size: 12px;
 }
 .subject {
-  flex: 1;
+  flex: 1 0 12ch;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
