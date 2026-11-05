@@ -1,0 +1,194 @@
+.overview {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: var(--space-5);
+}
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 20px var(--space-6) 0;
+}
+.title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.name {
+  margin: 0;
+  overflow: hidden;
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sub {
+  color: var(--text-muted);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-left: auto;
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  padding: 18px var(--space-6) 0;
+}
+.tableHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: 22px var(--space-6) var(--space-3);
+}
+.tableTitle {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+.progressText {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.progressBar {
+  width: 120px;
+}
+.scroll {
+  padding: 0 var(--space-6);
+  overflow-x: auto;
+}
+.table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+}
+.table th,
+.table td {
+  padding: 0 6px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  font-weight: 400;
+}
+.table th {
+  height: 30px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.table td {
+  height: 52px;
+  vertical-align: middle;
+}
+.numeric {
+  text-align: right !important;
+}
+.sortButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.sortButton:hover,
+.sortButton[data-active] {
+  color: var(--text);
+}
+.actionCol {
+  width: 44px;
+  text-align: right;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.row {
+  cursor: pointer;
+}
+.row:hover {
+  background: var(--hover);
+}
+.dim {
+  color: var(--text-muted);
+}
+.repoCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.repoText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.repoName {
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+button.repoName {
+  cursor: pointer;
+}
+.where {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.muted {
+  color: var(--text-muted);
+}
+.local {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--success-text);
+}
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-round);
+  background: var(--success);
+}
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-6);
+}
+.emptyTitle {
+  margin: 0;
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+}
+.emptyText {
+  margin: 0 0 var(--space-3);
+  color: var(--text-muted);
+}

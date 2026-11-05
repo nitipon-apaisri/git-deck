@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { MouseEvent, ReactNode } from 'react'
 import styles from './TreeRow.module.css'
 
 interface TreeRowProps {
@@ -17,6 +17,8 @@ interface TreeRowProps {
   /** A button that shows on hover and keyboard focus, for example "Open in split view". */
   action?: ReactNode
   title?: string
+  /** Right-click or the menu key on the row. */
+  onContextMenu?: (event: MouseEvent<HTMLDivElement>) => void
 }
 
 /** One line in the sidebar. Trailing items may be buttons of their own. */
@@ -29,13 +31,14 @@ export function TreeRow({
   children,
   trailing,
   action,
-  title
+  title,
+  onContextMenu
 }: TreeRowProps) {
   const classes = [styles.row, styles[level], selected ? styles.selected : '']
     .filter(Boolean)
     .join(' ')
   return (
-    <div className={classes}>
+    <div className={classes} onContextMenu={onContextMenu}>
       <button
         type="button"
         className={styles.main}

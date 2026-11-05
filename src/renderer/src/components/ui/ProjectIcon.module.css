@@ -6,6 +6,16 @@
   background: color-mix(in srgb, var(--tile) 20%, transparent);
   color: var(--tile);
 }
+.lg {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-dialog);
+  font-size: 24px;
+}
+.lg svg {
+  width: 26px;
+  height: 26px;
+}
 .md {
   width: 36px;
   height: 36px;

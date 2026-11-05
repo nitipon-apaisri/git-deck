@@ -131,6 +131,137 @@ const SHAPES = {
       <path d="M6 7l1 13h10l1-13" />
       <path d="M10 11v6M14 11v6" />
     </>
+  ),
+  edit: (
+    <>
+      <path d="M4 20h4L19 9l-4-4L4 16z" />
+      <path d="M13.5 6.5l4 4" />
+    </>
+  ),
+  'arrow-down': (
+    <>
+      <path d="M12 5v14" />
+      <path d="M6 13l6 6 6-6" />
+    </>
+  ),
+  'arrow-up': (
+    <>
+      <path d="M12 19V5" />
+      <path d="M6 11l6-6 6 6" />
+    </>
+  ),
+  more: <path d="M5 12v.01M12 12v.01M19 12v.01" />,
+  rocket: (
+    <>
+      <path d="M12 3c3.5 2 5.5 5.5 5.5 9l-2.5 3H9l-2.5-3C6.5 8.5 8.5 5 12 3z" />
+      <circle cx="12" cy="10" r="1.6" />
+      <path d="M8.5 14L5 15.5 6 19l3-1.5" />
+      <path d="M15.5 14l3.5 1.5L18 19l-3-1.5" />
+      <path d="M10.5 18.5L12 21l1.5-2.5" />
+    </>
+  ),
+  server: (
+    <>
+      <rect x="3" y="4" width="18" height="7" rx="2" />
+      <rect x="3" y="13" width="18" height="7" rx="2" />
+      <path d="M7 7.5v.01M7 16.5v.01" />
+    </>
+  ),
+  box: (
+    <>
+      <rect x="4" y="9" width="16" height="11" rx="1.5" />
+      <path d="M3 5h18v4H3z" />
+      <path d="M10 13h4" />
+    </>
+  ),
+  package: (
+    <>
+      <path d="M12 3l8 4v10l-8 4-8-4V7z" />
+      <path d="M4 7l8 4 8-4" />
+      <path d="M12 11v10" />
+    </>
+  ),
+  code: <path d="M8 8l-5 4 5 4M16 8l5 4-5 4M14 5l-4 14" />,
+  terminal: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M7 10l3 2-3 2M12 15h5" />
+    </>
+  ),
+  database: (
+    <>
+      <ellipse cx="12" cy="6" rx="8" ry="3" />
+      <path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6" />
+      <path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" />
+    </>
+  ),
+  cloud: <path d="M7 18a4 4 0 0 1-.6-7.96A6 6 0 0 1 18 9.5 4.3 4.3 0 0 1 17.5 18z" />,
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" />
+    </>
+  ),
+  cpu: (
+    <>
+      <rect x="7" y="7" width="10" height="10" rx="1.5" />
+      <path d="M10 3v3M14 3v3M10 18v3M14 18v3M3 10h3M3 14h3M18 10h3M18 14h3" />
+    </>
+  ),
+  shield: <path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z" />,
+  key: (
+    <>
+      <circle cx="8" cy="15" r="4" />
+      <path d="M11 12l9-9M16 7l3 3M14 9l2 2" />
+    </>
+  ),
+  zap: <path d="M13 3L5 14h6l-1 7 8-11h-6z" />,
+  star: <path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 17l-5.2 2.7 1-5.9L3.5 9.7l5.9-.8z" />,
+  heart: <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />,
+  flag: <path d="M5 21V4M5 4h11l-2 4 2 4H5" />,
+  bookmark: <path d="M7 3h10a1 1 0 0 1 1 1v17l-6-4-6 4V4a1 1 0 0 1 1-1z" />,
+  book: (
+    <>
+      <path d="M12 6c-2-1.5-5-2-8-2v13c3 0 6 .5 8 2 2-1.5 5-2 8-2V4c-3 0-6 .5-8 2z" />
+      <path d="M12 6v13" />
+    </>
+  ),
+  briefcase: (
+    <>
+      <rect x="3" y="7" width="18" height="13" rx="2" />
+      <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+      <path d="M3 13h18" />
+    </>
+  ),
+  home: (
+    <>
+      <path d="M4 11l8-7 8 7" />
+      <path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9" />
+    </>
+  ),
+  tool: (
+    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9A6 6 0 0 1 17.9 2.5z" />
+  ),
+  settings: (
+    <>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M10.5 3.5h3l.5 2.2 1.7 1 2.1-.8 1.5 2.6-1.6 1.6v2l1.6 1.6-1.5 2.6-2.1-.8-1.7 1-.5 2.2h-3l-.5-2.2-1.7-1-2.1.8-1.5-2.6 1.6-1.6v-2L4.7 8.5l1.5-2.6 2.1.8 1.7-1z" />
+    </>
+  ),
+  activity: <path d="M3 12h4l3-8 4 16 3-8h4" />,
+  'bar-chart': <path d="M5 20v-9M12 20V4M19 20v-6" />,
+  smartphone: (
+    <>
+      <rect x="7" y="2.5" width="10" height="19" rx="2.2" />
+      <path d="M11 18.5h2" />
+    </>
+  ),
+  monitor: (
+    <>
+      <rect x="3" y="4" width="18" height="12" rx="2" />
+      <path d="M8 20h8M12 16v4" />
+    </>
   )
 } satisfies Record<string, ReactNode>
 

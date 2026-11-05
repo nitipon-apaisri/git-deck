@@ -16,5 +16,5 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 6: Renderer: repo view, overview, info
 - [x] Phase 7: Commit graph
 - [x] Phase 8: Split View (two repos at once)
-- [ ] Phase 9: Projects
+- [x] Phase 9: Projects
 - [ ] Phase 10: Polish and docs

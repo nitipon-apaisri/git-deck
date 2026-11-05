@@ -313,28 +313,28 @@ Goal: the user can show two different repos side by side (or stacked), each full
 
 A **Project is a named group of repos from any connected host or account, with a custom name and icon** (similar to GitKraken Workspaces). Keep the data model small.
 
-- [ ] Data: `Project` in `config.json` (types above), including the user's custom `name`, `icon` and `color`. Names are trimmed, 1-60 chars and unique ignoring case. IDs are random UUIDs. A repo can belong to several projects.
-- [ ] `ProjectIcon` component renders a project's icon in a colored rounded square: a built-in SVG icon, or the emoji as text. It is used in the scope switcher, the project overview header, "Add to project" menus and the manage dialog. Fall back to the `folder` icon for unknown ids.
-- [ ] Scope switcher at the top of the sidebar: "All repositories", then each project with its icon, color and repo count, then "New project..." and "Manage projects...". The choice persists in localStorage (`gitdeck.scope`).
-- [ ] In a project scope the sidebar shows only that project's repos, still grouped host, then namespace, with search working inside the project. Repo keys that are not in any loaded repo list (account removed, access lost, not loaded yet) show in an "Unavailable" group with a remove button.
-- [ ] Adding repos:
+- [x] Data: `Project` in `config.json` (types above), including the user's custom `name`, `icon` and `color`. Names are trimmed, 1-60 chars and unique ignoring case. IDs are random UUIDs. A repo can belong to several projects.
+- [x] `ProjectIcon` component renders a project's icon in a colored rounded square: a built-in SVG icon, or the emoji as text. It is used in the scope switcher, the project overview header, "Add to project" menus and the manage dialog. Fall back to the `folder` icon for unknown ids.
+- [x] Scope switcher at the top of the sidebar: "All repositories", then each project with its icon, color and repo count, then "New project..." and "Manage projects...". The choice persists in localStorage (`gitdeck.scope`).
+- [x] In a project scope the sidebar shows only that project's repos, still grouped host, then namespace, with search working inside the project. Repo keys that are not in any loaded repo list (account removed, access lost, not loaded yet) show in an "Unavailable" group with a remove button.
+- [x] Adding repos:
   - a repo row context menu "Add to project..." with a checkbox list of projects plus "New project..."
   - the project dialog has a searchable multi-select of all repos, grouped by host
   - "Remove from project" in the context menu while in project scope
-- [ ] **Manage projects dialog**: create, edit, delete (with confirmation). Deleting a project never touches repos or local clones. The create/edit form has:
+- [x] **Manage projects dialog**: create, edit, delete (with confirmation). Deleting a project never touches repos or local clones. The create/edit form has:
   - a name field with live validation (empty, too long, duplicate)
   - an **icon picker**: a searchable grid of the built-in icons plus a free text field that accepts one emoji
   - a **color picker** with the 8 palette colors
   - a live preview of the icon and name as they will appear in the sidebar
-- [ ] **Project overview page**, shown in the main area when a project scope is active and no repo is selected, and from a "Project overview" button in the sidebar:
+- [x] **Project overview page**, shown in the main area when a project scope is active and no repo is selected, and from a "Project overview" button in the sidebar:
   - header with the project icon, name and repo count, and an "Edit project" button
   - stat cards: repos, total commits, contributors, open PRs/MRs, last activity
   - a `partial` badge with a tooltip when some repos have no loaded summary or a null count; totals then count only what is known
   - a sortable table: name, host badge, visibility, commits, contributors, open PRs/MRs, last activity, local status (linked or not)
   - row click opens the repo in the active pane; a row button "Open in split view" opens it in the other pane (Phase 8)
   - cached summaries show immediately; missing or stale ones (older than 1 hour) load in the background with concurrency 3 and a "12/30 loaded" indicator; "Refresh all" forces a reload
-- [ ] **Fetch all linked**: runs the local fetch for every linked repo in the project, concurrency 2, and shows a per-repo list with success or failure. Cloning all repos is out of scope.
-- [ ] Aggregation rules (`aggregateProject`):
+- [x] **Fetch all linked**: runs the local fetch for every linked repo in the project, concurrency 2, and shows a per-repo list with success or failure. Cloning all repos is out of scope.
+- [x] Aggregation rules (`aggregateProject`):
   - commits and open PRs/MRs are sums over known (non-null) values
   - contributors are the union of each repo's top contributors (at most 25 per repo), de-duplicated by lowercase email, else login, and displayed as approximate with a "~" or tooltip
   - last activity is the maximum across repos
