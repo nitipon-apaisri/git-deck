@@ -1,4 +1,4 @@
-import type { AccountType } from '../../shared/types'
+import type { AccountType } from './types'
 
 const DEFAULTS: Record<AccountType, string> = {
   github: 'https://github.com',

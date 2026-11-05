@@ -1,0 +1,13 @@
+.island {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--island);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-island);
+  overflow: hidden;
+}
+.padded {
+  padding: var(--space-5);
+}

@@ -233,19 +233,19 @@ Any `path` argument must equal one of the stored link values, otherwise throw. V
 
 ## Phase 5 — Renderer: shell, accounts, sidebar
 
-- [ ] Theme and shell from **UI design** above: import `tokens.css`, theme switch (System / Dark / Light), 48 px toolbar, 40 px icon rail, 300 px sidebar island and a flexible main island. Build the `ui/` components listed there, a small inline SVG icon set (24 px viewBox, 1.8 px stroke, round caps, `currentColor`) and an `Avatar` that falls back to coloured initials (`--avatar-1` to `--avatar-4` with `--avatar-ink`) when the image fails.
-- [ ] **Accounts dialog**
+- [x] Theme and shell from **UI design** above: import `tokens.css`, theme switch (System / Dark / Light), 48 px toolbar, 40 px icon rail, 300 px sidebar island and a flexible main island. Build the `ui/` components listed there, a small inline SVG icon set (24 px viewBox, 1.8 px stroke, round caps, `currentColor`) and an `Avatar` that falls back to coloured initials (`--avatar-1` to `--avatar-4` with `--avatar-ink`) when the image fails.
+- [x] **Accounts dialog**
   - Presets: GitHub.com, GitLab.com, GitLab self-hosted, GitHub Enterprise.
   - Fields: label, base URL (disabled for the .com presets), token (password input), "allow self-signed certificate" (shown for non-default hosts).
   - "Test connection" and "Create token" (opens the right token page with scopes pre-filled for GitLab).
   - Shows a warning if secure storage is unavailable, and lists existing accounts with remove (with confirm).
-- [ ] **Sidebar**
+- [x] **Sidebar**
   - Account (host) → namespace (org/group) → repos. The user's own namespace sorts first, the rest alphabetically.
   - Per host: provider badge, label, repo count, spinner while loading, error indicator with the message in a tooltip.
   - Search across name, full name and description. When searching, groups auto-expand.
   - Badges: lock for private, "archived", "fork", dot for linked local clone.
   - Empty state with a "Connect GitHub / GitLab" button.
-- [ ] **App state**: load accounts and links, then for each account show cached repos immediately and refresh from the network in the background. Persist the selected repo key in localStorage, but keep selection behind one small `useSelection` hook so Phase 8 can replace it with the split-layout state without touching the sidebar. Clean Electron's `Error invoking remote method '…':` prefix from error messages.
+- [x] **App state**: load accounts and links, then for each account show cached repos immediately and refresh from the network in the background. Persist the selected repo key in localStorage, but keep selection behind one small `useSelection` hook so Phase 8 can replace it with the split-layout state without touching the sidebar. Clean Electron's `Error invoking remote method '…':` prefix from error messages.
 
 **Verify:** typecheck and build. If a display and a launchable Electron binary exist, run `pnpm dev` and screenshot the accounts dialog and sidebar.
 

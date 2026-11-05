@@ -1,0 +1,42 @@
+.tile {
+  --tile: var(--proj-gray);
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  background: color-mix(in srgb, var(--tile) 20%, transparent);
+  color: var(--tile);
+}
+.md {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-lg);
+}
+.sm {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+}
+.tile[data-color='blue'] {
+  --tile: var(--proj-blue);
+}
+.tile[data-color='teal'] {
+  --tile: var(--proj-teal);
+}
+.tile[data-color='violet'] {
+  --tile: var(--proj-violet);
+}
+.tile[data-color='amber'] {
+  --tile: var(--proj-amber);
+}
+.tile[data-color='rose'] {
+  --tile: var(--proj-rose);
+}
+.tile[data-color='green'] {
+  --tile: var(--proj-green);
+}
+.tile[data-color='pink'] {
+  --tile: var(--proj-pink);
+}
+.tile[data-color='gray'] {
+  --tile: var(--proj-gray);
+}
