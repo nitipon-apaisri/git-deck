@@ -28,6 +28,8 @@ interface GitGraphProps {
   onFetch: () => void
   /** A narrow pane: no author or date column, and the detail opens as a drawer. */
   narrow: boolean
+  /** Which pane this is. A swap changes it, and the scroll position is put back. */
+  place: 1 | 2
 }
 
 /**
@@ -41,7 +43,8 @@ export function GitGraph({
   reloadToken,
   fetching,
   onFetch,
-  narrow
+  narrow,
+  place
 }: GitGraphProps) {
   const idPrefix = useId()
   const now = useNow()
@@ -75,10 +78,12 @@ export function GitGraph({
     return () => observer.disconnect()
   }, [linked])
 
+  // The browser resets a scroll position when the element is detached, which is what a
+  // tab change (display: none) and a pane swap (the DOM node moves) both do.
   useLayoutEffect(() => {
     const el = viewport.current
     if (visible && el) el.scrollTop = savedTop.current
-  }, [visible])
+  }, [visible, place])
 
   useEffect(() => {
     if (

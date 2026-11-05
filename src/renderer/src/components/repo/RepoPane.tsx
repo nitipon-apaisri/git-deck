@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useId, useLayoutEffect, useRef, useState } from 'react'
 import type { Account, Repo } from '@shared/types'
 import { errorMessage } from '../../lib/errors'
 import { timeAgo } from '../../lib/format'
@@ -68,6 +68,12 @@ export function RepoPane({
   const now = useNow()
   const { ref, width } = useElementSize<HTMLElement>()
   const narrow = isNarrow(width)
+  // A swap moves this pane in the DOM, and the browser then resets the panel's scroll.
+  const panel = useRef<HTMLDivElement>(null)
+  const panelTop = useRef(0)
+  useLayoutEffect(() => {
+    if (panel.current) panel.current.scrollTop = panelTop.current
+  }, [paneNumber])
   // The graph mounts on the first visit and then stays, so its scroll position, loaded
   // pages and selected commit survive a trip to another tab.
   const [graphSeen, setGraphSeen] = useState(tab === 'graph')
@@ -157,7 +163,11 @@ export function RepoPane({
       </div>
 
       <div
+        ref={panel}
         className={styles.panel}
+        onScroll={(e) => {
+          if (e.currentTarget.clientHeight > 0) panelTop.current = e.currentTarget.scrollTop
+        }}
         role="tabpanel"
         id={panelId(idPrefix, tab)}
         aria-labelledby={tabId(idPrefix, tab)}
@@ -181,6 +191,7 @@ export function RepoPane({
               fetching={actions.busy === 'fetch'}
               onFetch={actions.fetch}
               narrow={narrow}
+              place={paneNumber}
             />
           </div>
         ) : null}
