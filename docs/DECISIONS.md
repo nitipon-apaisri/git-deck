@@ -8,6 +8,24 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-06: Phase 7 choices not fixed by PLAN.md
+
+- **Question:** Where the graph lives while another tab shows, how a narrow pane and a failed page behave, the column order, and how the selection survives a reload.
+- **Options considered:** unmount the graph on a tab change; keep it mounted; a JS width observer for the drawer; select by row index or by hash.
+- **Decision and why:**
+  - The Graph tab mounts on the first visit and then stays mounted (hidden). Its scroll position, loaded pages and selected commit survive a trip to Overview or Info, and no second `git log` runs. The last scroll position is saved while visible and restored on return, because a hidden box reports no usable size.
+  - Paging is a pure reducer (`lib/graphPaging.ts`). Every action carries its generation, and one from an older generation is dropped. The `GraphLayout` is created per generation in `state/graphData.ts`, so a reload, a new path or a fetch (`reloadToken`) cannot mix pages of two histories.
+  - A failed page keeps the rows already loaded and stops. Scrolling does not retry it (a broken repository would loop); "Try again" does. A first-page failure shows the git message and a "Try again" button.
+  - The selection is a commit hash, not an index, so it survives a reload. A selected commit that is no longer in the list closes the panel.
+  - Row column order follows PLAN.md (subject, author, date, hash). `GraphRow/README.md` lists hash before author; the geometry is the same.
+  - Ref badges: the default branch and its remote twin use the `main` look, other local branches `feature`, other remotes `project`, tags `tag`. The checked-out branch is bold. Badges shrink before the subject does, and the subject keeps at least 12 characters.
+  - The graph column is as wide as the widest row being drawn (visible rows plus overscan), as `GraphRow/README.md` says, so it can change width while scrolling. It is not capped: a history with 40 lanes gives a 640 px graph column.
+  - The commit detail is a side column. Under 640 px of pane width (a CSS container query, no JS) it becomes a drawer over the list. This is only the detail panel's part of the Phase 8 narrow-pane item; the rest (hiding author and date, icon-only buttons, the `ResizeObserver` hook) is still Phase 8.
+  - Keyboard: Up, Down, PageUp, PageDown, Home, End move the selection and Escape closes the panel. The list is a `listbox` with `aria-activedescendant`. Phase 10 still owns the shortcut list in the README.
+  - Detail shows the message body without its first line (the title already shows it) and caps the file list at 300 until "Show all". A merge commit shows its diff against the first parent, as `git.ts` does.
+  - `RefBadge` gained an optional `current` prop.
+- **Not verified:** Real GitHub or GitLab remotes (the fixture remote is a local bare repo). A repository with a detached HEAD. A history with more than 3 lanes at once was drawn (the fixture has up to 3 at a time) but 10 or more were not. Window sizes below 760 px. A history over 1,611 commits, and the cost of copying the rows array per page past several thousand commits.
+
 ## 2026-11-05: Phase 6 choices not fixed by PLAN.md
 
 - **Question:** What `RepoPane` takes beyond `{ repo, active, onActivate }`, how null figures read, what a clone in progress does when the user switches repo, and how loading is kept from painting a stale answer.
