@@ -36,6 +36,7 @@ Desktop Git client (Electron + React + TypeScript) for GitHub, GitLab.com and se
 - Never commit directly to `main`. Create a new branch from `main` for every feature or phase before making changes.
 - Names: `phase/<n>-<slug>` for a PLAN.md phase (for example `phase/1-scaffold`), `feat/<slug>` for a feature, `fix/<slug>` for a bug fix, `chore/<slug>` for tooling or docs.
 - Finish a branch by running its Verify steps, ticking the PLAN.md boxes and the `README.md` progress checklist, then stop. Merging to `main` is the user's call. Never push.
+- Merge with `git merge --no-ff <branch>`, never fast-forward, so every phase or feature shows as one merge commit and `git log --first-parent` reads as one line per branch. Message: `🔀 (merge): <what the branch did>`, for example `🔀 (merge): phase 6, repo pane, overview and info`. Run the merge only when the user asks.
 
 ## Commits (gitmoji)
 
@@ -58,6 +59,7 @@ Format: `{emoji} ({type}): {imperative, concise message}`. One logical change an
 | Security         | `🔒 (security):`           |
 | Breaking         | `💥 (breaking):`           |
 | Hotfix           | `🚑 (hotfix):`             |
+| Merge a branch   | `🔀 (merge):`              |
 
 ## Code quality
 
