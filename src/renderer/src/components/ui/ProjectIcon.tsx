@@ -1,5 +1,10 @@
-import { Icon, isIconName } from './Icon'
+import { PROJECT_ICONS } from '../../../../shared/projects'
+import { Icon, isIconName, type IconName } from './Icon'
 import styles from './ProjectIcon.module.css'
+
+// Compile-time check: every built-in project icon id has a drawn glyph.
+const _drawn: readonly IconName[] = PROJECT_ICONS
+void _drawn
 
 interface ProjectIconProps {
   /** A glyph id or a single emoji, as stored on the project. */
