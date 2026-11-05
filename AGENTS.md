@@ -31,6 +31,12 @@ Desktop Git client (Electron + React + TypeScript) for GitHub, GitLab.com and se
 | `tests/`           | `node:test` via `tsx`, mirroring `src/`.                                                              |
 | `docs/`            | Design system, UI boards, `DECISIONS.md`.                                                             |
 
+## Branches
+
+- Never commit directly to `main`. Create a new branch from `main` for every feature or phase before making changes.
+- Names: `phase/<n>-<slug>` for a PLAN.md phase (for example `phase/1-scaffold`), `feat/<slug>` for a feature, `fix/<slug>` for a bug fix, `chore/<slug>` for tooling or docs.
+- Finish a branch by running its Verify steps, ticking the PLAN.md boxes and the `README.md` progress checklist, then stop. Merging to `main` is the user's call. Never push.
+
 ## Commits (gitmoji)
 
 Format: `{emoji} ({type}): {imperative, concise message}`. One logical change and one primary emoji per commit. Commit only when asked. Never push to any remote.
