@@ -1,0 +1,109 @@
+.row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-right: var(--space-4);
+  border-radius: var(--radius-md);
+  white-space: nowrap;
+  cursor: default;
+}
+.row:hover {
+  background: var(--hover);
+}
+.row[data-selected='true'] {
+  background: var(--selection);
+}
+
+.lanes {
+  flex: none;
+  display: block;
+}
+.line {
+  fill: none;
+  stroke-width: 2;
+  stroke: var(--lane-1);
+}
+.node {
+  fill: var(--lane-1);
+}
+.ring {
+  fill: var(--island);
+  stroke: var(--lane-1);
+  stroke-width: 2;
+}
+.line[data-lane='2'] {
+  stroke: var(--lane-2);
+}
+.line[data-lane='3'] {
+  stroke: var(--lane-3);
+}
+.line[data-lane='4'] {
+  stroke: var(--lane-4);
+}
+.line[data-lane='5'] {
+  stroke: var(--lane-5);
+}
+.line[data-lane='6'] {
+  stroke: var(--lane-6);
+}
+.node[data-lane='2'] {
+  fill: var(--lane-2);
+}
+.node[data-lane='3'] {
+  fill: var(--lane-3);
+}
+.node[data-lane='4'] {
+  fill: var(--lane-4);
+}
+.node[data-lane='5'] {
+  fill: var(--lane-5);
+}
+.node[data-lane='6'] {
+  fill: var(--lane-6);
+}
+
+.badges {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-1);
+}
+.more {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.subject {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.author {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-2);
+  width: 128px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.authorName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.date {
+  flex: none;
+  width: 76px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.hash {
+  flex: none;
+  width: 56px;
+  color: var(--text-muted);
+  font-size: 12px;
+}

@@ -6,16 +6,18 @@ import { useLocalInfo, useRepoSummary } from '../../state/repoData'
 import { useLocalActions } from '../../state/useLocalActions'
 import { useNow } from '../../state/useNow'
 import { Icon, IconButton, Island, Spinner, Tabs, panelId, tabId } from '../ui'
+import { GitGraph } from '../graph/GitGraph'
 import { InfoTab } from './InfoTab'
 import { LocalActions } from './LocalActions'
 import { OverviewTab } from './OverviewTab'
 import { RepoHeader } from './RepoHeader'
 import styles from './RepoPane.module.css'
 
-type TabName = 'overview' | 'info'
+type TabName = 'overview' | 'graph' | 'info'
 
 const TABS: { id: TabName; label: string }[] = [
   { id: 'overview', label: 'Overview' },
+  { id: 'graph', label: 'Graph' },
   { id: 'info', label: 'Info' }
 ]
 
@@ -50,6 +52,9 @@ export function RepoPane({
   const idPrefix = useId()
   const now = useNow()
   const [tab, setTab] = useState<TabName>('overview')
+  // The graph mounts on the first visit and then stays, so its scroll position, loaded
+  // pages and selected commit survive a trip to another tab.
+  const [graphSeen, setGraphSeen] = useState(false)
   const [webError, setWebError] = useState<string | null>(null)
 
   const { summary, fetchedAt, loading, error, reload } = useRepoSummary(repo.key)
@@ -101,7 +106,10 @@ export function RepoPane({
         <Tabs
           tabs={TABS}
           value={tab}
-          onChange={(id) => setTab(id as TabName)}
+          onChange={(id) => {
+            setTab(id as TabName)
+            if (id === 'graph') setGraphSeen(true)
+          }}
           label="Repository"
           idPrefix={idPrefix}
           trailing={
@@ -130,13 +138,26 @@ export function RepoPane({
         id={panelId(idPrefix, tab)}
         aria-labelledby={tabId(idPrefix, tab)}
         tabIndex={0}
+        data-tab={tab}
       >
-        {error ? (
+        {error && tab !== 'graph' ? (
           <p className={styles.notice} role="alert">
             <Icon name="alert" size="sm" />
             {summary ? 'Could not refresh the summary: ' : 'Could not load the summary: '}
             {error}
           </p>
+        ) : null}
+        {graphSeen ? (
+          <div className={styles.graphWrap} hidden={tab !== 'graph'}>
+            <GitGraph
+              path={linkedPath ?? null}
+              defaultBranch={repo.defaultBranch}
+              visible={tab === 'graph'}
+              reloadToken={actions.reloadToken}
+              fetching={actions.busy === 'fetch'}
+              onFetch={actions.fetch}
+            />
+          </div>
         ) : null}
         {tab === 'overview' ? (
           <OverviewTab
@@ -145,7 +166,7 @@ export function RepoPane({
             summary={summary}
             loading={loading}
           />
-        ) : (
+        ) : tab === 'info' ? (
           <InfoTab
             repo={repo}
             account={account}
@@ -153,7 +174,7 @@ export function RepoPane({
             linkedPath={linkedPath}
             local={local}
           />
-        )}
+        ) : null}
       </div>
     </Island>
   )
