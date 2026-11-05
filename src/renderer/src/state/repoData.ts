@@ -76,11 +76,14 @@ export interface LocalInfoState {
   info: LocalInfo | null
   loading: boolean
   error: string | null
+  /** Read the folder again. */
+  reload: () => void
 }
 
 /** `LocalInfo` for a linked folder. Loads again whenever `reloadToken` changes. */
 export function useLocalInfo(path: string | null, reloadToken: number): LocalInfoState {
   const [state, dispatch] = useReducer(resourceReducer<LocalInfo>, emptyResource<LocalInfo>())
+  const [nonce, setNonce] = useState(0)
 
   useEffect(() => {
     if (path === null) return
@@ -98,10 +101,11 @@ export function useLocalInfo(path: string | null, reloadToken: number): LocalInf
     return () => {
       cancelled = true
     }
-  }, [path, reloadToken])
+  }, [path, reloadToken, nonce])
 
+  const reload = useCallback(() => setNonce((n) => n + 1), [])
   if (path === null || state.key !== path) {
-    return { info: null, loading: path !== null, error: null }
+    return { info: null, loading: path !== null, error: null, reload }
   }
-  return { info: state.data, loading: state.loading, error: state.error }
+  return { info: state.data, loading: state.loading, error: state.error, reload }
 }

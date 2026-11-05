@@ -27,7 +27,8 @@ type DialogName = 'accounts' | 'preferences' | 'projects' | null
 const SIDEBAR_KEY = 'gitdeck.sidebar'
 
 export function App() {
-  const { state, refresh, refreshAll, refreshLinks, accountAdded, removeAccount } = useWorkspace()
+  const { state, refresh, refreshAll, refreshLinks, accountAdded, removeAccount, retryLoad } =
+    useWorkspace()
   const split = useSplit()
   const { state: layout } = split
   const projectsApi = useProjects()
@@ -150,6 +151,19 @@ export function App() {
   const active = layout.active
   const onShortcut = useCallback(
     (action: ShortcutAction) => {
+      if (action === 'search') {
+        // A modal dialog owns the keyboard: leave it alone.
+        if (document.querySelector('dialog[open]')) return
+        setSidebarOpen(true)
+        writeStored(SIDEBAR_KEY, 'open')
+        // After React has drawn the sidebar, if it was closed.
+        requestAnimationFrame(() => {
+          const input = document.querySelector<HTMLInputElement>('[data-search-input]')
+          input?.focus()
+          input?.select()
+        })
+        return
+      }
       if (action === 'toggle') {
         toggle()
         return
@@ -185,6 +199,9 @@ export function App() {
         />
         {sidebarOpen ? (
           <Sidebar
+            loading={!state.ready}
+            loadError={state.loadError}
+            onRetryLoad={retryLoad}
             accounts={state.accounts}
             byAccount={state.byAccount}
             links={state.links}
@@ -201,6 +218,8 @@ export function App() {
               view,
               overviewActive: overviewVisible,
               error: projectError,
+              loadError: projectsApi.loadError,
+              onRetryLoad: () => void projectsApi.reload(),
               onDismissError: () => setProjectError(null),
               onScope: chooseScope,
               onNewProject: (repoKeys = []) => setForm({ editId: null, repoKeys }),

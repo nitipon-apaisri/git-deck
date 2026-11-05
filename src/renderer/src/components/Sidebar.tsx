@@ -10,7 +10,17 @@ import { readStored, writeStored } from '../state/storage'
 import { useNow } from '../state/useNow'
 import { RepoProjectMenu } from './projects/RepoProjectMenu'
 import { ScopeSwitcher } from './projects/ScopeSwitcher'
-import { Button, HostTile, Icon, IconButton, Island, Spinner, TreeRow } from './ui'
+import {
+  Button,
+  ErrorBanner,
+  HostTile,
+  Icon,
+  IconButton,
+  Island,
+  Skeleton,
+  Spinner,
+  TreeRow
+} from './ui'
 import styles from './Sidebar.module.css'
 
 const COLLAPSED_KEY = 'gitdeck.collapsed'
@@ -35,6 +45,9 @@ export interface SidebarProjects {
   /** The last project change that failed, in words. */
   error: string | null
   onDismissError: () => void
+  /** The project list could not be read from main. */
+  loadError: string | null
+  onRetryLoad: () => void
   /** `null` picks "All repositories". */
   onScope: (projectId: string | null) => void
   onNewProject: (repoKeys?: string[]) => void
@@ -47,6 +60,11 @@ export interface SidebarProjects {
 }
 
 interface SidebarProps {
+  /** The first load of accounts and links is still running. */
+  loading: boolean
+  /** That first load failed. */
+  loadError: string | null
+  onRetryLoad: () => void
   accounts: Account[]
   byAccount: Record<string, AccountRepos>
   /** repo key -> local folder */
@@ -63,6 +81,9 @@ interface SidebarProps {
 }
 
 export function Sidebar({
+  loading,
+  loadError,
+  onRetryLoad,
   accounts,
   byAccount,
   links,
@@ -118,7 +139,13 @@ export function Sidebar({
 
   return (
     <Island as="aside" aria-label="Repositories" className={styles.sidebar}>
-      {accounts.length === 0 && !scope ? (
+      {loading ? (
+        <SidebarSkeleton />
+      ) : loadError ? (
+        <div className={styles.loadError}>
+          <ErrorBanner onRetry={onRetryLoad}>Could not load your accounts: {loadError}</ErrorBanner>
+        </div>
+      ) : accounts.length === 0 && !scope ? (
         <div className={styles.empty}>
           <h2 className={styles.emptyTitle}>No accounts yet</h2>
           <p className={styles.emptyText}>
@@ -143,18 +170,26 @@ export function Sidebar({
               <input
                 type="search"
                 className={styles.searchInput}
+                data-search-input
+                onKeyDown={(e) => {
+                  // Escape clears the filter, and a second one leaves the field.
+                  if (e.key !== 'Escape') return
+                  if (query !== '') setQuery('')
+                  else e.currentTarget.blur()
+                }}
                 aria-label={scope ? 'Filter repositories in this project' : 'Filter repositories'}
                 placeholder={scope ? 'Filter in project' : 'Filter repositories'}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
             </label>
+            {proj.loadError ? (
+              <ErrorBanner onRetry={proj.onRetryLoad}>
+                Could not load your projects: {proj.loadError}
+              </ErrorBanner>
+            ) : null}
             {proj.error ? (
-              <div role="alert" className={styles.notice}>
-                <Icon name="alert" size="sm" />
-                <span className={styles.noticeText}>{proj.error}</span>
-                <IconButton label="Dismiss" icon="x" onClick={proj.onDismissError} />
-              </div>
+              <ErrorBanner onDismiss={proj.onDismissError}>{proj.error}</ErrorBanner>
             ) : null}
             {scope ? (
               <button
@@ -416,5 +451,23 @@ function HostRow({ node, expanded, searching, state, onToggle, onRefresh }: Host
     >
       {account.label} <span className={styles.sub}>{account.host}</span>
     </TreeRow>
+  )
+}
+
+/** What the list looks like before the accounts have loaded: three hosts, a few repos each. */
+function SidebarSkeleton() {
+  return (
+    <div className={styles.skeleton} aria-busy="true">
+      <Skeleton height={36} label="Loading repositories" />
+      <Skeleton height={32} />
+      {[0, 1, 2].map((host) => (
+        <div key={host} className={styles.skeletonGroup}>
+          <Skeleton width="55%" />
+          {[0, 1, 2].map((repo) => (
+            <Skeleton key={repo} width={`${80 - repo * 12}%`} className={styles.skeletonRepo} />
+          ))}
+        </div>
+      ))}
+    </div>
   )
 }

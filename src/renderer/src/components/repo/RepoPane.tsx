@@ -8,7 +8,7 @@ import { useLocalInfo, useRepoSummary } from '../../state/repoData'
 import { useElementSize } from '../../state/useElementSize'
 import { useLocalActions } from '../../state/useLocalActions'
 import { useNow } from '../../state/useNow'
-import { Icon, IconButton, Island, Spinner, Tabs, panelId, tabId } from '../ui'
+import { ErrorBanner, Icon, IconButton, Island, Spinner, Tabs, panelId, tabId } from '../ui'
 import { GitGraph } from '../graph/GitGraph'
 import { InfoTab } from './InfoTab'
 import { LocalActions } from './LocalActions'
@@ -175,11 +175,10 @@ export function RepoPane({
         data-tab={tab}
       >
         {error && tab !== 'graph' ? (
-          <p className={styles.notice} role="alert">
-            <Icon name="alert" size="sm" />
+          <ErrorBanner onRetry={reload} retrying={loading} className={styles.banner}>
             {summary ? 'Could not refresh the summary: ' : 'Could not load the summary: '}
             {error}
-          </p>
+          </ErrorBanner>
         ) : null}
         {graphSeen ? (
           <div className={styles.graphWrap} hidden={tab !== 'graph'}>

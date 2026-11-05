@@ -57,3 +57,7 @@
 .graphWrap[hidden] {
   display: none;
 }
+
+.banner {
+  margin-bottom: var(--space-4);
+}

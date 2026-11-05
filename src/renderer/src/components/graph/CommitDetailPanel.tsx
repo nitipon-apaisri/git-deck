@@ -12,7 +12,7 @@ import {
   fileTotals,
   fileTotalsText
 } from '../../lib/graphView'
-import { Avatar, Button, CopyButton, IconButton, RefBadge, Spinner } from '../ui'
+import { Avatar, Button, CopyButton, ErrorBanner, IconButton, RefBadge, Skeleton } from '../ui'
 import styles from './CommitDetailPanel.module.css'
 
 interface CommitDetailPanelProps {
@@ -87,14 +87,17 @@ export function CommitDetailPanel({
         </dl>
 
         {state.loading && !detail ? (
-          <p className={styles.muted}>
-            <Spinner label="Loading the commit" /> Loading the commit…
-          </p>
+          <div className={styles.skeletons}>
+            <Skeleton label="Loading the commit" width="45%" />
+            <Skeleton width="85%" />
+            <Skeleton width="70%" />
+            <Skeleton width="78%" />
+          </div>
         ) : null}
         {state.error ? (
-          <p className={styles.error} role="alert">
+          <ErrorBanner onRetry={state.reload} retrying={state.loading}>
             Could not read this commit: {state.error}
-          </p>
+          </ErrorBanner>
         ) : null}
 
         {body ? <pre className={styles.body}>{body}</pre> : null}

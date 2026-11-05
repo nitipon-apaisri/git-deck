@@ -25,6 +25,7 @@ import type { ProjectSummaries } from '../../state/projectSummaries'
 import {
   Badge,
   Button,
+  ErrorBanner,
   HostTile,
   Icon,
   IconButton,
@@ -104,6 +105,7 @@ export function ProjectOverview({
     r.repo && r.linkedPath ? [{ key: r.key, name: r.repo.fullName, path: r.linkedPath }] : []
   )
   const loading = summaries.progress !== null
+  const failedCount = project.repoKeys.filter((k) => summaries.failed[k] !== undefined).length
   const empty = project.repoKeys.length === 0
 
   const missingOf = (count: number): number => project.repoKeys.length - count
@@ -159,6 +161,16 @@ export function ProjectOverview({
         </div>
       ) : (
         <>
+          {failedCount > 0 && !loading ? (
+            <div className={styles.banner}>
+              <ErrorBanner onRetry={summaries.retryFailed}>
+                {failedCount === 1
+                  ? 'The summary of 1 repository could not be loaded.'
+                  : `The summaries of ${failedCount} repositories could not be loaded.`}{' '}
+                Totals count only what is known.
+              </ErrorBanner>
+            </div>
+          ) : null}
           <div className={styles.stats}>
             <StatCard
               value={project.repoKeys.length}

@@ -67,7 +67,7 @@ export function trackTemplate(ratio: number, orientation: Orientation): string {
 
 export const isNarrow = (width: number): boolean => width > 0 && width < NARROW_PANE
 
-export type ShortcutAction = 'toggle' | 'pane1' | 'pane2'
+export type ShortcutAction = 'toggle' | 'pane1' | 'pane2' | 'search'
 
 export interface KeyLike {
   code: string
@@ -78,13 +78,14 @@ export interface KeyLike {
 }
 
 /**
- * Ctrl/Cmd+Alt+S toggles split view. Ctrl/Cmd+1 and +2 focus a pane. `code` is used
- * because Alt changes `key` on macOS ("ß" for Alt+S).
+ * Ctrl/Cmd+Alt+S toggles split view. Ctrl/Cmd+1 and +2 focus a pane. Ctrl/Cmd+K focuses
+ * the sidebar search. `code` is used because Alt changes `key` on macOS ("ß" for Alt+S).
  */
 export function shortcutOf(e: KeyLike): ShortcutAction | null {
   const mod = e.ctrlKey !== e.metaKey // exactly one of them
   if (!mod || e.shiftKey) return null
   if (e.altKey) return e.code === 'KeyS' ? 'toggle' : null
+  if (e.code === 'KeyK') return 'search'
   if (e.code === 'Digit1') return 'pane1'
   if (e.code === 'Digit2') return 'pane2'
   return null

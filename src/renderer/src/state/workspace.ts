@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer } from 'react'
+import { useCallback, useEffect, useReducer, useState } from 'react'
 import { errorMessage } from '../lib/errors'
 import { reducer, initial } from '../lib/workspaceReducer'
 import type { Account } from '@shared/types'
@@ -17,10 +17,13 @@ export interface Workspace {
   accountAdded: (account: Account) => void
   /** Removes through main, then forgets the account here. Rejects with a plain message. */
   removeAccount: (accountId: string) => Promise<void>
+  /** Runs the first load again after it failed. */
+  retryLoad: () => void
 }
 
 export function useWorkspace(): Workspace {
   const [state, dispatch] = useReducer(reducer, initial)
+  const [attempt, setAttempt] = useState(0)
 
   const refresh = useCallback(async (accountId: string) => {
     dispatch({ type: 'loading', accountId })
@@ -67,7 +70,12 @@ export function useWorkspace(): Workspace {
     return () => {
       cancelled = true
     }
-  }, [loadAccount])
+  }, [loadAccount, attempt])
+
+  const retryLoad = useCallback(() => {
+    dispatch({ type: 'loadStart' })
+    setAttempt((n) => n + 1)
+  }, [])
 
   const refreshAll = useCallback(
     () => Promise.all(state.accounts.map((a) => refresh(a.id))).then(() => undefined),
@@ -99,5 +107,5 @@ export function useWorkspace(): Workspace {
     dispatch({ type: 'accountRemoved', accountId })
   }, [])
 
-  return { state, refresh, refreshAll, refreshLinks, accountAdded, removeAccount }
+  return { state, refresh, refreshAll, refreshLinks, accountAdded, removeAccount, retryLoad }
 }

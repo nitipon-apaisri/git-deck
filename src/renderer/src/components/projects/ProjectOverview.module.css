@@ -192,3 +192,7 @@ button.repoName {
   margin: 0 0 var(--space-3);
   color: var(--text-muted);
 }
+
+.banner {
+  padding: 18px var(--space-6) 0;
+}
