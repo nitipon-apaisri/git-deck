@@ -1,0 +1,30 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-11-05T10:30:00Z" },
+  "title": "GitDeck UI Design",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1440, "h": 900, "title": "Workspace: commit graph", "expand": "fill" },
+    "Split.dc.html": { "x": 1520, "y": 0, "w": 1440, "h": 900, "title": "Split view: two repos", "expand": "fill" },
+    "Project.dc.html": { "x": 0, "y": 1260, "w": 1440, "h": 900, "title": "Project overview", "expand": "fill" },
+    "ProjectDialog.dc.html": { "x": 1520, "y": 1260, "w": 560, "h": 740, "title": "New project dialog", "radius": 14 },
+    "AccountDialog.dc.html": { "x": 2160, "y": 1260, "w": 520, "h": 680, "title": "Connect account dialog", "radius": 14 },
+    "MainLight.dc.html": { "x": 0, "y": 2480, "w": 1440, "h": 900, "title": "Workspace: commit graph (light)", "expand": "fill" },
+    "SplitLight.dc.html": { "x": 1520, "y": 2480, "w": 1440, "h": 900, "title": "Split view (light)", "expand": "fill" },
+    "ProjectLight.dc.html": { "x": 3040, "y": 2480, "w": 1440, "h": 900, "title": "Project overview (light)", "expand": "fill" },
+    "ProjectDialogLight.dc.html": { "x": 0, "y": 3700, "w": 560, "h": 740, "title": "New project dialog (light)", "radius": 14 },
+    "AccountDialogLight.dc.html": { "x": 640, "y": 3700, "w": 520, "h": 680, "title": "Connect account dialog (light)", "radius": 14 }
+  },
+  "order": [
+    "Main.dc.html", "Split.dc.html", "Project.dc.html", "ProjectDialog.dc.html", "AccountDialog.dc.html",
+    "MainLight.dc.html", "SplitLight.dc.html", "ProjectLight.dc.html", "ProjectDialogLight.dc.html", "AccountDialogLight.dc.html"
+  ],
+  "notes": {
+    "t1": { "x": 0, "y": -300, "text": "GitDeck dark: workspace and split view", "kind": "title1", "maxW": 2960 },
+    "t2": { "x": 0, "y": 1020, "text": "Dark: projects and dialogs", "kind": "title1", "maxW": 2680 },
+    "t3": { "x": 0, "y": 2240, "text": "GitDeck light: workspace, split view and projects", "kind": "title1", "maxW": 4480 },
+    "t4": { "x": 0, "y": 3450, "text": "Light: dialogs", "kind": "title1", "maxW": 1160 }
+  },
+  "designSystems": []
+}

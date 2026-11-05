@@ -1,0 +1,29 @@
+<!-- @dsCard group="Layout" height=300 subtitle="Rounded panel on the window ground" -->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:transparent;font:400 13px/18px var(--font-sans)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px}
+.th{background:var(--window);color:var(--text);padding:var(--space-2);border-radius:var(--radius-xl);display:grid;grid-template-columns:120px 1fr;gap:var(--space-2);height:236px}
+.island{background:var(--island);border-radius:var(--radius-xl);box-shadow:var(--shadow-island);padding:var(--space-5);min-width:0}
+.h{font:600 15px/22px var(--font-sans);margin:0 0 4px}
+.m{color:var(--text-muted);font:400 12px/16px var(--font-sans)}
+.row{display:flex;align-items:center;gap:8px;height:30px;padding:0 8px;border-radius:var(--radius-md);margin:0 -8px}
+.row.sel{background:var(--selection)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--success)}
+</style></head>
+<body>
+<div class="pair">
+  <div class="th" data-theme="dark">
+    <div class="island"><p class="h">Repos</p><p class="m">Sidebar island</p></div>
+    <div class="island"><p class="h">acme/web-app</p><p class="m">Main island</p>
+      <div class="row sel"><span class="dot"></span>main</div><div class="row"><span class="dot"></span>release/2.4</div></div>
+  </div>
+  <div class="th" data-theme="light">
+    <div class="island"><p class="h">Repos</p><p class="m">Sidebar island</p></div>
+    <div class="island"><p class="h">acme/web-app</p><p class="m">Main island</p>
+      <div class="row sel"><span class="dot"></span>main</div><div class="row"><span class="dot"></span>release/2.4</div></div>
+  </div>
+</div>
+</body></html>

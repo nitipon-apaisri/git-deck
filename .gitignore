@@ -1,0 +1,14 @@
+node_modules/
+out/
+dist/
+release/
+*.log
+.DS_Store
+.env
+.env.*
+_to_delete/
+.vite/
+*.pem
+*.key
+*.p12
+.claude/settings.local.json

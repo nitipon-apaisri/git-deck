@@ -1,0 +1,52 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;background:transparent}
+.cover{position:relative;width:960px;height:288px;background:var(--window);overflow:hidden;font-family:var(--font-sans)}
+.cover svg{position:absolute;left:0;top:0;width:960px;height:288px}
+.name{position:absolute;left:40px;bottom:64px;margin:0;font-weight:600;font-size:96px;line-height:.95;letter-spacing:0;color:var(--text)}
+.tag{position:absolute;left:40px;bottom:32px;margin:0;width:400px;font-size:14px;line-height:20px;font-weight:400;color:var(--text-muted)}
+.b1{fill:var(--primary);rx:var(--radius-xl)}
+.b2{fill:var(--lane-2);rx:var(--radius-xl)}
+.b3{fill:var(--lane-3);rx:var(--radius-xl)}
+.b4{fill:var(--lane-4);rx:var(--radius-xl)}
+.ln{fill:none;stroke:var(--window);stroke-width:2;stroke-linecap:round}
+.nd{fill:var(--window)}
+</style></head>
+<body>
+<div class="cover">
+<svg viewBox="0 0 960 288" aria-hidden="true">
+<!--
+blocks: primary 160x200 (A), lane-2 108x248 (B), lane-3 108x168 (C), lane-4 80+ bleeding right 200 (D); gaps space-4 (12), all corners radius-xl (12).
+arrangement: four staggered slabs from x=480; A and C hang from the top edge, B and D rise from the bottom edge, D bleeds off the right.
+pattern: literal motif, the commit graph. Parallel lanes 16px apart (graph-lane-width) with 5px nodes and a few forks, drawn in the window ground so they are cut out of the blocks. Chosen because GitDeck's one recognisable shape is the lane graph.
+scales: lane pitch 16, node radius 5, gap 12 (space-4), radius-xl 12, stroke 2.
+-->
+<rect class="b1" x="480" y="-12" width="160" height="212"/>
+<rect class="b2" x="652" y="40" width="108" height="260"/>
+<rect class="b3" x="772" y="-12" width="108" height="180"/>
+<rect class="b4" x="892" y="88" width="92" height="212"/>
+
+<path class="ln" d="M504 0V200M520 40V200"/>
+<path class="ln" d="M504 76C504 100 520 96 520 120"/>
+<path class="ln" d="M520 150C520 170 504 166 504 188"/>
+<circle class="nd" cx="504" cy="28" r="5"/><circle class="nd" cx="504" cy="76" r="5"/><circle class="nd" cx="520" cy="120" r="5"/><circle class="nd" cx="504" cy="148" r="5"/><circle class="nd" cx="504" cy="176" r="5"/>
+
+<path class="ln" d="M676 40V288M692 120V288"/>
+<path class="ln" d="M676 172C676 196 692 192 692 216"/>
+<circle class="nd" cx="676" cy="68" r="5"/><circle class="nd" cx="692" cy="148" r="5"/><circle class="nd" cx="676" cy="172" r="5"/><circle class="nd" cx="692" cy="240" r="5"/><circle class="nd" cx="676" cy="264" r="5"/>
+
+<path class="ln" d="M796 0V168M812 56V168"/>
+<path class="ln" d="M796 96C796 112 812 108 812 124"/>
+<circle class="nd" cx="796" cy="24" r="5"/><circle class="nd" cx="812" cy="72" r="5"/><circle class="nd" cx="796" cy="96" r="5"/><circle class="nd" cx="812" cy="124" r="5"/>
+
+<path class="ln" d="M916 88V288M932 150V288"/>
+<path class="ln" d="M916 188C916 208 932 204 932 224"/>
+<circle class="nd" cx="916" cy="116" r="5"/><circle class="nd" cx="932" cy="172" r="5"/><circle class="nd" cx="916" cy="188" r="5"/><circle class="nd" cx="932" cy="224" r="5"/><circle class="nd" cx="916" cy="256" r="5"/>
+</svg>
+<h1 class="name">GitDeck</h1>
+<p class="tag">Every repository, every host, in view.</p>
+</div>
+</body></html>

@@ -1,0 +1,66 @@
+<!-- @dsCard group="Commit graph" height=330 subtitle="Lane graph, ref badges, author and date" -->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:transparent;font:400 13px/18px var(--font-sans)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px}
+.th{background:var(--island);color:var(--text);border-radius:var(--radius-xl);padding:0 var(--space-3);position:relative;height:278px;overflow:hidden}
+.g{position:absolute;left:8px;top:0;width:64px;height:100%}
+.l1{stroke:var(--lane-1)}.l2{stroke:var(--lane-2)}.l3{stroke:var(--lane-3)}
+.f1{fill:var(--lane-1)}.f2{fill:var(--lane-2)}.f3{fill:var(--lane-3)}
+.ring{fill:var(--island);stroke:var(--lane-1);stroke-width:2}
+.line{fill:none;stroke-width:2}
+.rows{position:relative;padding-left:64px}
+.row{display:flex;align-items:center;gap:8px;height:28px;padding:0 4px;border-radius:var(--radius-md);white-space:nowrap}
+.row.sel{background:var(--selection)}
+.msg{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.h{font:400 12px/16px var(--font-mono);color:var(--text-muted)}
+.m{color:var(--text-muted);font:400 12px/16px var(--font-sans)}
+.b{display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:var(--radius-xs);border:1px solid transparent;font:500 11.5px/16px var(--font-sans)}
+.head{background:var(--ref-head-bg);color:var(--ref-head-fg)}
+.main{background:var(--ref-main-bg);color:var(--ref-main-fg);border-color:var(--ref-main-edge)}
+.feat{background:var(--ref-feature-bg);color:var(--ref-feature-fg);border-color:var(--ref-feature-edge)}
+.proj{background:var(--ref-project-bg);color:var(--ref-project-fg);border-color:var(--ref-project-edge)}
+.tag{background:var(--ref-tag-bg);color:var(--ref-tag-fg);border-color:var(--ref-tag-edge)}
+</style></head>
+<body>
+<div class="pair">
+  <div class="th" data-theme="dark">
+    <svg class="g" viewBox="0 0 64 280" aria-hidden="true">
+      <path class="line l1" d="M14 14V252"/><path class="line l2" d="M30 42V154"/><path class="line l2" d="M14 70C22 70 30 62 30 56"/><path class="line l2" d="M30 154C30 168 22 168 14 182"/>
+      <path class="line l3" d="M46 98V126"/><path class="line l3" d="M46 126C46 140 30 134 30 154"/>
+      <circle class="ring" cx="14" cy="14" r="5"/><circle class="f2" cx="30" cy="42" r="5"/><circle class="f1" cx="14" cy="70" r="5"/><circle class="f3" cx="46" cy="98" r="5"/><circle class="f2" cx="30" cy="126" r="5"/><circle class="f1" cx="14" cy="154" r="5"/><circle class="f1" cx="14" cy="182" r="5"/><circle class="f1" cx="14" cy="210" r="5"/><circle class="f1" cx="14" cy="238" r="5"/>
+    </svg>
+    <div class="rows">
+      <div class="row"><span class="b head">HEAD</span><span class="b main">main</span><span class="msg">Add split view pane state</span><span class="h">a41c9e2</span><span class="m">Nitipon</span></div>
+      <div class="row sel"><span class="b feat">feature/projects</span><span class="msg">Persist project icons</span><span class="h">9be07d1</span><span class="m">Mali</span></div>
+      <div class="row"><span class="msg">Merge branch release/2.4</span><span class="h">5f20a3c</span><span class="m">Nitipon</span></div>
+      <div class="row"><span class="msg">Virtualize graph rows</span><span class="h">c83d114</span><span class="m">Arun</span></div>
+      <div class="row"><span class="b proj">origin/release/2.4</span><span class="msg">Lane assignment fix</span><span class="h">0d77e5b</span><span class="m">Arun</span></div>
+      <div class="row"><span class="msg">Parse decorated refs</span><span class="h">e19a6f0</span><span class="m">Mali</span></div>
+      <div class="row"><span class="msg">Add git service</span><span class="h">72bc8a4</span><span class="m">Nitipon</span></div>
+      <div class="row"><span class="b tag">v0.1.0</span><span class="msg">Scaffold app</span><span class="h">3a5e9c7</span><span class="m">Nitipon</span></div>
+      <div class="row"><span class="msg">Initial commit</span><span class="h">1f0b2d8</span><span class="m">Nitipon</span></div>
+    </div>
+  </div>
+  <div class="th" data-theme="light">
+    <svg class="g" viewBox="0 0 64 280" aria-hidden="true">
+      <path class="line l1" d="M14 14V252"/><path class="line l2" d="M30 42V154"/><path class="line l2" d="M14 70C22 70 30 62 30 56"/><path class="line l2" d="M30 154C30 168 22 168 14 182"/>
+      <path class="line l3" d="M46 98V126"/><path class="line l3" d="M46 126C46 140 30 134 30 154"/>
+      <circle class="ring" cx="14" cy="14" r="5"/><circle class="f2" cx="30" cy="42" r="5"/><circle class="f1" cx="14" cy="70" r="5"/><circle class="f3" cx="46" cy="98" r="5"/><circle class="f2" cx="30" cy="126" r="5"/><circle class="f1" cx="14" cy="154" r="5"/><circle class="f1" cx="14" cy="182" r="5"/><circle class="f1" cx="14" cy="210" r="5"/><circle class="f1" cx="14" cy="238" r="5"/>
+    </svg>
+    <div class="rows">
+      <div class="row"><span class="b head">HEAD</span><span class="b main">main</span><span class="msg">Add split view pane state</span><span class="h">a41c9e2</span><span class="m">Nitipon</span></div>
+      <div class="row sel"><span class="b feat">feature/projects</span><span class="msg">Persist project icons</span><span class="h">9be07d1</span><span class="m">Mali</span></div>
+      <div class="row"><span class="msg">Merge branch release/2.4</span><span class="h">5f20a3c</span><span class="m">Nitipon</span></div>
+      <div class="row"><span class="msg">Virtualize graph rows</span><span class="h">c83d114</span><span class="m">Arun</span></div>
+      <div class="row"><span class="b proj">origin/release/2.4</span><span class="msg">Lane assignment fix</span><span class="h">0d77e5b</span><span class="m">Arun</span></div>
+      <div class="row"><span class="msg">Parse decorated refs</span><span class="h">e19a6f0</span><span class="m">Mali</span></div>
+      <div class="row"><span class="msg">Add git service</span><span class="h">72bc8a4</span><span class="m">Nitipon</span></div>
+      <div class="row"><span class="b tag">v0.1.0</span><span class="msg">Scaffold app</span><span class="h">3a5e9c7</span><span class="m">Nitipon</span></div>
+      <div class="row"><span class="msg">Initial commit</span><span class="h">1f0b2d8</span><span class="m">Nitipon</span></div>
+    </div>
+  </div>
+</div>
+</body></html>

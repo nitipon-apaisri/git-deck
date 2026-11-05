@@ -1,0 +1,6 @@
+title = "GitDeck gitleaks config"
+
+[extend]
+useDefault = true
+
+# Add allowlists here for false positives, each with a reason. Never skip the hook.

@@ -1,0 +1,40 @@
+<!-- @dsCard group="Overlays" height=330 subtitle="Modal with header, body and action footer" -->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:transparent;font:400 13px/18px var(--font-sans)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px}
+.th{background:var(--window);color:var(--text);padding:var(--space-6);border-radius:var(--radius-xl);display:flex;justify-content:center}
+.d{background:var(--island);border-radius:var(--radius-dialog);box-shadow:var(--shadow-dialog);width:100%;max-width:340px;display:flex;flex-direction:column}
+.hd{display:flex;align-items:flex-start;gap:12px;padding:20px 24px 12px}
+.t{font:600 17px/24px var(--font-sans)}
+.s{color:var(--text-muted);font:400 13px/18px var(--font-sans)}
+.bd{padding:4px 24px 16px;display:flex;flex-direction:column;gap:6px}
+label{font-weight:500}
+input{height:36px;padding:0 12px;border-radius:var(--radius-md);border:1px solid var(--border-strong);background:var(--island-raised);color:var(--text);font:inherit;outline:0}
+.ft{display:flex;align-items:center;gap:10px;padding:14px 24px;border-top:1px solid var(--line)}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{height:34px;padding:0 16px;border-radius:var(--radius-md);border:1px solid var(--line);background:transparent}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--on-primary);font-weight:500}
+.ib{margin-left:auto;width:32px;height:32px;border:0;border-radius:var(--radius-md);background:transparent;color:var(--text-muted);display:grid;place-items:center}
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+</style></head>
+<body>
+<div class="pair">
+  <div class="th" data-theme="dark">
+    <div class="d" role="dialog" aria-label="New project">
+      <div class="hd"><div><div class="t">New project</div><div class="s">Group repositories under one name.</div></div><button class="ib" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="bd"><label for="dn">Name</label><input id="dn" value="Platform"></div>
+      <div class="ft"><span style="flex:1"></span><button class="btn">Cancel</button><button class="btn primary">Create project</button></div>
+    </div>
+  </div>
+  <div class="th" data-theme="light">
+    <div class="d" role="dialog" aria-label="New project">
+      <div class="hd"><div><div class="t">New project</div><div class="s">Group repositories under one name.</div></div><button class="ib" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="bd"><label for="ln">Name</label><input id="ln" value="Platform"></div>
+      <div class="ft"><span style="flex:1"></span><button class="btn">Cancel</button><button class="btn primary">Create project</button></div>
+    </div>
+  </div>
+</div>
+</body></html>

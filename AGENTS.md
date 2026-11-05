@@ -1,0 +1,89 @@
+# GitDeck: agent instructions
+
+Portable instructions for any coding agent. `PLAN.md` is the build brief. `CLAUDE.md` holds the Claude Code working rules. This file must stay consistent with it.
+
+Desktop Git client (Electron + React + TypeScript) for GitHub, GitLab.com and self-hosted GitLab, with a commit graph, Projects and Split View.
+
+**Package manager: pnpm only.** Never commit `package-lock.json` or `yarn.lock`. Node >= 22.12.
+
+## Read first
+
+- `PLAN.md`: 10 phases with checkboxes, stack versions, IPC contract, graph algorithm.
+- `docs/design-system/`: visual source of truth (tokens, component guidelines, previews).
+- `docs/ui-boards/`: full-screen designs.
+- `docs/DECISIONS.md`: log of ambiguities and the call made.
+
+## Workflow
+
+- Do the phase you are asked to do, run its **Verify** steps, tick its boxes in `PLAN.md`, then stop.
+- Keep dependencies minimal. Runtime dependencies are `react` and `react-dom` only. Fonts and build tools are devDependencies. No native modules.
+- If something is ambiguous, pick the default from `PLAN.md` and record it in `docs/DECISIONS.md`.
+- If there is no display, say plainly what was not checked visually.
+
+## Folder structure
+
+| Path               | Role                                                                                                  |
+| ------------------ | ----------------------------------------------------------------------------------------------------- |
+| `src/main`         | Electron main process: window, IPC handlers, store, http, tls, git, providers. Owns all side effects. |
+| `src/preload`      | `contextBridge` exposing `window.api`.                                                                |
+| `src/renderer/src` | React UI. Only talks to main through `window.api`.                                                    |
+| `src/shared`       | Domain types, IPC contract, pure graph layout. No `electron` import.                                  |
+| `tests/`           | `node:test` via `tsx`, mirroring `src/`.                                                              |
+| `docs/`            | Design system, UI boards, `DECISIONS.md`.                                                             |
+
+## Commits (gitmoji)
+
+Format: `{emoji} ({type}): {imperative, concise message}`. One logical change and one primary emoji per commit. Commit only when asked. Never push to any remote.
+
+| Change           | Prefix                     |
+| ---------------- | -------------------------- |
+| New feature      | `✨ (feat):`               |
+| Bug fix          | `🐛 (bug):`                |
+| Performance      | `⚡️ (improve):`            |
+| UI / style       | `💄 (ui):`                 |
+| Refactor         | `♻️ (refactor):`           |
+| Config / tooling | `🔧 (config):`             |
+| Dependencies     | `➕` / `➖` / `⬆️ (deps):` |
+| Docs             | `📝 (docs):`               |
+| Tests            | `✅ (test):`               |
+| CI               | `💚 (ci):`                 |
+| Lint             | `🚨 (lint):`               |
+| Remove           | `🔥 (remove):`             |
+| Security         | `🔒 (security):`           |
+| Breaking         | `💥 (breaking):`           |
+| Hotfix           | `🚑 (hotfix):`             |
+
+## Code quality
+
+- TypeScript `strict`. No `any` without a comment saying why. Use `import type` for types.
+- Small, typed, pure modules. Code that does not need Electron must not import `electron`, so it runs under `tsx` tests.
+- Main and `shared` use relative imports. The renderer may use `@shared`.
+- Comments explain why, not what.
+- **Pane-safe renderer:** no global "current repo", no module-level singletons. Each `RepoPane` owns its tab, summary, graph and scroll state.
+
+## UI rules
+
+- Style with tokens only: `var(--island)`, `var(--text)` and so on from `tokens.css`. No hex values in components.
+- Theme is `data-theme` on `<html>`, set before first paint.
+- Reuse the components in `src/renderer/src/components/ui/`. Status uses a word or icon as well as colour. Icon-only buttons have `aria-label`.
+
+## Security
+
+- Never log or store a token outside Electron `safeStorage`. Never put a token in a git config, URL or error message.
+- Windows use `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`. Validate all IPC input.
+- No destructive git operations (force push, `reset --hard`, `clean`, `branch -D`) without asking.
+
+## Git hooks (husky)
+
+- `pre-commit`: `lint-staged` (Prettier + ESLint on staged files), then `gitleaks protect --staged`.
+- `pre-push`: `pnpm audit:secrets`. Once Phase 1 lands, also typecheck and tests.
+- Install gitleaks with `brew install gitleaks`. `pnpm install` activates the hooks via `prepare`.
+- If a hook fails, fix the cause. Never use `--no-verify`. Allowlist real false positives in `.gitleaks.toml` with a reason.
+
+## Verification
+
+Run `pnpm lint`, `pnpm format:check`, and after Phase 1 `pnpm typecheck`, `pnpm test`, `pnpm build`. For UI work, check dark and light when a display exists.
+
+## Scripts
+
+`pnpm dev`, `pnpm build`, `pnpm typecheck`, `pnpm test` (added in Phase 1). Available now: `pnpm lint`, `pnpm format`, `pnpm format:check`, `pnpm audit:secrets`.

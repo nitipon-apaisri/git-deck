@@ -1,0 +1,53 @@
+<!-- @dsCard group="Projects" height=230 subtitle="Icon tile in the eight project colors" -->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:transparent;font:400 13px/18px var(--font-sans)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px}
+.th{background:var(--island);color:var(--text);padding:var(--space-6);border-radius:var(--radius-xl);display:flex;flex-direction:column;gap:16px}
+.r{display:flex;gap:10px;flex-wrap:wrap}
+.t{width:36px;height:36px;border-radius:var(--radius-lg);display:grid;place-items:center;background:color-mix(in srgb,var(--c) 20%,transparent);color:var(--c)}
+.t.sm{width:28px;height:28px;border-radius:var(--radius-md)}
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sm .ic{width:14px;height:14px}
+.sel{outline:2px solid var(--focus-ring);outline-offset:2px}
+.p{display:flex;align-items:center;gap:10px}
+.n{font-weight:500}.m{color:var(--text-muted);font:400 12px/16px var(--font-sans)}
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="rocket" viewBox="0 0 24 24"><path d="M5 19c0-3 1-5 3-7l4-4c3-3 6-4 8-4 0 2-1 5-4 8l-4 4c-2 2-4 3-7 3z"/><circle cx="15" cy="9" r="1.5"/></symbol>
+<symbol id="cube" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12L4 7.5M12 12v9"/></symbol>
+<symbol id="bolt" viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></symbol>
+<symbol id="folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+</svg>
+<div class="pair">
+  <div class="th" data-theme="dark">
+    <div class="r">
+      <span class="t" style="--c:var(--proj-blue)"><svg class="ic"><use href="#rocket"/></svg></span>
+      <span class="t" style="--c:var(--proj-teal)"><svg class="ic"><use href="#cube"/></svg></span>
+      <span class="t" style="--c:var(--proj-violet)"><svg class="ic"><use href="#bolt"/></svg></span>
+      <span class="t" style="--c:var(--proj-amber)"><svg class="ic"><use href="#folder"/></svg></span>
+      <span class="t" style="--c:var(--proj-rose)"><svg class="ic"><use href="#rocket"/></svg></span>
+      <span class="t" style="--c:var(--proj-green)"><svg class="ic"><use href="#cube"/></svg></span>
+      <span class="t" style="--c:var(--proj-pink)"><svg class="ic"><use href="#bolt"/></svg></span>
+      <span class="t sel" style="--c:var(--proj-gray)"><svg class="ic"><use href="#folder"/></svg></span>
+    </div>
+    <div class="p"><span class="t sm" style="--c:var(--proj-blue)"><svg class="ic"><use href="#rocket"/></svg></span><div><div class="n">Platform</div><div class="m">6 repositories</div></div></div>
+  </div>
+  <div class="th" data-theme="light">
+    <div class="r">
+      <span class="t" style="--c:var(--proj-blue)"><svg class="ic"><use href="#rocket"/></svg></span>
+      <span class="t" style="--c:var(--proj-teal)"><svg class="ic"><use href="#cube"/></svg></span>
+      <span class="t" style="--c:var(--proj-violet)"><svg class="ic"><use href="#bolt"/></svg></span>
+      <span class="t" style="--c:var(--proj-amber)"><svg class="ic"><use href="#folder"/></svg></span>
+      <span class="t" style="--c:var(--proj-rose)"><svg class="ic"><use href="#rocket"/></svg></span>
+      <span class="t" style="--c:var(--proj-green)"><svg class="ic"><use href="#cube"/></svg></span>
+      <span class="t" style="--c:var(--proj-pink)"><svg class="ic"><use href="#bolt"/></svg></span>
+      <span class="t sel" style="--c:var(--proj-gray)"><svg class="ic"><use href="#folder"/></svg></span>
+    </div>
+    <div class="p"><span class="t sm" style="--c:var(--proj-blue)"><svg class="ic"><use href="#rocket"/></svg></span><div><div class="n">Platform</div><div class="m">6 repositories</div></div></div>
+  </div>
+</div>
+</body></html>

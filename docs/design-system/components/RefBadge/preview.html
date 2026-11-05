@@ -1,0 +1,32 @@
+<!-- @dsCard group="Commit graph" height=200 subtitle="HEAD, branch, feature, project and tag refs" -->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:transparent;font:400 13px/18px var(--font-sans)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px}
+.th{background:var(--island);color:var(--text);padding:var(--space-6);border-radius:var(--radius-xl);display:flex;flex-direction:column;gap:12px}
+.r{display:flex;gap:6px;flex-wrap:wrap}
+.b{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 7px;border-radius:var(--radius-xs);border:1px solid transparent;font:500 11.5px/16px var(--font-sans);white-space:nowrap}
+.head{background:var(--ref-head-bg);color:var(--ref-head-fg)}
+.main{background:var(--ref-main-bg);color:var(--ref-main-fg);border-color:var(--ref-main-edge)}
+.feat{background:var(--ref-feature-bg);color:var(--ref-feature-fg);border-color:var(--ref-feature-edge)}
+.proj{background:var(--ref-project-bg);color:var(--ref-project-fg);border-color:var(--ref-project-edge)}
+.tag{background:var(--ref-tag-bg);color:var(--ref-tag-fg);border-color:var(--ref-tag-edge)}
+.ic{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.cap{color:var(--text-muted);font:400 12px/16px var(--font-sans)}
+</style></head>
+<body>
+<div class="pair">
+  <div class="th" data-theme="dark">
+    <div class="r"><span class="b head">HEAD</span><span class="b main">main</span><span class="b main">origin/main</span></div>
+    <div class="r"><span class="b feat">feature/split-view</span><span class="b proj">origin/release/2.4</span><span class="b tag"><svg class="ic" viewBox="0 0 24 24"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1"/></svg>v2.4.0</span></div>
+    <span class="cap">Show at most three per row, then +2</span>
+  </div>
+  <div class="th" data-theme="light">
+    <div class="r"><span class="b head">HEAD</span><span class="b main">main</span><span class="b main">origin/main</span></div>
+    <div class="r"><span class="b feat">feature/split-view</span><span class="b proj">origin/release/2.4</span><span class="b tag"><svg class="ic" viewBox="0 0 24 24"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1"/></svg>v2.4.0</span></div>
+    <span class="cap">Show at most three per row, then +2</span>
+  </div>
+</div>
+</body></html>

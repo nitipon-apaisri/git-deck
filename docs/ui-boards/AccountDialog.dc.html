@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Connect account dialog</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--island:#1E1F22;--island-2:#26282C;--hover:#2B2D31;--line:#303338;--text:#DFE1E5;--muted:#9498A2;--accent:#5B93F8;--green:#6FCB8B}
+body{margin:0;background:#1E1F22}
+*{box-sizing:border-box}
+button,input{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer}
+a{color:#8FB3FF}a:hover{color:#B8CCFF}
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic.s{width:14px;height:14px}
+.ib{width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:var(--muted);display:grid;place-items:center}
+.ib:hover{background:var(--hover);color:var(--text)}
+.btn{display:flex;align-items:center;gap:7px;height:34px;padding:0 16px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:13px}
+.btn:hover{background:var(--hover)}
+input[type=checkbox]{width:16px;height:16px;accent-color:#5B93F8;margin:0}
+</style>
+</helmet>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"></path></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"></path></symbol>
+<symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6"></path><path d="M20 4l-9 9"></path><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"></path></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4l9 16H3z"></path><path d="M12 10v4"></path><path d="M12 17.2v.01"></path></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></symbol>
+</svg>
+<div style="width: 520px; height: 680px; display: flex; flex-direction: column; background: var(--island); color: var(--text); font-family: Inter, system-ui, sans-serif; font-size: 13px; line-height: 1.4; border: 1px solid var(--line)">
+
+  <div style="display: flex; align-items: flex-start; gap: 12px; padding: 20px 24px 12px">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <span style="font-size: 17px; font-weight: 600">Connect an account</span>
+      <span style="color: var(--muted)">Uses a personal access token, stored encrypted in your OS keychain.</span>
+    </div>
+    <button class="ib" aria-label="Close" style="margin-left: auto"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-x"></use></svg></button>
+  </div>
+
+  <div style="flex: 1; padding: 4px 24px 0; display: flex; flex-direction: column; gap: 16px; overflow: hidden">
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+      <sc-for list="{{presets}}" as="p" hint-placeholder-count="4">
+        <button aria-pressed="{{p.on}}" style="display: flex; align-items: center; gap: 10px; height: 54px; padding: 0 12px; border-radius: 10px; border: 1px solid {{p.bd}}; background: {{p.bg}}; text-align: left">
+          <span style="width: 28px; height: 28px; border-radius: 8px; background: {{p.badgeBg}}; display: grid; place-items: center; font-size: 11px; font-weight: 600; flex: none">{{p.badge}}</span>
+          <span style="display: flex; flex-direction: column; min-width: 0">
+            <span style="font-weight: 500">{{p.title}}</span>
+            <span style="color: var(--muted); font-size: 12px">{{p.sub}}</span>
+          </span>
+        </button>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="alabel" style="font-weight: 500">Label</label>
+      <input id="alabel" value="Acme GitLab" style="height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--island-2); outline: 0">
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="aurl" style="font-weight: 500">Base URL</label>
+      <input id="aurl" value="https://gitlab.acme.dev" style="height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--island-2); outline: 0">
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <div style="display: flex; align-items: center; justify-content: space-between">
+        <label for="atoken" style="font-weight: 500">Access token</label>
+        <a href="https://gitlab.acme.dev/-/user_settings/personal_access_tokens" style="display: inline-flex; align-items: center; gap: 5px; font-size: 12px">Create token<svg class="ic s" viewBox="0 0 24 24" aria-hidden="true" style="width: 12px; height: 12px"><use href="#i-external"></use></svg></a>
+      </div>
+      <input id="atoken" type="password" value="glpat-xxxxxxxxxxxxxxxx" style="height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--island-2); outline: 0">
+      <span style="color: var(--muted); font-size: 12px">Needs the <span style="font-family: ui-monospace, monospace">read_api</span> and <span style="font-family: ui-monospace, monospace">read_repository</span> scopes.</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 10px; border: 1px solid var(--line)">
+      <label style="display: flex; align-items: center; gap: 10px; font-weight: 500">
+        <input type="checkbox" aria-label="Allow self-signed certificate">Allow self-signed certificate for this host
+      </label>
+      <span style="display: flex; gap: 8px; color: #F0C27A; font-size: 12px"><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true" style="margin-top: 2px"><use href="#i-alert"></use></svg><span>Only enable this for hosts you trust. It applies to gitlab.acme.dev only. Certificates from your company CA already work through the system store.</span></span>
+    </div>
+
+    <div role="status" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(111,203,139,.12); color: #8FDBA6">
+      <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>
+      <span>Connected as <b style="font-weight: 600">nitipon</b> · 21 projects visible</span>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 10px; padding: 14px 24px; border-top: 1px solid var(--line)">
+    <button class="btn">Test connection</button>
+    <span style="flex: 1"></span>
+    <button class="btn">Cancel</button>
+    <button class="btn" style="background: #2E69DC; border-color: #2E69DC; color: #fff; font-weight: 500">Add account</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":520,"height":680}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const p = (title, sub, badge, badgeBg, on) => ({
+      title, sub, badge, badgeBg, on,
+      bd: on ? '#5B93F8' : '#303338',
+      bg: on ? 'rgba(91,147,248,.14)' : 'transparent'
+    });
+    const presets = [
+      p('GitHub.com', 'Personal or org repos', 'GH', '#2C2F34', false),
+      p('GitLab.com', 'Hosted by GitLab', 'GL', '#3A2F2A', false),
+      p('GitLab self-hosted', 'Your own base URL', 'SH', '#2A3440', true),
+      p('GitHub Enterprise', 'Your own base URL', 'GE', '#2C2F34', false)
+    ];
+    return { presets };
+  }
+}
+</script>
+</body>
+</html>

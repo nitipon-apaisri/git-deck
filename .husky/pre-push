@@ -1,0 +1,2 @@
+pnpm audit:secrets
+# Phase 1+: add `pnpm typecheck && pnpm test`
