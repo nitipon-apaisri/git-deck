@@ -12,3 +12,4 @@ _to_delete/
 *.key
 *.p12
 .claude/settings.local.json
+*.tsbuildinfo
