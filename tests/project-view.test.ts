@@ -329,11 +329,11 @@ test('progressText and partialNote', () => {
   assert.equal(partialNote(base), null)
   assert.match(
     partialNote({ ...base, loadedCount: 8, partial: true }) ?? '',
-    /1 of 9 repository has no summary/
+    /No summary yet for 1 of 9 repositories/
   )
   assert.match(
     partialNote({ ...base, loadedCount: 6, partial: true }) ?? '',
-    /3 of 9 repositories have/
+    /No summary yet for 3 of 9 repositories/
   )
   assert.match(partialNote({ ...base, partial: true }) ?? '', /could not be read/)
 })

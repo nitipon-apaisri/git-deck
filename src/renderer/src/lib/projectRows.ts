@@ -142,7 +142,7 @@ export function partialNote(summary: ProjectSummary): string | null {
   if (!summary.partial) return null
   const missing = summary.repoCount - summary.loadedCount
   if (missing > 0) {
-    return `${missing} of ${summary.repoCount} ${missing === 1 ? 'repository has' : 'repositories have'} no summary yet. Totals count only what is known.`
+    return `No summary yet for ${missing} of ${summary.repoCount} ${summary.repoCount === 1 ? 'repository' : 'repositories'}. Totals count only what is known.`
   }
   return 'Some counts could not be read from the host. Totals count only what is known.'
 }

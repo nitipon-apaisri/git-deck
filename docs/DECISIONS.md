@@ -8,6 +8,27 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-06: Phase 9 choices not fixed by PLAN.md
+
+- **Question:** How the scope, the overview and the menus behave where the plan is silent: what creating a project does to the scope, when a key counts as unavailable, whether the overview replaces or hides the panes, where summaries are held, and what the rail's Projects button does.
+- **Options considered:** unavailable as soon as a repo is missing, or only once its account's list has been tried; the overview hiding `MainPane` or unmounting it; summaries held in the overview or in `App`; a floating menu inside the sidebar or in a portal.
+- **Decision and why:**
+  - Unavailable means "no loaded list has it" **and** the account's list has settled (loaded or failed) or the account is gone. An account whose first list is still loading, and the time before accounts are known, is `pending`: shown in neither list, so a restart does not flash every repo as unavailable. A failed list does leave its repos unavailable, as the plan says ("access lost, not loaded yet"). Pure code: `projectView` in `lib/projectScope.ts`.
+  - The overview **replaces** the panes while it shows (`MainPane` takes an `overview` node). It shows when a project scope is active and either no repo is selected (split off) or the user chose it: picking a project, or the sidebar "Project overview" button. Picking a repo or "Open in split view" from a row hides it. The panes unmount, so a graph's scroll position is lost on a trip to the overview. Tab, selection and split state live in `SplitState` and come back. I did not keep the hidden panes mounted: a `display: none` pane has no size, which would break the pane `ResizeObserver` and the scroll restore.
+  - Creating a project (from the scope menu, the manage dialog or "New project..." in a repo menu) switches the scope to it and shows its overview. A project that no longer exists resolves to "All repositories".
+  - Summaries are held in `App` through `useProjectSummaries`, not inside the overview, so closing and reopening the overview shows them at once. They only load while the overview is on screen: cache read first, then missing or older than one hour, three at a time, and "Refresh summaries" forces all. This is separate from a pane's own summary hook; main de-duplicates in-flight requests per repo.
+  - Figures: the sum cards show `–` until at least one summary has loaded (never 0 for unknown). Each sum card has its own Partial badge from its own known count. Contributors is `~n` with a tooltip.
+  - Sorting keeps unknown values and unavailable repos last in both directions. The default is last activity, newest first.
+  - Repo menu: opens on right-click, and from a "Project options" button that appears on hover or focus in the row, so keyboard users can reach it. Project items are checkboxes and keep the menu open; "Remove from <project>" shows in project scope. The menu renders in a portal and must not be opened from inside a modal dialog (it never is).
+  - The rail's layers button opens the Manage projects dialog. The people icon is still Accounts.
+  - "Fetch all linked" starts from a click, not an effect, because StrictMode runs effects twice and two `git fetch` runs in one folder can collide. Closing the list stops the queue; fetches already running finish.
+  - Icon glyphs for all 30 ids were drawn in the existing style. A compile-time check in `ProjectIcon.tsx` fails the build if an id has no glyph.
+  - The form shows an empty-name error only after the field is touched. The emoji field must hold exactly one emoji or be empty, and Save is blocked while it holds anything else.
+  - Account removal: main already drops that account's repos from every project, so `App` re-reads the list after a removal.
+- **Known limits:** the form's repository list is not virtualised, so thousands of repos render thousands of rows (search narrows it). The sidebar list is not virtualised either. Dead dialog buttons in the sidebar: an Unavailable row's main button does nothing.
+- **Not verified:** a real GitHub or GitLab host (two mock hosts, one GitHub Enterprise style and one self-hosted GitLab style, were used). Removing an account that a project uses (covered by `store.test.ts` and the pure helpers, not run in the window). A project with hundreds of repos. Touch input. Windows and Linux.
+- **Harness note:** the mock GitLab and GitHub servers and the CDP scripts live in the session scratchpad, not in the repo. Real-window checks ran in light and dark, at 1280 x 768.
+
 ## 2026-11-06: Phase 8 choices not fixed by PLAN.md
 
 - **Question:** Where each pane's tab lives, what select and close do to the hidden pane, how panes keep their state across a swap, what "too narrow" measures, and which optional items to skip.

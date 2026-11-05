@@ -86,7 +86,9 @@ export function Sidebar({
     const repos = view
       ? view.reposByAccount
       : Object.fromEntries(Object.entries(byAccount).map(([id, a]) => [id, a.repos]))
-    return buildTree(accounts, repos, query)
+    const tree = buildTree(accounts, repos, query)
+    // In a project, a host with none of its repositories would be an empty heading.
+    return view ? tree.filter((node) => node.total > 0) : tree
   }, [accounts, byAccount, query, view])
   // Keys the lists cannot show. A search only keeps the ones whose id matches.
   const unavailable = (view?.unavailable ?? []).filter(

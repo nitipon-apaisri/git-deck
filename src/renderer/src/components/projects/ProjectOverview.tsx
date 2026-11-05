@@ -109,7 +109,7 @@ export function ProjectOverview({
   const missingOf = (count: number): number => project.repoKeys.length - count
   const note = partialNote(total) ?? undefined
   const noneLoaded = total.loadedCount === 0
-  const figure = (value: number): string | number => (noneLoaded ? '–' : value)
+  const figure = (value: number): string => (noneLoaded ? '–' : countText(value))
 
   const subtitle = [
     `${project.repoKeys.length} ${project.repoKeys.length === 1 ? 'repository' : 'repositories'}`,
