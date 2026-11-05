@@ -74,6 +74,33 @@ test('errorMessage strips the Electron prefix and Error labels', () => {
   assert.equal(errorMessage(new Error('   ')), 'Something went wrong')
 })
 
+test('errorMessage says network and HTTP failures plainly', () => {
+  assert.match(errorMessage(new Error('net::ERR_CONNECTION_REFUSED')), /refused the connection/)
+  assert.match(errorMessage(new Error('net::ERR_NAME_NOT_RESOLVED')), /address could not be found/)
+  assert.match(
+    errorMessage(new Error('net::ERR_CERT_AUTHORITY_INVALID')),
+    /self-signed certificate/
+  )
+  assert.match(errorMessage(new Error('net::ERR_SSL_PROTOCOL_ERROR')), /certificate is not trusted/)
+  assert.match(errorMessage(new Error('Request timed out')), /did not answer in time/)
+  assert.match(
+    errorMessage(new Error('Request failed: 401 Unauthorized')),
+    /rejected the token \(401\)/
+  )
+  assert.match(errorMessage(new Error('Request failed: 403 Forbidden')), /scopes/)
+  assert.match(errorMessage(new Error('Request failed: 404 Not Found')), /base URL/)
+  assert.match(errorMessage(new Error('Request failed: 503 Service Unavailable')), /\(503\)/)
+  assert.equal(
+    errorMessage(new Error('net::ERR_UNSAFE_PORT')),
+    'Could not reach the server (ERR_UNSAFE_PORT).'
+  )
+  // Messages the service already made plain pass through unchanged.
+  assert.equal(
+    errorMessage(new Error('This account is already added')),
+    'This account is already added'
+  )
+})
+
 // theme
 
 test('theme: parse, resolve and storage that may throw', () => {
