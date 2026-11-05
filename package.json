@@ -8,6 +8,13 @@
     "node": ">=22.12"
   },
   "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck:node": "tsc -p tsconfig.node.json --noEmit",
+    "typecheck:web": "tsc -p tsconfig.web.json --noEmit",
+    "typecheck": "pnpm typecheck:node && pnpm typecheck:web",
+    "test": "node --import tsx --test tests/*.test.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -16,14 +23,22 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6",
+    "electron": "^45",
+    "electron-vite": "^6",
     "eslint": "^10.14.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.14.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
     "prettier": "^3.9.10",
+    "tsx": "^4",
     "typescript": "~5.9.3",
-    "typescript-eslint": "^8.72.1"
+    "typescript-eslint": "^8.72.1",
+    "vite": "^8"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs,cjs}": [
@@ -33,5 +48,10 @@
     "*.{json,md,css,yml,yaml}": [
       "prettier --write"
     ]
-  }
+  },
+  "dependencies": {
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "main": "./out/main/index.js"
 }
