@@ -10,7 +10,7 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 
 - [x] Phase 1: Scaffold
 - [x] Phase 2: Core services (no UI yet)
-- [ ] Phase 3: Providers
+- [x] Phase 3: Providers
 - [ ] Phase 4: IPC and main wiring
 - [ ] Phase 5: Renderer: shell, accounts, sidebar
 - [ ] Phase 6: Renderer: repo view, overview, info

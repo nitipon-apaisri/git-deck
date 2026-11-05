@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { createServer, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { after, before, test } from 'node:test'
-import { countItems, getJson, HttpError, paginate, parseLink } from '../src/main/http'
+import { countItems, getJson, getPage, HttpError, paginate, parseLink } from '../src/main/http'
 
 let server: Server
 let base = ''
@@ -23,6 +23,10 @@ before(async () => {
           page < 3 ? { link: `<${base}/pages?page=${page + 1}>; rel="next"` } : {}
         return json(200, [page * 10, page * 10 + 1], link)
       }
+      case '/rel':
+        return json(200, [1], { link: '</rel/two>; rel="next"' })
+      case '/rel/two':
+        return json(200, [2])
       case '/loop':
         return json(200, [1], { link: `<${base}/loop>; rel="next"` })
       case '/total':
@@ -98,4 +102,13 @@ test('countItems uses x-total, then the last page, then length, else null', asyn
   assert.equal(await countItems(`${base}/last`), 7)
   assert.equal(await countItems(`${base}/short`), 0)
   assert.equal(await countItems(`${base}/unknown`), null)
+})
+
+test('paginate resolves a relative next link against the current page', async () => {
+  assert.deepEqual(await paginate<number>(`${base}/rel`), [1, 2])
+})
+
+test('getPage returns the items and the x-total header', async () => {
+  assert.deepEqual(await getPage<number>(`${base}/total`), { items: [1], total: 42 })
+  assert.deepEqual(await getPage<number>(`${base}/short`), { items: [], total: null })
 })
