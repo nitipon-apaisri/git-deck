@@ -260,14 +260,14 @@ Any `path` argument must equal one of the stored link values, otherwise throw. V
 
 ## Phase 7 — Commit graph
 
-- [ ] `GitGraph` component with a toolbar (Reload, Fetch, "N commits loaded"). It must be pane-safe: its `GraphLayout` instance, paging state, scroll position and selected commit are per component instance.
-- [ ] Load pages of 500 via `local.graph(path, skip, 500)` and keep one stateful `GraphLayout` instance. Use a generation counter so a path change or reload cannot apply stale results. Load the next page when scrolled within about 20 rows of the end, and also when the content is shorter than the viewport.
-- [ ] Virtualised list: fixed row height 28 px, render only visible rows plus 10 overscan above and below, spacer element for total height, `ResizeObserver` for the viewport height.
-- [ ] Each row is a small SVG (graph lanes) followed by ref badges + subject, author with initials avatar, relative date (full date in tooltip) and short hash. Lane width 16 px, node radius 5, 2 px lines, colours `--lane-1` to `--lane-6` repeating. HEAD gets a ring in `--lane-1` filled with `--island`. Row geometry matches `docs/design-system/components/GraphRow/preview.html`.
-- [ ] Row SVG: draw `through` edges as vertical lines, `top` and `bottom` edges as S-curves (cubic Bézier with control points at the vertical midpoint), nodes last.
-- [ ] Ref badges: local branch, remote branch and tag styled differently, current branch emphasised, show up to 3 then "+n". Use the `RefBadge` kinds from the design system (HEAD, branch, feature, project, tag with the tag icon).
-- [ ] Selecting a row opens a detail panel (`local.commit`): full hash with copy, author and email, date, refs, message body, changed files with +/- counts (binary shown as "binary").
-- [ ] Empty states: not linked ("Use Clone or Link above"), empty repository, git error with message.
+- [x] `GitGraph` component with a toolbar (Reload, Fetch, "N commits loaded"). It must be pane-safe: its `GraphLayout` instance, paging state, scroll position and selected commit are per component instance.
+- [x] Load pages of 500 via `local.graph(path, skip, 500)` and keep one stateful `GraphLayout` instance. Use a generation counter so a path change or reload cannot apply stale results. Load the next page when scrolled within about 20 rows of the end, and also when the content is shorter than the viewport.
+- [x] Virtualised list: fixed row height 28 px, render only visible rows plus 10 overscan above and below, spacer element for total height, `ResizeObserver` for the viewport height.
+- [x] Each row is a small SVG (graph lanes) followed by ref badges + subject, author with initials avatar, relative date (full date in tooltip) and short hash. Lane width 16 px, node radius 5, 2 px lines, colours `--lane-1` to `--lane-6` repeating. HEAD gets a ring in `--lane-1` filled with `--island`. Row geometry matches `docs/design-system/components/GraphRow/preview.html`.
+- [x] Row SVG: draw `through` edges as vertical lines, `top` and `bottom` edges as S-curves (cubic Bézier with control points at the vertical midpoint), nodes last.
+- [x] Ref badges: local branch, remote branch and tag styled differently, current branch emphasised, show up to 3 then "+n". Use the `RefBadge` kinds from the design system (HEAD, branch, feature, project, tag with the tag icon).
+- [x] Selecting a row opens a detail panel (`local.commit`): full hash with copy, author and email, date, refs, message body, changed files with +/- counts (binary shown as "binary").
+- [x] Empty states: not linked ("Use Clone or Link above"), empty repository, git error with message.
 
 ## Phase 8 — Split View (two repos at once)
 

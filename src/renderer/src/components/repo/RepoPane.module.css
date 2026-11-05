@@ -45,3 +45,15 @@
   flex: none;
   margin-top: 2px;
 }
+/* The graph scrolls inside itself, so the panel does not. */
+.panel[data-tab='graph'] {
+  overflow: hidden;
+}
+.graphWrap {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.graphWrap[hidden] {
+  display: none;
+}

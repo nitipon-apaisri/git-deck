@@ -35,3 +35,7 @@
   border-color: var(--ref-tag-edge);
   color: var(--ref-tag-fg);
 }
+
+.badge[data-current='true'] {
+  font-weight: 700;
+}
