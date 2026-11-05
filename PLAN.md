@@ -216,7 +216,7 @@ Any `path` argument must equal one of the stored link values, otherwise throw. V
 
 ## Phase 4 — IPC and main wiring
 
-- [ ] `ipc.ts` implements the full `Api` above.
+- [x] `ipc.ts` implements the full `Api` above.
   - Normalise and validate `AccountInput`. `accounts:add` verifies the token against the host first and rejects duplicates (same type, base URL and username).
   - De-duplicate in-flight requests per account and per repo.
   - Link: folder picker, `repoRoot`, then if no remote URL contains the repo's `fullName` (case-insensitive) show a "Link anyway?" confirmation.
@@ -226,8 +226,8 @@ Any `path` argument must equal one of the stored link values, otherwise throw. V
   - Projects: implement `projects.*` on top of `shared/projects.ts` and persist through the store. Return the updated `Project` from every mutation. Reject empty or duplicate names and unknown repo keys with plain error messages.
   - Concurrency: cap simultaneous git child processes at 4 with a small semaphore in `git.ts`, because two panes (and "Fetch all" in a project) can start work at the same time. Clone progress events must carry the `repoKey` so the right pane updates.
   - Errors thrown to the renderer carry plain, token-free messages.
-- [ ] `preload/index.ts` exposes `window.api` with `contextBridge`. Add `src/renderer/src/env.d.ts` declaring `window.api: Api`.
-- [ ] `main/index.ts`: configure fetch with `net.fetch`, install the certificate verifier, sync insecure hosts from stored accounts on start and after add/remove, register IPC.
+- [x] `preload/index.ts` exposes `window.api` with `contextBridge`. Add `src/renderer/src/env.d.ts` declaring `window.api: Api`.
+- [x] `main/index.ts`: configure fetch with `net.fetch`, install the certificate verifier, sync insecure hosts from stored accounts on start and after add/remove, register IPC.
 
 **Verify:** typecheck passes, `electron-vite build` succeeds, and the full test suite is green.
 

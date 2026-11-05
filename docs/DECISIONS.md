@@ -8,6 +8,22 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-05: Phase 4 choices not fixed by PLAN.md
+
+- **Question:** Where the IPC logic lives so it stays testable, how errors cross IPC, which senders are trusted, what "unavailable" secure storage means on Linux, and how clone URLs are vetted.
+- **Options considered:** put everything in `ipc.ts` (needs `electron`, so no `tsx` tests); let Electron's rejected-invoke errors reach the renderer; trust any frame; accept any clone URL from the API.
+- **Decision and why:**
+  - `ipc.ts` is only the Electron binding (dialogs, shell, sender check, registration). The logic is in `service.ts` (no `electron`, injected `Ui`, provider and git ops), the channel table in `ipcTable.ts`, shared channel names and the `Api` type in `shared/api.ts`.
+  - Handlers return `{ ok, value | error }` and preload rethrows `new Error(message)`. Electron would otherwise prefix messages with "Error invoking remote method". Every service method is wrapped by `guard`, which scrubs stored tokens, the token just typed, and `scheme://user:pass@` credentials, and drops `cause` and stacks.
+  - Handlers reject calls whose `senderFrame` is not the app page (dev server origin or `file://`).
+  - On Linux the `basic_text` safeStorage backend (no keyring) counts as unavailable, since it is not real encryption.
+  - Clone URLs must be http(s) for HTTPS and `ssh://` or `user@host:path` for SSH, so a hostile API response cannot smuggle `ext::` or an option. Auth env is attached only for HTTPS, and git scopes it to the account's origin.
+  - Link stores the repo root from `repoRoot`, not the picked subfolder. Path arguments must equal a stored link. The graph page size is capped at 2000.
+  - After `listRepos` or `getSummary` returns, the account is re-checked, so removing an account mid-request cannot write its cache back.
+  - Project mutations read, change and assign without an `await` in between, so concurrent calls cannot overwrite each other.
+  - The git semaphore (limit 4) covers clone as well as short commands, as the plan says. Four long clones can therefore delay fetches.
+  - `VerifiedUser` moved to `shared/types.ts` so `shared/api.ts` can use it.
+
 ## 2026-11-05: Phase 3 provider choices not fixed by PLAN.md
 
 - **Question:** `verify()` return shape, how to read `x-total` next to the list, relative `Link` URLs, GitLab avatar base, and the contributor fields the APIs do not send.
