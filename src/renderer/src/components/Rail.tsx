@@ -20,7 +20,7 @@ export function Rail({
     <nav className={styles.rail} aria-label="Main">
       <div className={styles.group}>
         <span className={styles.mark} role="img" aria-label="GitDeck" title="GitDeck">
-          <Icon name="git-branch" size="sm" />
+          <Icon name="git-branch" />
         </span>
         <IconButton
           size="rail"
