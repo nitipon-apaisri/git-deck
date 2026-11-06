@@ -232,3 +232,22 @@ test('a hunk is staged and unstaged through the service', async () => {
     /changed since/
   )
 })
+
+// Phase 16
+
+test('hunk calls validate the optional line selection', async () => {
+  const s = await setup()
+  const l = s.api.local
+  const hunk = { path: 'a.txt', source: 'worktree' as const, index: 0, fingerprint: '00000000' }
+  await assert.rejects(l.stageHunk(s.dir, { ...hunk, lines: 'all' as never }), /not valid/)
+  await assert.rejects(l.stageHunk(s.dir, { ...hunk, lines: [1.5] }), /not valid/)
+  await assert.rejects(l.stageHunk(s.dir, { ...hunk, lines: [-1] }), /not valid/)
+  await assert.rejects(l.stageHunk(s.dir, { ...hunk, lines: ['1'] as never }), /not valid/)
+  await assert.rejects(l.unstageHunk(s.dir, { ...hunk, lines: [1e9] }), /not valid/)
+  await assert.rejects(
+    l.stageHunk(emptyRepo(), { ...hunk, lines: [1] }),
+    /not linked/,
+    'a folder that is not linked is refused first'
+  )
+  assert.equal(s.confirmed(), 0)
+})
