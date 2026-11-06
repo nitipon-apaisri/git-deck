@@ -1,7 +1,6 @@
 import type { Repo } from '@shared/types'
 import type { LocalActions as Actions } from '../../state/useLocalActions'
 import { Button, IconButton, ProgressBar, Spinner } from '../ui'
-import styles from './LocalActions.module.css'
 
 interface LocalActionsProps {
   repo: Repo
@@ -18,16 +17,18 @@ export function LocalActions({ repo, linkedPath, actions, compact = false }: Loc
 
   if (busy === 'clone') {
     return (
-      <div className={styles.progress} role="group" aria-label="Clone progress">
+      <div className="flex max-w-[480px] flex-col gap-1.5" role="group" aria-label="Clone progress">
         <ProgressBar percent={actions.progress?.percent ?? null} label="Clone progress" />
-        <p className={styles.line}>{actions.progress?.line ?? 'Cloning…'}</p>
+        <p className="m-0 text-[12px] leading-4 text-muted-foreground [overflow-wrap:anywhere]">
+          {actions.progress?.line ?? 'Cloning…'}
+        </p>
       </div>
     )
   }
 
   if (linkedPath) {
     return (
-      <div className={styles.row}>
+      <div className="flex flex-wrap items-center gap-2">
         {compact ? (
           <>
             <IconButton
@@ -64,7 +65,7 @@ export function LocalActions({ repo, linkedPath, actions, compact = false }: Loc
             Unlink
           </Button>
         )}
-        <span className={`${styles.path} hash`} title={linkedPath}>
+        <span className="hash min-w-0 flex-1 truncate text-muted-foreground" title={linkedPath}>
           {linkedPath}
         </span>
       </div>
@@ -72,7 +73,7 @@ export function LocalActions({ repo, linkedPath, actions, compact = false }: Loc
   }
 
   return (
-    <div className={styles.row}>
+    <div className="flex flex-wrap items-center gap-2">
       {repo.httpUrl ? (
         <Button
           variant="primary"
