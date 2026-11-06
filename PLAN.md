@@ -449,6 +449,54 @@ Scope decision and reasons: `docs/DECISIONS.md` (2026-11-06, Phase 14 scope). Ru
 
 **Verify:** temp-repo tests cover a clean rebase, a conflicting rebase then abort, skip, resuming an in-progress rebase, and hunk stage and unstage round trips (including a new file and a deletion), plus argument-injection cases. Typecheck, lint, build pass. Say plainly if the screens were not run in a live window.
 
+## Phase 15a — Conflict data and whole-file resolution
+
+Scope decision and reasons: `docs/DECISIONS.md` (2026-11-06, Phase 15 scope). The editor is split in two so the git layer is proven before any screen depends on it. Runs on its own branch and stops at its Verify steps.
+
+**Groundwork:**
+
+- [ ] Reuse the Phase 11 rules for every new call: the typed write helper, the per-repo write queue (`serial` in `service.ts`), `--` before user-supplied paths, and a `guard()`ed service method that starts with `linkedRepoKey(path)`. Wire each call through `GitOps`, `Api.local`, `IPC`, the preload and `ipcTable.ts`.
+- [ ] A file path from the renderer must be one that `git status` lists as conflicted right now (as `knownPaths` does). Never write to any other path.
+
+**Shared (pure, no Electron):**
+
+- [ ] `ConflictKind` on `StatusEntry` (`conflict: ConflictKind | null`), read from the `XY` of a porcelain v2 `u` line: `both-modified` (UU), `both-added` (AA), `deleted-by-us` (DU), `deleted-by-them` (UD), `added-by-us` (AU), `added-by-them` (UA), `both-deleted` (DD). Keep `conflicted: boolean`.
+- [ ] `shared/conflict.ts`: `parseConflicts(text)` returns `Segment[]` where a segment is `{ type: 'text', lines }` or `{ type: 'conflict', ours, base | null, theirs, oursLabel, theirsLabel }`. It understands the default, `diff3` and `zdiff3` marker styles, CRLF and LF (the file's own line ending is kept and reported), and a missing final newline. It refuses, rather than guesses, on an unterminated or nested marker block. `applyResolutions(segments, choices)` rebuilds the text. A choice is `ours`, `theirs`, `both` (ours then theirs), `base` (only when the file has it) or `{ text }` (edited, size capped). `conflictFingerprint(text)` is a hash of the file content.
+- [ ] `sideLabels(kind, target)`: which side is which. In a merge or cherry-pick or revert, ours is the current branch and theirs is the incoming commit. In a rebase the two swap (ours is the branch being rebased onto, theirs is the commit being replayed). The labels say "Current" and "Incoming", or "Upstream" and "Your commit", in words, never by colour alone.
+
+**Main (`git.ts`, beside `continueOperation`):**
+
+- [ ] `getConflictFile(cwd, path)` returns `{ path, kind, binary, tooLarge, submodule, eol, segments, fingerprint }`. It reads the work-tree file (what the user sees, including edits already made). A binary, over-size (reuse the diff cap) or submodule conflict returns no segments and only allows the whole-file actions below. Refuse a path that is a symlink or resolves outside the repository root.
+- [ ] `resolveConflictRegions(cwd, request)` with `{ path, fingerprint, choices }`. Main re-reads the file, refuses with "Reload the file and try again" if the fingerprint changed, re-parses it, applies the choices itself and writes the result. The renderer never sends the whole file. Write atomically (temp file in the same folder, then rename), keep the file mode, the line ending and the final-newline state. When no marker is left it stages the file with `git add -- path`, so it leaves the banner's list. A file with regions still open is written but not staged.
+- [ ] `resolveConflictFile(cwd, { path, action })` for whole-file actions: `ours` and `theirs` (`git checkout --ours|--theirs -- path`, then `add`), `keep` (the file exists on one side: `add`) and `delete` (`git rm -- path`) for the delete-versus-modify kinds, and `markResolved` (stage the work-tree file as it is, refused while a `<<<<<<<` or `>>>>>>>` line remains, like Continue). `delete` is confirmed in main. `both-deleted` offers `delete` only.
+- [ ] `continueOperation` is unchanged. Check that it works when every file was resolved through the new calls and when none is left to stage.
+- [ ] The conflict list also works with no operation in progress (a conflicting `stash pop` or `stash apply` leaves unmerged paths with no `MERGE_HEAD`). The calls take the path from `status`, not from `getOperation`. Without an operation `sideLabels` says "Current" and "Stash".
+
+**Verify:** temp-repo tests (real conflicts made by merge, cherry-pick, revert, rebase and stash pop) cover:
+
+- parsing: one region, several regions, `diff3` and `zdiff3`, CRLF, no final newline, an empty side, marker-like text that is not a marker, an unterminated block (refused);
+- every choice, and a round trip where resolving all regions to `ours` gives the same bytes as `git checkout --ours`;
+- a stale fingerprint is refused and the file is untouched;
+- delete-versus-modify (both directions), add/add, both-deleted, binary and over-size files;
+- a symlink, a path outside the repo, a path not in conflict, and a path that starts with `-` are rejected;
+- after the last file is resolved, `continueOperation` finishes the merge, the cherry-pick and the rebase (including a rebase that stops again on the next commit).
+
+Typecheck, lint, build pass and the existing suite stays green. No token in argv, errors or `.git/config`.
+
+## Phase 15b — Conflict editor screen
+
+**Renderer (pane-safe: the editor state lives in `RepoPane`, like the diff):**
+
+- [ ] `lib/conflictView.ts` (pure, tested): region summary text, the result preview for the current choices, "can save", "all regions resolved", and the side labels.
+- [ ] `useConflictFile(path)` hook keyed on `reloadToken` and the pane's repo, next to `useDiff`. No global "current conflict".
+- [ ] `ConflictEditor` opens inside the pane from a file row in the operation banner or from a conflicted row in Changes. Each region is a card with the two sides next to each other (the base too when the file has one), line numbers, and the buttons Accept current, Accept incoming, Accept both, and Edit (a `Textarea` with the result for that region). Below the regions sits a read-only preview of the whole result. Sides are named in words and carry an icon, so colour is never the only cue.
+- [ ] Footer: "Save and mark resolved" (primary, enabled when every region has a choice), "Save for later" (writes without staging) and Close. Arrow-key and Tab order is checked, and every icon button has an `aria-label`.
+- [ ] Whole-file actions for the kinds without regions: a small panel with Keep file, Delete file, Use current or Use incoming, each saying in words what it does.
+- [ ] The operation banner lists its files as buttons that open the editor, and each file in the list shows its kind in words ("both modified", "deleted by them"). A file that was just resolved leaves the list. The banner's Continue is unchanged. "Open folder" stays.
+- [ ] Dark and light boards for the editor under `docs/ui-boards/`. If not drawn, log the gap in `DECISIONS.md` as before. This also closes the Phase 11 board item if the Changes and diff boards are drawn in the same pass. The editor uses tokens only, no hex values.
+
+**Verify:** unit tests for `conflictView.ts`; a service test that drives the whole flow through `GitOps` (conflicting merge, then regions resolved, then Continue). Typecheck, lint, build pass and the existing suite stays green. If a display is available, resolve a real conflict in a scratch repo in the window and screenshot the editor in both themes. Otherwise say clearly that it was not run visually.
+
 ---
 
 ## Graph algorithm (src/shared/graph-layout.ts)
@@ -480,4 +528,4 @@ Row shape: `{ commit, lane, color, edges: { part: 'top'|'bottom'|'through', from
 
 ## Non-goals for this version
 
-Merge-conflict editor, interactive rebase, line-level staging, PR/MR creation, OAuth login (tokens only), SQLite cache, auto-update and installers, more than two split panes, drag-and-drop between projects, cloning all repos of a project at once.
+Interactive rebase, line-level staging, a full-file three-way editor, `rerere`, external merge tools, submodule conflicts, PR/MR creation, OAuth login (tokens only), SQLite cache, auto-update and installers, more than two split panes, drag-and-drop between projects, cloning all repos of a project at once.

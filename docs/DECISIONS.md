@@ -8,6 +8,22 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-06: Phase 15 scope (merge-conflict editor)
+
+- **Question:** what an in-app conflict editor is, how much of it to build now, and how it stays safe.
+- **Options considered:** a full three-pane file editor (Monaco-style) vs a region-by-region resolver vs line-level picks; one phase vs two.
+- **Decision and why:**
+  - A region-by-region resolver. The user sees each conflict block with the two sides (and the base when the file has one), picks current, incoming or both, or edits that block's text, and sees the whole result below. That fixes almost every real conflict without a code editor, adds no dependency (runtime deps stay `react` and `react-dom`) and stays testable as pure functions. A full-file editor and line-level picks stay out.
+  - Two phases, as with Phase 14. 15a is the git and parsing layer plus whole-file actions (it has no screen), so the risky part is proven by temp-repo tests first. 15b is the screen on top.
+  - The parser reads the markers in the work-tree file, not the three index stages, so edits the user already made elsewhere are kept and the editor shows what is on disk. The cost is that unusual marker text is refused instead of guessed.
+  - The renderer sends choices (`ours`, `theirs`, `both`, `base`, or edited text for one region) and a content fingerprint, never the whole file. Main re-reads, checks the fingerprint, re-parses, builds the result and writes it atomically. This is the same shape as hunk staging in 14b. Only paths that `git status` reports as conflicted are accepted, and symlinks, paths outside the repo and submodule conflicts are refused.
+  - Ours and theirs swap in a rebase. The screen therefore says "Current / Incoming" or "Upstream / Your commit" in words, chosen by the operation kind.
+  - Delete-versus-modify, add/add and binary conflicts have no regions. They get whole-file actions only (keep, delete, use current, use incoming), and delete is confirmed in main.
+  - The editor works from `status`, so it also serves a conflicting `stash pop` that has no operation banner.
+  - Continue keeps its marker check, so a half-resolved file cannot be committed.
+  - Still out: interactive rebase, line-level staging, a full-file three-way editor, `rerere`, external merge tools, submodule conflicts, pull or merge request creation, OAuth sign-in, a SQLite cache, auto-update and installers, more than two panes, drag-and-drop between projects, cloning every repository of a project at once.
+- **Not verified:** this entry records a plan. Nothing in Phase 15 is built yet.
+
 ## 2026-11-06: Open a local repository
 
 - **Question:** Can a folder be opened without any account?
