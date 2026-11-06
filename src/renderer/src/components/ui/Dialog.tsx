@@ -1,6 +1,7 @@
-import { useEffect, useId, useLayoutEffect, useRef, type ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 import { IconButton } from './Button'
 import styles from './Dialog.module.css'
+import { useModalDialog } from './useModalDialog'
 
 interface DialogProps {
   title: string
@@ -15,10 +16,7 @@ interface DialogProps {
   actions?: ReactNode
 }
 
-/**
- * Uses the native modal `<dialog>`, which traps focus and closes on Escape. Focus goes
- * back to the opener when it unmounts. Mount it to open it, unmount it to close it.
- */
+/** A modal dialog, see `useModalDialog`. Mount it to open it, unmount it to close it. */
 export function Dialog({
   title,
   description,
@@ -28,36 +26,9 @@ export function Dialog({
   actionsStart,
   actions
 }: DialogProps) {
-  const ref = useRef<HTMLDialogElement>(null)
+  const ref = useModalDialog(onClose)
   const titleId = useId()
   const descriptionId = useId()
-  // The latest handler, without re-running the open effect when it changes.
-  const closeRef = useRef(onClose)
-  useEffect(() => {
-    closeRef.current = onClose
-  })
-
-  // A layout effect, so cleanup runs while the dialog is still in the page. React removes
-  // the element before passive cleanups, and a detached dialog cannot give focus back.
-  useLayoutEffect(() => {
-    const dialog = ref.current
-    if (!dialog) return
-    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
-    dialog.showModal()
-    dialog.querySelector<HTMLElement>('[data-autofocus]')?.focus()
-    const onCancel = (event: Event): void => {
-      // The caller owns the open state, so hand Escape to it instead of closing here.
-      event.preventDefault()
-      closeRef.current()
-    }
-    dialog.addEventListener('cancel', onCancel)
-    return () => {
-      dialog.removeEventListener('cancel', onCancel)
-      if (dialog.open) dialog.close()
-      // Put focus back on whatever opened the dialog, if it is still there.
-      if (opener?.isConnected) opener.focus()
-    }
-  }, [])
 
   return (
     <dialog

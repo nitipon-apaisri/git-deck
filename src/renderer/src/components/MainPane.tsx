@@ -10,7 +10,6 @@ import styles from './MainPane.module.css'
 
 interface MainPaneProps {
   split: Split
-  hasAccounts: boolean
   repos: Repo[]
   accounts: Account[]
   /** repo key -> local folder */
@@ -28,7 +27,6 @@ interface MainPaneProps {
  */
 export function MainPane({
   split,
-  hasAccounts,
   repos,
   accounts,
   links,
@@ -61,13 +59,7 @@ export function MainPane({
       )
     }
     const waiting = repoKey !== null && loading
-    const kind: EmptyKind = waiting
-      ? 'loading'
-      : !hasAccounts
-        ? 'connect'
-        : state.enabled
-          ? 'pick'
-          : 'select'
+    const kind: EmptyKind = waiting ? 'loading' : state.enabled ? 'pick' : 'select'
     return (
       <EmptyPane
         key={`empty-${id}`}

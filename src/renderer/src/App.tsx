@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Repo } from '@shared/types'
-import { AccountsDialog } from './components/AccountsDialog'
 import { MainPane } from './components/MainPane'
-import { PreferencesDialog } from './components/PreferencesDialog'
+import { SettingsDialog } from './components/settings/SettingsDialog'
 import { ManageProjectsDialog } from './components/projects/ManageProjectsDialog'
 import { ProjectFormDialog } from './components/projects/ProjectFormDialog'
 import { ProjectOverview } from './components/projects/ProjectOverview'
@@ -10,6 +9,7 @@ import { Rail } from './components/Rail'
 import { Sidebar } from './components/Sidebar'
 import { Toolbar } from './components/Toolbar'
 import { hasInsetTitleBar } from './lib/platform'
+import type { SettingsSection } from './lib/settingsSections'
 import { ALL_SCOPE, SCOPE_KEY, parseScope, projectView, resolveScope } from './lib/projectScope'
 import type { ShortcutAction } from './lib/splitLayout'
 import { stillValid, type PaneId } from './lib/splitState'
@@ -23,7 +23,7 @@ import { useTheme } from './state/theme'
 import { useWorkspace } from './state/workspace'
 import styles from './App.module.css'
 
-type DialogName = 'accounts' | 'preferences' | 'projects' | null
+type DialogName = 'settings' | 'projects' | null
 
 const SIDEBAR_KEY = 'gitdeck.sidebar'
 
@@ -39,6 +39,11 @@ export function App() {
   const [projectError, setProjectError] = useState<string | null>(null)
   const { setting, setSetting } = useTheme()
   const [dialog, setDialog] = useState<DialogName>(null)
+  const [settingsSection, setSettingsSection] = useState<SettingsSection>('appearance')
+  const openSettings = (section: SettingsSection): void => {
+    setSettingsSection(section)
+    setDialog('settings')
+  }
   const [sidebarOpen, setSidebarOpen] = useState(() => readStored(SIDEBAR_KEY) !== 'closed')
 
   function toggleSidebar(): void {
@@ -182,7 +187,7 @@ export function App() {
       <Toolbar
         insetTitleBar={hasInsetTitleBar(navigator.userAgent)}
         accounts={state.accounts}
-        onOpenAccounts={() => setDialog('accounts')}
+        onOpenAccounts={() => openSettings('integrations')}
         splitEnabled={layout.enabled}
         orientation={layout.orientation}
         onToggleSplit={split.toggle}
@@ -195,9 +200,9 @@ export function App() {
         <Rail
           sidebarOpen={sidebarOpen}
           onToggleSidebar={toggleSidebar}
-          onOpenAccounts={() => setDialog('accounts')}
+          onOpenAccounts={() => openSettings('integrations')}
           onOpenProjects={() => setDialog('projects')}
-          onOpenPreferences={() => setDialog('preferences')}
+          onOpenPreferences={() => openSettings('appearance')}
         />
         {sidebarOpen ? (
           <Sidebar
@@ -211,7 +216,7 @@ export function App() {
             paneMarks={paneMarks}
             onSelect={selectRepo}
             onOpenInSplit={openRepoInSplit}
-            onConnect={() => setDialog('accounts')}
+            onConnect={() => openSettings('integrations')}
             onRefresh={(id) => void refresh(id)}
             onRefreshAll={() => void refreshAll()}
             projects={{
@@ -241,7 +246,6 @@ export function App() {
         ) : null}
         <MainPane
           split={split}
-          hasAccounts={state.accounts.length > 0}
           repos={repos}
           accounts={state.accounts}
           links={state.links}
@@ -267,15 +271,6 @@ export function App() {
         />
       </div>
 
-      {dialog === 'accounts' ? (
-        <AccountsDialog
-          accounts={state.accounts}
-          secureStorage={state.secureStorage}
-          onClose={() => setDialog(null)}
-          onAdded={accountAdded}
-          onRemove={removeAccountAndPrune}
-        />
-      ) : null}
       {dialog === 'projects' ? (
         <ManageProjectsDialog
           projects={projects}
@@ -299,11 +294,17 @@ export function App() {
           onClose={() => setForm(null)}
         />
       ) : null}
-      {dialog === 'preferences' ? (
-        <PreferencesDialog
-          setting={setting}
-          onChange={setSetting}
+      {dialog === 'settings' ? (
+        <SettingsDialog
+          section={settingsSection}
+          onSection={setSettingsSection}
           onClose={() => setDialog(null)}
+          theme={setting}
+          onThemeChange={setSetting}
+          accounts={state.accounts}
+          secureStorage={state.secureStorage}
+          onAccountAdded={accountAdded}
+          onAccountRemove={removeAccountAndPrune}
         />
       ) : null}
     </div>

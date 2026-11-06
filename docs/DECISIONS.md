@@ -8,6 +8,17 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-06: Settings, accents, fonts and motion
+
+- **Question:** Preferences should look like lens, hold Appearance and Integrations, and the main pane should stop asking to connect an account.
+- **Decision and why:**
+  - One Settings dialog (about 40px inset, section list on the left) replaces the Preferences and Accounts dialogs. The rail's Accounts button, the toolbar chip and the sidebar's Connect button open it on Integrations. Both sections stay mounted, so a half-filled account form survives.
+  - "Colour scheme" means theme plus 5 accent presets (blue, violet, green, orange, rose). Each preset overrides five tokens per theme in `appearance.css`. Contrast was checked: primary against white at least 4.5:1, accent text at least 4.5:1, accent and focus ring at least 3:1.
+  - Fonts: Inter, Roboto, Open Sans and System, as `@fontsource` dev dependencies. Code stays in JetBrains Mono.
+  - The empty main pane says "No repository selected" with no connect button. The sidebar keeps its own button.
+  - Motion tokens `motion-fast` 120ms, `motion-base` 180ms, `ease-out`. Dialogs and menus fade in with `@starting-style`. Closing is not animated, because dialogs unmount to close. Reduced motion is honoured by `global.css`.
+  - Not done: the sidebar width is not animated, as it would reflow the graph on every frame.
+
 ## 2026-11-06: Toolbar in the title bar (macOS)
 
 - **Question:** The toolbar sat below the native title bar. Can it share the row with the window buttons to give the main area more height?

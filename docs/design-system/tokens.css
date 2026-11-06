@@ -131,6 +131,9 @@
   --radius-dialog: 14px;
   --radius-round: 50%;
   --toolbar-height: 48px;
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
   --titlebar-inset: 80px;
   --rail-width: 40px;
   --sidebar-width: 300px;

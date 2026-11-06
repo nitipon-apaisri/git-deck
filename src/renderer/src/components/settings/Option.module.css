@@ -1,0 +1,72 @@
+/* Shared by the Appearance pickers. */
+.group {
+  display: grid;
+  gap: var(--space-3);
+}
+.cards {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out);
+}
+.card:hover {
+  background: var(--hover);
+}
+.checked,
+.checked:hover {
+  border-color: var(--accent);
+  background: var(--selection);
+}
+.cardLabel {
+  font-weight: 500;
+}
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 var(--space-4) 0 var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-round);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out);
+}
+.swatch:hover {
+  background: var(--hover);
+}
+.dot {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-round);
+  background: var(--primary);
+}
+.fonts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.fontSample {
+  font-size: 12px;
+  color: var(--text-muted);
+}

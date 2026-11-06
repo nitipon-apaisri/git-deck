@@ -1,6 +1,16 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { errorMessage } from '../src/renderer/src/lib/errors'
+import {
+  ACCENTS,
+  DEFAULT_ACCENT,
+  parseAccent,
+  readAccent,
+  writeAccent
+} from '../src/renderer/src/lib/accent'
+import { DEFAULT_FONT, FONTS, parseFont, readFont, writeFont } from '../src/renderer/src/lib/font'
+import { sectionAfterKey } from '../src/renderer/src/lib/settingsSections'
 import { avatarIndex, initialsOf, timeAgo, truncateMiddle } from '../src/renderer/src/lib/format'
 import { hasInsetTitleBar } from '../src/renderer/src/lib/platform'
 import { PRESETS, hostTileOf, tokenUrl, tryNormalize } from '../src/renderer/src/lib/presets'
@@ -360,4 +370,76 @@ test('workspace reducer: retrying the first load clears the error and shows load
   const loaded = reducer(retry, { type: 'loaded', secureStorage: true, accounts: [], links: {} })
   assert.equal(loaded.ready, true)
   assert.equal(loaded.loadError, null)
+})
+
+// appearance: accent, font, settings sections
+
+test('parseAccent and parseFont fall back to the default for anything unknown', () => {
+  assert.equal(parseAccent('violet'), 'violet')
+  assert.equal(parseAccent('hotpink'), 'blue')
+  assert.equal(parseAccent(null), 'blue')
+  assert.equal(parseFont('roboto'), 'roboto')
+  assert.equal(parseFont('Comic Sans'), 'inter')
+  assert.equal(parseFont(undefined), 'inter')
+})
+
+test('accent and font storage survive a store that throws', () => {
+  const broken = {
+    getItem: () => {
+      throw new Error('blocked')
+    },
+    setItem: () => {
+      throw new Error('blocked')
+    }
+  }
+  assert.equal(readAccent(broken), 'blue')
+  assert.equal(readFont(broken), 'inter')
+  assert.doesNotThrow(() => writeAccent(broken, 'rose'))
+  assert.doesNotThrow(() => writeFont(broken, 'system'))
+  const mem = new Map<string, string>()
+  const store = {
+    getItem: (k: string) => mem.get(k) ?? null,
+    setItem: (k: string, v: string) => void mem.set(k, v)
+  }
+  writeAccent(store, 'green')
+  writeFont(store, 'open-sans')
+  assert.equal(readAccent(store), 'green')
+  assert.equal(readFont(store), 'open-sans')
+})
+
+test('every accent except the default has dark and light overrides for all five tokens', () => {
+  const css = readFileSync(new URL('../src/renderer/src/appearance.css', import.meta.url), 'utf8')
+  assert.equal(new Set(ACCENTS.map((a) => a.id)).size, ACCENTS.length)
+  for (const { id } of ACCENTS) {
+    if (id === DEFAULT_ACCENT) {
+      assert.ok(!css.includes(`data-accent='${id}'`), 'the default lives in tokens.css')
+      continue
+    }
+    for (const theme of ['dark', 'light']) {
+      const at = css.indexOf(`:root[data-accent='${id}'][data-theme='${theme}']`)
+      assert.ok(at >= 0, `${id} ${theme} block`)
+      const block = css.slice(at, css.indexOf('}', at))
+      for (const token of [
+        '--primary',
+        '--accent',
+        '--accent-text',
+        '--selection',
+        '--focus-ring'
+      ]) {
+        assert.ok(block.includes(`${token}:`), `${id} ${theme} sets ${token}`)
+      }
+    }
+  }
+  for (const { id } of FONTS) {
+    if (id !== DEFAULT_FONT) assert.ok(css.includes(`data-font='${id}'`), `${id} font rule`)
+  }
+})
+
+test('settings sections: arrows wrap, Home and End jump, other keys do nothing', () => {
+  assert.equal(sectionAfterKey('appearance', 'ArrowDown'), 'integrations')
+  assert.equal(sectionAfterKey('integrations', 'ArrowDown'), 'appearance')
+  assert.equal(sectionAfterKey('appearance', 'ArrowUp'), 'integrations')
+  assert.equal(sectionAfterKey('integrations', 'Home'), 'appearance')
+  assert.equal(sectionAfterKey('appearance', 'End'), 'integrations')
+  assert.equal(sectionAfterKey('appearance', 'Enter'), null)
 })

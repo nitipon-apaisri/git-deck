@@ -2,18 +2,17 @@ import type { PaneId } from '../../lib/splitState'
 import { IconButton, Island, Spinner } from '../ui'
 import styles from './EmptyPane.module.css'
 
-export type EmptyKind = 'loading' | 'connect' | 'pick' | 'select'
+export type EmptyKind = 'loading' | 'pick' | 'select'
 
 const COPY: Record<Exclude<EmptyKind, 'loading'>, { title: string; text: string }> = {
-  connect: {
-    title: 'Connect an account',
-    text: 'Add a GitHub or GitLab account to browse your repositories.'
-  },
   pick: {
     title: 'Pick a repository from the sidebar',
     text: 'It opens in this pane.'
   },
-  select: { title: 'Select a repository', text: 'Choose one from the list on the left.' }
+  select: {
+    title: 'No repository selected',
+    text: 'Choose one from the list on the left. To add an account, open Settings.'
+  }
 }
 
 interface EmptyPaneProps {
