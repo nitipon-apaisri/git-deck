@@ -7,7 +7,7 @@ import {
 } from '../../lib/settingsSections'
 import type { ThemeSetting } from '../../lib/theme'
 import { Icon, IconButton, type IconName } from '../ui'
-import { useModalDialog } from '../ui/useModalDialog'
+import { Modal, ModalTitle } from '../ui/Dialog'
 import { AppearanceSection } from './AppearanceSection'
 import { IntegrationsSection } from './IntegrationsSection'
 import styles from './SettingsDialog.module.css'
@@ -44,7 +44,6 @@ export function SettingsDialog({
   onAccountAdded,
   onAccountRemove
 }: SettingsDialogProps) {
-  const ref = useModalDialog(onClose)
   const tabs = useRef<Partial<Record<SettingsSection, HTMLButtonElement | null>>>({})
 
   function onKeyDown(event: KeyboardEvent): void {
@@ -56,9 +55,12 @@ export function SettingsDialog({
   }
 
   return (
-    <dialog ref={ref} className={styles.dialog} aria-label="Settings">
+    <Modal
+      onClose={onClose}
+      className="h-[calc(100vh-80px)] max-h-none w-[calc(100vw-80px)] max-w-none flex-row"
+    >
       <aside className={styles.aside}>
-        <h2 className={styles.title}>Settings</h2>
+        <ModalTitle className={styles.title}>Settings</ModalTitle>
         <div role="tablist" aria-orientation="vertical" aria-label="Settings sections">
           {SETTINGS_SECTIONS.map(({ id, label }) => (
             <button
@@ -111,6 +113,6 @@ export function SettingsDialog({
           ))}
         </div>
       </div>
-    </dialog>
+    </Modal>
   )
 }

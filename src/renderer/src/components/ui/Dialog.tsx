@@ -1,7 +1,57 @@
-import { useId, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
+import { Dialog as DialogPrimitive } from 'radix-ui'
+import { cn } from '@/lib/cn'
 import { IconButton } from './Button'
-import styles from './Dialog.module.css'
-import { useModalDialog } from './useModalDialog'
+
+interface ModalProps {
+  onClose: () => void
+  className?: string
+  /** Accessible name when the content has no `ModalTitle`. */
+  label?: string
+  children: ReactNode
+}
+
+/**
+ * shadcn's dialog shell on Radix: focus trap, Escape, and focus back to the opener. Mount it to
+ * open it, unmount it to close it, so the caller owns the open state. Clicking the backdrop does
+ * not close it. A `[data-autofocus]` element inside gets focus first.
+ */
+export function Modal({ onClose, className, label, children }: ModalProps) {
+  const content = useRef<HTMLDivElement>(null)
+  // Radix only gives focus back to a `Trigger`; ours is opened by mounting, so remember the opener.
+  const [opener] = useState(() => document.activeElement)
+  return (
+    <DialogPrimitive.Root open onOpenChange={(open) => !open && onClose()}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="animate-in fade-in-0 fixed inset-0 z-50 bg-[color-mix(in_srgb,var(--window)_60%,transparent)] duration-[var(--motion-base)]" />
+        <DialogPrimitive.Content
+          ref={content}
+          aria-label={label}
+          aria-describedby={undefined}
+          onInteractOutside={(event) => event.preventDefault()}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            if (opener instanceof HTMLElement && opener.isConnected) opener.focus()
+          }}
+          onOpenAutoFocus={(event) => {
+            const target = content.current?.querySelector<HTMLElement>('[data-autofocus]')
+            target?.focus()
+            // A hidden target cannot take focus; leave Radix to focus the first control instead.
+            if (target && document.activeElement === target) event.preventDefault()
+          }}
+          className={cn(
+            'animate-in fade-in-0 slide-in-from-bottom-2 fixed inset-0 z-50 m-auto flex h-fit max-h-[calc(100vh-48px)] w-[520px] max-w-[calc(100vw-32px)] flex-col overflow-hidden rounded-[var(--radius-dialog)] bg-card text-foreground shadow-[var(--shadow-dialog)] duration-[var(--motion-base)] ease-[var(--ease-out)]',
+            className
+          )}
+        >
+          {children}
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
+  )
+}
+
+export const ModalTitle = DialogPrimitive.Title
 
 interface DialogProps {
   title: string
@@ -16,7 +66,7 @@ interface DialogProps {
   actions?: ReactNode
 }
 
-/** A modal dialog, see `useModalDialog`. Mount it to open it, unmount it to close it. */
+/** A titled dialog with a close button, a scrolling body and an optional action footer. */
 export function Dialog({
   title,
   description,
@@ -26,38 +76,31 @@ export function Dialog({
   actionsStart,
   actions
 }: DialogProps) {
-  const ref = useModalDialog(onClose)
-  const titleId = useId()
-  const descriptionId = useId()
-
   return (
-    <dialog
-      ref={ref}
-      className={`${styles.dialog} ${width === 560 ? styles.wide : ''}`}
-      aria-labelledby={titleId}
-      aria-describedby={description ? descriptionId : undefined}
-    >
-      <header className={styles.header}>
-        <div className={styles.heading}>
-          <h2 id={titleId} className={styles.title}>
+    <Modal onClose={onClose} className={width === 560 ? 'w-[560px]' : undefined}>
+      <header className="flex items-start gap-3 px-6 pt-5 pb-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <DialogPrimitive.Title className="m-0 text-[17px] leading-6 font-semibold">
             {title}
-          </h2>
+          </DialogPrimitive.Title>
           {description ? (
-            <p id={descriptionId} className={styles.description}>
+            <DialogPrimitive.Description className="text-muted-foreground m-0">
               {description}
-            </p>
+            </DialogPrimitive.Description>
           ) : null}
         </div>
         <IconButton label="Close" icon="x" onClick={onClose} />
       </header>
-      <div className={styles.body}>{children}</div>
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 pt-1 pb-4">
+        {children}
+      </div>
       {actionsStart || actions ? (
-        <footer className={styles.footer}>
+        <footer className="border-border flex items-center gap-2.5 border-t px-6 py-3.5">
           {actionsStart}
-          <span className={styles.spacer} />
+          <span className="flex-1" />
           {actions}
         </footer>
       ) : null}
-    </dialog>
+    </Modal>
   )
 }
