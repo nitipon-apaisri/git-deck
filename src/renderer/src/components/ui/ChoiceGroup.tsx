@@ -1,5 +1,6 @@
-import { useRef, type KeyboardEvent, type ReactNode } from 'react'
-import styles from './ChoiceGroup.module.css'
+import type { ReactNode } from 'react'
+import * as RadioGroup from '@radix-ui/react-radio-group'
+import { cn } from '@/lib/cn'
 
 export interface Choice<T extends string> {
   value: T
@@ -16,7 +17,7 @@ interface ChoiceGroupProps<T extends string> {
   columns?: 2 | 3
 }
 
-/** One choice out of a few, as cards. A radio group: arrow keys move the choice. */
+/** One choice out of a few, as cards. shadcn's radio group on Radix: arrow keys move the choice. */
 export function ChoiceGroup<T extends string>({
   label,
   value,
@@ -24,52 +25,28 @@ export function ChoiceGroup<T extends string>({
   onChange,
   columns = 2
 }: ChoiceGroupProps<T>) {
-  const refs = useRef<(HTMLButtonElement | null)[]>([])
-
-  function onKeyDown(event: KeyboardEvent, index: number): void {
-    const step =
-      event.key === 'ArrowRight' || event.key === 'ArrowDown'
-        ? 1
-        : event.key === 'ArrowLeft' || event.key === 'ArrowUp'
-          ? -1
-          : 0
-    if (step === 0) return
-    event.preventDefault()
-    const next = (index + step + options.length) % options.length
-    onChange(options[next].value)
-    refs.current[next]?.focus()
-  }
-
   return (
-    <div
-      role="radiogroup"
+    <RadioGroup.Root
       aria-label={label}
-      className={`${styles.group} ${columns === 3 ? styles.three : ''}`}
+      value={value}
+      onValueChange={(next) => onChange(next as T)}
+      className={cn('grid gap-2', columns === 3 ? 'grid-cols-3' : 'grid-cols-2')}
     >
-      {options.map((option, index) => {
-        const checked = option.value === value
-        return (
-          <button
-            key={option.value}
-            ref={(node) => {
-              refs.current[index] = node
-            }}
-            type="button"
-            role="radio"
-            aria-checked={checked}
-            tabIndex={checked ? 0 : -1}
-            className={`${styles.choice} ${checked ? styles.checked : ''}`}
-            onClick={() => onChange(option.value)}
-            onKeyDown={(e) => onKeyDown(e, index)}
-          >
-            {option.leading}
-            <span className={styles.text}>
-              <span className={styles.title}>{option.title}</span>
-              {option.sub ? <span className={styles.sub}>{option.sub}</span> : null}
-            </span>
-          </button>
-        )
-      })}
-    </div>
+      {options.map((option) => (
+        <RadioGroup.Item
+          key={option.value}
+          value={option.value}
+          className="flex min-h-[54px] min-w-0 cursor-pointer items-center gap-2.5 rounded-lg border border-border bg-transparent px-3 text-left text-[13px] text-foreground transition-[background-color,border-color] duration-[var(--motion-fast)] ease-[var(--ease-out)] hover:bg-accent data-[state=checked]:border-[var(--accent)] data-[state=checked]:bg-[var(--selection)]"
+        >
+          {option.leading}
+          <span className="flex min-w-0 flex-col">
+            <span className="font-medium">{option.title}</span>
+            {option.sub ? (
+              <span className="text-[12px] text-muted-foreground">{option.sub}</span>
+            ) : null}
+          </span>
+        </RadioGroup.Item>
+      ))}
+    </RadioGroup.Root>
   )
 }

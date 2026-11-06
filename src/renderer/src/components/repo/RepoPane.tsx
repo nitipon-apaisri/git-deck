@@ -1,4 +1,5 @@
 import { useId, useLayoutEffect, useRef, useState } from 'react'
+import { cn } from '@/lib/cn'
 import type { Account, Repo } from '@shared/types'
 import { errorMessage } from '../../lib/errors'
 import { timeAgo } from '../../lib/format'
@@ -15,7 +16,6 @@ import { InfoTab } from './InfoTab'
 import { LocalActions } from './LocalActions'
 import { OverviewTab } from './OverviewTab'
 import { RepoHeader } from './RepoHeader'
-import styles from './RepoPane.module.css'
 
 const TABS: { id: TabName; label: string }[] = [
   { id: 'overview', label: 'Overview' },
@@ -119,12 +119,12 @@ export function RepoPane({
       tabIndex={-1}
       data-pane={paneNumber - 1}
       data-narrow={narrow ? 'true' : undefined}
-      className={[styles.pane, className ?? ''].filter(Boolean).join(' ')}
+      className={cn('flex-1', className)}
       data-active={active}
       onPointerDownCapture={onActivate}
       onFocusCapture={onActivate}
     >
-      <div className={styles.top}>
+      <div className="flex flex-col gap-3 px-6 pt-4">
         <RepoHeader
           repo={repo}
           account={account}
@@ -135,14 +135,17 @@ export function RepoPane({
         />
         <LocalActions repo={repo} linkedPath={linkedPath} actions={actions} compact={narrow} />
         {problem ? (
-          <p className={styles.notice} role="alert">
+          <p
+            className="m-0 flex items-start gap-2 rounded-md bg-[var(--warning-bg)] px-3 py-2 text-[var(--warning-text)] [overflow-wrap:anywhere] [&_svg]:mt-0.5 [&_svg]:flex-none"
+            role="alert"
+          >
             <Icon name="alert" size="sm" />
             {problem}
           </p>
         ) : null}
       </div>
 
-      <div className={styles.tabs}>
+      <div className="mx-6 mt-3">
         <Tabs
           tabs={isLocal ? LOCAL_TABS : TABS}
           value={tab}
@@ -151,10 +154,10 @@ export function RepoPane({
           idPrefix={idPrefix}
           trailing={
             isLocal ? undefined : (
-              <div className={styles.status}>
+              <div className="flex items-center gap-1.5 pb-1">
                 {loading ? <Spinner label="Refreshing the summary" /> : null}
                 <span
-                  className={styles.statusText}
+                  className="text-[12px] whitespace-nowrap text-muted-foreground"
                   title={fetchedAt ? new Date(fetchedAt).toLocaleString() : undefined}
                 >
                   {status}
@@ -173,7 +176,11 @@ export function RepoPane({
 
       <div
         ref={panel}
-        className={styles.panel}
+        className={cn(
+          'flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-6 pt-4 pb-6',
+          // The graph scrolls inside itself, so the panel does not.
+          tab === 'graph' && 'overflow-hidden'
+        )}
         onScroll={(e) => {
           if (e.currentTarget.clientHeight > 0) panelTop.current = e.currentTarget.scrollTop
         }}
@@ -184,13 +191,13 @@ export function RepoPane({
         data-tab={tab}
       >
         {error && tab !== 'graph' ? (
-          <ErrorBanner onRetry={reload} retrying={loading} className={styles.banner}>
+          <ErrorBanner onRetry={reload} retrying={loading} className="mb-3">
             {summary ? 'Could not refresh the summary: ' : 'Could not load the summary: '}
             {error}
           </ErrorBanner>
         ) : null}
         {graphSeen ? (
-          <div className={styles.graphWrap} hidden={tab !== 'graph'}>
+          <div className="flex min-h-0 flex-1 [&[hidden]]:hidden" hidden={tab !== 'graph'}>
             <GitGraph
               path={linkedPath ?? null}
               defaultBranch={repo.defaultBranch}

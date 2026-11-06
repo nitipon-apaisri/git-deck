@@ -1,0 +1,74 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* Dark is `data-theme='dark'` on <html>, not a `.dark` class. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/*
+ * shadcn's variable names, pointed at our tokens (tokens.css stays the single source of truth,
+ * so light, dark and System keep working). `--primary` already exists in tokens.css.
+ */
+:root,
+[data-theme] {
+  --background: var(--window);
+  --foreground: var(--text);
+  --card: var(--island);
+  --card-foreground: var(--text);
+  --popover: var(--island-raised);
+  --popover-foreground: var(--text);
+  --primary-foreground: var(--on-primary);
+  --secondary: var(--island-raised);
+  --secondary-foreground: var(--text);
+  --muted: var(--island-raised);
+  --muted-foreground: var(--text-muted);
+  --accent-foreground: var(--text);
+  --destructive: var(--danger);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--focus-ring);
+  --radius: var(--radius-md);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--hover);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-warning: var(--warning-text);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --animate-skeleton: skeleton-pulse 1.4s ease-in-out infinite;
+  --animate-progress-slide: progress-slide 1.1s ease-in-out infinite;
+  @keyframes progress-slide {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(300%);
+    }
+  }
+  @keyframes skeleton-pulse {
+    50% {
+      opacity: 0.45;
+    }
+  }
+}

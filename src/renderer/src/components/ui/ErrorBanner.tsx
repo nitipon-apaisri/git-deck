@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
+import { cn } from '@/lib/cn'
 import { Button } from './Button'
 import { Icon } from './Icon'
-import styles from './ErrorBanner.module.css'
 
 interface ErrorBannerProps {
   /** What went wrong, in words: "Could not load the summary: " plus the reason. */
@@ -15,7 +15,7 @@ interface ErrorBannerProps {
   className?: string
 }
 
-/** A message with the way out: Retry runs the failed request again. */
+/** shadcn's alert with the way out: Retry runs the failed request again. */
 export function ErrorBanner({
   children,
   onRetry,
@@ -24,9 +24,15 @@ export function ErrorBanner({
   className
 }: ErrorBannerProps) {
   return (
-    <div role="alert" className={[styles.banner, className ?? ''].filter(Boolean).join(' ')}>
+    <div
+      role="alert"
+      className={cn(
+        'flex items-center gap-2 rounded-md bg-[var(--warning-bg)] px-3 py-2 text-[var(--warning-text)] [&>svg]:flex-none',
+        className
+      )}
+    >
       <Icon name="alert" size="sm" />
-      <span className={styles.text}>{children}</span>
+      <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">{children}</span>
       {onRetry ? (
         <Button icon="refresh" disabled={retrying} onClick={onRetry}>
           Retry

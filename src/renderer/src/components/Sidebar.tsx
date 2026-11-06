@@ -23,7 +23,6 @@ import {
   Spinner,
   TreeRow
 } from './ui'
-import styles from './Sidebar.module.css'
 
 const COLLAPSED_KEY = 'gitdeck.collapsed'
 
@@ -154,28 +153,28 @@ export function Sidebar({
   const isEmpty = accounts.length === 0 && !hasLocal && !scope
 
   return (
-    <Island as="aside" aria-label="Repositories" className={styles.sidebar}>
+    <Island as="aside" aria-label="Repositories" className="w-[var(--sidebar-width)] flex-none">
       {loading ? (
         <SidebarSkeleton />
       ) : loadError ? (
-        <div className={styles.loadError}>
+        <div className="p-3">
           <ErrorBanner onRetry={onRetryLoad}>Could not load your accounts: {loadError}</ErrorBanner>
         </div>
       ) : isEmpty ? (
-        <div className={styles.empty}>
-          <h2 className={styles.emptyTitle}>No repositories</h2>
-          <p className={styles.emptyText}>
+        <div className="flex flex-1 flex-col items-stretch gap-2 p-4">
+          <h2 className="m-0 text-[15px] leading-[22px] font-semibold">No repositories</h2>
+          <p className="m-0 mb-2 text-muted-foreground">
             Open a local repository, or add an account in Settings.
           </p>
           <Button
             variant="primary"
             icon="folder"
-            className={styles.emptyAction}
+            className="w-full justify-center"
             onClick={onOpenLocal}
           >
             Open a repository
           </Button>
-          <Button className={styles.emptyAction} onClick={onConnect}>
+          <Button className="w-full justify-center" onClick={onConnect}>
             Connect to
             <BrandLogo brand="gitlab" />
             GitLab
@@ -186,7 +185,7 @@ export function Sidebar({
         </div>
       ) : (
         <>
-          <div className={styles.search}>
+          <div className="flex flex-col gap-2 px-2.5 pt-2.5 pb-2">
             <ScopeSwitcher
               projects={proj.projects}
               scope={scope}
@@ -194,11 +193,11 @@ export function Sidebar({
               onNew={() => proj.onNewProject()}
               onManage={proj.onManage}
             />
-            <label className={styles.searchBox}>
+            <label className="flex h-8 items-center gap-2 rounded-md border border-[var(--border-strong)] px-2.5 text-muted-foreground focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[var(--focus-ring)]">
               <Icon name="search" size="sm" />
               <input
                 type="search"
-                className={styles.searchInput}
+                className="min-w-0 flex-1 border-0 bg-transparent text-foreground outline-0 placeholder:text-muted-foreground"
                 data-search-input
                 onKeyDown={(e) => {
                   // Escape clears the filter, and a second one leaves the field.
@@ -223,7 +222,7 @@ export function Sidebar({
             {scope ? (
               <button
                 type="button"
-                className={styles.overview}
+                className="flex h-[30px] cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-2.5 text-left text-foreground transition-[background-color,color] duration-[var(--motion-fast)] ease-[var(--ease-out)] hover:bg-accent aria-pressed:bg-[var(--selection)] aria-pressed:font-medium"
                 aria-pressed={proj.overviewActive}
                 onClick={proj.onOverview}
               >
@@ -232,7 +231,10 @@ export function Sidebar({
               </button>
             ) : null}
           </div>
-          <nav className={styles.list} aria-label="Accounts and repositories">
+          <nav
+            className="min-h-0 flex-1 overflow-y-auto pb-2"
+            aria-label="Accounts and repositories"
+          >
             {rows.map((row) => (
               <SidebarRow
                 key={row.key}
@@ -252,7 +254,7 @@ export function Sidebar({
             ))}
             {unavailable.length > 0 ? (
               <>
-                <div className={styles.unavailableHead}>
+                <div className="mt-2.5 flex h-[30px] items-center gap-2 px-3 text-[12px] font-medium text-[var(--warning-text)]">
                   <Icon name="alert" size="sm" />
                   Unavailable ({unavailable.length})
                 </div>
@@ -267,21 +269,23 @@ export function Sidebar({
                       <IconButton
                         label={`Remove ${remoteIdOf(key)} from project`}
                         icon="x"
-                        className={styles.rowAction}
+                        className="size-6"
                         onClick={() => proj.onRemoveUnavailable(key)}
                       />
                     }
                   >
-                    <span className={styles.dim}>{remoteIdOf(key)}</span>
+                    <span className="text-muted-foreground">{remoteIdOf(key)}</span>
                   </TreeRow>
                 ))}
               </>
             ) : null}
             {scope && !searching && scope.repoKeys.length === 0 ? (
-              <p className={styles.noMatch}>This project has no repositories yet.</p>
+              <p className="m-0 px-4 py-3 text-muted-foreground">
+                This project has no repositories yet.
+              </p>
             ) : null}
             {searching && nodes.length === 0 && unavailable.length === 0 ? (
-              <p className={styles.noMatch}>
+              <p className="m-0 px-4 py-3 text-muted-foreground">
                 No repositories match “{query.trim()}”{scope ? ' in this project' : ''}.
               </p>
             ) : null}
@@ -289,7 +293,7 @@ export function Sidebar({
         </>
       )}
       {isEmpty ? null : (
-        <div className={styles.footer}>
+        <div className="flex items-center gap-2 border-t border-border px-2.5 py-2">
           {scope ? (
             <Button variant="ghost" icon="plus" onClick={proj.onEditScope}>
               Add repositories
@@ -310,7 +314,7 @@ export function Sidebar({
             </>
           )}
           <span
-            className={styles.updated}
+            className="min-w-0 flex-1 truncate text-right text-[12px] text-muted-foreground"
             title={lastFetched !== null ? `Updated ${timeAgo(lastFetched, now)}` : undefined}
           >
             {anyLoading ? 'Updating…' : lastFetched !== null ? timeAgo(lastFetched, now) : ''}
@@ -409,14 +413,14 @@ function SidebarRow({
             <IconButton
               label={`Remove ${repo.name} from the list`}
               icon="x"
-              className={styles.rowAction}
+              className="size-6"
               onClick={() => onRemoveLocal(repo.key)}
             />
           ) : (
             <IconButton
               label={`Project options for ${repo.name}`}
               icon="more"
-              className={styles.rowAction}
+              className="size-6"
               aria-haspopup="menu"
               onClick={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect()
@@ -427,7 +431,7 @@ function SidebarRow({
           <IconButton
             label={`Open ${repo.name} in split view`}
             icon="columns"
-            className={styles.rowAction}
+            className="size-6"
             onClick={() => onOpenInSplit(repo.key)}
           />
         </>
@@ -436,7 +440,7 @@ function SidebarRow({
         <>
           {mark ? (
             <span
-              className={styles.paneMark}
+              className="grid size-4 place-items-center rounded-[var(--radius-xs)] bg-primary text-[11px] leading-none font-semibold text-primary-foreground"
               role="img"
               aria-label={`Shown in pane ${mark}`}
               title={`Shown in pane ${mark}`}
@@ -444,14 +448,22 @@ function SidebarRow({
               {mark}
             </span>
           ) : null}
-          {repo.archived ? <span className={styles.pill}>archived</span> : null}
-          {repo.fork ? <span className={styles.pill}>fork</span> : null}
+          {repo.archived ? (
+            <span className="rounded-[var(--radius-xs)] border border-border px-1.5 text-[11px] leading-4 text-muted-foreground">
+              archived
+            </span>
+          ) : null}
+          {repo.fork ? (
+            <span className="rounded-[var(--radius-xs)] border border-border px-1.5 text-[11px] leading-4 text-muted-foreground">
+              fork
+            </span>
+          ) : null}
           {!local && repo.visibility === 'private' ? (
             <Icon name="lock" size="sm" label="Private" />
           ) : null}
           {!local && links[repo.key] ? (
             <span
-              className={styles.linked}
+              className="size-[7px] rounded-full bg-[var(--success)]"
               role="img"
               aria-label="Cloned locally"
               title="Cloned locally"
@@ -490,7 +502,8 @@ function HostRow({ node, expanded, searching, state, onToggle, onRefresh }: Host
         }
         trailing={<span>{searching ? node.matched : node.total}</span>}
       >
-        {account.label} <span className={styles.sub}>{account.host}</span>
+        {account.label}{' '}
+        <span className="text-[12px] font-normal text-muted-foreground">{account.host}</span>
       </TreeRow>
     )
   }
@@ -515,7 +528,7 @@ function HostRow({ node, expanded, searching, state, onToggle, onRefresh }: Host
             <IconButton
               label={`Could not load repositories: ${state.error} Retry`}
               icon="alert"
-              className={styles.errorButton}
+              className="size-6 text-[color:var(--warning-text)]"
               onClick={onRefresh}
             />
           ) : null}
@@ -523,7 +536,8 @@ function HostRow({ node, expanded, searching, state, onToggle, onRefresh }: Host
         </>
       }
     >
-      {account.label} <span className={styles.sub}>{account.host}</span>
+      {account.label}{' '}
+      <span className="text-[12px] font-normal text-muted-foreground">{account.host}</span>
     </TreeRow>
   )
 }
@@ -531,14 +545,14 @@ function HostRow({ node, expanded, searching, state, onToggle, onRefresh }: Host
 /** What the list looks like before the accounts have loaded: three hosts, a few repos each. */
 function SidebarSkeleton() {
   return (
-    <div className={styles.skeleton} aria-busy="true">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden p-2.5" aria-busy="true">
       <Skeleton height={36} label="Loading repositories" />
       <Skeleton height={32} />
       {[0, 1, 2].map((host) => (
-        <div key={host} className={styles.skeletonGroup}>
+        <div key={host} className="flex flex-col gap-2.5">
           <Skeleton width="55%" />
           {[0, 1, 2].map((repo) => (
-            <Skeleton key={repo} width={`${80 - repo * 12}%`} className={styles.skeletonRepo} />
+            <Skeleton key={repo} width={`${80 - repo * 12}%`} className="ml-6" />
           ))}
         </div>
       ))}

@@ -11,7 +11,6 @@ import {
 } from '../../lib/splitLayout'
 import { RATIO_MAX, RATIO_MIN, type Orientation } from '../../lib/splitState'
 import { useElementSize } from '../../state/useElementSize'
-import styles from './SplitView.module.css'
 
 interface SplitViewProps {
   /** Two panes with a divider. Off shows only `first`. */
@@ -85,7 +84,13 @@ export function SplitView({
   return (
     <div
       ref={ref}
-      className={styles.split}
+      className={[
+        'group/split grid min-h-0 min-w-0 flex-1 [grid-template:minmax(0,1fr)/minmax(0,1fr)]',
+        'data-[dragging=true]:select-none data-[dragging=true]:data-[orientation=horizontal]:cursor-col-resize data-[dragging=true]:data-[orientation=vertical]:cursor-row-resize',
+        // Every pane keeps room for the active outline, and shows it only in split view.
+        '[&>[data-pane]]:min-h-0 [&>[data-pane]]:min-w-0 [&>[data-pane]]:outline-2 [&>[data-pane]]:-outline-offset-2 [&>[data-pane]]:outline-transparent',
+        'data-[multi=true]:[&>[data-pane][data-active=true]]:outline-[var(--accent)]'
+      ].join(' ')}
       data-multi={enabled}
       data-orientation={orientation}
       data-dragging={dragging ? 'true' : undefined}
@@ -101,7 +106,7 @@ export function SplitView({
       {enabled ? (
         <div
           key="divider"
-          className={styles.divider}
+          className="group/divider relative grid touch-none place-items-center rounded-md focus-visible:-outline-offset-2 group-data-[orientation=horizontal]/split:cursor-col-resize group-data-[orientation=vertical]/split:cursor-row-resize"
           role="separator"
           aria-label="Resize panes"
           aria-orientation={horizontal ? 'vertical' : 'horizontal'}
@@ -118,7 +123,10 @@ export function SplitView({
           onKeyDown={onKeyDown}
           onDoubleClick={() => onRatioChange(0.5)}
         >
-          <span className={styles.grip} aria-hidden="true" />
+          <span
+            className="rounded-[var(--radius-xs)] bg-[var(--border-strong)] opacity-55 transition-opacity duration-[120ms] group-hover/divider:bg-[var(--accent)] group-hover/divider:opacity-100 group-focus-visible/divider:bg-[var(--accent)] group-focus-visible/divider:opacity-100 group-data-[dragging=true]/split:bg-[var(--accent)] group-data-[dragging=true]/split:opacity-100 group-data-[orientation=horizontal]/split:h-10 group-data-[orientation=horizontal]/split:w-[3px] group-data-[orientation=vertical]/split:h-[3px] group-data-[orientation=vertical]/split:w-10"
+            aria-hidden="true"
+          />
         </div>
       ) : null}
       {enabled ? second : null}

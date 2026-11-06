@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import styles from './Badge.module.css'
+import { cn } from '@/lib/cn'
 
 interface BadgeProps {
   /** `warning` is for states that need a second look, such as an archived repository. */
@@ -10,7 +10,14 @@ interface BadgeProps {
 /** A small word label. Always text, so the state never rests on colour alone. */
 export function Badge({ tone = 'neutral', children }: BadgeProps) {
   return (
-    <span className={styles.badge} data-tone={tone}>
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 rounded-[var(--radius-xs)] border px-2 text-[11.5px] leading-[18px] font-medium whitespace-nowrap',
+        tone === 'warning'
+          ? 'border-transparent bg-[var(--warning-bg)] text-[var(--warning-text)]'
+          : 'border-border text-muted-foreground'
+      )}
+    >
       {children}
     </span>
   )

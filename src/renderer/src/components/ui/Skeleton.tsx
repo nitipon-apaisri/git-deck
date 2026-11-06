@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import styles from './Skeleton.module.css'
+import { cn } from '@/lib/cn'
 
 interface SkeletonProps {
   /** CSS width, for example `120` (px) or `'60%'`. Defaults to the full width. */
@@ -21,9 +21,11 @@ export function Skeleton({ width, height = 14, circle = false, label, className 
   const style: CSSProperties = { width, height }
   return (
     <span
-      className={[styles.skeleton, circle ? styles.circle : '', className ?? '']
-        .filter(Boolean)
-        .join(' ')}
+      className={cn(
+        'block max-w-full animate-skeleton bg-border motion-reduce:animate-none',
+        circle ? 'rounded-full' : 'rounded-sm',
+        className
+      )}
       style={style}
       role={label ? 'status' : undefined}
       aria-label={label}

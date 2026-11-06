@@ -1,6 +1,6 @@
 import type { HostKind } from '../../lib/presets'
 import { BrandLogo } from './BrandLogo'
-import styles from './HostTile.module.css'
+import { cn } from '@/lib/cn'
 
 interface HostTileProps {
   /** Two-letter label: GH, GL, SH or GE. */
@@ -16,9 +16,21 @@ interface HostTileProps {
 export function HostTile({ tile, host, size = 20, label, brand }: HostTileProps) {
   return (
     <span
-      className={`${styles.tile} ${styles[`s${size}`]}`}
+      className={cn(
+        'inline-grid flex-none place-items-center font-semibold text-foreground',
+        size === 20 && 'size-5 rounded-sm text-[10px]',
+        size === 24 && 'size-6 rounded-sm text-[10px]',
+        size === 28 && 'size-7 rounded-md text-[11px]',
+        // A logo sits on a plain tile: the brand colours come from the logo itself.
+        brand
+          ? 'bg-secondary'
+          : host === 'github'
+            ? 'bg-[var(--host-github)]'
+            : host === 'gitlab'
+              ? 'bg-[var(--host-gitlab)]'
+              : 'bg-[var(--host-selfhosted)]'
+      )}
       data-host={host}
-      data-logo={brand ? '' : undefined}
       role={label ? 'img' : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}

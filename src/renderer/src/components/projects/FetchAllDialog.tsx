@@ -1,7 +1,6 @@
 import type { FetchAllState } from '../../lib/fetchAll'
 import { fetchTotals, fetchTotalsText } from '../../lib/fetchAll'
 import { Button, Dialog, Icon, ProgressBar, Spinner } from '../ui'
-import styles from './FetchAllDialog.module.css'
 
 interface FetchAllDialogProps {
   state: FetchAllState
@@ -23,31 +22,44 @@ export function FetchAllDialog({ state, onClose }: FetchAllDialogProps) {
         </Button>
       }
     >
-      <div className={styles.summary} aria-live="polite">
+      <div className="flex items-baseline justify-between gap-3 font-medium" aria-live="polite">
         <span>{fetchTotalsText(totals)}</span>
-        {!totals.finished ? <span className={styles.note}>Closing stops the queue.</span> : null}
+        {!totals.finished ? (
+          <span className="text-[12px] font-normal text-muted-foreground">
+            Closing stops the queue.
+          </span>
+        ) : null}
       </div>
       <ProgressBar percent={percent} label="Fetch progress" />
-      <ul className={styles.list}>
+      <ul className="m-0 flex list-none flex-col rounded-lg border border-border p-0">
         {state.items.map((item) => (
-          <li key={item.key} className={styles.item}>
-            <span className={styles.mark}>
+          <li
+            key={item.key}
+            className="flex items-start gap-2.5 border-t border-border px-3 py-2.5 first:border-t-0"
+          >
+            <span className="grid min-h-[18px] w-16 flex-none place-items-center">
               {item.status === 'running' ? <Spinner label={`Fetching ${item.name}`} /> : null}
               {item.status === 'done' ? (
-                <span className={styles.done}>
+                <span className="inline-grid text-[var(--success-text)]">
                   <Icon name="check" size="sm" label="Fetched" />
                 </span>
               ) : null}
               {item.status === 'failed' ? (
-                <span className={styles.failed}>
+                <span className="inline-grid text-destructive">
                   <Icon name="alert" size="sm" label="Failed" />
                 </span>
               ) : null}
-              {item.status === 'queued' ? <span className={styles.queued}>Waiting</span> : null}
+              {item.status === 'queued' ? (
+                <span className="text-[12px] text-muted-foreground">Waiting</span>
+              ) : null}
             </span>
-            <span className={styles.text}>
-              <span className={styles.name}>{item.name}</span>
-              {item.error ? <span className={styles.error}>{item.error}</span> : null}
+            <span className="flex min-w-0 flex-1 flex-col">
+              <span className="truncate font-medium">{item.name}</span>
+              {item.error ? (
+                <span className="text-[12px] leading-4 text-destructive [overflow-wrap:anywhere]">
+                  {item.error}
+                </span>
+              ) : null}
             </span>
           </li>
         ))}

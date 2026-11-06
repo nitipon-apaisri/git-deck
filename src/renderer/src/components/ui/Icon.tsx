@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import styles from './Icon.module.css'
+import { cn } from '@/lib/cn'
 
 // Drawn for GitDeck: 24px viewBox, 1.8px stroke, round caps and joins, currentColor.
 const SHAPES = {
@@ -289,7 +289,14 @@ interface IconProps {
 export function Icon({ name, size = 'md', label }: IconProps) {
   return (
     <svg
-      className={`${styles.icon} ${styles[size]}`}
+      className={cn(
+        'flex-none fill-none stroke-current [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:1.8]',
+        size === 'md'
+          ? 'size-[var(--icon-size)]'
+          : size === 'sm'
+            ? 'size-[var(--icon-size-sm)]'
+            : 'size-3'
+      )}
       viewBox="0 0 24 24"
       role={label ? 'img' : undefined}
       aria-label={label}

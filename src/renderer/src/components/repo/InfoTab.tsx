@@ -12,7 +12,6 @@ import {
   visibilityLabel
 } from '../../lib/repoView'
 import { CopyButton, ErrorBanner, RefBadge, Skeleton, Spinner } from '../ui'
-import styles from './InfoTab.module.css'
 
 interface InfoTabProps {
   repo: Repo
@@ -27,11 +26,15 @@ interface InfoTabProps {
   }
 }
 
+const HEADING = 'm-0 flex items-center gap-2 text-[15px] leading-[22px] font-semibold'
+
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className={styles.row}>
-      <dt className={styles.term}>{label}</dt>
-      <dd className={styles.value}>{children}</dd>
+    <div className="grid min-h-[34px] grid-cols-[minmax(110px,160px)_minmax(0,1fr)] items-center gap-3 border-b border-border last:border-b-0">
+      <dt className="text-[12px] text-muted-foreground">{label}</dt>
+      <dd className="m-0 flex min-w-0 flex-wrap items-center gap-2 [overflow-wrap:anywhere]">
+        {children}
+      </dd>
     </div>
   )
 }
@@ -40,8 +43,8 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 function Copyable({ text, what }: { text: string; what: string }) {
   if (!text) return <>—</>
   return (
-    <span className={styles.copyable}>
-      <span className={`${styles.mono} hash`}>{text}</span>
+    <span className="inline-flex min-w-0 items-center gap-1">
+      <span className="hash [overflow-wrap:anywhere]">{text}</span>
       <CopyButton text={text} what={what} />
     </span>
   )
@@ -50,11 +53,11 @@ function Copyable({ text, what }: { text: string; what: string }) {
 export function InfoTab({ repo, account, summary, linkedPath, local }: InfoTabProps) {
   const info = local.info
   return (
-    <div className={styles.info}>
+    <div className="flex flex-col gap-6">
       {repo.accountId === 'local' ? null : (
-        <section className={styles.section} aria-label="Remote">
-          <h2 className={styles.heading}>Remote</h2>
-          <dl className={styles.list}>
+        <section className="flex flex-col gap-2" aria-label="Remote">
+          <h2 className={HEADING}>Remote</h2>
+          <dl className="m-0 flex flex-col">
             <Row label="Repository">{repo.fullName}</Row>
             <Row label="Host">{account ? account.host : '—'}</Row>
             <Row label="Visibility">{visibilityLabel(repo.visibility)}</Row>
@@ -80,13 +83,13 @@ export function InfoTab({ repo, account, summary, linkedPath, local }: InfoTabPr
         </section>
       )}
 
-      <section className={styles.section} aria-label="Local clone">
-        <h2 className={styles.heading}>
+      <section className="flex flex-col gap-2" aria-label="Local clone">
+        <h2 className={HEADING}>
           {repo.accountId === 'local' ? 'Folder' : 'Local clone'}{' '}
           {local.loading && info ? <Spinner label="Reading the folder" /> : null}
         </h2>
         {!linkedPath ? (
-          <p className={styles.muted}>
+          <p className="m-0 text-muted-foreground">
             Not cloned on this computer. Use Clone or Link existing folder above.
           </p>
         ) : local.error && !info ? (
@@ -100,7 +103,7 @@ export function InfoTab({ repo, account, summary, linkedPath, local }: InfoTabPr
                 Could not refresh: {local.error}
               </ErrorBanner>
             ) : null}
-            <dl className={styles.list}>
+            <dl className="m-0 flex flex-col">
               <Row label="Path">
                 <Copyable text={info.path} what="folder path" />
               </Row>
@@ -109,11 +112,11 @@ export function InfoTab({ repo, account, summary, linkedPath, local }: InfoTabPr
               </Row>
               <Row label="Remotes">
                 {info.remotes.length > 0 ? (
-                  <ul className={styles.remotes}>
+                  <ul className="m-0 flex list-none flex-col gap-1 px-0 py-1.5 [&_li]:flex [&_li]:flex-wrap [&_li]:gap-2">
                     {info.remotes.map((r) => (
                       <li key={r.name}>
-                        <span className={styles.remoteName}>{r.name}</span>
-                        <span className={`${styles.mono} hash`}>{r.url}</span>
+                        <span className="font-medium">{r.name}</span>
+                        <span className="hash [overflow-wrap:anywhere]">{r.url}</span>
                       </li>
                     ))}
                   </ul>
@@ -125,7 +128,7 @@ export function InfoTab({ repo, account, summary, linkedPath, local }: InfoTabPr
               <Row label="Tags">
                 {countText(info.tags)}
                 {info.latestTags.length > 0 ? (
-                  <span className={styles.tags}>
+                  <span className="inline-flex flex-wrap gap-1.5">
                     {info.latestTags.map((t) => (
                       <RefBadge key={t} kind="tag" name={t} />
                     ))}
@@ -141,7 +144,7 @@ export function InfoTab({ repo, account, summary, linkedPath, local }: InfoTabPr
             </dl>
           </>
         ) : (
-          <div className={styles.skeletons}>
+          <div className="flex flex-col gap-3">
             <Skeleton label="Reading the folder" width="40%" />
             <Skeleton width="70%" />
             <Skeleton width="55%" />

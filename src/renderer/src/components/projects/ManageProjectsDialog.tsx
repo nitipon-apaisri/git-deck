@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import type { Project } from '@shared/types'
 import { Button, Dialog, Icon, IconButton, ProjectIcon } from '../ui'
-import styles from './ManageProjectsDialog.module.css'
 
 interface ManageProjectsDialogProps {
   projects: Project[]
@@ -54,16 +53,21 @@ export function ManageProjectsDialog({
       }
     >
       {projects.length === 0 ? (
-        <p className={styles.empty}>No projects yet. Create one to group repositories.</p>
+        <p className="m-0 text-muted-foreground">
+          No projects yet. Create one to group repositories.
+        </p>
       ) : (
-        <ul className={styles.list}>
+        <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {projects.map((p) => (
-            <li key={p.id} className={styles.item}>
-              <div className={styles.row}>
+            <li
+              key={p.id}
+              className="flex flex-col gap-2 rounded-lg border border-border px-3 py-2.5"
+            >
+              <div className="flex items-center gap-3">
                 <ProjectIcon icon={p.icon} color={p.color} />
-                <span className={styles.text}>
-                  <span className={styles.name}>{p.name}</span>
-                  <span className={styles.sub}>
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate font-semibold">{p.name}</span>
+                  <span className="text-[12px] text-muted-foreground">
                     {p.repoKeys.length} {p.repoKeys.length === 1 ? 'repository' : 'repositories'}
                   </span>
                 </span>
@@ -78,19 +82,23 @@ export function ManageProjectsDialog({
                 />
               </div>
               {confirming === p.id ? (
-                <div className={styles.confirm} role="alertdialog" aria-label={`Delete ${p.name}?`}>
-                  <span className={styles.confirmText}>
+                <div
+                  className="flex flex-col gap-2 rounded-md bg-secondary px-3 py-2"
+                  role="alertdialog"
+                  aria-label={`Delete ${p.name}?`}
+                >
+                  <span className="flex items-start gap-2">
                     <Icon name="alert" size="sm" />
                     <span>
                       Delete “{p.name}”? The repositories and any local clones are not touched.
                     </span>
                   </span>
-                  <span className={styles.confirmActions}>
+                  <span className="flex justify-end gap-2">
                     <Button onClick={() => setConfirming(null)} disabled={busy}>
                       Cancel
                     </Button>
                     <Button
-                      className={styles.danger}
+                      className="border-destructive text-destructive"
                       onClick={() => void confirmDelete(p.id)}
                       disabled={busy}
                     >
@@ -104,7 +112,10 @@ export function ManageProjectsDialog({
         </ul>
       )}
       {error ? (
-        <span role="alert" className={styles.error}>
+        <span
+          role="alert"
+          className="flex items-start gap-2 text-[12px] leading-4 text-destructive"
+        >
           <Icon name="alert" size="sm" />
           {error}
         </span>

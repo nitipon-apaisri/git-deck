@@ -196,3 +196,14 @@ Newest first. Template:
 - **Question:** `PLAN.md` and `CLAUDE.md` specified npm, but the sibling project `lens` uses pnpm. Phase 1 (which creates `package.json`) is not done, yet git hooks need one.
 - **Options considered:** npm vs pnpm; wait for Phase 1 vs add a tooling-only `package.json` now.
 - **Decision and why:** pnpm, to match `lens`. A minimal `package.json` with only devDependencies (husky, lint-staged, prettier, eslint) so hooks work from the first commit. Phase 1 extends it and does not replace it.
+
+## 2026-11-06: shadcn/ui with Tailwind v4, our tokens kept
+
+- **Question:** the user asked to use shadcn, which needs Tailwind, Radix, cva, clsx and tailwind-merge. That conflicted with "runtime dependencies are `react` and `react-dom` only" and with CSS Modules.
+- **Options considered:** full migration; shadcn for overlays only; new components only. Keep our look or take shadcn's default theme. List the packages as `dependencies` or `devDependencies`.
+- **Decision and why:** full migration, our look kept, packages in `devDependencies` (Vite bundles them, so the packaged app still has only `react` and `react-dom` as runtime dependencies).
+  - `shadcn.css` maps shadcn's variable names onto `tokens.css`, and dark is `data-theme='dark'` through a custom variant, so tokens stay the single source of truth.
+  - shadcn's lowercase file names would collide with our PascalCase ones on a case-insensitive disk, so the shadcn source lives in our existing `ui/*.tsx` files and keeps their exports.
+  - Our `Button` variants keep their names (`default` outlined, `primary` filled, `ghost`) so call sites do not change.
+  - Radix only restores focus to a `Trigger`, so `Modal` and `Menu` remember their opener. Both are opened by mounting.
+  - Element resets in `global.css` sit in `@layer base`, so Tailwind utilities beat them. Unlayered CSS Modules still beat utilities until each module is converted.

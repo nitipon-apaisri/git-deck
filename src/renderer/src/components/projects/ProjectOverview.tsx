@@ -35,7 +35,6 @@ import {
   StatCard
 } from '../ui'
 import { FetchAllDialog } from './FetchAllDialog'
-import styles from './ProjectOverview.module.css'
 
 interface ProjectOverviewProps {
   project: Project
@@ -122,14 +121,17 @@ export function ProjectOverview({
     .join(' · ')
 
   return (
-    <section className={styles.overview} aria-label={`${project.name} overview`}>
-      <header className={styles.header}>
+    <section
+      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pb-4"
+      aria-label={`${project.name} overview`}
+    >
+      <header className="flex flex-wrap items-center gap-[14px] px-6 pt-5">
         <ProjectIcon icon={project.icon} color={project.color} size="lg" />
-        <div className={styles.title}>
-          <h1 className={styles.name}>{project.name}</h1>
-          <span className={styles.sub}>{subtitle}</span>
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <h1 className="m-0 truncate text-[22px] leading-7 font-semibold">{project.name}</h1>
+          <span className="text-muted-foreground">{subtitle}</span>
         </div>
-        <div className={styles.actions}>
+        <div className="ml-auto flex flex-wrap gap-2">
           <Button
             icon="refresh"
             disabled={targets.length === 0}
@@ -150,9 +152,11 @@ export function ProjectOverview({
       </header>
 
       {empty ? (
-        <div className={styles.emptyState}>
-          <h2 className={styles.emptyTitle}>No repositories in this project yet</h2>
-          <p className={styles.emptyText}>
+        <div className="flex flex-col items-start gap-2 p-6">
+          <h2 className="m-0 text-[15px] leading-[22px] font-semibold">
+            No repositories in this project yet
+          </h2>
+          <p className="m-0 mb-2 text-muted-foreground">
             Add repositories from any connected host to see their totals here.
           </p>
           <Button variant="primary" icon="plus" onClick={onEdit}>
@@ -162,7 +166,7 @@ export function ProjectOverview({
       ) : (
         <>
           {failedCount > 0 && !loading ? (
-            <div className={styles.banner}>
+            <div className="px-6 pt-[18px]">
               <ErrorBanner onRetry={summaries.retryFailed}>
                 {failedCount === 1
                   ? 'The summary of 1 repository could not be loaded.'
@@ -171,7 +175,7 @@ export function ProjectOverview({
               </ErrorBanner>
             </div>
           ) : null}
-          <div className={styles.stats}>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(130px,1fr))] gap-2.5 px-6 pt-[18px]">
             <StatCard
               value={project.repoKeys.length}
               label="Repositories"
@@ -212,14 +216,14 @@ export function ProjectOverview({
             />
           </div>
 
-          <div className={styles.tableHead}>
-            <h2 className={styles.tableTitle}>Repositories</h2>
+          <div className="flex items-center gap-3 px-6 pt-[22px] pb-2">
+            <h2 className="m-0 text-[14px] leading-5 font-semibold">Repositories</h2>
             {loading && summaries.progress ? (
               <>
-                <span className={styles.progressText} aria-live="polite">
+                <span className="text-[12px] text-muted-foreground" aria-live="polite">
                   {progressText(summaries.progress)}
                 </span>
-                <span className={styles.progressBar}>
+                <span className="w-[120px]">
                   <ProgressBar
                     label="Summaries loading"
                     percent={(summaries.progress.done / summaries.progress.total) * 100}
@@ -227,14 +231,14 @@ export function ProjectOverview({
                 </span>
               </>
             ) : (
-              <span className={styles.progressText}>
+              <span className="text-[12px] text-muted-foreground">
                 Summaries loaded {total.loadedCount} / {total.repoCount}
               </span>
             )}
           </div>
 
-          <div className={styles.scroll}>
-            <table className={styles.table}>
+          <div className="overflow-x-auto px-6">
+            <table className="w-full min-w-[860px] border-collapse [&_td]:h-[52px] [&_td]:border-b [&_td]:border-border [&_td]:px-1.5 [&_td]:text-left [&_td]:align-middle [&_td]:font-normal [&_th]:h-[30px] [&_th]:border-b [&_th]:border-border [&_th]:px-1.5 [&_th]:text-left [&_th]:text-[12px] [&_th]:font-normal [&_th]:text-muted-foreground">
               <thead>
                 <tr>
                   {COLUMNS.map((col) => {
@@ -243,14 +247,14 @@ export function ProjectOverview({
                       <th
                         key={col.key}
                         scope="col"
-                        className={col.numeric ? styles.numeric : undefined}
+                        className={col.numeric ? 'text-right!' : undefined}
                         aria-sort={
                           active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'
                         }
                       >
                         <button
                           type="button"
-                          className={styles.sortButton}
+                          className="inline-flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-inherit hover:text-foreground data-[active]:text-foreground"
                           data-active={active || undefined}
                           onClick={() => setSort(nextSort(sort, col.key))}
                         >
@@ -262,8 +266,10 @@ export function ProjectOverview({
                       </th>
                     )
                   })}
-                  <th scope="col" className={styles.actionCol}>
-                    <span className={styles.srOnly}>Actions</span>
+                  <th scope="col" className="w-11">
+                    <span className="absolute size-px overflow-hidden whitespace-nowrap [clip-path:inset(50%)]">
+                      Actions
+                    </span>
                   </th>
                 </tr>
               </thead>
@@ -322,13 +328,15 @@ function Row({
   const { repo, summary } = row
   if (!repo) {
     return (
-      <tr className={styles.dim}>
+      <tr className="text-muted-foreground">
         <td>
-          <span className={styles.repoCell}>
+          <span className="flex min-w-0 items-center gap-2.5">
             {waiting ? <Spinner label="Loading repositories" /> : <Icon name="alert" size="sm" />}
-            <span className={styles.repoText}>
-              <span className={styles.repoName}>{remoteIdOf(row.key)}</span>
-              <span className={styles.where}>
+            <span className="flex min-w-0 flex-col">
+              <span className="overflow-hidden p-0 text-left font-medium text-ellipsis whitespace-nowrap">
+                {remoteIdOf(row.key)}
+              </span>
+              <span className="truncate text-[12px] text-muted-foreground">
                 {waiting
                   ? 'Waiting for the repository list'
                   : 'Unavailable: access lost or account removed'}
@@ -337,12 +345,12 @@ function Row({
           </span>
         </td>
         <td>–</td>
-        <td className={styles.numeric}>–</td>
-        <td className={styles.numeric}>–</td>
-        <td className={styles.numeric}>–</td>
+        <td className="text-right!">–</td>
+        <td className="text-right!">–</td>
+        <td className="text-right!">–</td>
         <td>–</td>
         <td>–</td>
-        <td className={styles.actionCol}>
+        <td className="w-11">
           {!waiting ? (
             <IconButton
               label={`Remove ${remoteIdOf(row.key)} from project`}
@@ -357,15 +365,19 @@ function Row({
   const tile = account ? hostTileOf(account.type, account.baseUrl) : null
   const last = summary?.lastActivityAt ? Date.parse(summary.lastActivityAt) : NaN
   return (
-    <tr className={styles.row} onClick={() => onOpen(row.key)}>
+    <tr className="cursor-pointer hover:bg-accent" onClick={() => onOpen(row.key)}>
       <td>
-        <span className={styles.repoCell}>
+        <span className="flex min-w-0 items-center gap-2.5">
           {tile ? <HostTile tile={tile.tile} host={tile.host} size={24} /> : null}
-          <span className={styles.repoText}>
-            <button type="button" className={styles.repoName} title={repo.fullName}>
+          <span className="flex min-w-0 flex-col">
+            <button
+              type="button"
+              className="cursor-pointer overflow-hidden border-0 bg-transparent p-0 text-left font-medium text-ellipsis whitespace-nowrap"
+              title={repo.fullName}
+            >
               {repo.name}
             </button>
-            <span className={styles.where}>
+            <span className="truncate text-[12px] text-muted-foreground">
               {account?.label ?? repo.accountId} · {repo.namespace}
             </span>
           </span>
@@ -377,27 +389,30 @@ function Row({
           ) : null}
         </span>
       </td>
-      <td className={styles.muted}>{capitalize(repo.visibility)}</td>
-      <td className={styles.numeric}>{countText(summary?.commitCount)}</td>
-      <td className={styles.numeric}>{countText(summary?.contributorCount)}</td>
-      <td className={styles.numeric}>{countText(summary?.openChangeRequests)}</td>
+      <td className="text-muted-foreground">{capitalize(repo.visibility)}</td>
+      <td className="text-right!">{countText(summary?.commitCount)}</td>
+      <td className="text-right!">{countText(summary?.contributorCount)}</td>
+      <td className="text-right!">{countText(summary?.openChangeRequests)}</td>
       <td
-        className={styles.muted}
+        className="text-muted-foreground"
         title={Number.isNaN(last) ? undefined : new Date(last).toLocaleString()}
       >
         {Number.isNaN(last) ? '–' : timeAgo(last, now)}
       </td>
       <td>
         {row.linkedPath ? (
-          <span className={styles.local} title={row.linkedPath}>
-            <span className={styles.dot} aria-hidden="true" />
+          <span
+            className="inline-flex items-center gap-1.5 text-[var(--success-text)]"
+            title={row.linkedPath}
+          >
+            <span className="size-[7px] rounded-full bg-[var(--success)]" aria-hidden="true" />
             Cloned
           </span>
         ) : (
           <Badge>Not cloned</Badge>
         )}
       </td>
-      <td className={styles.actionCol}>
+      <td className="w-11">
         <IconButton
           label={`Open ${repo.name} in split view`}
           icon="columns"

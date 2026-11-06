@@ -1,6 +1,5 @@
 import type { PaneId } from '../../lib/splitState'
 import { IconButton, Island, Spinner } from '../ui'
-import styles from './EmptyPane.module.css'
 
 export type EmptyKind = 'loading' | 'pick' | 'select'
 
@@ -28,7 +27,7 @@ interface EmptyPaneProps {
 export function EmptyPane({ pane, kind, active, onActivate, onClose }: EmptyPaneProps) {
   return (
     <Island
-      className={styles.empty}
+      className="relative items-center justify-center gap-2 p-6 text-center"
       aria-label={onClose ? `Pane ${pane + 1}, empty` : 'No repository'}
       tabIndex={-1}
       data-pane={pane}
@@ -37,19 +36,19 @@ export function EmptyPane({ pane, kind, active, onActivate, onClose }: EmptyPane
       onFocusCapture={onActivate}
     >
       {onClose ? (
-        <div className={styles.close}>
+        <div className="absolute top-2 right-2">
           <IconButton label="Close pane" icon="x" onClick={onClose} />
         </div>
       ) : null}
       {kind === 'loading' ? (
         <>
           <Spinner label="Loading repositories" />
-          <p className={styles.text}>Loading repositories</p>
+          <p className="m-0 text-muted-foreground">Loading repositories</p>
         </>
       ) : (
         <>
-          <h1 className={styles.title}>{COPY[kind].title}</h1>
-          <p className={styles.text}>{COPY[kind].text}</p>
+          <h1 className="m-0 text-[15px] leading-[22px] font-semibold">{COPY[kind].title}</h1>
+          <p className="m-0 text-muted-foreground">{COPY[kind].text}</p>
         </>
       )}
     </Island>

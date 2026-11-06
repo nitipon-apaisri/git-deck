@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import * as AvatarPrimitive from '@radix-ui/react-avatar'
+import { cn } from '@/lib/cn'
 import { avatarIndex, initialsOf } from '../../lib/format'
-import styles from './Avatar.module.css'
 
 interface AvatarProps {
   /** Image URL. When it is missing or fails to load, coloured initials show instead. */
@@ -9,17 +9,31 @@ interface AvatarProps {
   size?: 24 | 28 | 32
 }
 
+const SIZES = {
+  24: 'size-6 text-[10px]',
+  28: 'size-7 text-[11px]',
+  32: 'size-8 text-[12px]'
+} as const
+const TONES = [
+  'bg-[var(--avatar-1)]',
+  'bg-[var(--avatar-2)]',
+  'bg-[var(--avatar-3)]',
+  'bg-[var(--avatar-4)]'
+] as const
+
+/** shadcn's avatar on Radix: the image, or coloured initials until it loads or when it fails. */
 export function Avatar({ src, name, size = 28 }: AvatarProps) {
-  // Remember which URL failed, so a new `src` gets a fresh try.
-  const [failedSrc, setFailedSrc] = useState<string | null>(null)
-  const showImage = Boolean(src) && failedSrc !== src
+  const tone = TONES[Math.max(0, Math.min(3, Number(avatarIndex(name)) - 1))]
   return (
-    <span className={`${styles.avatar} ${styles[`s${size}`]}`} data-tone={avatarIndex(name)}>
-      {showImage ? (
-        <img src={src} alt="" className={styles.image} onError={() => setFailedSrc(src ?? null)} />
-      ) : (
-        <span aria-hidden="true">{initialsOf(name)}</span>
+    <AvatarPrimitive.Root
+      className={cn(
+        'inline-grid flex-none place-items-center overflow-hidden rounded-full font-semibold text-[var(--avatar-ink)]',
+        SIZES[size],
+        tone
       )}
-    </span>
+    >
+      {src ? <AvatarPrimitive.Image src={src} alt="" className="size-full object-cover" /> : null}
+      <AvatarPrimitive.Fallback aria-hidden="true">{initialsOf(name)}</AvatarPrimitive.Fallback>
+    </AvatarPrimitive.Root>
   )
 }

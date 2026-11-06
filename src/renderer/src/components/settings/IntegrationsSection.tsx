@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import type { Account, AccountInput } from '@shared/types'
+import { cn } from '@/lib/cn'
 import { errorMessage } from '../../lib/errors'
 import {
   TOKEN_SCOPES,
@@ -21,7 +22,6 @@ import {
   TextInput,
   type Choice
 } from '../ui'
-import styles from './IntegrationsSection.module.css'
 
 interface IntegrationsSectionProps {
   accounts: Account[]
@@ -155,13 +155,16 @@ export function IntegrationsSection({
     }
 
   return (
-    <div className={styles.section}>
-      <p className={styles.lead}>
+    <div className="flex flex-col gap-4">
+      <p className="m-0 text-muted-foreground">
         Connect GitHub or GitLab with a personal access token, stored encrypted in your OS keychain.
       </p>
 
       {secureStorage === false ? (
-        <p className={styles.notice} role="alert">
+        <p
+          className="m-0 flex gap-2 rounded-lg bg-[var(--warning-bg)] px-4 py-2.5 text-[var(--warning-text)] [&_svg]:mt-0.5"
+          role="alert"
+        >
           <Icon name="alert" size="sm" />
           <span>
             Secure storage is not available on this computer, so a token cannot be saved. You can
@@ -171,22 +174,25 @@ export function IntegrationsSection({
       ) : null}
 
       {accounts.length > 0 ? (
-        <section className={styles.group} aria-label="Connected accounts">
-          <h3 className={styles.sectionTitle}>Connected accounts</h3>
-          <ul className={styles.accounts}>
+        <section className="flex flex-col gap-2" aria-label="Connected accounts">
+          <h3 className="m-0 text-[13px] leading-[18px] font-semibold">Connected accounts</h3>
+          <ul className="m-0 flex list-none flex-col gap-2 p-0">
             {accounts.map((account) => {
               const { tile, host: kind } = hostTileOf(account.type, account.baseUrl)
               return (
-                <li key={account.id} className={styles.account}>
+                <li
+                  key={account.id}
+                  className="flex flex-wrap items-center gap-2.5 rounded-lg border border-border px-3 py-2"
+                >
                   <HostTile tile={tile} host={kind} size={28} brand={account.type} />
-                  <span className={styles.accountText}>
-                    <span className={styles.accountName}>{account.label}</span>
-                    <span className={styles.accountSub}>
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="font-medium">{account.label}</span>
+                    <span className="truncate text-[12px] text-muted-foreground">
                       {account.username} · {account.host}
                     </span>
                   </span>
                   {confirmRemove === account.id ? (
-                    <span className={styles.confirm}>
+                    <span className="flex gap-2">
                       <Button onClick={() => setConfirmRemove(null)}>Keep</Button>
                       <Button onClick={() => void remove(account)}>Remove account</Button>
                     </span>
@@ -201,7 +207,7 @@ export function IntegrationsSection({
                     />
                   )}
                   {confirmRemove === account.id ? (
-                    <span className={styles.confirmText}>
+                    <span className="basis-full text-[12px] leading-4 text-muted-foreground">
                       Removes the token, cached repositories and local links of {account.label} from
                       this computer. Your projects stay.
                     </span>
@@ -211,12 +217,12 @@ export function IntegrationsSection({
             })}
           </ul>
           {removeError ? (
-            <p className={styles.errorText} role="alert">
+            <p className="m-0 flex gap-2 text-[12px] text-destructive" role="alert">
               <Icon name="alert" size="sm" />
               {removeError}
             </p>
           ) : null}
-          <h3 className={styles.sectionTitle}>Add another account</h3>
+          <h3 className="m-0 text-[13px] leading-[18px] font-semibold">Add another account</h3>
         </section>
       ) : null}
 
@@ -306,7 +312,12 @@ export function IntegrationsSection({
 
       {status.kind !== 'idle' ? (
         <p
-          className={`${styles.status} ${styles[status.kind]}`}
+          className={cn(
+            'm-0 flex items-center gap-2.5 rounded-lg px-4 py-2.5',
+            status.kind === 'ok' && 'bg-[var(--success-bg)] text-[var(--success-text)]',
+            status.kind === 'error' && 'bg-[var(--warning-bg)] text-destructive',
+            status.kind === 'busy' && 'bg-secondary text-muted-foreground'
+          )}
           role={status.kind === 'error' ? 'alert' : 'status'}
         >
           <Icon
@@ -315,7 +326,7 @@ export function IntegrationsSection({
           <span>{status.kind === 'busy' ? `${status.text}…` : status.text}</span>
         </p>
       ) : null}
-      <div className={styles.actions}>
+      <div className="flex gap-2.5">
         <Button onClick={() => void test()} disabled={!canSubmit || busy}>
           Test connection
         </Button>

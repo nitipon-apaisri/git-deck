@@ -11,8 +11,8 @@ Desktop Git client (Electron + React + TypeScript) for GitHub, GitLab.com and se
 
 ## Rules
 
-- Style with tokens only: `var(--island)`, `var(--text)`, etc. from `tokens.css`. No hex values in components. Theme is `data-theme` on `<html>`.
-- Runtime dependencies are `react` and `react-dom` only. Fonts and build tools are devDependencies. No native modules.
+- Style with shadcn/ui components and Tailwind classes. Colours come only from the tokens in `tokens.css` (`var(--island)`, `var(--text)` and so on, or the shadcn names mapped onto them in `shadcn.css`). No hex values in components. Theme is `data-theme` on `<html>`.
+- The packaged app has no runtime dependencies beyond what Vite bundles: `package.json` `dependencies` stays `react` and `react-dom`. UI libraries (shadcn's Radix, Tailwind, `class-variance-authority`, `clsx`, `tailwind-merge`), fonts and build tools are devDependencies. No native modules.
 - Code that does not need Electron must not import `electron`, so it can run under `tsx` tests.
 - Never log or store a token outside Electron `safeStorage`. Never put a token in a git config, URL or error message.
 - Pane-safe renderer: no global "current repo". Each `RepoPane` owns its tab, summary, graph and scroll state.

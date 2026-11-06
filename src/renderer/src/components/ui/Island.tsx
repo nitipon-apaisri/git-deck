@@ -1,5 +1,5 @@
 import type { HTMLAttributes, Ref } from 'react'
-import styles from './Island.module.css'
+import { cn } from '@/lib/cn'
 
 interface IslandProps extends HTMLAttributes<HTMLElement> {
   ref?: Ref<HTMLElement>
@@ -17,11 +17,16 @@ export function Island({
   children,
   ...rest
 }: IslandProps) {
-  const classes = [styles.island, padded ? styles.padded : '', className ?? '']
-    .filter(Boolean)
-    .join(' ')
   return (
-    <Tag ref={ref as Ref<HTMLDivElement>} className={classes} {...rest}>
+    <Tag
+      ref={ref as Ref<HTMLDivElement>}
+      className={cn(
+        'flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl bg-card shadow-[var(--shadow-island)]',
+        padded && 'p-4',
+        className
+      )}
+      {...rest}
+    >
       {children}
     </Tag>
   )

@@ -1,6 +1,7 @@
 import { useId, useMemo, useState, type FormEvent } from 'react'
 import type { Account, Project, Repo } from '@shared/types'
 import { DEFAULT_ICON, PROJECT_COLORS } from '@shared/projects'
+import { cn } from '@/lib/cn'
 import { hostTileOf } from '../../lib/presets'
 import {
   COLOR_LABELS,
@@ -15,7 +16,6 @@ import {
   type ProjectFormValue
 } from '../../lib/projectForm'
 import { Button, Dialog, Field, HostTile, Icon, ProjectIcon, TextInput, isIconName } from '../ui'
-import styles from './ProjectFormDialog.module.css'
 
 interface ProjectFormDialogProps {
   projects: Project[]
@@ -31,6 +31,18 @@ interface ProjectFormDialogProps {
 }
 
 /** New or edit project: name, icon, colour and repositories, with a live preview. */
+// `--swatch` is the palette colour of a project colour id.
+const SWATCHES: Record<string, string> = {
+  blue: '[--swatch:var(--proj-blue)]',
+  teal: '[--swatch:var(--proj-teal)]',
+  violet: '[--swatch:var(--proj-violet)]',
+  amber: '[--swatch:var(--proj-amber)]',
+  rose: '[--swatch:var(--proj-rose)]',
+  green: '[--swatch:var(--proj-green)]',
+  pink: '[--swatch:var(--proj-pink)]',
+  gray: '[--swatch:var(--proj-gray)]'
+}
+
 export function ProjectFormDialog({
   projects,
   editing,
@@ -125,13 +137,13 @@ export function ProjectFormDialog({
         </>
       }
     >
-      <form id={formId} className={styles.form} onSubmit={(e) => void submit(e)} noValidate>
+      <form id={formId} className="flex flex-col gap-4" onSubmit={(e) => void submit(e)} noValidate>
         <Field
           label="Name"
           error={problem}
           hint={
-            <span className={styles.nameHint}>
-              <span className={styles.ok}>
+            <span className="flex justify-between gap-3">
+              <span className="inline-flex items-center gap-1 text-[var(--success-text)]">
                 {nameOk ? (
                   <>
                     <Icon name="check" size="xs" />
@@ -157,14 +169,14 @@ export function ProjectFormDialog({
           )}
         </Field>
 
-        <fieldset className={styles.group}>
-          <legend className={styles.legend}>Icon</legend>
-          <div className={styles.iconTools}>
-            <label className={styles.search}>
+        <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
+          <legend className="mb-2 p-0 font-medium">Icon</legend>
+          <div className="flex items-center gap-2">
+            <label className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border border-[var(--border-strong)] px-2.5 text-muted-foreground focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[var(--focus-ring)]">
               <Icon name="search" size="sm" />
               <input
                 type="search"
-                className={styles.searchInput}
+                className="min-w-0 flex-1 border-0 bg-transparent text-foreground outline-0 placeholder:text-muted-foreground"
                 aria-label="Search icons"
                 placeholder="Search icons"
                 value={iconQuery}
@@ -172,7 +184,7 @@ export function ProjectFormDialog({
               />
             </label>
             <TextInput
-              className={styles.emoji}
+              className="h-8 w-[150px]"
               aria-label="Or paste an emoji"
               aria-invalid={emojiBad ? true : undefined}
               placeholder="Or paste an emoji"
@@ -181,17 +193,20 @@ export function ProjectFormDialog({
             />
           </div>
           {emojiBad ? (
-            <span role="alert" className={styles.problem}>
+            <span
+              role="alert"
+              className="flex items-start gap-2 text-[12px] leading-4 text-destructive"
+            >
               <Icon name="alert" size="sm" />
               Use one emoji, or pick an icon below.
             </span>
           ) : null}
-          <div className={styles.iconGrid}>
+          <div className="grid grid-cols-8 gap-1.5">
             {icons.map((id) => (
               <button
                 key={id}
                 type="button"
-                className={styles.iconButton}
+                className="grid h-11 cursor-pointer place-items-center rounded-lg border border-border bg-transparent text-foreground hover:bg-accent aria-pressed:border-[var(--accent)] aria-pressed:bg-[var(--selection)] aria-pressed:text-[var(--accent-text)]"
                 aria-label={iconLabel(id)}
                 aria-pressed={icon === id}
                 title={iconLabel(id)}
@@ -201,20 +216,24 @@ export function ProjectFormDialog({
               </button>
             ))}
             {icons.length === 0 ? (
-              <p className={styles.none}>No icon matches “{iconQuery.trim()}”.</p>
+              <p className="col-span-full m-0 py-2 text-muted-foreground">
+                No icon matches “{iconQuery.trim()}”.
+              </p>
             ) : null}
           </div>
         </fieldset>
 
-        <fieldset className={styles.group}>
-          <legend className={styles.legend}>Color</legend>
-          <div className={styles.swatches}>
+        <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
+          <legend className="mb-2 p-0 font-medium">Color</legend>
+          <div className="flex flex-wrap gap-2.5">
             {PROJECT_COLORS.map((id) => (
               <button
                 key={id}
                 type="button"
-                className={styles.swatch}
-                data-color={id}
+                className={cn(
+                  'grid size-7 cursor-pointer place-items-center rounded-full border-2 border-transparent bg-[var(--swatch)] p-0 text-[var(--island)] shadow-[inset_0_0_0_2px_var(--island)] aria-pressed:border-foreground',
+                  SWATCHES[id]
+                )}
                 aria-label={COLOR_LABELS[id]}
                 aria-pressed={color === id}
                 title={COLOR_LABELS[id]}
@@ -226,58 +245,70 @@ export function ProjectFormDialog({
           </div>
         </fieldset>
 
-        <div className={styles.preview} aria-label="Preview">
+        <div
+          className="flex items-center gap-3 rounded-xl bg-secondary px-[14px] py-3"
+          aria-label="Preview"
+        >
           <ProjectIcon icon={icon} color={color} size="lg" />
-          <div className={styles.previewText}>
-            <span className={styles.previewName}>{name.trim() || 'Untitled project'}</span>
-            <span className={styles.previewSub}>
+          <div className="flex min-w-0 flex-col">
+            <span className="truncate text-[14px] font-semibold">
+              {name.trim() || 'Untitled project'}
+            </span>
+            <span className="text-[12px] text-muted-foreground">
               Preview · {chosen.size} {chosen.size === 1 ? 'repository' : 'repositories'}
             </span>
           </div>
         </div>
 
-        <fieldset className={styles.group}>
-          <legend className={styles.legend}>
-            Repositories <span className={styles.optional}>(optional)</span>
+        <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
+          <legend className="mb-2 p-0 font-medium">
+            Repositories <span className="font-normal text-muted-foreground">(optional)</span>
           </legend>
-          <div className={styles.repoTools}>
-            <label className={styles.search}>
+          <div className="flex items-center gap-2">
+            <label className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border border-[var(--border-strong)] px-2.5 text-muted-foreground focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[var(--focus-ring)]">
               <Icon name="search" size="sm" />
               <input
                 type="search"
-                className={styles.searchInput}
+                className="min-w-0 flex-1 border-0 bg-transparent text-foreground outline-0 placeholder:text-muted-foreground"
                 aria-label="Filter repositories to add"
                 placeholder="Filter repositories"
                 value={repoQuery}
                 onChange={(e) => setRepoQuery(e.target.value)}
               />
             </label>
-            <span className={styles.selected} aria-live="polite">
+            <span className="flex-none text-[12px] text-muted-foreground" aria-live="polite">
               {chosen.size} selected
             </span>
           </div>
-          <div className={styles.repoBox}>
+          <div className="max-h-60 overflow-y-auto rounded-lg border border-border">
             {groups.map(({ accountId, repos }) => {
               const account = accounts.find((a) => a.id === accountId)
               const tile = account ? hostTileOf(account.type, account.baseUrl) : null
               return (
                 <div key={accountId} role="group" aria-label={account?.label ?? accountId}>
-                  <div className={styles.hostRow}>
+                  <div className="flex h-8 items-center gap-2.5 bg-secondary px-3 font-semibold text-foreground">
                     {tile ? <HostTile tile={tile.tile} host={tile.host} /> : null}
-                    <span className={styles.hostName}>{account?.label ?? accountId}</span>
-                    <span className={styles.where}>{account?.host}</span>
+                    <span className="min-w-0 truncate">{account?.label ?? accountId}</span>
+                    <span className="ml-auto flex-none text-[12px] font-normal text-muted-foreground">
+                      {account?.host}
+                    </span>
                   </div>
                   {repos.map((r) => (
-                    <label key={r.key} className={styles.repoRow}>
+                    <label
+                      key={r.key}
+                      className="flex h-[34px] cursor-pointer items-center gap-2.5 border-t border-border px-3 hover:bg-accent"
+                    >
                       <input
                         type="checkbox"
-                        className={styles.checkbox}
+                        className="m-0 size-4 accent-[var(--accent)]"
                         aria-label={`Add ${r.fullName}`}
                         checked={chosen.has(r.key)}
                         onChange={(e) => toggle(r.key, e.target.checked)}
                       />
-                      <span className={styles.repoName}>{r.name}</span>
-                      <span className={styles.where}>{r.namespace}</span>
+                      <span className="min-w-0 truncate font-medium">{r.name}</span>
+                      <span className="ml-auto flex-none text-[12px] font-normal text-muted-foreground">
+                        {r.namespace}
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -285,27 +316,32 @@ export function ProjectFormDialog({
             })}
             {missing.length > 0 ? (
               <div role="group" aria-label="Unavailable">
-                <div className={styles.hostRow}>
+                <div className="flex h-8 items-center gap-2.5 bg-secondary px-3 font-semibold text-foreground">
                   <Icon name="alert" size="sm" />
-                  <span className={styles.hostName}>Unavailable</span>
+                  <span className="min-w-0 truncate">Unavailable</span>
                 </div>
                 {missing.map((key) => (
-                  <label key={key} className={styles.repoRow}>
+                  <label
+                    key={key}
+                    className="flex h-[34px] cursor-pointer items-center gap-2.5 border-t border-border px-3 hover:bg-accent"
+                  >
                     <input
                       type="checkbox"
-                      className={styles.checkbox}
+                      className="m-0 size-4 accent-[var(--accent)]"
                       aria-label={`Keep ${remoteIdOf(key)}`}
                       checked={chosen.has(key)}
                       onChange={(e) => toggle(key, e.target.checked)}
                     />
-                    <span className={styles.repoName}>{remoteIdOf(key)}</span>
-                    <span className={styles.where}>access lost or account removed</span>
+                    <span className="min-w-0 truncate font-medium">{remoteIdOf(key)}</span>
+                    <span className="ml-auto flex-none text-[12px] font-normal text-muted-foreground">
+                      access lost or account removed
+                    </span>
                   </label>
                 ))}
               </div>
             ) : null}
             {groups.length === 0 && missing.length === 0 ? (
-              <p className={styles.none}>
+              <p className="m-0 p-3 text-muted-foreground">
                 {repoQuery.trim() !== ''
                   ? `No repositories match “${repoQuery.trim()}”.`
                   : 'No repositories loaded yet. Connect an account first.'}
@@ -315,7 +351,10 @@ export function ProjectFormDialog({
         </fieldset>
 
         {saveError ? (
-          <span role="alert" className={styles.problem}>
+          <span
+            role="alert"
+            className="flex items-start gap-2 text-[12px] leading-4 text-destructive"
+          >
             <Icon name="alert" size="sm" />
             {saveError}
           </span>
