@@ -447,17 +447,24 @@ test('settings sections: arrows wrap, Home and End jump, other keys do nothing',
 
 // local repositories in the sidebar tree
 
-test('local repositories: one heading, repos directly under it, no namespace rows', () => {
-  const mk = (name: string): Repo => repo('local', name, 'local', name)
-  const nodes = buildTree([LOCAL_GROUP], { local: [mk('b'), mk('a')] }, '')
+test('local repositories: grouped by the folder they live in', () => {
+  const mk = (name: string, dir: string): Repo => ({
+    ...repo('local', name, 'local', name),
+    description: `${dir}/${name}`
+  })
+  const nodes = buildTree(
+    [LOCAL_GROUP],
+    { local: [mk('b', '/h/work'), mk('a', '/h/work'), mk('c', '/h/play')] },
+    ''
+  )
   const rows = flattenTree(nodes, new Set(), false)
   assert.deepEqual(
     rows.map((r) => r.kind),
-    ['host', 'repo', 'repo']
+    ['host', 'namespace', 'repo', 'namespace', 'repo', 'repo']
   )
   assert.deepEqual(
-    rows.filter((r) => r.kind === 'repo').map((r) => (r.kind === 'repo' ? r.repo.name : '')),
-    ['a', 'b']
+    nodes[0]?.namespaces.map((n) => n.name),
+    ['play', 'work']
   )
   assert.equal(flattenTree(nodes, new Set(['local']), false).length, 1)
   assert.ok(isLocalKey('local:abc') && !isLocalKey('acc1:1'))
