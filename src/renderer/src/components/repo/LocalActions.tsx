@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { cn } from '@/lib/cn'
 import type { BranchList, Repo } from '@shared/types'
 import { remoteOnly, remoteState, trackingText } from '../../lib/branchView'
 import { stashButtonLabel } from '../../lib/operationView'
@@ -20,6 +21,12 @@ interface LocalActionsProps {
 }
 
 type OpenMenu = { id: 'branch' | 'pull' | 'push'; x: number; y: number }
+
+/** Buttons inside the joined Fetch / Pull / Push strip: the strip draws the border. */
+const SEGMENT = 'h-full rounded-none border-0 pr-1.5 pl-3'
+const DIVIDER = 'border-l border-border'
+const SEGMENT_ICON = 'h-full w-8 rounded-none'
+const SEGMENT_CARET = 'h-full w-7 rounded-none'
 
 const PROGRESS_LABEL = { clone: 'Cloning…', pull: 'Pulling…', push: 'Pushing…' } as const
 
@@ -154,24 +161,23 @@ export function LocalActions({
           <span className="truncate">{branchName}</span>
           <Icon name="chevron-down" size="xs" />
         </Button>
-        {compact ? (
+        <div
+          className="inline-flex h-9 items-center overflow-hidden rounded-md border border-border"
+          role="group"
+          aria-label="Sync"
+        >
           <IconButton
             label={busy === 'fetch' ? 'Fetching…' : 'Fetch'}
             icon="refresh"
             disabled={working}
+            className={SEGMENT_ICON}
             onClick={actions.fetch}
           />
-        ) : (
-          <Button icon="refresh" disabled={working} onClick={actions.fetch}>
-            {busy === 'fetch' ? 'Fetching…' : 'Fetch'}
-          </Button>
-        )}
-        <span className="inline-flex items-center" role="group" aria-label="Pull">
           <Button
-            icon="download"
+            icon="arrow-down"
             disabled={working || !state.pull.enabled}
             title={state.pull.title}
-            className="rounded-r-none border-r-0"
+            className={cn(SEGMENT, DIVIDER)}
             onClick={() => actions.pull('ff-only')}
           >
             {compact
@@ -182,17 +188,15 @@ export function LocalActions({
             label="More ways to pull"
             icon="chevron-down"
             disabled={working || !state.pull.enabled}
-            className="h-[34px] rounded-l-none border border-border"
+            className={SEGMENT_CARET}
             aria-haspopup="menu"
             onClick={(e) => open('pull', e.currentTarget)}
           />
-        </span>
-        <span className="inline-flex items-center" role="group" aria-label="Push">
           <Button
-            icon="external"
+            icon="arrow-up"
             disabled={working || !state.push.enabled}
             title={state.push.title}
-            className="rounded-r-none border-r-0"
+            className={cn(SEGMENT, DIVIDER)}
             onClick={() => actions.push(false)}
           >
             {compact
@@ -203,18 +207,17 @@ export function LocalActions({
             label="More ways to push"
             icon="chevron-down"
             disabled={working || !state.force}
-            className="h-[34px] rounded-l-none border border-border"
+            className={SEGMENT_CARET}
             aria-haspopup="menu"
             onClick={(e) => open('push', e.currentTarget)}
           />
-        </span>
-        {compact ? (
-          <IconButton label={stashButtonLabel(stashCount)} icon="layers" onClick={onStash} />
-        ) : (
-          <Button icon="layers" title="Stash changes" onClick={onStash}>
-            {stashButtonLabel(stashCount)}
-          </Button>
-        )}
+        </div>
+        <IconButton
+          label={stashButtonLabel(stashCount)}
+          icon="layers"
+          className="size-9"
+          onClick={onStash}
+        />
         {busy === 'fetch' || busy === 'branch' ? (
           <Spinner label={busy === 'fetch' ? 'Fetching' : 'Switching branches'} />
         ) : null}
@@ -228,19 +231,13 @@ export function LocalActions({
             Unlink
           </Button>
         )}
-        {compact ? (
-          <IconButton
-            label="Open folder"
-            icon="folder"
-            className="ml-auto"
-            disabled={working}
-            onClick={actions.openFolder}
-          />
-        ) : (
-          <Button icon="folder" className="ml-auto" disabled={working} onClick={actions.openFolder}>
-            Open folder
-          </Button>
-        )}
+        <IconButton
+          label="Open folder"
+          icon="folder"
+          className="ml-auto size-9"
+          disabled={working}
+          onClick={actions.openFolder}
+        />
         {menu ? (
           <Menu
             label={menu.id === 'branch' ? 'Branches' : menu.id === 'pull' ? 'Pull' : 'Push'}
