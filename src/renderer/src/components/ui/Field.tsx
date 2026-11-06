@@ -1,6 +1,7 @@
 import { useId, type InputHTMLAttributes, type ReactNode } from 'react'
+import { Checkbox } from 'radix-ui'
+import { cn } from '@/lib/cn'
 import { Icon } from './Icon'
-import styles from './Field.module.css'
 
 interface ControlProps {
   id: string
@@ -27,22 +28,29 @@ export function Field({ label, hint, error, action, children }: FieldProps) {
   const describedBy =
     [error ? errorId : null, hint ? hintId : null].filter(Boolean).join(' ') || undefined
   return (
-    <div className={styles.field}>
-      <div className={styles.labelRow}>
-        <label htmlFor={id} className={styles.label}>
+    <div className="flex flex-col gap-1.5">
+      <div className="flex min-h-[18px] items-center justify-between">
+        <label htmlFor={id} className="font-medium">
           {label}
         </label>
         {action}
       </div>
       {children({ id, 'aria-describedby': describedBy, 'aria-invalid': error ? true : undefined })}
       {error ? (
-        <span id={errorId} role="alert" className={styles.error}>
+        <span
+          id={errorId}
+          role="alert"
+          className="flex items-start gap-2 text-xs leading-4 text-destructive"
+        >
           <Icon name="alert" size="sm" />
           {error}
         </span>
       ) : null}
       {hint ? (
-        <span id={hintId} className={styles.hint}>
+        <span
+          id={hintId}
+          className="text-xs leading-4 text-muted-foreground [&_code]:font-mono [&_code]:text-xs"
+        >
           {hint}
         </span>
       ) : null}
@@ -51,7 +59,15 @@ export function Field({ label, hint, error, action, children }: FieldProps) {
 }
 
 export function TextInput({ className, ...rest }: InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={`${styles.input} ${className ?? ''}`} {...rest} />
+  return (
+    <input
+      className={cn(
+        'h-9 min-w-0 rounded-md border border-[var(--border-strong)] bg-secondary px-3 text-[13px] text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60',
+        className
+      )}
+      {...rest}
+    />
+  )
 }
 
 interface CheckOptionProps {
@@ -64,20 +80,27 @@ interface CheckOptionProps {
 
 /** A related option in its own `radius-lg` box, with its warning below. */
 export function CheckOption({ label, checked, onChange, warning }: CheckOptionProps) {
+  const id = useId()
   return (
-    <div className={styles.optionBox}>
-      <label className={styles.checkLabel}>
-        <input
-          type="checkbox"
-          className={styles.checkbox}
+    <div className="flex flex-col gap-2 rounded-lg border border-border bg-secondary p-3">
+      <label htmlFor={id} className="flex cursor-pointer items-center gap-2.5 font-medium">
+        <Checkbox.Root
+          id={id}
           checked={checked}
-          onChange={(e) => onChange(e.target.checked)}
-        />
+          onCheckedChange={(next) => onChange(next === true)}
+          className="grid size-4 flex-none cursor-pointer place-items-center rounded-[4px] border border-[var(--border-strong)] bg-transparent text-primary-foreground data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+        >
+          <Checkbox.Indicator>
+            <Icon name="check" size="sm" />
+          </Checkbox.Indicator>
+        </Checkbox.Root>
         {label}
       </label>
       {warning ? (
-        <span className={styles.warning}>
-          <Icon name="alert" size="sm" />
+        <span className="flex gap-2 text-xs leading-4 text-[var(--warning-text)]">
+          <span className="mt-px">
+            <Icon name="alert" size="sm" />
+          </span>
           <span>{warning}</span>
         </span>
       ) : null}
