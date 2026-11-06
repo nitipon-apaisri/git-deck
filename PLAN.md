@@ -407,6 +407,48 @@ Scope decision and reasons: `docs/DECISIONS.md` (2026-11-06, git write features)
 
 **Verify:** temp-repo tests cover stash round trips, a clean cherry-pick, a conflicting cherry-pick then abort, a clean merge, a conflicting merge then abort, and resuming an in-progress state. Typecheck, lint, build pass.
 
+## Phase 14a — Tags, revert, reset, remotes
+
+Scope decision and reasons: `docs/DECISIONS.md` (2026-11-06, Phase 14 scope). Runs on its own branch and stops at its Verify steps.
+
+**Groundwork:**
+
+- [ ] Reuse the Phase 11 rules for every new call: the typed write helper, the per-repo write queue (`serial` in `service.ts`), `assertBranchName` / `git check-ref-format` for names, `HASH_RE` for hashes and `--` before user-supplied paths.
+- [ ] Wire each call through `GitOps` in `service.ts`, `Api.local`, `IPC`, the preload, `ipcTable.ts` and a `guard()`ed service method that starts with `linkedRepoKey(path)`.
+
+**Main (`git.ts`, beside `cherryPick` and `merge`):**
+
+- [ ] Tags: `listTags`, `createTag` (lightweight, or annotated with the message on stdin, never argv), `deleteTag` (confirmed in main), `pushTag` and `deleteRemoteTag` through `getRemoteTarget` and `remoteAuthEnv`.
+- [ ] `revert(hash)` with `--no-edit`. Merge commits are refused, as for cherry-pick. A conflict returns `{ conflicted: true }` through `OperationResult`.
+- [ ] `reset(hash, mode)` for `soft`, `mixed` and `hard`. `hard` is confirmed in main and says how many files it will discard. Refused while a merge, cherry-pick, revert or rebase is in progress.
+- [ ] Remotes: `addRemote`, `renameRemote`, `removeRemote` on top of `getRemotes`. URLs are validated and pass through `stripCredentials`. A token never goes into a URL or `.git/config`.
+- [ ] Extend `getOperation`, `continueOperation` and `abortOperation` to understand `REVERT_HEAD`.
+
+**Renderer:**
+
+- [ ] Graph context-menu entries (tag here, revert, reset to here), built from the pure `refActions` so they are tested without a DOM. Revert and reset are not offered with a merge commit or during an operation.
+- [ ] A Tags dialog opened from the repo header, beside the Stash dialog.
+- [ ] A Remotes section in the repo settings.
+- [ ] The operation banner shows revert.
+- [ ] Add dark and light boards under `docs/ui-boards/` for the Tags dialog and the Remotes section, or log the gap in `DECISIONS.md`.
+
+**Verify:**
+
+- `tests/git-history.test.ts` and `tests/service-history.test.ts` cover each call against temp repos (a bare repo as the remote for tag push and delete): tag create, annotate, delete and push; revert clean, then conflict and abort; reset in each mode; remote add, rename and remove. Argument-injection cases (a name or path that starts with `-`, a URL with credentials) are rejected.
+- No token in argv, errors or `.git/config`.
+- Typecheck, lint, build pass and the existing suite stays green.
+- If a display is available, run each new screen in a scratch repo and screenshot it in both themes. Otherwise say clearly that this was not run visually.
+
+## Phase 14b — Rebase and hunk staging
+
+- [ ] `rebase(onto)`, non-interactive only. Read the state from `rebase-merge` and `rebase-apply` through `rev-parse --git-path`. Refuse a detached HEAD and a dirty tree.
+- [ ] Extend `continueOperation` and `abortOperation`, and add `skipOperation`, for rebase. Reuse the conflict banner and add Skip. Opening a repo mid-rebase shows the banner.
+- [ ] Pushing a rebased branch goes through the existing `--force-with-lease` confirm. Nothing pushes by itself.
+- [ ] `stageHunk` and `unstageHunk` through `git apply --cached`, using the hunks that `src/shared/diff.ts` already parses. The patch goes in on stdin and is rebuilt from the diff in main, not taken from the renderer. Line-level staging stays out.
+- [ ] Renderer: per-hunk Stage and Unstage buttons in `DiffView`, a "Rebase onto" entry on branch badges and graph rows, and Skip in the banner.
+
+**Verify:** temp-repo tests cover a clean rebase, a conflicting rebase then abort, skip, resuming an in-progress rebase, and hunk stage and unstage round trips (including a new file and a deletion), plus argument-injection cases. Typecheck, lint, build pass. Say plainly if the screens were not run in a live window.
+
 ---
 
 ## Graph algorithm (src/shared/graph-layout.ts)
@@ -438,4 +480,4 @@ Row shape: `{ commit, lane, color, edges: { part: 'top'|'bottom'|'through', from
 
 ## Non-goals for this version
 
-Merge-conflict editor, interactive rebase (and non-interactive rebase), line-level staging, PR/MR creation, OAuth login (tokens only), SQLite cache, auto-update and installers, more than two split panes, drag-and-drop between projects, cloning all repos of a project at once.
+Merge-conflict editor, interactive rebase, line-level staging, PR/MR creation, OAuth login (tokens only), SQLite cache, auto-update and installers, more than two split panes, drag-and-drop between projects, cloning all repos of a project at once.

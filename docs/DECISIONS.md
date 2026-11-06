@@ -271,3 +271,13 @@ Newest first. Template:
   - The renderer keeps a `watchToken` apart from `reloadToken`. It reloads status, diff, branches, stashes and the operation banner. The graph reloads only when HEAD moves (`status.head`) or the WIP state flips, so typing in an editor does not reset graph pages and scroll. A branch created or deleted without a new commit does not redraw the graph until the next reload.
   - A throttled window `focus` listener bumps the same token, as a net for folders that cannot be watched. Events are ignored while an app action runs, because that action refreshes at the end.
 - **Not verified:** not run in a live Electron window. The watcher is covered by a temp-repo test (edit, commit, checkout, stop).
+
+## 2026-11-06: Phase 14 scope
+
+- **Question:** which Git operations come next after stash, cherry-pick and merge, and whether the non-goals list still holds.
+- **Decision and why:**
+  - Phase 14 is split. 14a (tags, revert, reset, remotes) is independent and low risk. 14b (non-interactive rebase and hunk staging) is riskier because rebase has its own in-progress state and ends in a force push, so it ships second.
+  - Non-interactive rebase and hunk staging move out of the non-goals list. Hunk staging was the Phase 11 stretch goal.
+  - Still out: interactive rebase, a merge-conflict editor, line-level staging, pull or merge request creation, OAuth sign-in, a SQLite cache, auto-update and installers, more than two panes, drag-and-drop between projects, cloning every repository of a project at once.
+  - Revert, reset and rebase reuse the Phase 13 operation banner (state from `.git` files, Continue, Abort) and Phase 12's confirm and `--force-with-lease` rules. A hard reset is confirmed in main.
+- **Not verified:** this entry records a plan. Nothing in Phase 14 is built yet.
