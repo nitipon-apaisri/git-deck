@@ -37,6 +37,8 @@ export interface Split {
   setRatio: (ratio: number) => void
   pruneRepos: (validKeys: ReadonlySet<string>) => void
   toggle: () => void
+  /** Empties both panes and turns Split View off. */
+  clear: () => void
 }
 
 /**
@@ -64,6 +66,7 @@ export function useSplit(): Split {
     ),
     setRatio: useCallback((ratio) => dispatch({ type: 'setRatio', ratio }), []),
     pruneRepos: useCallback((validKeys) => dispatch({ type: 'pruneRepos', validKeys }), []),
-    toggle: useCallback(() => dispatch({ type: 'toggle' }), [])
+    toggle: useCallback(() => dispatch({ type: 'toggle' }), []),
+    clear: useCallback(() => dispatch({ type: 'clear' }), [])
   }
 }

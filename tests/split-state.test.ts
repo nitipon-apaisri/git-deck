@@ -368,6 +368,22 @@ test('isNarrow is under 640 px and never for an unmeasured pane', () => {
   assert.equal(isNarrow(0), false)
 })
 
+test('clear empties both panes and turns Split View off but keeps the layout', () => {
+  let state = splitReducer(defaultSplit(), { type: 'select', repoKey: 'a' })
+  state = splitReducer(state, { type: 'openInSplit', repoKey: 'b' })
+  state = splitReducer(state, { type: 'setOrientation', orientation: 'vertical' })
+  state = splitReducer(state, { type: 'setRatio', ratio: 0.4 })
+  const next = splitReducer(state, { type: 'clear' })
+  assert.equal(next.enabled, false)
+  assert.deepEqual(
+    next.panes.map((p) => p.repoKey),
+    [null, null]
+  )
+  assert.equal(next.active, 0)
+  assert.equal(next.orientation, 'vertical')
+  assert.equal(next.ratio, 0.4)
+})
+
 // shortcuts
 
 const key = (code: string, over: Partial<KeyLike> = {}): KeyLike => ({
