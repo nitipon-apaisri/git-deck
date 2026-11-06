@@ -29,6 +29,10 @@ function createWindow(): BrowserWindow {
     show: false,
     title: 'GitDeck',
     backgroundColor: '#000000',
+    // On macOS the toolbar doubles as the title bar, beside the traffic lights.
+    ...(process.platform === 'darwin'
+      ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 16, y: 18 } }
+      : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,

@@ -5,6 +5,8 @@ import { HostTile, Icon, IconButton } from './ui'
 import styles from './Toolbar.module.css'
 
 interface ToolbarProps {
+  /** macOS: no native title bar, so leave room for the traffic lights. */
+  insetTitleBar: boolean
   accounts: Account[]
   onOpenAccounts: () => void
   splitEnabled: boolean
@@ -15,6 +17,7 @@ interface ToolbarProps {
 }
 
 export function Toolbar({
+  insetTitleBar,
   accounts,
   onOpenAccounts,
   splitEnabled,
@@ -25,7 +28,7 @@ export function Toolbar({
 }: ToolbarProps) {
   const names = accounts.map((a) => a.label).join(', ')
   return (
-    <header className={styles.toolbar}>
+    <header className={styles.toolbar} data-inset={insetTitleBar ? 'true' : undefined}>
       <div className={styles.brand}>
         <span className={styles.mark} aria-hidden="true">
           <Icon name="git-branch" size="sm" />

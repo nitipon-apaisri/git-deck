@@ -5,6 +5,14 @@
   height: var(--toolbar-height);
   padding: 0 var(--space-4);
   flex: none;
+  /* A hidden title bar: the empty parts of the toolbar drag the window. */
+  -webkit-app-region: drag;
+}
+.toolbar[data-inset='true'] {
+  padding-left: var(--titlebar-inset);
+}
+.toolbar button {
+  -webkit-app-region: no-drag;
 }
 .brand {
   display: flex;
