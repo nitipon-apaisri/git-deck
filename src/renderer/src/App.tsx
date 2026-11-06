@@ -55,13 +55,6 @@ export function App() {
   const [query, setQuery] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(() => readStored(SIDEBAR_KEY) !== 'closed')
 
-  function toggleSidebar(): void {
-    setSidebarOpen((open) => {
-      writeStored(SIDEBAR_KEY, open ? 'closed' : 'open')
-      return !open
-    })
-  }
-
   const repos = Object.values(state.byAccount).flatMap((a) => a.repos)
   const anyLoading = Object.values(state.byAccount).some((a) => a.loading)
   const selectedKey = layout.panes[layout.active].repoKey
@@ -230,8 +223,6 @@ export function App() {
         onScope={chooseScope}
         onNewProject={() => setForm({ editId: null, repoKeys: [] })}
         onManage={() => setDialog('projects')}
-        sidebarOpen={sidebarOpen}
-        onToggleSidebar={toggleSidebar}
         onOpenPreferences={() => openSettings('appearance')}
         query={query}
         onQueryChange={(value) => {

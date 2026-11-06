@@ -24,8 +24,6 @@ interface ToolbarProps {
   onManage: () => void
   query: string
   onQueryChange: (value: string) => void
-  sidebarOpen: boolean
-  onToggleSidebar: () => void
   onOpenPreferences: () => void
 }
 
@@ -44,8 +42,6 @@ export function Toolbar({
   onManage,
   query,
   onQueryChange,
-  sidebarOpen,
-  onToggleSidebar,
   onOpenPreferences
 }: ToolbarProps) {
   return (
@@ -53,15 +49,7 @@ export function Toolbar({
       className="grid h-(--toolbar-height) flex-none grid-cols-[1fr_auto_1fr] items-center gap-2 group px-3 [-webkit-app-region:drag] [&_button]:[-webkit-app-region:no-drag] [&_label]:[-webkit-app-region:no-drag]"
       data-inset={insetTitleBar ? 'true' : undefined}
     >
-      <div className="flex items-center gap-1 group-data-[inset=true]:pl-[calc(var(--titlebar-inset)-12px)]">
-        <IconButton
-          icon="repo"
-          label="Repositories"
-          active={sidebarOpen}
-          aria-pressed={sidebarOpen}
-          onClick={onToggleSidebar}
-        />
-      </div>
+      <span />
       {showScope ? (
         <div className="flex w-[min(520px,45vw)] min-w-0 items-center gap-2">
           <div className="w-[210px] flex-none">
