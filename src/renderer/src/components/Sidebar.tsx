@@ -288,36 +288,38 @@ export function Sidebar({
           </nav>
         </>
       )}
-      <div className={styles.footer}>
-        {scope ? (
-          <Button variant="ghost" icon="plus" onClick={proj.onEditScope}>
-            Add repositories
-          </Button>
-        ) : isEmpty ? null : (
-          <>
-            <Button variant="ghost" icon="plus" onClick={onConnect}>
-              Connect account
+      {isEmpty ? null : (
+        <div className={styles.footer}>
+          {scope ? (
+            <Button variant="ghost" icon="plus" onClick={proj.onEditScope}>
+              Add repositories
             </Button>
-            <Button
-              variant="ghost"
-              icon="folder"
-              aria-label="Open a local repository"
-              onClick={onOpenLocal}
-            >
-              Open
-            </Button>
-          </>
-        )}
-        <span
-          className={styles.updated}
-          title={lastFetched !== null ? `Updated ${timeAgo(lastFetched, now)}` : undefined}
-        >
-          {anyLoading ? 'Updating…' : lastFetched !== null ? timeAgo(lastFetched, now) : ''}
-        </span>
-        {accounts.length > 0 ? (
-          <IconButton label="Refresh all" icon="refresh" onClick={onRefreshAll} />
-        ) : null}
-      </div>
+          ) : (
+            <>
+              <Button variant="ghost" icon="plus" onClick={onConnect}>
+                Connect account
+              </Button>
+              <Button
+                variant="ghost"
+                icon="folder"
+                aria-label="Open a local repository"
+                onClick={onOpenLocal}
+              >
+                Open
+              </Button>
+            </>
+          )}
+          <span
+            className={styles.updated}
+            title={lastFetched !== null ? `Updated ${timeAgo(lastFetched, now)}` : undefined}
+          >
+            {anyLoading ? 'Updating…' : lastFetched !== null ? timeAgo(lastFetched, now) : ''}
+          </span>
+          {accounts.length > 0 ? (
+            <IconButton label="Refresh all" icon="refresh" onClick={onRefreshAll} />
+          ) : null}
+        </div>
+      )}
       {menu ? (
         <RepoProjectMenu
           repo={menu.repo}
