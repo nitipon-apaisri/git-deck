@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Account, Repo } from '@shared/types'
-import { visibilityLabel } from '../../lib/repoView'
-import { Badge, Button, Icon, IconButton } from '../ui'
+import { Badge, IconButton } from '../ui'
 
 interface RepoHeaderProps {
   repo: Repo
@@ -19,53 +18,38 @@ interface RepoHeaderProps {
 
 export function RepoHeader({
   repo,
-  account,
+  // account,
   local = false,
-  compact = false,
+  // compact,
   onOpenWeb,
   onClose,
   children
 }: RepoHeaderProps) {
   return (
     <header className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+      <div className="flex flex-wrap items-center justify-between gap-y-2">
         <div className="flex min-w-0 flex-col gap-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
-            <h1 className="m-0 text-[20px] leading-[26px] font-semibold [overflow-wrap:anywhere]">
-              {repo.name}
-            </h1>
-            {local ? (
-              <Badge>Local</Badge>
-            ) : (
-              <Badge>
-                {repo.visibility === 'private' ? <Icon name="lock" size="xs" /> : null}
-                {visibilityLabel(repo.visibility)}
-              </Badge>
-            )}
             {repo.archived ? <Badge tone="warning">Archived</Badge> : null}
             {repo.fork ? <Badge>Fork</Badge> : null}
           </div>
-          {local ? null : (
-            <p className="m-0 text-[12px] leading-4 text-muted-foreground [overflow-wrap:anywhere]">
-              {`${account ? `${account.label} · ` : ''}${repo.fullName}`}
-            </p>
-          )}
         </div>
         {children}
         <div className="flex flex-none items-center gap-1">
-          {local ? null : compact ? (
-            <IconButton label="Open on web" icon="external" onClick={onOpenWeb} />
-          ) : (
-            <Button icon="external" onClick={onOpenWeb}>
-              Open on web
-            </Button>
+          {local ? null : (
+            <IconButton
+              label="Open on web"
+              icon="external"
+              className="size-9"
+              onClick={onOpenWeb}
+            />
           )}
-          {onClose ? <IconButton label="Close pane" icon="x" onClick={onClose} /> : null}
+          {onClose ? (
+            <IconButton label="Close pane" icon="x" className="size-9" onClick={onClose} />
+          ) : null}
         </div>
       </div>
-      {repo.description && !local ? (
-        <p className="m-0 [overflow-wrap:anywhere]">{repo.description}</p>
-      ) : null}
+      {repo.description && !local ? <p className="m-0 wrap-anywhere">{repo.description}</p> : null}
     </header>
   )
 }

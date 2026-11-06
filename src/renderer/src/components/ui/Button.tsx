@@ -6,7 +6,7 @@ import { Icon, type IconName } from './Icon'
 // shadcn's button, with our variant names: `default` is the outlined button, `primary` the filled
 // one (shadcn calls it `default`), `ghost` the inline action beside a field.
 const buttonVariants = cva(
-  'inline-flex h-[34px] cursor-pointer items-center justify-center gap-[7px] whitespace-nowrap rounded-md border px-4 text-[13px] leading-[18px] transition-[background-color,color,border-color,transform] duration-[var(--motion-fast)] ease-[var(--ease-out)] active:scale-[0.97] disabled:cursor-default disabled:opacity-45 disabled:active:scale-100',
+  'inline-flex h-9 cursor-pointer items-center justify-center gap-[7px] whitespace-nowrap rounded-md border px-4 text-[13px] leading-[18px] transition-[background-color,color,border-color,transform] duration-[var(--motion-fast)] ease-[var(--ease-out)] active:scale-[0.97] disabled:cursor-default disabled:opacity-45 disabled:active:scale-100',
   {
     variants: {
       variant: {
