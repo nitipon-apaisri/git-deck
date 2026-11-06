@@ -9,22 +9,21 @@ interface HostTileProps {
   size?: 20 | 24 | 28
   /** Set when the tile stands alone; omit when the host name is written next to it. */
   label?: string
-  /** Show the brand logo instead of letters (GitHub and GitLab only). */
-  logo?: boolean
+  /** Show this brand's logo instead of letters. Self-hosted tiles pass their product. */
+  brand?: 'github' | 'gitlab'
 }
 
-export function HostTile({ tile, host, size = 20, label, logo = false }: HostTileProps) {
-  const showLogo = logo && (host === 'github' || host === 'gitlab')
+export function HostTile({ tile, host, size = 20, label, brand }: HostTileProps) {
   return (
     <span
       className={`${styles.tile} ${styles[`s${size}`]}`}
       data-host={host}
-      data-logo={showLogo ? '' : undefined}
+      data-logo={brand ? '' : undefined}
       role={label ? 'img' : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}
     >
-      {showLogo ? <BrandLogo brand={host as 'github' | 'gitlab'} /> : tile}
+      {brand ? <BrandLogo brand={brand} /> : tile}
     </span>
   )
 }
