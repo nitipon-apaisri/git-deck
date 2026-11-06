@@ -162,6 +162,11 @@ export interface HunkRequest {
   index: number
   /** `hunkFingerprint` of its lines: a diff that changed since it was read is refused. */
   fingerprint: string
+  /**
+   * Positions in the hunk's `lines` of the added or removed lines to stage or unstage. Absent
+   * means the whole hunk.
+   */
+  lines?: number[]
 }
 
 export interface DiffLine {
@@ -185,6 +190,8 @@ export interface FileDiff {
   tooLarge: boolean
   additions: number
   deletions: number
+  /** The diff creates or deletes the file. Such a file is staged as a whole. */
+  change: 'created' | 'deleted' | null
   hunks: DiffHunk[]
 }
 

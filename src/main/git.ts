@@ -23,7 +23,7 @@ import {
   parseConflicts,
   sideLabels
 } from '../shared/conflict'
-import { hunkFingerprint, parseUnifiedDiff, splitPatch } from '../shared/diff'
+import { hunkFingerprint, linePatch, parseUnifiedDiff, splitPatch } from '../shared/diff'
 import type {
   BranchList,
   ChangeKind,
@@ -1558,7 +1558,7 @@ export async function rebase(cwd: string, onto: string): Promise<OperationResult
 
 /** Checks the request, re-reads the file's diff and returns the one hunk as a patch. */
 async function hunkPatch(cwd: string, request: HunkRequest): Promise<string> {
-  const { source, path, index, fingerprint } = request
+  const { source, path, index, fingerprint, lines } = request
   if (source !== 'worktree' && source !== 'staged') throw new Error('Invalid hunk')
   if (!Number.isInteger(index) || index < 0 || index > 100_000) throw new Error('Invalid hunk')
   if (typeof fingerprint !== 'string' || !/^[0-9a-f]{8}$/.test(fingerprint)) {
@@ -1597,17 +1597,36 @@ async function hunkPatch(cwd: string, request: HunkRequest): Promise<string> {
     throw new Error('The file changed since this diff was read. Reload the diff and try again.')
   }
   // The patch is rebuilt here from the file itself. Nothing from the renderer is applied.
-  return parts.header + parts.hunks[index]
+  if (lines === undefined) return parts.header + parts.hunks[index]
+  if (parsed.change) {
+    throw new Error('A file that is created or deleted is staged as a whole, not line by line')
+  }
+  if (
+    !Array.isArray(lines) ||
+    lines.length > hunk.lines.length ||
+    lines.some((n) => !Number.isInteger(n) || n < 0 || n >= hunk.lines.length) ||
+    new Set(lines).size !== lines.length
+  ) {
+    throw new Error('Invalid line selection')
+  }
+  return linePatch(
+    parts.header,
+    parts.hunks[index],
+    lines,
+    source === 'staged' ? 'unstage' : 'stage'
+  )
 }
 
 export async function stageHunk(cwd: string, request: HunkRequest): Promise<void> {
   if (request.source !== 'worktree') throw new Error('Only an unstaged hunk can be staged')
   const patch = await hunkPatch(cwd, request)
-  await exec(cwd, ['apply', '--cached', '--whitespace=nowarn', '-'], { stdin: patch })
+  await exec(cwd, ['apply', '--cached', '--recount', '--whitespace=nowarn', '-'], { stdin: patch })
 }
 
 export async function unstageHunk(cwd: string, request: HunkRequest): Promise<void> {
   if (request.source !== 'staged') throw new Error('Only a staged hunk can be unstaged')
   const patch = await hunkPatch(cwd, request)
-  await exec(cwd, ['apply', '--cached', '--reverse', '--whitespace=nowarn', '-'], { stdin: patch })
+  await exec(cwd, ['apply', '--cached', '--reverse', '--recount', '--whitespace=nowarn', '-'], {
+    stdin: patch
+  })
 }

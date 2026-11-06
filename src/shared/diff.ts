@@ -13,6 +13,7 @@ export function parseUnifiedDiff(path: string, patch: string): FileDiff {
     tooLarge: false,
     additions: 0,
     deletions: 0,
+    change: null,
     hunks: []
   }
   if (patch.length > MAX_PATCH_BYTES) {
@@ -32,6 +33,8 @@ export function parseUnifiedDiff(path: string, patch: string): FileDiff {
       continue
     }
     if (!hunk) {
+      if (line.startsWith('new file mode ')) result.change = 'created'
+      else if (line.startsWith('deleted file mode ')) result.change = 'deleted'
       if (/^Binary files .* differ$/.test(line) || line === 'GIT binary patch') result.binary = true
       continue
     }
@@ -92,4 +95,65 @@ export function splitPatch(patch: string): { header: string; hunks: string[] } {
     return body.endsWith('\n') ? body : body + '\n'
   })
   return { header, hunks }
+}
+
+const HUNK_HEAD_RE = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@(.*)$/
+
+/**
+ * Builds a patch for some lines of one hunk, from the hunk's raw text so no byte changes.
+ * `selected` holds positions in the hunk's content lines (the same positions as
+ * `DiffHunk.lines`). To stage, an unselected `+` is dropped and an unselected `-` becomes
+ * context. To unstage (the patch is applied with `--reverse`) an unselected `+` becomes context
+ * and an unselected `-` is dropped. Header counts are recomputed from the lines kept.
+ */
+export function linePatch(
+  header: string,
+  hunkText: string,
+  selected: number[],
+  direction: 'stage' | 'unstage'
+): string {
+  if (selected.length === 0) throw new Error('Select at least one changed line')
+  if (new Set(selected).size !== selected.length) throw new Error('A line is selected twice')
+  const rows = hunkText.split('\n')
+  if (rows.at(-1) === '') rows.pop()
+  const head = HUNK_HEAD_RE.exec((rows[0] ?? '').replace(/\r$/, ''))
+  if (!head) throw new Error('This is not a hunk')
+  const body = rows.slice(1)
+  const picked = new Set(selected)
+  for (const n of picked) {
+    const mark = body[n]?.[0]
+    if (!Number.isInteger(n) || (mark !== '+' && mark !== '-')) {
+      throw new Error('Only an added or removed line can be selected')
+    }
+  }
+  const changed = body.filter((r) => r[0] === '+' || r[0] === '-').length
+  const partial = picked.size < changed
+  const out: string[] = []
+  let oldCount = 0
+  let newCount = 0
+  body.forEach((row, i) => {
+    const mark = row[0]
+    if (mark === '\\') {
+      if (partial)
+        throw new Error('A change at the end of a file without a newline is staged whole')
+      out.push(row)
+      return
+    }
+    const chosen = picked.has(i)
+    let kept = row
+    if (mark === '+' && !chosen) {
+      if (direction === 'stage') return
+      kept = ' ' + row.slice(1)
+    } else if (mark === '-' && !chosen) {
+      if (direction === 'unstage') return
+      kept = ' ' + row.slice(1)
+    }
+    out.push(kept)
+    if (kept[0] !== '+') oldCount++
+    if (kept[0] !== '-') newCount++
+  })
+  const eol = (rows[0] ?? '').endsWith('\r') ? '\r' : ''
+  const title = head[3].replace(/\r$/, '')
+  const top = `@@ -${head[1]},${oldCount} +${head[2]},${newCount} @@${title}${eol}`
+  return header + [top, ...out].join('\n') + '\n'
 }
