@@ -1,5 +1,6 @@
 // Pure sidebar tree: account -> namespace -> repos, with search and collapse.
 import type { Account, Repo } from '../../../shared/types'
+import { LOCAL_ACCOUNT_ID } from './localRepos'
 
 export interface NamespaceNode {
   key: string
@@ -85,6 +86,13 @@ export function flattenTree(
     const hostOpen = searching || !collapsed.has(node.account.id)
     rows.push({ kind: 'host', key: node.account.id, node, expanded: hostOpen })
     if (!hostOpen) continue
+    if (node.account.id === LOCAL_ACCOUNT_ID) {
+      // Local repositories sit directly under their heading: one folder name each.
+      for (const ns of node.namespaces) {
+        for (const repo of ns.repos) rows.push({ kind: 'repo', key: repo.key, repo })
+      }
+      continue
+    }
     for (const ns of node.namespaces) {
       const nsOpen = searching || !collapsed.has(ns.key)
       rows.push({ kind: 'namespace', key: ns.key, node: ns, expanded: nsOpen })

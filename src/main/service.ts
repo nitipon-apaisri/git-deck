@@ -2,7 +2,8 @@
 // delivery are injected (`Ui`, `emitCloneProgress`), so this runs under tsx tests.
 import { randomUUID } from 'node:crypto'
 import { readdir } from 'node:fs/promises'
-import { join } from 'node:path'
+import { createHash } from 'node:crypto'
+import { basename, join } from 'node:path'
 import type { Api, CloneProgress, CloneProtocol } from '../shared/api'
 import {
   addRepos,
@@ -54,6 +55,8 @@ export interface ServiceDeps {
 const MAX_GRAPH_PAGE = 2000
 const MAX_TOKEN_LENGTH = 512
 const MAX_LABEL_LENGTH = 60
+/** The account id of repositories opened from a folder. A real account id is a UUID. */
+export const LOCAL_ACCOUNT = 'local'
 const REPO_KEY_RE = /^([A-Za-z0-9_-]+):([A-Za-z0-9_.-]+)$/
 
 const UNKNOWN_ERROR = 'Something went wrong'
@@ -304,6 +307,38 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
     return root
   }
 
+  async function openLocal(): Promise<Repo | null> {
+    const picked = await ui.pickFolder('Select a Git repository to open')
+    if (!picked) return null
+    const root = await git.repoRoot(picked)
+    if (!root) throw new Error('That folder is not a Git repository')
+    const id = createHash('sha1').update(root).digest('hex').slice(0, 12)
+    const info = await git.getLocalInfo(root)
+    const name = basename(root) || 'repository'
+    const repo: Repo = {
+      key: `${LOCAL_ACCOUNT}:${id}`,
+      accountId: LOCAL_ACCOUNT,
+      remoteId: id,
+      name,
+      fullName: name,
+      namespace: LOCAL_ACCOUNT,
+      description: root,
+      visibility: 'private',
+      defaultBranch: info.currentBranch ?? '',
+      webUrl: '',
+      httpUrl: '',
+      sshUrl: '',
+      stars: 0,
+      forks: 0,
+      openIssues: 0,
+      updatedAt: info.lastCommitAt ? new Date(info.lastCommitAt * 1000).toISOString() : '',
+      archived: false,
+      fork: false
+    }
+    await store.addLocalRepo(repo, root)
+    return repo
+  }
+
   async function cloneInto(repoKey: string, protocol: CloneProtocol): Promise<string | null> {
     const repo = requireRepo(repoKey)
     const url = cloneUrlFor(repo, protocol)
@@ -404,7 +439,9 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
       links: guard(async () => store.getLinks()),
       link: guard(linkRepo),
       unlink: guard(async (repoKey) => {
-        parseRepoKey(repoKey)
+        if (parseRepoKey(repoKey).accountId === LOCAL_ACCOUNT) {
+          throw new Error('Use Remove to forget a local repository')
+        }
         await store.removeLink(repoKey)
       }),
       clone: guard(cloneInto),
@@ -428,6 +465,14 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
       reveal: guard(async (path) => {
         linkedRepoKey(path)
         ui.reveal(path)
+      }),
+      repos: guard(async () => store.getLocalRepos()),
+      open: guard(openLocal),
+      remove: guard(async (repoKey) => {
+        if (parseRepoKey(repoKey).accountId !== LOCAL_ACCOUNT) {
+          throw new Error('Only a local repository can be removed this way')
+        }
+        await store.removeLocalRepo(repoKey as string)
       })
     },
     openExternal: guard(async (url) => {

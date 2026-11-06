@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import type { Account, AccountInput } from '@shared/types'
-import { errorMessage } from '../lib/errors'
+import { errorMessage } from '../../lib/errors'
 import {
   PRESETS,
   TOKEN_SCOPES,
@@ -10,26 +10,24 @@ import {
   tokenUrl,
   tryNormalize,
   type PresetId
-} from '../lib/presets'
+} from '../../lib/presets'
 import {
   Button,
   CheckOption,
   ChoiceGroup,
-  Dialog,
   Field,
   HostTile,
   Icon,
   IconButton,
   TextInput,
   type Choice
-} from './ui'
-import styles from './AccountsDialog.module.css'
+} from '../ui'
+import styles from './IntegrationsSection.module.css'
 
-interface AccountsDialogProps {
+interface IntegrationsSectionProps {
   accounts: Account[]
   /** `false` blocks saving a token; `null` while main has not answered yet. */
   secureStorage: boolean | null
-  onClose: () => void
   onAdded: (account: Account) => void
   onRemove: (accountId: string) => Promise<void>
 }
@@ -56,13 +54,12 @@ function scopeList(scopes: readonly string[]): ReactNode {
   ))
 }
 
-export function AccountsDialog({
+export function IntegrationsSection({
   accounts,
   secureStorage,
-  onClose,
   onAdded,
   onRemove
-}: AccountsDialogProps) {
+}: IntegrationsSectionProps) {
   const [presetId, setPresetId] = useState<PresetId>('github')
   const [label, setLabel] = useState('GitHub')
   const [labelTouched, setLabelTouched] = useState(false)
@@ -120,7 +117,9 @@ export function AccountsDialog({
     try {
       const account = await window.api.accounts.add(input())
       onAdded(account)
-      onClose()
+      // Ready for another account: keep the host, drop the secret.
+      setToken('')
+      setStatus({ kind: 'ok', text: <>Added {account.label}.</> })
     } catch (err) {
       setStatus({ kind: 'error', text: errorMessage(err) })
     }
@@ -153,28 +152,11 @@ export function AccountsDialog({
     }
 
   return (
-    <Dialog
-      title="Connect an account"
-      description="Uses a personal access token, stored encrypted in your OS keychain."
-      onClose={onClose}
-      actionsStart={
-        <Button onClick={() => void test()} disabled={!canSubmit || busy}>
-          Test connection
-        </Button>
-      }
-      actions={
-        <>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button
-            variant="primary"
-            onClick={() => void add()}
-            disabled={!canSubmit || busy || secureStorage === false}
-          >
-            Add account
-          </Button>
-        </>
-      }
-    >
+    <div className={styles.section}>
+      <p className={styles.lead}>
+        Connect GitHub or GitLab with a personal access token, stored encrypted in your OS keychain.
+      </p>
+
       {secureStorage === false ? (
         <p className={styles.notice} role="alert">
           <Icon name="alert" size="sm" />
@@ -186,7 +168,7 @@ export function AccountsDialog({
       ) : null}
 
       {accounts.length > 0 ? (
-        <section className={styles.section} aria-label="Connected accounts">
+        <section className={styles.group} aria-label="Connected accounts">
           <h3 className={styles.sectionTitle}>Connected accounts</h3>
           <ul className={styles.accounts}>
             {accounts.map((account) => {
@@ -330,6 +312,18 @@ export function AccountsDialog({
           <span>{status.kind === 'busy' ? `${status.text}…` : status.text}</span>
         </p>
       ) : null}
-    </Dialog>
+      <div className={styles.actions}>
+        <Button onClick={() => void test()} disabled={!canSubmit || busy}>
+          Test connection
+        </Button>
+        <Button
+          variant="primary"
+          onClick={() => void add()}
+          disabled={!canSubmit || busy || secureStorage === false}
+        >
+          Add account
+        </Button>
+      </div>
+    </div>
   )
 }

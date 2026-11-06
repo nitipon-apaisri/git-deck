@@ -1,0 +1,82 @@
+/* Shared by the Appearance pickers. */
+.group {
+  display: grid;
+  gap: var(--space-3);
+}
+.cards {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out);
+}
+.card:hover {
+  background: var(--hover);
+}
+.checked,
+.checked:hover {
+  border-color: var(--accent);
+  background: var(--selection);
+}
+.cardLabel {
+  font-weight: 500;
+}
+.swatches {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.swatch {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-round);
+  background: transparent;
+  color: var(--on-primary);
+  cursor: pointer;
+  transition: box-shadow var(--motion-fast) var(--ease-out);
+}
+.dot {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-round);
+  background: var(--primary);
+  transition: transform var(--motion-fast) var(--ease-out);
+}
+.swatch:hover .dot {
+  transform: scale(1.08);
+}
+/* Selected: a ring in the swatch's own colour, with a gap, and a tick. */
+.swatch[aria-checked='true'] {
+  box-shadow:
+    0 0 0 2px var(--island),
+    0 0 0 4px var(--primary);
+}
+.swatchName {
+  margin-left: var(--space-2);
+  color: var(--text-muted);
+}
+.fonts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.fontSample {
+  font-size: 12px;
+  color: var(--text-muted);
+}

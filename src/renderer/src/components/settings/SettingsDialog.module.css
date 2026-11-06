@@ -1,0 +1,116 @@
+.dialog {
+  width: calc(100vw - 80px);
+  height: calc(100vh - 80px);
+  max-width: none;
+  max-height: none;
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-dialog);
+  background: var(--island);
+  box-shadow: var(--shadow-dialog);
+  color: var(--text);
+  overflow: hidden;
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--motion-base) var(--ease-out),
+    transform var(--motion-base) var(--ease-out);
+}
+.dialog[open] {
+  display: flex;
+}
+@starting-style {
+  .dialog[open] {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.dialog::backdrop {
+  background: color-mix(in srgb, var(--window) 60%, transparent);
+  transition: opacity var(--motion-base) var(--ease-out);
+}
+@starting-style {
+  .dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+.aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 208px;
+  flex: none;
+  padding: var(--space-5) var(--space-4);
+  background: var(--window);
+}
+.title {
+  margin: 0;
+  padding: 0 var(--space-3);
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+}
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 34px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--ease-out),
+    color var(--motion-fast) var(--ease-out);
+}
+.tab:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.tab[aria-selected='true'] {
+  background: var(--island);
+  color: var(--text);
+  font-weight: 500;
+}
+.content {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+.close {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: 1;
+}
+.scroll {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: var(--space-6) 40px;
+}
+.panel {
+  max-width: 640px;
+  animation: fade var(--motion-base) var(--ease-out);
+}
+.panel[hidden] {
+  display: none;
+}
+.heading {
+  margin: 0 0 var(--space-5);
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 600;
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}

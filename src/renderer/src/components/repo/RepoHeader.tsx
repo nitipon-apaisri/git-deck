@@ -6,6 +6,8 @@ import styles from './RepoHeader.module.css'
 interface RepoHeaderProps {
   repo: Repo
   account: Account | null
+  /** Opened from a folder: no host, so no visibility, web link or account. */
+  local?: boolean
   /** A narrow pane: buttons show only their icon. */
   compact?: boolean
   onOpenWeb: () => void
@@ -16,6 +18,7 @@ interface RepoHeaderProps {
 export function RepoHeader({
   repo,
   account,
+  local = false,
   compact = false,
   onOpenWeb,
   onClose
@@ -26,20 +29,23 @@ export function RepoHeader({
         <div className={styles.titles}>
           <div className={styles.titleRow}>
             <h1 className={styles.title}>{repo.name}</h1>
-            <Badge>
-              {repo.visibility === 'private' ? <Icon name="lock" size="xs" /> : null}
-              {visibilityLabel(repo.visibility)}
-            </Badge>
+            {local ? (
+              <Badge>Local</Badge>
+            ) : (
+              <Badge>
+                {repo.visibility === 'private' ? <Icon name="lock" size="xs" /> : null}
+                {visibilityLabel(repo.visibility)}
+              </Badge>
+            )}
             {repo.archived ? <Badge tone="warning">Archived</Badge> : null}
             {repo.fork ? <Badge>Fork</Badge> : null}
           </div>
           <p className={styles.path}>
-            {account ? `${account.label} · ` : ''}
-            {repo.fullName}
+            {local ? 'Not on a host' : `${account ? `${account.label} · ` : ''}${repo.fullName}`}
           </p>
         </div>
         <div className={styles.buttons}>
-          {compact ? (
+          {local ? null : compact ? (
             <IconButton label="Open on web" icon="external" onClick={onOpenWeb} />
           ) : (
             <Button icon="external" onClick={onOpenWeb}>
@@ -49,7 +55,7 @@ export function RepoHeader({
           {onClose ? <IconButton label="Close pane" icon="x" onClick={onClose} /> : null}
         </div>
       </div>
-      {repo.description ? <p className={styles.description}>{repo.description}</p> : null}
+      {repo.description && !local ? <p className={styles.description}>{repo.description}</p> : null}
     </header>
   )
 }

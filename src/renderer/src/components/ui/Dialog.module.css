@@ -10,13 +10,30 @@
   box-shadow: var(--shadow-dialog);
   color: var(--text);
   overflow: hidden;
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--motion-base) var(--ease-out),
+    transform var(--motion-base) var(--ease-out);
 }
 .dialog[open] {
   display: flex;
   flex-direction: column;
 }
+@starting-style {
+  .dialog[open] {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
 .dialog::backdrop {
   background: color-mix(in srgb, var(--window) 60%, transparent);
+  transition: opacity var(--motion-base) var(--ease-out);
+}
+@starting-style {
+  .dialog[open]::backdrop {
+    opacity: 0;
+  }
 }
 .wide {
   width: 560px;

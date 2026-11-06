@@ -16,11 +16,13 @@ export interface RepoSummaryState {
 }
 
 /** Cached summary first, then the network answer. `reload` skips the cache. */
-export function useRepoSummary(repoKey: string): RepoSummaryState {
+/** `null` for a repository with no host (a local folder): nothing is loaded. */
+export function useRepoSummary(repoKey: string | null): RepoSummaryState {
   const [state, dispatch] = useReducer(resourceReducer<RepoSummary>, emptyResource<RepoSummary>())
   const [nonce, setNonce] = useState(0)
 
   useEffect(() => {
+    if (repoKey === null) return
     let cancelled = false
     void (async () => {
       dispatch({ type: 'start', key: repoKey })
@@ -62,6 +64,9 @@ export function useRepoSummary(repoKey: string): RepoSummaryState {
 
   const reload = useCallback(() => setNonce((n) => n + 1), [])
   // For one render after the key changes, `state` still belongs to the old key.
+  if (repoKey === null) {
+    return { summary: null, fetchedAt: null, loading: false, error: null, reload }
+  }
   const current: Resource<RepoSummary> = state.key === repoKey ? state : emptyResource()
   return {
     summary: current.data,

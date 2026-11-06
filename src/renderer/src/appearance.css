@@ -1,0 +1,98 @@
+/* Appearance choices on <html>: data-accent and data-font.
+   Blue is the default and lives in tokens.css. Each other accent overrides only the five
+   accent tokens, per theme. The swatches in Settings and the theme previews reuse them. Contrast was checked against --island and --on-primary:
+   primary >= 4.5:1 with white, accent text >= 4.5:1, accent and focus ring >= 3:1. */
+
+:root[data-accent='violet'][data-theme='dark'],
+:root[data-accent='violet'] [data-theme='dark'],
+[data-theme='dark'] [data-accent-dot='violet'] {
+  --primary: #7a4fd6;
+  --accent: #a78bfa;
+  --accent-text: #b9a2fb;
+  --selection: #a78bfa38;
+  --focus-ring: #c4b5fd;
+}
+:root[data-accent='violet'][data-theme='light'],
+:root[data-accent='violet'] [data-theme='light'],
+[data-theme='light'] [data-accent-dot='violet'] {
+  --primary: #6d3fc8;
+  --accent: #6d3fc8;
+  --accent-text: #5b30b0;
+  --selection: #6d3fc81f;
+  --focus-ring: #4c2a9e;
+}
+
+:root[data-accent='green'][data-theme='dark'],
+:root[data-accent='green'] [data-theme='dark'],
+[data-theme='dark'] [data-accent-dot='green'] {
+  --primary: #1a7f45;
+  --accent: #4cc07a;
+  --accent-text: #6fd496;
+  --selection: #4cc07a38;
+  --focus-ring: #8be0ac;
+}
+:root[data-accent='green'][data-theme='light'],
+:root[data-accent='green'] [data-theme='light'],
+[data-theme='light'] [data-accent-dot='green'] {
+  --primary: #1a7f45;
+  --accent: #1a7f45;
+  --accent-text: #166a3a;
+  --selection: #1a7f451f;
+  --focus-ring: #115c31;
+}
+
+:root[data-accent='orange'][data-theme='dark'],
+:root[data-accent='orange'] [data-theme='dark'],
+[data-theme='dark'] [data-accent-dot='orange'] {
+  --primary: #b4540a;
+  --accent: #f0903c;
+  --accent-text: #f5a560;
+  --selection: #f0903c38;
+  --focus-ring: #f8bb82;
+}
+:root[data-accent='orange'][data-theme='light'],
+:root[data-accent='orange'] [data-theme='light'],
+[data-theme='light'] [data-accent-dot='orange'] {
+  --primary: #b4540a;
+  --accent: #b4540a;
+  --accent-text: #9a4608;
+  --selection: #b4540a1f;
+  --focus-ring: #7f3a06;
+}
+
+:root[data-accent='rose'][data-theme='dark'],
+:root[data-accent='rose'] [data-theme='dark'],
+[data-theme='dark'] [data-accent-dot='rose'] {
+  --primary: #c2255c;
+  --accent: #f06292;
+  --accent-text: #f589ab;
+  --selection: #f0629238;
+  --focus-ring: #f8a5c0;
+}
+:root[data-accent='rose'][data-theme='light'],
+:root[data-accent='rose'] [data-theme='light'],
+[data-theme='light'] [data-accent-dot='rose'] {
+  --primary: #c2255c;
+  --accent: #c2255c;
+  --accent-text: #a81e4e;
+  --selection: #c2255c1f;
+  --focus-ring: #8f1943;
+}
+
+:root[data-font='roboto'] {
+  --font-sans: 'Roboto', system-ui, sans-serif;
+}
+:root[data-font='open-sans'] {
+  --font-sans: 'Open Sans', system-ui, sans-serif;
+}
+:root[data-font='system'] {
+  --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+/* The default accent has no root rule, but its swatch must not inherit another accent. */
+[data-theme='dark'] [data-accent-dot='blue'] {
+  --primary: #2e69dc;
+}
+[data-theme='light'] [data-accent-dot='blue'] {
+  --primary: #2e69dc;
+}

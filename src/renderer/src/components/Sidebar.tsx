@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { Account, Project, Repo } from '@shared/types'
 import { timeAgo } from '../lib/format'
 import { hostTileOf } from '../lib/presets'
+import { LOCAL_ACCOUNT_ID, LOCAL_GROUP, isLocalRepo } from '../lib/localRepos'
 import { remoteIdOf } from '../lib/projectForm'
 import type { ProjectView } from '../lib/projectScope'
 import { buildTree, flattenTree, type AccountNode, type TreeRow as Row } from '../lib/sidebarTree'
@@ -75,6 +76,9 @@ interface SidebarProps {
   onSelect: (repoKey: string) => void
   onOpenInSplit: (repoKey: string) => void
   onConnect: () => void
+  /** Folder picker: opens a local repository. */
+  onOpenLocal: () => void
+  onRemoveLocal: (repoKey: string) => void
   onRefresh: (accountId: string) => void
   onRefreshAll: () => void
   projects: SidebarProjects
@@ -92,6 +96,8 @@ export function Sidebar({
   onSelect,
   onOpenInSplit,
   onConnect,
+  onOpenLocal,
+  onRemoveLocal,
   onRefresh,
   onRefreshAll,
   projects: proj
@@ -107,7 +113,10 @@ export function Sidebar({
     const repos = view
       ? view.reposByAccount
       : Object.fromEntries(Object.entries(byAccount).map(([id, a]) => [id, a.repos]))
-    const tree = buildTree(accounts, repos, query)
+    // Local repositories lead the list. They are not part of any project.
+    const withLocal =
+      !view && (repos[LOCAL_ACCOUNT_ID]?.length ?? 0) > 0 ? [LOCAL_GROUP, ...accounts] : accounts
+    const tree = buildTree(withLocal, repos, query)
     // In a project, a host with none of its repositories would be an empty heading.
     return view ? tree.filter((node) => node.total > 0) : tree
   }, [accounts, byAccount, query, view])
@@ -130,8 +139,12 @@ export function Sidebar({
     })
   }
 
-  const anyLoading = Object.values(byAccount).some((a) => a.loading)
-  const lastFetched = Object.values(byAccount).reduce<number | null>(
+  const hosted = Object.entries(byAccount)
+    .filter(([id]) => id !== LOCAL_ACCOUNT_ID)
+    .map(([, a]) => a)
+  const hasLocal = (byAccount[LOCAL_ACCOUNT_ID]?.repos.length ?? 0) > 0
+  const anyLoading = hosted.some((a) => a.loading)
+  const lastFetched = hosted.reduce<number | null>(
     (latest, a) =>
       a.fetchedAt !== null && (latest === null || a.fetchedAt > latest) ? a.fetchedAt : latest,
     null
@@ -145,14 +158,14 @@ export function Sidebar({
         <div className={styles.loadError}>
           <ErrorBanner onRetry={onRetryLoad}>Could not load your accounts: {loadError}</ErrorBanner>
         </div>
-      ) : accounts.length === 0 && !scope ? (
+      ) : accounts.length === 0 && !hasLocal && !scope ? (
         <div className={styles.empty}>
-          <h2 className={styles.emptyTitle}>No accounts yet</h2>
+          <h2 className={styles.emptyTitle}>No repositories</h2>
           <p className={styles.emptyText}>
-            Connect GitHub or GitLab to see your repositories here.
+            Open a local repository, or add an account in Settings.
           </p>
-          <Button variant="primary" icon="plus" onClick={onConnect}>
-            Connect GitHub / GitLab
+          <Button variant="primary" icon="folder" onClick={onOpenLocal}>
+            Open
           </Button>
         </div>
       ) : (
@@ -218,6 +231,7 @@ export function Sidebar({
                 onToggle={toggle}
                 onRefresh={onRefresh}
                 onMenu={(repo, x, y) => setMenu({ repo, x, y })}
+                onRemoveLocal={onRemoveLocal}
               />
             ))}
             {unavailable.length > 0 ? (
@@ -264,9 +278,19 @@ export function Sidebar({
             Add repositories
           </Button>
         ) : (
-          <Button variant="ghost" icon="plus" onClick={onConnect}>
-            Connect account
-          </Button>
+          <>
+            <Button variant="ghost" icon="plus" onClick={onConnect}>
+              Connect account
+            </Button>
+            <Button
+              variant="ghost"
+              icon="folder"
+              aria-label="Open a local repository"
+              onClick={onOpenLocal}
+            >
+              Open
+            </Button>
+          </>
         )}
         <span
           className={styles.updated}
@@ -305,6 +329,7 @@ interface SidebarRowProps {
   onToggle: (key: string) => void
   onRefresh: (accountId: string) => void
   onMenu: (repo: Repo, x: number, y: number) => void
+  onRemoveLocal: (repoKey: string) => void
 }
 
 function SidebarRow({
@@ -318,7 +343,8 @@ function SidebarRow({
   onOpenInSplit,
   onToggle,
   onRefresh,
-  onMenu
+  onMenu,
+  onRemoveLocal
 }: SidebarRowProps) {
   if (row.kind === 'host') {
     const { account } = row.node
@@ -347,29 +373,39 @@ function SidebarRow({
   }
   const { repo } = row
   const mark = paneMarks[repo.key]
+  const local = isLocalRepo(repo)
   return (
     <TreeRow
       level="repo"
       selected={repo.key === selectedKey}
       onClick={() => onSelect(repo.key)}
-      title={repo.fullName}
-      leading={<Icon name="repo" size="sm" />}
+      leading={<Icon name={local ? 'folder' : 'repo'} size="sm" />}
+      title={local ? repo.description : repo.fullName}
       onContextMenu={(e) => {
         e.preventDefault()
-        onMenu(repo, e.clientX, e.clientY)
+        if (!local) onMenu(repo, e.clientX, e.clientY)
       }}
       action={
         <>
-          <IconButton
-            label={`Project options for ${repo.name}`}
-            icon="more"
-            className={styles.rowAction}
-            aria-haspopup="menu"
-            onClick={(e) => {
-              const rect = e.currentTarget.getBoundingClientRect()
-              onMenu(repo, rect.left, rect.bottom + 4)
-            }}
-          />
+          {local ? (
+            <IconButton
+              label={`Remove ${repo.name} from the list`}
+              icon="x"
+              className={styles.rowAction}
+              onClick={() => onRemoveLocal(repo.key)}
+            />
+          ) : (
+            <IconButton
+              label={`Project options for ${repo.name}`}
+              icon="more"
+              className={styles.rowAction}
+              aria-haspopup="menu"
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect()
+                onMenu(repo, rect.left, rect.bottom + 4)
+              }}
+            />
+          )}
           <IconButton
             label={`Open ${repo.name} in split view`}
             icon="columns"
@@ -392,8 +428,10 @@ function SidebarRow({
           ) : null}
           {repo.archived ? <span className={styles.pill}>archived</span> : null}
           {repo.fork ? <span className={styles.pill}>fork</span> : null}
-          {repo.visibility === 'private' ? <Icon name="lock" size="sm" label="Private" /> : null}
-          {links[repo.key] ? (
+          {!local && repo.visibility === 'private' ? (
+            <Icon name="lock" size="sm" label="Private" />
+          ) : null}
+          {!local && links[repo.key] ? (
             <span
               className={styles.linked}
               role="img"
@@ -420,6 +458,24 @@ interface HostRowProps {
 
 function HostRow({ node, expanded, searching, state, onToggle, onRefresh }: HostRowProps) {
   const { account } = node
+  if (account.id === LOCAL_ACCOUNT_ID) {
+    return (
+      <TreeRow
+        level="host"
+        expanded={expanded}
+        onClick={onToggle}
+        leading={
+          <>
+            <Icon name={expanded ? 'chevron-down' : 'chevron-right'} size="sm" />
+            <Icon name="folder" size="sm" />
+          </>
+        }
+        trailing={<span>{searching ? node.matched : node.total}</span>}
+      >
+        {account.label} <span className={styles.sub}>{account.host}</span>
+      </TreeRow>
+    )
+  }
   const { tile, host } = hostTileOf(account.type, account.baseUrl)
   const known = state !== undefined && (state.fetchedAt !== null || state.repos.length > 0)
   const count = searching ? node.matched : node.total

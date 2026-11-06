@@ -51,36 +51,39 @@ export function InfoTab({ repo, account, summary, linkedPath, local }: InfoTabPr
   const info = local.info
   return (
     <div className={styles.info}>
-      <section className={styles.section} aria-label="Remote">
-        <h2 className={styles.heading}>Remote</h2>
-        <dl className={styles.list}>
-          <Row label="Repository">{repo.fullName}</Row>
-          <Row label="Host">{account ? account.host : '—'}</Row>
-          <Row label="Visibility">{visibilityLabel(repo.visibility)}</Row>
-          <Row label="Default branch">
-            {repo.defaultBranch ? <span className="hash">{repo.defaultBranch}</span> : '—'}
-          </Row>
-          <Row label="Created">{isoDateText(summary?.createdAt ?? null)}</Row>
-          <Row label="Last activity">
-            {isoDateText(summary?.lastActivityAt ?? repo.updatedAt ?? null)}
-          </Row>
-          <Row label="License">{summary?.license ?? '—'}</Row>
-          <Row label="Size">{sizeText(summary?.sizeKb ?? null)}</Row>
-          <Row label="Web URL">
-            <Copyable text={repo.webUrl} what="web URL" />
-          </Row>
-          <Row label="HTTPS clone URL">
-            <Copyable text={repo.httpUrl} what="HTTPS clone URL" />
-          </Row>
-          <Row label="SSH clone URL">
-            <Copyable text={repo.sshUrl} what="SSH clone URL" />
-          </Row>
-        </dl>
-      </section>
+      {repo.accountId === 'local' ? null : (
+        <section className={styles.section} aria-label="Remote">
+          <h2 className={styles.heading}>Remote</h2>
+          <dl className={styles.list}>
+            <Row label="Repository">{repo.fullName}</Row>
+            <Row label="Host">{account ? account.host : '—'}</Row>
+            <Row label="Visibility">{visibilityLabel(repo.visibility)}</Row>
+            <Row label="Default branch">
+              {repo.defaultBranch ? <span className="hash">{repo.defaultBranch}</span> : '—'}
+            </Row>
+            <Row label="Created">{isoDateText(summary?.createdAt ?? null)}</Row>
+            <Row label="Last activity">
+              {isoDateText(summary?.lastActivityAt ?? repo.updatedAt ?? null)}
+            </Row>
+            <Row label="License">{summary?.license ?? '—'}</Row>
+            <Row label="Size">{sizeText(summary?.sizeKb ?? null)}</Row>
+            <Row label="Web URL">
+              <Copyable text={repo.webUrl} what="web URL" />
+            </Row>
+            <Row label="HTTPS clone URL">
+              <Copyable text={repo.httpUrl} what="HTTPS clone URL" />
+            </Row>
+            <Row label="SSH clone URL">
+              <Copyable text={repo.sshUrl} what="SSH clone URL" />
+            </Row>
+          </dl>
+        </section>
+      )}
 
       <section className={styles.section} aria-label="Local clone">
         <h2 className={styles.heading}>
-          Local clone {local.loading && info ? <Spinner label="Reading the folder" /> : null}
+          {repo.accountId === 'local' ? 'Folder' : 'Local clone'}{' '}
+          {local.loading && info ? <Spinner label="Reading the folder" /> : null}
         </h2>
         {!linkedPath ? (
           <p className={styles.muted}>

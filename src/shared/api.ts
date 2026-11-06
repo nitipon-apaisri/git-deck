@@ -65,6 +65,12 @@ export interface Api {
     commit(path: string, hash: string): Promise<CommitDetail>
     fetch(path: string): Promise<void>
     reveal(path: string): Promise<void>
+    /** Repositories opened from a folder, without an account. */
+    repos(): Promise<Repo[]>
+    /** Folder picker. `null` when cancelled. Opening the same folder twice gives one entry. */
+    open(): Promise<Repo | null>
+    /** Forgets a local repository. The folder is not touched. */
+    remove(repoKey: string): Promise<void>
     /** Returns the function that stops listening. */
     onCloneProgress(cb: (progress: CloneProgress) => void): () => void
   }
@@ -99,6 +105,9 @@ export const IPC = {
   localCommit: 'local:commit',
   localFetch: 'local:fetch',
   localReveal: 'local:reveal',
+  localRepos: 'local:repos',
+  localOpen: 'local:open',
+  localRemove: 'local:remove',
   openExternal: 'openExternal',
   projectsList: 'projects:list',
   projectsCreate: 'projects:create',

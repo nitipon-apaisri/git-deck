@@ -601,3 +601,45 @@ test('respond wraps results and errors without a stack', async () => {
   assert.equal(failed.ok, false)
   assert.deepEqual(Object.keys(failed), ['ok', 'error'])
 })
+
+// Local-only repositories
+
+test('local.open adds a folder without an account, with a stable key', async () => {
+  const r = await rig({ seed: false })
+  const folder = emptyRepo()
+  r.picks.push(folder, folder)
+  const first = await r.api.local.open()
+  assert.ok(first)
+  assert.equal(first.accountId, 'local')
+  assert.match(first.key, /^local:[0-9a-f]{12}$/)
+  const again = await r.api.local.open()
+  assert.equal(again?.key, first.key)
+  assert.equal((await r.api.local.repos()).length, 1)
+  // The folder is linked, so the read-only calls accept its path.
+  const links = await r.api.local.links()
+  assert.equal(links[first.key], first.description)
+  const info = await r.api.local.info(first.description)
+  assert.equal(info.path, first.description)
+})
+
+test('local.open rejects a folder that is not a repository and returns null on cancel', async () => {
+  const r = await rig({ seed: false })
+  r.picks.push(tempDir())
+  await assert.rejects(r.api.local.open(), /not a Git repository/)
+  assert.equal(await r.api.local.open(), null)
+  assert.equal((await r.api.local.repos()).length, 0)
+})
+
+test('local.remove forgets the repository and its link, and only accepts local keys', async () => {
+  const r = await rig()
+  const folder = emptyRepo()
+  r.picks.push(folder)
+  const opened = await r.api.local.open()
+  assert.ok(opened)
+  await assert.rejects(r.api.local.remove('acc1:1'), /Only a local repository/)
+  await assert.rejects(r.api.local.unlink(opened.key), /Use Remove/)
+  await r.api.local.remove(opened.key)
+  assert.deepEqual(await r.api.local.repos(), [])
+  assert.equal((await r.api.local.links())[opened.key], undefined)
+  await assert.rejects(r.api.local.info(opened.description), /not linked/)
+})

@@ -10,11 +10,12 @@ Built with Electron, React and TypeScript.
 
 - **Host integrations.** GitHub.com, GitHub Enterprise, GitLab.com and self-hosted GitLab, with any number of accounts. Repositories are grouped by host, then namespace, with search.
 - **Repository overview.** Commits, contributors, branches, tags, open pull or merge requests, languages and top contributors. Saved data shows first and refreshes in the background. If a refresh fails, the saved data stays and a banner offers Retry.
+- **Open a folder.** Open any local Git repository without an account. It appears under Local with its graph and folder info.
 - **Local clones.** Clone over HTTPS or SSH, or link an existing folder. Fetch, open the folder, and read local branch, ahead/behind and working tree state.
 - **Commit graph.** A lane graph of the whole history, loaded 500 commits at a time and virtualised, so a repository with thousands of commits stays smooth. Select a commit to see its message and changed files.
 - **Projects.** A named group of repositories from any host or account, with its own icon and colour. A project has an overview page with totals, a sortable table of its repositories, and "Fetch all linked".
 - **Split View.** Two repositories at once, side by side or stacked, each with its own tab, graph and scroll position, and a draggable divider.
-- **Light and dark themes**, following the system or set by hand.
+- **Appearance.** Light, dark or system theme, five accent colours and a choice of font, in Settings. Accounts are connected there too.
 
 ## Requirements
 

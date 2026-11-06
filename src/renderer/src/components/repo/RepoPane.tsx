@@ -2,6 +2,7 @@ import { useId, useLayoutEffect, useRef, useState } from 'react'
 import type { Account, Repo } from '@shared/types'
 import { errorMessage } from '../../lib/errors'
 import { timeAgo } from '../../lib/format'
+import { isLocalRepo } from '../../lib/localRepos'
 import { isNarrow } from '../../lib/splitLayout'
 import type { TabName } from '../../lib/splitState'
 import { useLocalInfo, useRepoSummary } from '../../state/repoData'
@@ -21,6 +22,8 @@ const TABS: { id: TabName; label: string }[] = [
   { id: 'graph', label: 'Graph' },
   { id: 'info', label: 'Info' }
 ]
+/** A local repository has no host summary, so no Overview. */
+const LOCAL_TABS = TABS.filter((t) => t.id !== 'overview')
 
 interface RepoPaneProps {
   repo: Repo
@@ -55,7 +58,7 @@ export function RepoPane({
   account,
   linkedPath,
   active,
-  tab,
+  tab: savedTab,
   onTabChange,
   onActivate,
   onLinksChanged,
@@ -64,6 +67,9 @@ export function RepoPane({
   onClose,
   className
 }: RepoPaneProps) {
+  const isLocal = isLocalRepo(repo)
+  // A saved "overview" tab means nothing here: start on the graph.
+  const tab = isLocal && savedTab === 'overview' ? 'graph' : savedTab
   const idPrefix = useId()
   const now = useNow()
   const { ref, width } = useElementSize<HTMLElement>()
@@ -80,7 +86,7 @@ export function RepoPane({
   if (tab === 'graph' && !graphSeen) setGraphSeen(true)
   const [webError, setWebError] = useState<string | null>(null)
 
-  const { summary, fetchedAt, loading, error, reload } = useRepoSummary(repo.key)
+  const { summary, fetchedAt, loading, error, reload } = useRepoSummary(isLocal ? null : repo.key)
   const actions = useLocalActions(repo.key, linkedPath, onLinksChanged)
   // Only read the folder while the Info tab is showing it.
   const local = useLocalInfo(tab === 'info' ? (linkedPath ?? null) : null, actions.reloadToken)
@@ -122,6 +128,7 @@ export function RepoPane({
         <RepoHeader
           repo={repo}
           account={account}
+          local={isLocal}
           compact={narrow}
           onOpenWeb={() => void openWeb()}
           onClose={split ? onClose : undefined}
@@ -137,27 +144,29 @@ export function RepoPane({
 
       <div className={styles.tabs}>
         <Tabs
-          tabs={TABS}
+          tabs={isLocal ? LOCAL_TABS : TABS}
           value={tab}
           onChange={(id) => onTabChange(id as TabName)}
           label="Repository"
           idPrefix={idPrefix}
           trailing={
-            <div className={styles.status}>
-              {loading ? <Spinner label="Refreshing the summary" /> : null}
-              <span
-                className={styles.statusText}
-                title={fetchedAt ? new Date(fetchedAt).toLocaleString() : undefined}
-              >
-                {status}
-              </span>
-              <IconButton
-                label="Reload summary"
-                icon="refresh"
-                disabled={loading}
-                onClick={reload}
-              />
-            </div>
+            isLocal ? undefined : (
+              <div className={styles.status}>
+                {loading ? <Spinner label="Refreshing the summary" /> : null}
+                <span
+                  className={styles.statusText}
+                  title={fetchedAt ? new Date(fetchedAt).toLocaleString() : undefined}
+                >
+                  {status}
+                </span>
+                <IconButton
+                  label="Reload summary"
+                  icon="refresh"
+                  disabled={loading}
+                  onClick={reload}
+                />
+              </div>
+            )
           }
         />
       </div>
