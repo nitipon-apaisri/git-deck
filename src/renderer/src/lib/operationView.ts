@@ -1,4 +1,4 @@
-// Pure: words for the merge and cherry-pick banner and the stash list.
+// Pure: words for the merge, cherry-pick and revert banner and the stash list.
 import type { OperationState, StashEntry } from '../../../shared/types'
 
 /** "Merge in progress", with the commit when git recorded one. */

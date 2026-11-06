@@ -13,7 +13,7 @@ interface OperationBannerProps {
   onOpenFolder: () => void
 }
 
-/** A merge or cherry-pick stopped and waits: what is left, and the way out. */
+/** A merge, cherry-pick or revert stopped and waits: what is left, and the way out. */
 export function OperationBanner({
   state,
   busy,
