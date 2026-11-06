@@ -5,7 +5,6 @@ import { SettingsDialog } from './components/settings/SettingsDialog'
 import { ManageProjectsDialog } from './components/projects/ManageProjectsDialog'
 import { ProjectFormDialog } from './components/projects/ProjectFormDialog'
 import { ProjectOverview } from './components/projects/ProjectOverview'
-import { Rail } from './components/Rail'
 import { Sidebar } from './components/Sidebar'
 import { Toolbar } from './components/Toolbar'
 import { hasInsetTitleBar } from './lib/platform'
@@ -231,6 +230,9 @@ export function App() {
         onScope={chooseScope}
         onNewProject={() => setForm({ editId: null, repoKeys: [] })}
         onManage={() => setDialog('projects')}
+        sidebarOpen={sidebarOpen}
+        onToggleSidebar={toggleSidebar}
+        onOpenPreferences={() => openSettings('appearance')}
         query={query}
         onQueryChange={(value) => {
           setQuery(value)
@@ -242,13 +244,6 @@ export function App() {
         }}
       />
       <div className="flex min-h-0 flex-1 gap-1.5 px-1.5 pb-1.5">
-        <Rail
-          sidebarOpen={sidebarOpen}
-          onToggleSidebar={toggleSidebar}
-          onOpenAccounts={() => openSettings('integrations')}
-          onOpenProjects={() => setDialog('projects')}
-          onOpenPreferences={() => openSettings('appearance')}
-        />
         {sidebarOpen ? (
           <Sidebar
             loading={!state.ready}

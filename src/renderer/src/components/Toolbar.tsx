@@ -24,6 +24,9 @@ interface ToolbarProps {
   onManage: () => void
   query: string
   onQueryChange: (value: string) => void
+  sidebarOpen: boolean
+  onToggleSidebar: () => void
+  onOpenPreferences: () => void
 }
 
 export function Toolbar({
@@ -40,16 +43,27 @@ export function Toolbar({
   onNewProject,
   onManage,
   query,
-  onQueryChange
+  onQueryChange,
+  sidebarOpen,
+  onToggleSidebar,
+  onOpenPreferences
 }: ToolbarProps) {
   return (
     <header
-      className="flex h-(--toolbar-height) flex-none items-center gap-2 px-3 data-[inset=true]:pl-(--titlebar-inset) [-webkit-app-region:drag] [&_button]:[-webkit-app-region:no-drag] [&_label]:[-webkit-app-region:no-drag]"
+      className="grid h-(--toolbar-height) flex-none grid-cols-[1fr_auto_1fr] items-center gap-2 group px-3 [-webkit-app-region:drag] [&_button]:[-webkit-app-region:no-drag] [&_label]:[-webkit-app-region:no-drag]"
       data-inset={insetTitleBar ? 'true' : undefined}
     >
+      <div className="flex items-center gap-1 group-data-[inset=true]:pl-[calc(var(--titlebar-inset)-12px)]">
+        <IconButton
+          icon="repo"
+          label="Repositories"
+          active={sidebarOpen}
+          aria-pressed={sidebarOpen}
+          onClick={onToggleSidebar}
+        />
+      </div>
       {showScope ? (
-        // About as wide as the sidebar below, so the two line up.
-        <div className="flex w-[calc(var(--sidebar-width)+130px)] min-w-0 flex-none items-center gap-2">
+        <div className="flex w-[min(520px,45vw)] min-w-0 items-center gap-2">
           <div className="w-[210px] flex-none">
             <ScopeSwitcher
               projects={projects}
@@ -61,9 +75,10 @@ export function Toolbar({
           </div>
           <RepoFilter value={query} onChange={onQueryChange} scoped={scope !== null} />
         </div>
-      ) : null}
-      <span className="flex-1" />
-      <div className="flex items-center gap-1" role="group" aria-label="Split view">
+      ) : (
+        <span />
+      )}
+      <div className="flex items-center justify-end gap-1" role="group" aria-label="Split view">
         {splitEnabled ? (
           <>
             <IconButton
@@ -85,6 +100,7 @@ export function Toolbar({
           aria-pressed={splitEnabled}
           onClick={onToggleSplit}
         />
+        <IconButton label="Preferences" icon="sliders" onClick={onOpenPreferences} />
       </div>
     </header>
   )
