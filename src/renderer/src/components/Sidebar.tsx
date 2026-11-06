@@ -195,7 +195,7 @@ export function Sidebar({
             {scope ? (
               <button
                 type="button"
-                className="flex h-[30px] cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-2.5 text-left text-foreground transition-[background-color,color] duration-[var(--motion-fast)] ease-[var(--ease-out)] hover:bg-accent aria-pressed:bg-[var(--selection)] aria-pressed:font-medium"
+                className="flex h-7.5 cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-2.5 text-left text-foreground transition-[background-color,color] duration-[var(--motion-fast)] ease-[var(--ease-out)] hover:bg-accent aria-pressed:bg-[var(--selection)] aria-pressed:font-medium"
                 aria-pressed={proj.overviewActive}
                 onClick={proj.onOverview}
               >

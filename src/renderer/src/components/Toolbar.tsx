@@ -45,7 +45,7 @@ export function Toolbar({
       data-inset={insetTitleBar ? 'true' : undefined}
     >
       {showScope ? (
-        <div className="w-[240px] min-w-0">
+        <div className="w-60 min-w-0 mx-8">
           <ScopeSwitcher
             projects={projects}
             scope={scope}
