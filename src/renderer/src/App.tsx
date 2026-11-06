@@ -14,6 +14,7 @@ import { ALL_SCOPE, SCOPE_KEY, parseScope, projectView, resolveScope } from './l
 import type { ShortcutAction } from './lib/splitLayout'
 import { stillValid, type PaneId } from './lib/splitState'
 import { errorMessage } from './lib/errors'
+import { LOCAL_ACCOUNT_ID, LOCAL_GROUP } from './lib/localRepos'
 import { useProjectSummaries } from './state/projectSummaries'
 import { useProjects } from './state/projects'
 import { readStored, writeStored } from './state/storage'
@@ -88,6 +89,8 @@ export function App() {
         ]
       })
     )
+    // Local repositories load with the first read, before any host is asked.
+    loads[LOCAL_ACCOUNT_ID] = { settled: state.byAccount[LOCAL_ACCOUNT_ID]?.fetchedAt != null }
     return projectView(scope, reposByAccount, loads, state.ready)
   }, [scope, reposByAccount, state.accounts, state.byAccount, state.ready])
   const overviewVisible =
@@ -311,7 +314,11 @@ export function App() {
           projects={projects}
           editing={form.editId ? (projects.find((p) => p.id === form.editId) ?? null) : null}
           initialRepoKeys={form.repoKeys}
-          accounts={state.accounts}
+          accounts={
+            (reposByAccount[LOCAL_ACCOUNT_ID]?.length ?? 0) > 0
+              ? [LOCAL_GROUP, ...state.accounts]
+              : state.accounts
+          }
           reposByAccount={reposByAccount}
           onSave={async (value) => {
             const saved = await projectsApi.save(form.editId, value)

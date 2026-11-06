@@ -447,7 +447,7 @@ test('settings sections: arrows wrap, Home and End jump, other keys do nothing',
 
 // local repositories in the sidebar tree
 
-test('local repositories: grouped by the folder they live in', () => {
+test('local repositories: grouped by folder in the tree, listed flat in the rows', () => {
   const mk = (name: string, dir: string): Repo => ({
     ...repo('local', name, 'local', name),
     description: `${dir}/${name}`
@@ -460,7 +460,7 @@ test('local repositories: grouped by the folder they live in', () => {
   const rows = flattenTree(nodes, new Set(), false)
   assert.deepEqual(
     rows.map((r) => r.kind),
-    ['host', 'namespace', 'repo', 'namespace', 'repo', 'repo']
+    ['host', 'repo', 'repo', 'repo']
   )
   assert.deepEqual(
     nodes[0]?.namespaces.map((n) => n.name),
@@ -468,4 +468,30 @@ test('local repositories: grouped by the folder they live in', () => {
   )
   assert.equal(flattenTree(nodes, new Set(['local']), false).length, 1)
   assert.ok(isLocalKey('local:abc') && !isLocalKey('acc1:1'))
+})
+
+test('local repositories list straight under the host, without a folder group', () => {
+  const mk = (name: string, dir: string): Repo =>
+    ({
+      key: `local:${name}`,
+      accountId: 'local',
+      name,
+      fullName: name,
+      namespace: 'local',
+      description: `${dir}/${name}`
+    }) as Repo
+  const nodes = buildTree(
+    [LOCAL_GROUP],
+    { local: [mk('zeta', '/a/one'), mk('alpha', '/b/two')] },
+    ''
+  )
+  const rows = flattenTree(nodes, new Set(), false)
+  assert.deepEqual(
+    rows.map((r) => r.kind),
+    ['host', 'repo', 'repo']
+  )
+  assert.deepEqual(
+    rows.filter((r) => r.kind === 'repo').map((r) => r.key),
+    ['local:alpha', 'local:zeta']
+  )
 })

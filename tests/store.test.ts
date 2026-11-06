@@ -155,3 +155,13 @@ test('a config file written before local repositories existed still loads', asyn
   await store.load()
   assert.deepEqual(store.getLocalRepos(), [])
 })
+
+test('forgetting a local repository removes it from every project', async () => {
+  const { store } = await newStore()
+  const repo = { key: 'local:abc', accountId: 'local' } as never
+  await store.addLocalRepo(repo, '/tmp/abc')
+  const project = createProject([], { name: 'Mixed', repoKeys: ['local:abc', 'acc:1'] })
+  await store.setProjects([project])
+  await store.removeLocalRepo('local:abc')
+  assert.deepEqual(store.getProjects()[0].repoKeys, ['acc:1'])
+})

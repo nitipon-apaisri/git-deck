@@ -2,7 +2,7 @@
 // can use a fake and main/index.ts passes `safeStorage`.
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { pruneAccount } from '../shared/projects'
+import { pruneAccount, removeRepos } from '../shared/projects'
 import type { Account, Cached, Project, Repo, RepoSummary } from '../shared/types'
 
 export interface TokenCrypto {
@@ -162,6 +162,10 @@ export class Store {
   async removeLocalRepo(repoKey: string): Promise<void> {
     this.config.localRepos = this.config.localRepos.filter((r) => r.key !== repoKey)
     delete this.config.links[repoKey]
+    // A forgotten folder leaves every project too, so none keeps an "unavailable" entry.
+    this.config.projects = this.config.projects.map((p) =>
+      p.repoKeys.includes(repoKey) ? removeRepos(p, [repoKey]) : p
+    )
     await this.persist('config')
   }
 

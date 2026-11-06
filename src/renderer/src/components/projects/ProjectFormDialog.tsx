@@ -2,6 +2,7 @@ import { useId, useMemo, useState, type FormEvent } from 'react'
 import type { Account, Project, Repo } from '@shared/types'
 import { DEFAULT_ICON, PROJECT_COLORS } from '@shared/projects'
 import { cn } from '@/lib/cn'
+import { LOCAL_ACCOUNT_ID } from '../../lib/localRepos'
 import { hostTileOf } from '../../lib/presets'
 import {
   COLOR_LABELS,
@@ -283,11 +284,18 @@ export function ProjectFormDialog({
           <div className="max-h-60 overflow-y-auto rounded-lg border border-border">
             {groups.map(({ accountId, repos }) => {
               const account = accounts.find((a) => a.id === accountId)
-              const tile = account ? hostTileOf(account.type, account.baseUrl) : null
+              const tile =
+                account && account.id !== LOCAL_ACCOUNT_ID
+                  ? hostTileOf(account.type, account.baseUrl)
+                  : null
               return (
                 <div key={accountId} role="group" aria-label={account?.label ?? accountId}>
                   <div className="flex h-8 items-center gap-2.5 bg-secondary px-3 font-semibold text-foreground">
-                    {tile ? <HostTile tile={tile.tile} host={tile.host} /> : null}
+                    {tile ? (
+                      <HostTile tile={tile.tile} host={tile.host} />
+                    ) : (
+                      <Icon name="folder" size="sm" />
+                    )}
                     <span className="min-w-0 truncate">{account?.label ?? accountId}</span>
                     <span className="ml-auto flex-none text-[12px] font-normal text-muted-foreground">
                       {account?.host}
@@ -307,7 +315,7 @@ export function ProjectFormDialog({
                       />
                       <span className="min-w-0 truncate font-medium">{r.name}</span>
                       <span className="ml-auto flex-none text-[12px] font-normal text-muted-foreground">
-                        {r.namespace}
+                        {r.accountId === LOCAL_ACCOUNT_ID ? '' : r.namespace}
                       </span>
                     </label>
                   ))}
