@@ -1,6 +1,7 @@
 import { Icon } from './Icon'
 import { Skeleton } from './Skeleton'
-import styles from './StatCard.module.css'
+
+const LABEL = 'text-[12px] leading-4 text-muted-foreground'
 
 interface StatCardProps {
   /** `null` means the host could not be reached: shown as "Unavailable", never 0. */
@@ -28,23 +29,26 @@ export function StatCard({
   loading = false
 }: StatCardProps) {
   return (
-    <div className={styles.card} title={explain}>
+    <div
+      className="flex flex-col items-start gap-0.5 rounded-xl bg-secondary px-[14px] py-3"
+      title={explain}
+    >
       {loading ? (
-        <span className={styles.skeleton}>
+        <span className="flex h-[30px] items-center">
           <Skeleton width={64} height={24} label={`Loading ${label}`} />
         </span>
       ) : value === null ? (
-        <span className={styles.unavailable}>Unavailable</span>
+        <span className="text-[15px] leading-[30px] text-muted-foreground">Unavailable</span>
       ) : (
-        <span className={styles.value}>
+        <span className="text-[24px] leading-[30px] font-semibold text-foreground">
           {approximate ? '~' : ''}
           {value}
         </span>
       )}
-      <span className={styles.label}>{label}</span>
-      {note ? <span className={styles.label}>{note}</span> : null}
+      <span className={LABEL}>{label}</span>
+      {note ? <span className={LABEL}>{note}</span> : null}
       {partial ? (
-        <span className={styles.partial}>
+        <span className="mt-1 inline-flex items-center gap-1 rounded-[var(--radius-xs)] bg-[var(--warning-bg)] px-2 text-[11.5px] leading-[18px] font-medium text-[var(--warning-text)]">
           <Icon name="alert" size="xs" />
           Partial
         </span>
