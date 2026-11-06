@@ -150,6 +150,8 @@ export function Sidebar({
     null
   )
 
+  const isEmpty = accounts.length === 0 && !hasLocal && !scope
+
   return (
     <Island as="aside" aria-label="Repositories" className={styles.sidebar}>
       {loading ? (
@@ -158,14 +160,27 @@ export function Sidebar({
         <div className={styles.loadError}>
           <ErrorBanner onRetry={onRetryLoad}>Could not load your accounts: {loadError}</ErrorBanner>
         </div>
-      ) : accounts.length === 0 && !hasLocal && !scope ? (
+      ) : isEmpty ? (
         <div className={styles.empty}>
           <h2 className={styles.emptyTitle}>No repositories</h2>
           <p className={styles.emptyText}>
             Open a local repository, or add an account in Settings.
           </p>
-          <Button variant="primary" icon="folder" onClick={onOpenLocal}>
-            Open
+          <Button
+            variant="primary"
+            icon="folder"
+            className={styles.emptyAction}
+            onClick={onOpenLocal}
+          >
+            Open a repository
+          </Button>
+          <Button className={styles.emptyAction} onClick={onConnect}>
+            Connect to
+            <HostTile tile="GL" host="gitlab" />
+            GitLab
+            <span aria-hidden="true">/</span>
+            <HostTile tile="GH" host="github" />
+            GitHub
           </Button>
         </div>
       ) : (
@@ -277,7 +292,7 @@ export function Sidebar({
           <Button variant="ghost" icon="plus" onClick={proj.onEditScope}>
             Add repositories
           </Button>
-        ) : (
+        ) : isEmpty ? null : (
           <>
             <Button variant="ghost" icon="plus" onClick={onConnect}>
               Connect account
