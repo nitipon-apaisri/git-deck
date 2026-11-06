@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { errorMessage } from '../src/renderer/src/lib/errors'
 import { avatarIndex, initialsOf, timeAgo, truncateMiddle } from '../src/renderer/src/lib/format'
+import { hasInsetTitleBar } from '../src/renderer/src/lib/platform'
 import { PRESETS, hostTileOf, tokenUrl, tryNormalize } from '../src/renderer/src/lib/presets'
 import {
   buildTree,
@@ -99,6 +100,20 @@ test('errorMessage says network and HTTP failures plainly', () => {
     errorMessage(new Error('This account is already added')),
     'This account is already added'
   )
+})
+
+// platform
+
+test('hasInsetTitleBar is true on macOS only', () => {
+  const mac =
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/140 Electron/45 Safari/537.36'
+  const win =
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/140 Electron/45 Safari/537.36'
+  const linux =
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/140 Electron/45 Safari/537.36'
+  assert.equal(hasInsetTitleBar(mac), true)
+  assert.equal(hasInsetTitleBar(win), false)
+  assert.equal(hasInsetTitleBar(linux), false)
 })
 
 // theme

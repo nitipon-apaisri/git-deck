@@ -8,6 +8,16 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-06: Toolbar in the title bar (macOS)
+
+- **Question:** The toolbar sat below the native title bar. Can it share the row with the window buttons to give the main area more height?
+- **Options considered:** `hiddenInset` on macOS only; `hidden` plus `titleBarOverlay` on Windows and Linux too; keep the native frame.
+- **Decision and why:**
+  - macOS only, with `titleBarStyle: 'hiddenInset'` and the traffic lights at `{x: 16, y: 18}`. The renderer reads the user agent (`lib/platform.ts`), so no IPC is added.
+  - Windows and Linux keep the native frame. `titleBarOverlay` colours are hex strings set from main and would have to follow the theme, which breaks the tokens-only rule, and I cannot run those platforms.
+  - The toolbar is a drag region and its buttons are `no-drag`. The 80px left space is the `titlebar-inset` token.
+  - Known gap: in macOS full screen the traffic lights are hidden but the 80px space stays. Fixing it needs a main-to-renderer event.
+
 ## 2026-11-06: Phase 10 choices not fixed by PLAN.md
 
 - **Question:** What "everywhere data is fetched" covers, how a failed summary should behave, which keys count as shortcuts, and what the README may claim.

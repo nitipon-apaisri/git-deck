@@ -9,6 +9,7 @@ import { ProjectOverview } from './components/projects/ProjectOverview'
 import { Rail } from './components/Rail'
 import { Sidebar } from './components/Sidebar'
 import { Toolbar } from './components/Toolbar'
+import { hasInsetTitleBar } from './lib/platform'
 import { ALL_SCOPE, SCOPE_KEY, parseScope, projectView, resolveScope } from './lib/projectScope'
 import type { ShortcutAction } from './lib/splitLayout'
 import { stillValid, type PaneId } from './lib/splitState'
@@ -179,6 +180,7 @@ export function App() {
   return (
     <div className={styles.app}>
       <Toolbar
+        insetTitleBar={hasInsetTitleBar(navigator.userAgent)}
         accounts={state.accounts}
         onOpenAccounts={() => setDialog('accounts')}
         splitEnabled={layout.enabled}

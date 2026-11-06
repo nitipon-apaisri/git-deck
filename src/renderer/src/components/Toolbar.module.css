@@ -5,25 +5,14 @@
   height: var(--toolbar-height);
   padding: 0 var(--space-4);
   flex: none;
+  /* A hidden title bar: the empty parts of the toolbar drag the window. */
+  -webkit-app-region: drag;
 }
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.toolbar[data-inset='true'] {
+  padding-left: var(--titlebar-inset);
 }
-.mark {
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: var(--radius-md);
-  background: var(--primary);
-  color: var(--on-primary);
-}
-.name {
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 600;
+.toolbar button {
+  -webkit-app-region: no-drag;
 }
 .spacer {
   flex: 1;

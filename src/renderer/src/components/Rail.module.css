@@ -5,10 +5,19 @@
   align-items: center;
   width: var(--rail-width);
   flex: none;
-  padding: var(--space-1) 0;
+  padding: 0 0 var(--space-1);
 }
 .group {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+}
+.mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-lg);
+  background: var(--primary);
+  color: var(--on-primary);
 }

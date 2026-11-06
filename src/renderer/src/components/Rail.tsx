@@ -1,4 +1,4 @@
-import { IconButton } from './ui'
+import { Icon, IconButton } from './ui'
 import styles from './Rail.module.css'
 
 interface RailProps {
@@ -19,6 +19,9 @@ export function Rail({
   return (
     <nav className={styles.rail} aria-label="Main">
       <div className={styles.group}>
+        <span className={styles.mark} role="img" aria-label="GitDeck" title="GitDeck">
+          <Icon name="git-branch" />
+        </span>
         <IconButton
           size="rail"
           icon="repo"
