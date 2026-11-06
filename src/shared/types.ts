@@ -207,6 +207,34 @@ export type CheckoutTarget =
 
 export type PullMode = 'ff-only' | 'merge'
 
+export interface StashEntry {
+  /** Position in the stash list, 0 is the newest. */
+  index: number
+  /** Full hash of the stash commit. Sent back so a list that moved on is noticed. */
+  hash: string
+  message: string
+  /** Branch the stash was made on, when git recorded one. */
+  branch: string | null
+  /** Unix seconds. */
+  createdAt: number
+}
+
+export type OperationKind = 'merge' | 'cherry-pick'
+
+/** A merge or cherry-pick that stopped and waits for the user. */
+export interface OperationState {
+  kind: OperationKind
+  /** Short hash of the commit being merged or picked. */
+  target: string | null
+  /** Paths git could not combine and the user has not staged yet. */
+  conflicted: string[]
+}
+
+export interface OperationResult {
+  /** The run stopped on conflicts. Abort or continue through `local.operation`. */
+  conflicted: boolean
+}
+
 export interface LocalInfo {
   path: string
   currentBranch: string | null

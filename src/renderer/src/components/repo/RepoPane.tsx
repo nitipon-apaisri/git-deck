@@ -6,7 +6,13 @@ import { timeAgo } from '../../lib/format'
 import { isLocalRepo } from '../../lib/localRepos'
 import { isNarrow } from '../../lib/splitLayout'
 import type { TabName } from '../../lib/splitState'
-import { useBranches, useLocalInfo, useRepoSummary } from '../../state/repoData'
+import {
+  useBranches,
+  useLocalInfo,
+  useOperation,
+  useRepoSummary,
+  useStashes
+} from '../../state/repoData'
 import { useElementSize } from '../../state/useElementSize'
 import { useLocalActions } from '../../state/useLocalActions'
 import { useNow } from '../../state/useNow'
@@ -16,7 +22,9 @@ import { InfoTab } from './InfoTab'
 import { BranchNameDialog, type BranchNameRequest } from './BranchNameDialog'
 import { LocalActions } from './LocalActions'
 import { OverviewTab } from './OverviewTab'
+import { OperationBanner } from './OperationBanner'
 import { RepoHeader } from './RepoHeader'
+import { StashDialog } from './StashDialog'
 
 const TABS: { id: TabName; label: string }[] = [
   { id: 'overview', label: 'Overview' },
@@ -91,6 +99,9 @@ export function RepoPane({
   const { summary, fetchedAt, loading, error, reload } = useRepoSummary(isLocal ? null : repo.key)
   const actions = useLocalActions(repo.key, linkedPath, onLinksChanged)
   const { branches } = useBranches(linkedPath ?? null, actions.reloadToken)
+  const { stashes } = useStashes(linkedPath ?? null, actions.reloadToken)
+  const { operation } = useOperation(linkedPath ?? null, actions.reloadToken)
+  const [stashOpen, setStashOpen] = useState(false)
   const [nameRequest, setNameRequest] = useState<BranchNameRequest | null>(null)
   // Only read the folder while the Info tab is showing it.
   const local = useLocalInfo(tab === 'info' ? (linkedPath ?? null) : null, actions.reloadToken)
@@ -147,8 +158,19 @@ export function RepoPane({
               setNameRequest({ kind: 'create', startPoint: null, startLabel: 'the current commit' })
             }
             onRenameBranch={(from) => setNameRequest({ kind: 'rename', from })}
+            stashCount={stashes.length}
+            onStash={() => setStashOpen(true)}
           />
         </RepoHeader>
+        {operation ? (
+          <OperationBanner
+            state={operation}
+            busy={actions.busy !== null}
+            onContinue={actions.continueOperation}
+            onAbort={actions.abortOperation}
+            onOpenFolder={actions.openFolder}
+          />
+        ) : null}
         {problem ? (
           <p
             className="m-0 flex items-start gap-2 rounded-md bg-[var(--warning-bg)] px-3 py-2 text-[var(--warning-text)] [overflow-wrap:anywhere] [&_svg]:mt-0.5 [&_svg]:flex-none"
@@ -229,7 +251,11 @@ export function RepoPane({
                       deleteBranch: actions.deleteBranch,
                       createBranch: (startPoint, startLabel) =>
                         setNameRequest({ kind: 'create', startPoint, startLabel }),
-                      renameBranch: (from) => setNameRequest({ kind: 'rename', from })
+                      renameBranch: (from) => setNameRequest({ kind: 'rename', from }),
+                      cherryPick: actions.cherryPick,
+                      merge: actions.merge,
+                      currentBranch: branches?.current ?? null,
+                      operationActive: operation !== null
                     }
                   : undefined
               }
@@ -254,6 +280,14 @@ export function RepoPane({
           />
         ) : null}
       </div>
+      {stashOpen && linkedPath ? (
+        <StashDialog
+          path={linkedPath}
+          stashes={stashes}
+          onChanged={actions.refresh}
+          onClose={() => setStashOpen(false)}
+        />
+      ) : null}
       {nameRequest ? (
         <BranchNameDialog
           request={nameRequest}

@@ -88,6 +88,8 @@ export type RefAction =
   | { type: 'create-branch'; startPoint: string }
   | { type: 'rename-branch'; name: string }
   | { type: 'delete-branch'; name: string }
+  | { type: 'merge'; branch: string; noFf: boolean }
+  | { type: 'cherry-pick'; hash: string }
   | { type: 'copy'; text: string; what: string }
 
 export interface RefActionItem {
@@ -99,15 +101,27 @@ export interface RefActionItem {
   group: 'ref' | 'commit'
 }
 
+export interface RefActionContext {
+  /** The checked-out branch. `null` while HEAD is detached: merging is not offered. */
+  currentBranch: string | null
+  /** The commit has two or more parents. Cherry-picking one needs a mainline: not offered. */
+  isMerge: boolean
+  /** A merge or cherry-pick is waiting for the user: starting another is not offered. */
+  operationActive: boolean
+}
+
 /**
  * What a right-click offers. `ref` is the badge that was clicked, or `null` for the row.
- * Deleting the checked-out branch is not offered at all.
+ * Deleting the checked-out branch is not offered at all. Without `context` (a pane that
+ * cannot write) neither merge nor cherry-pick appears.
  */
 export function refActions(
   ref: (Pick<GraphRef, 'kind' | 'name'> & { current?: boolean }) | null,
-  hash: string
+  hash: string,
+  context?: RefActionContext
 ): RefActionItem[] {
   const items: RefActionItem[] = []
+  const canStart = !!context && !context.operationActive
   if (ref?.kind === 'branch') {
     if (ref.current) {
       items.push({
@@ -139,6 +153,27 @@ export function refActions(
       group: 'ref'
     })
   }
+  if (
+    canStart &&
+    context.currentBranch &&
+    ref &&
+    (ref.kind === 'remote' || (ref.kind === 'branch' && !ref.current))
+  ) {
+    items.push(
+      {
+        id: 'merge',
+        label: `Merge ${ref.name} into ${context.currentBranch}`,
+        action: { type: 'merge', branch: ref.name, noFf: false },
+        group: 'ref'
+      },
+      {
+        id: 'merge-no-ff',
+        label: `Merge ${ref.name} into ${context.currentBranch} (always a merge commit)`,
+        action: { type: 'merge', branch: ref.name, noFf: true },
+        group: 'ref'
+      }
+    )
+  }
   if (ref && (ref.kind === 'branch' || ref.kind === 'remote' || ref.kind === 'tag')) {
     items.push({
       id: 'copy-name',
@@ -159,13 +194,21 @@ export function refActions(
       label: 'Create branch here…',
       action: { type: 'create-branch', startPoint: hash },
       group: 'commit'
-    },
-    {
-      id: 'copy-hash',
-      label: 'Copy commit hash',
-      action: { type: 'copy', text: hash, what: 'hash' },
-      group: 'commit'
     }
   )
+  if (canStart && context.currentBranch && !context.isMerge) {
+    items.push({
+      id: 'cherry-pick',
+      label: `Cherry-pick onto ${context.currentBranch}`,
+      action: { type: 'cherry-pick', hash },
+      group: 'commit'
+    })
+  }
+  items.push({
+    id: 'copy-hash',
+    label: 'Copy commit hash',
+    action: { type: 'copy', text: hash, what: 'hash' },
+    group: 'commit'
+  })
   return items
 }

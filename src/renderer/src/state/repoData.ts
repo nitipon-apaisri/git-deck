@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useReducer, useState } from 'react'
 import { emptyResource, resourceReducer, type Resource } from '../lib/resource'
 import { errorMessage } from '../lib/errors'
-import type { BranchList, LocalInfo, RepoSummary } from '@shared/types'
+import type { BranchList, LocalInfo, OperationState, RepoSummary, StashEntry } from '@shared/types'
 
 // Both hooks take their key as an argument and keep their state inside the calling
 // component, so two panes showing two repositories never share anything.
@@ -146,4 +146,67 @@ export function useBranches(path: string | null, reloadToken: number): BranchesS
 
   if (path === null || state.key !== path) return { branches: null, error: null }
   return { branches: state.data, error: state.error }
+}
+
+export interface StashesState {
+  stashes: StashEntry[]
+  error: string | null
+}
+
+/** The stash list of a linked folder. Reads again whenever `reloadToken` changes. */
+export function useStashes(path: string | null, reloadToken: number): StashesState {
+  const [state, dispatch] = useReducer(resourceReducer<StashEntry[]>, emptyResource<StashEntry[]>())
+
+  useEffect(() => {
+    if (path === null) return
+    let cancelled = false
+    void (async () => {
+      dispatch({ type: 'start', key: path })
+      try {
+        const data = await window.api.local.stashes(path)
+        if (!cancelled) dispatch({ type: 'data', key: path, data, fetchedAt: null, done: true })
+      } catch (err) {
+        if (!cancelled) dispatch({ type: 'failed', key: path, error: errorMessage(err) })
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [path, reloadToken])
+
+  if (path === null || state.key !== path) return { stashes: [], error: null }
+  return { stashes: state.data ?? [], error: state.error }
+}
+
+export interface OperationStateResult {
+  /** The merge or cherry-pick waiting for the user. Found again after a restart. */
+  operation: OperationState | null
+  error: string | null
+}
+
+export function useOperation(path: string | null, reloadToken: number): OperationStateResult {
+  const [state, dispatch] = useReducer(
+    resourceReducer<OperationState | null>,
+    emptyResource<OperationState | null>()
+  )
+
+  useEffect(() => {
+    if (path === null) return
+    let cancelled = false
+    void (async () => {
+      dispatch({ type: 'start', key: path })
+      try {
+        const data = await window.api.local.operation(path)
+        if (!cancelled) dispatch({ type: 'data', key: path, data, fetchedAt: null, done: true })
+      } catch (err) {
+        if (!cancelled) dispatch({ type: 'failed', key: path, error: errorMessage(err) })
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [path, reloadToken])
+
+  if (path === null || state.key !== path) return { operation: null, error: null }
+  return { operation: state.data ?? null, error: state.error }
 }

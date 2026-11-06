@@ -66,6 +66,16 @@ export type GitOps = Pick<
   | 'getRemoteTarget'
   | 'pull'
   | 'push'
+  | 'listStashes'
+  | 'stashPush'
+  | 'stashApply'
+  | 'stashPop'
+  | 'stashDrop'
+  | 'cherryPick'
+  | 'merge'
+  | 'getOperation'
+  | 'continueOperation'
+  | 'abortOperation'
 >
 
 export interface ServiceDeps {
@@ -169,6 +179,18 @@ function checkBranchName(name: unknown): string {
     throw new Error('The branch name is not valid')
   }
   return name
+}
+
+const MAX_STASH_MESSAGE_LENGTH = 500
+
+function checkStashRef(index: unknown, hash: unknown): { index: number; hash: string } {
+  if (typeof index !== 'number' || !Number.isInteger(index) || index < 0 || index > 10_000) {
+    throw new Error('The stash is not valid')
+  }
+  if (typeof hash !== 'string' || !/^[0-9a-f]{7,64}$/i.test(hash)) {
+    throw new Error('The stash is not valid')
+  }
+  return { index, hash }
 }
 
 function checkTarget(target: unknown): CheckoutTarget {
@@ -692,6 +714,74 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
         await withRemote(path, 'push', (env, onLine) =>
           git.push(path, { forceWithLease: force }, env, onLine)
         )
+        return true
+      }),
+      stashes: guard(async (path) => {
+        linkedRepoKey(path)
+        return git.listStashes(path)
+      }),
+      stashPush: guard(async (path, message, includeUntracked) => {
+        linkedRepoKey(path)
+        if (typeof message !== 'string' || message.length > MAX_STASH_MESSAGE_LENGTH) {
+          throw new Error('The stash message is not valid')
+        }
+        if (typeof includeUntracked !== 'boolean') {
+          throw new Error('Include untracked must be true or false')
+        }
+        return serial(path, () => git.stashPush(path, message, includeUntracked))
+      }),
+      stashApply: guard(async (path, index, hash) => {
+        linkedRepoKey(path)
+        const stash = checkStashRef(index, hash)
+        return serial(path, () => git.stashApply(path, stash.index, stash.hash))
+      }),
+      stashPop: guard(async (path, index, hash) => {
+        linkedRepoKey(path)
+        const stash = checkStashRef(index, hash)
+        return serial(path, () => git.stashPop(path, stash.index, stash.hash))
+      }),
+      stashDrop: guard(async (path, index, hash) => {
+        linkedRepoKey(path)
+        const stash = checkStashRef(index, hash)
+        const ok = await ui.confirm({
+          message: 'Drop this stash?',
+          detail: 'The saved changes are deleted. This cannot be undone from the app.',
+          confirmLabel: 'Drop'
+        })
+        if (!ok) return false
+        await serial(path, () => git.stashDrop(path, stash.index, stash.hash))
+        return true
+      }),
+      cherryPick: guard(async (path, hash) => {
+        linkedRepoKey(path)
+        if (typeof hash !== 'string') throw new Error('Invalid commit hash')
+        return serial(path, () => git.cherryPick(path, hash))
+      }),
+      merge: guard(async (path, branch, noFf) => {
+        linkedRepoKey(path)
+        const name = checkBranchName(branch)
+        if (typeof noFf !== 'boolean') throw new Error('No fast-forward must be true or false')
+        return serial(path, () => git.merge(path, name, { noFf }))
+      }),
+      operation: guard(async (path) => {
+        linkedRepoKey(path)
+        return git.getOperation(path)
+      }),
+      continueOperation: guard(async (path) => {
+        linkedRepoKey(path)
+        return serial(path, () => git.continueOperation(path))
+      }),
+      abortOperation: guard(async (path) => {
+        linkedRepoKey(path)
+        const state = await git.getOperation(path)
+        if (!state) throw new Error('There is no merge or cherry-pick in progress')
+        const ok = await ui.confirm({
+          message: `Abort the ${state.kind}?`,
+          detail: 'Everything the operation changed is undone, including your conflict fixes.',
+          confirmLabel: 'Abort'
+        })
+        if (!ok) return false
+        await serial(path, () => git.abortOperation(path))
         return true
       }),
       reveal: guard(async (path) => {
