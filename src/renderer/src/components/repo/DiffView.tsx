@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { cn } from '@/lib/cn'
+import { hunkFingerprint } from '@shared/diff'
 import type { DiffLine } from '@shared/types'
 import {
   DIFF_LINE_LIMIT,
@@ -15,6 +16,13 @@ interface DiffViewProps {
   path: string
   state: DiffState
   onClose?: () => void
+  /** Offered for a tracked file's staged or unstaged diff: one button per hunk. */
+  hunkAction?: {
+    label: string
+    /** A stage or unstage is running, so the buttons wait. */
+    busy: boolean
+    onRun: (index: number, fingerprint: string) => void
+  }
 }
 
 // Each line starts with + or −, so a change is never shown by colour alone.
@@ -30,7 +38,7 @@ const LINE: Record<DiffLine['type'], { mark: string; row: string; text: string }
 }
 
 /** One file's changes as a unified diff, with old and new line numbers. */
-export function DiffView({ path, state, onClose }: DiffViewProps) {
+export function DiffView({ path, state, onClose, hunkAction }: DiffViewProps) {
   const { diff } = state
   const [expanded, setExpanded] = useState<string | null>(null)
   const total = diff ? diff.hunks.reduce((n, h) => n + h.lines.length, 0) : 0
@@ -89,8 +97,19 @@ export function DiffView({ path, state, onClose }: DiffViewProps) {
               const lines = hunk.lines
               return (
                 <div key={h}>
-                  <div className="bg-secondary px-3 py-0.5 text-muted-foreground">
-                    {hunk.header}
+                  <div className="flex items-center gap-2 bg-secondary px-3 py-0.5 text-muted-foreground">
+                    <span className="min-w-0 flex-1">{hunk.header}</span>
+                    {hunkAction && diff ? (
+                      <Button
+                        variant="ghost"
+                        className="sticky right-2 h-6 flex-none px-2 text-[12px]"
+                        disabled={hunkAction.busy}
+                        // The fingerprint comes from the whole hunk, never from the shortened view.
+                        onClick={() => hunkAction.onRun(h, hunkFingerprint(diff.hunks[h].lines))}
+                      >
+                        {hunkAction.label}
+                      </Button>
+                    ) : null}
                   </div>
                   {lines.map((line, i) => {
                     const look = LINE[line.type]

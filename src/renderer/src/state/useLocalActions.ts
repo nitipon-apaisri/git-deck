@@ -36,12 +36,16 @@ export interface LocalActions {
   /** A conflict does not fail: the pane's banner (from `operation`) takes it from there. */
   cherryPick: (hash: string) => void
   merge: (branch: string, noFf: boolean) => void
+  /** `onto` is a branch, a remote branch or a commit hash. May stop on conflicts. */
+  rebase: (onto: string) => void
   revert: (hash: string) => void
   /** A hard reset asks in main first. */
   reset: (hash: string, mode: ResetMode) => void
   continueOperation: () => void
   /** Main asks first. */
   abortOperation: () => void
+  /** Rebase only: drop the commit it stopped on. Main asks first. */
+  skipOperation: () => void
 }
 
 /**
@@ -212,7 +216,7 @@ export function useLocalActions(
     [run, linkedPath]
   )
 
-  // Merge, cherry-pick and revert may stop on conflicts, which is a result, not an error.
+  // Merge, cherry-pick, revert and rebase may stop on conflicts, which is a result, not an error.
   const operate = useCallback(
     (work: (path: string) => Promise<unknown>) => {
       if (!linkedPath) return
@@ -234,6 +238,14 @@ export function useLocalActions(
   const merge = useCallback(
     (branch: string, noFf: boolean) =>
       operate((path) => window.api.local.merge(path, branch, noFf)),
+    [operate]
+  )
+  const rebase = useCallback(
+    (onto: string) => operate((path) => window.api.local.rebase(path, onto)),
+    [operate]
+  )
+  const skipOperation = useCallback(
+    () => operate((path) => window.api.local.skipOperation(path)),
     [operate]
   )
   const revert = useCallback(
@@ -302,9 +314,11 @@ export function useLocalActions(
     refresh,
     cherryPick,
     merge,
+    rebase,
     revert,
     reset,
     continueOperation,
-    abortOperation
+    abortOperation,
+    skipOperation
   }
 }

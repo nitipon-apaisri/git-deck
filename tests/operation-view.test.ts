@@ -52,3 +52,14 @@ test('a revert reads as "Revert in progress"', () => {
     'Revert in progress (abc1234)'
   )
 })
+
+test('a rebase with every conflict fixed says it will replay the next commit', () => {
+  assert.match(
+    operationHint({ kind: 'rebase', target: 'abc1234', conflicted: [] }),
+    /replay the next commit, skip this one/
+  )
+  assert.match(
+    operationHint({ kind: 'rebase', target: null, conflicted: ['a.txt'] }),
+    /^1 file has conflicts/
+  )
+})

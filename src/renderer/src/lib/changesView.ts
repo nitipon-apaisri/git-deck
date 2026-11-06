@@ -121,3 +121,16 @@ export function limitHunks(hunks: readonly DiffHunk[], limit: number): DiffHunk[
   }
   return out
 }
+
+/**
+ * Whether a file's hunks can be staged one by one: tracked, not in conflict, not a rename, and
+ * with a change on the side the diff was read from. Main checks again.
+ */
+export function canStageHunks(
+  entry:
+    Pick<StatusEntry, 'untracked' | 'conflicted' | 'origPath' | 'index' | 'worktree'> | undefined,
+  source: 'worktree' | 'staged'
+): boolean {
+  if (!entry || entry.untracked || entry.conflicted || entry.origPath) return false
+  return source === 'staged' ? entry.index !== null : entry.worktree !== null
+}

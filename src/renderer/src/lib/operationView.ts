@@ -1,4 +1,4 @@
-// Pure: words for the merge, cherry-pick and revert banner and the stash list.
+// Pure: words for the merge, cherry-pick, revert and rebase banner and the stash list.
 import type { OperationState, StashEntry } from '../../../shared/types'
 
 /** "Merge in progress", with the commit when git recorded one. */
@@ -11,6 +11,9 @@ export function operationTitle(state: OperationState): string {
 /** What the user has left to do. */
 export function operationHint(state: OperationState): string {
   const n = state.conflicted.length
+  if (n === 0 && state.kind === 'rebase') {
+    return 'Every conflict is resolved. Continue to replay the next commit, skip this one, or abort to undo the whole rebase.'
+  }
   if (n === 0) return 'Every conflict is resolved. Continue to finish it, or abort to undo it.'
   const files = `${n} file${n === 1 ? ' has' : 's have'} conflicts`
   return `${files}. Fix ${n === 1 ? 'it' : 'them'} in your editor, then continue. Aborting undoes everything.`
