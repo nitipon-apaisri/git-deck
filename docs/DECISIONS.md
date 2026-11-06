@@ -8,6 +8,20 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-07: Scope selector and filter moved to the toolbar
+
+- **Question:** where the project selector and the repository filter live, and what happens when the sidebar is collapsed.
+- **Options considered:** a sidebar-width block on the left of the toolbar, a compact row, or centred like a command bar.
+- **Decision and why:**
+  - Both sit on the left of the 48 px toolbar, after the macOS traffic-light inset: the existing `ScopeSwitcher` (210 px) and a new `RepoFilter` beside it, then the split-view buttons stay on the right. The sidebar keeps the project error banners and the "Project overview" button.
+  - The filter text moved from `Sidebar` to `App`, so the toolbar writes it and the sidebar reads it. Typing while the sidebar is collapsed opens it, so the results are never hidden. The `Cmd/Ctrl+F` shortcut still finds `[data-search-input]`, now always rendered.
+  - The block is hidden until there is an account, a local repository or a project scope, so an empty app has no dead filter. The toolbar drags the window, so labels are opted out of dragging as buttons already were.
+  - Follow-up: the selector and filter are centred in the toolbar (a three-column grid, so they stay centred whatever the side buttons hold), the icon rail is removed, and Preferences sits at the right of the toolbar beside Split view. The rail's repositories button, which opened and closed the sidebar, is gone with it and nothing replaces it: the sidebar now stays open, and `sidebarOpen` only starts as closed for someone whose stored setting says so, until a search or Cmd/Ctrl+F opens it. The toolbar's left cell is empty, so the grid keeps the centre block centred.
+  - Later: the filter went back to the sidebar header (the `RepoFilter` component stays, and `query` is the sidebar's own state again). Only the scope selector is in the toolbar, centred. Typing no longer has to open a hidden sidebar, so that code is gone.
+  - Then: the scope selector is at the left of the toolbar after the traffic-light inset, and the sidebar filter is bigger (40 px tall, 14 px text, 18 px icon) so it reads as the main search.
+  - No board in `docs/ui-boards/` shows this layout. It uses tokens and existing components only. Gap logged.
+- **Checked in the window:** light and dark toolbar, the scope menu opens under the selector, typing filters the sidebar ("No repositories match"), and a collapsed sidebar reopens when typing. **Not checked:** dragging the window by the toolbar, a project scope with several projects, Escape behaviour by hand, a narrow window.
+
 ## 2026-11-07: Phase 16 as built
 
 - **Question:** what was built, what the checks showed, and what was not checked.

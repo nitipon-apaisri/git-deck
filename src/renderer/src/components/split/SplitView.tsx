@@ -88,8 +88,8 @@ export function SplitView({
         'group/split grid min-h-0 min-w-0 flex-1 [grid-template:minmax(0,1fr)/minmax(0,1fr)]',
         'data-[dragging=true]:select-none data-[dragging=true]:data-[orientation=horizontal]:cursor-col-resize data-[dragging=true]:data-[orientation=vertical]:cursor-row-resize',
         // Every pane keeps room for the active outline, and shows it only in split view.
-        '[&>[data-pane]]:min-h-0 [&>[data-pane]]:min-w-0 [&>[data-pane]]:outline-2 [&>[data-pane]]:-outline-offset-2 [&>[data-pane]]:outline-transparent',
-        'data-[multi=true]:[&>[data-pane][data-active=true]]:outline-[var(--accent)]'
+        '*:data-pane:min-h-0 *:data-pane:min-w-0 *:data-pane:outline-2 *:data-pane:-outline-offset-2 *:data-pane:outline-transparent',
+        'data-[multi=true]:[&>[data-pane][data-active=true]]:outline-(--accent)'
       ].join(' ')}
       data-multi={enabled}
       data-orientation={orientation}
@@ -124,7 +124,7 @@ export function SplitView({
           onDoubleClick={() => onRatioChange(0.5)}
         >
           <span
-            className="rounded-[var(--radius-xs)] bg-[var(--border-strong)] opacity-55 transition-opacity duration-[120ms] group-hover/divider:bg-[var(--accent)] group-hover/divider:opacity-100 group-focus-visible/divider:bg-[var(--accent)] group-focus-visible/divider:opacity-100 group-data-[dragging=true]/split:bg-[var(--accent)] group-data-[dragging=true]/split:opacity-100 group-data-[orientation=horizontal]/split:h-10 group-data-[orientation=horizontal]/split:w-[3px] group-data-[orientation=vertical]/split:h-[3px] group-data-[orientation=vertical]/split:w-10"
+            className="rounded-xs bg-(--border-strong) opacity-55 transition-opacity duration-120 group-hover/divider:bg-(--accent) group-hover/divider:opacity-100 group-focus-visible/divider:bg-(--accent) group-focus-visible/divider:opacity-100 group-data-[dragging=true]/split:bg-(--accent) group-data-[dragging=true]/split:opacity-100 group-data-[orientation=horizontal]/split:h-10 group-data-[orientation=horizontal]/split:w-0.75 group-data-[orientation=vertical]/split:h-0.75 group-data-[orientation=vertical]/split:w-10"
             aria-hidden="true"
           />
         </div>

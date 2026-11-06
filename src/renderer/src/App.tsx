@@ -5,7 +5,6 @@ import { SettingsDialog } from './components/settings/SettingsDialog'
 import { ManageProjectsDialog } from './components/projects/ManageProjectsDialog'
 import { ProjectFormDialog } from './components/projects/ProjectFormDialog'
 import { ProjectOverview } from './components/projects/ProjectOverview'
-import { Rail } from './components/Rail'
 import { Sidebar } from './components/Sidebar'
 import { Toolbar } from './components/Toolbar'
 import { hasInsetTitleBar } from './lib/platform'
@@ -54,13 +53,6 @@ export function App() {
     setDialog('settings')
   }
   const [sidebarOpen, setSidebarOpen] = useState(() => readStored(SIDEBAR_KEY) !== 'closed')
-
-  function toggleSidebar(): void {
-    setSidebarOpen((open) => {
-      writeStored(SIDEBAR_KEY, open ? 'closed' : 'open')
-      return !open
-    })
-  }
 
   const repos = Object.values(state.byAccount).flatMap((a) => a.repos)
   const anyLoading = Object.values(state.byAccount).some((a) => a.loading)
@@ -224,15 +216,15 @@ export function App() {
           split.setOrientation(layout.orientation === 'horizontal' ? 'vertical' : 'horizontal')
         }
         onSwap={split.swap}
+        showScope={state.ready && (state.accounts.length > 0 || repos.length > 0 || scope !== null)}
+        projects={projects}
+        scope={scope}
+        onScope={chooseScope}
+        onNewProject={() => setForm({ editId: null, repoKeys: [] })}
+        onManage={() => setDialog('projects')}
+        onOpenPreferences={() => openSettings('appearance')}
       />
       <div className="flex min-h-0 flex-1 gap-1.5 px-1.5 pb-1.5">
-        <Rail
-          sidebarOpen={sidebarOpen}
-          onToggleSidebar={toggleSidebar}
-          onOpenAccounts={() => openSettings('integrations')}
-          onOpenProjects={() => setDialog('projects')}
-          onOpenPreferences={() => openSettings('appearance')}
-        />
         {sidebarOpen ? (
           <Sidebar
             loading={!state.ready}
@@ -259,9 +251,7 @@ export function App() {
               loadError: projectsApi.loadError,
               onRetryLoad: () => void projectsApi.reload(),
               onDismissError: () => setProjectError(null),
-              onScope: chooseScope,
               onNewProject: (repoKeys = []) => setForm({ editId: null, repoKeys }),
-              onManage: () => setDialog('projects'),
               onEditScope: () => scope && setForm({ editId: scope.id, repoKeys: [] }),
               onOverview: () => setOverviewOn(true),
               onToggleMember: (projectId, repoKey, member) =>

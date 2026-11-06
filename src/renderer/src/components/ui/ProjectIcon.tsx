@@ -32,9 +32,9 @@ export function ProjectIcon({ icon, color, size = 'md' }: ProjectIconProps) {
   return (
     <span
       className={cn(
-        'inline-grid flex-none place-items-center bg-[color-mix(in_srgb,var(--tile)_20%,transparent)] text-[var(--tile)]',
+        'inline-grid flex-none place-items-center  text-(--tile)',
         COLORS[color] ?? COLORS.gray,
-        size === 'lg' && 'size-12 rounded-[var(--radius-dialog)] text-[24px] [&_svg]:size-[26px]',
+        size === 'lg' && 'size-12 rounded-(--radius-dialog) text-[24px] [&_svg]:size-6.5',
         size === 'md' && 'size-9 rounded-lg',
         size === 'sm' && 'size-7 rounded-md'
       )}

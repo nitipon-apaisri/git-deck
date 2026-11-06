@@ -1,5 +1,6 @@
-import type { Account } from '@shared/types'
+import type { Account, Project } from '@shared/types'
 import type { Orientation } from '../lib/splitState'
+import { ScopeSwitcher } from './projects/ScopeSwitcher'
 import { IconButton } from './ui'
 
 interface ToolbarProps {
@@ -13,6 +14,14 @@ interface ToolbarProps {
   onToggleSplit: () => void
   onToggleOrientation: () => void
   onSwap: () => void
+  /** The scope selector shows once there is something to select. */
+  showScope: boolean
+  projects: Project[]
+  scope: Project | null
+  onScope: (projectId: string | null) => void
+  onNewProject: () => void
+  onManage: () => void
+  onOpenPreferences: () => void
 }
 
 export function Toolbar({
@@ -21,15 +30,33 @@ export function Toolbar({
   orientation,
   onToggleSplit,
   onToggleOrientation,
-  onSwap
+  onSwap,
+  showScope,
+  projects,
+  scope,
+  onScope,
+  onNewProject,
+  onManage,
+  onOpenPreferences
 }: ToolbarProps) {
   return (
     <header
-      className="flex h-(--toolbar-height) flex-none items-center gap-2 px-3 data-[inset=true]:pl-(--titlebar-inset) [-webkit-app-region:drag] [&_button]:[-webkit-app-region:no-drag]"
+      className="flex h-(--toolbar-height) flex-none items-center gap-2 px-3 data-[inset=true]:pl-(--titlebar-inset) [-webkit-app-region:drag] [&_button]:[-webkit-app-region:no-drag] [&_label]:[-webkit-app-region:no-drag]"
       data-inset={insetTitleBar ? 'true' : undefined}
     >
+      {showScope ? (
+        <div className="w-60 min-w-0 mx-8">
+          <ScopeSwitcher
+            projects={projects}
+            scope={scope}
+            onSelect={onScope}
+            onNew={onNewProject}
+            onManage={onManage}
+          />
+        </div>
+      ) : null}
       <span className="flex-1" />
-      <div className="flex items-center gap-1" role="group" aria-label="Split view">
+      <div className="flex items-center justify-end gap-1" role="group" aria-label="Split view">
         {splitEnabled ? (
           <>
             <IconButton
@@ -51,6 +78,7 @@ export function Toolbar({
           aria-pressed={splitEnabled}
           onClick={onToggleSplit}
         />
+        <IconButton label="Preferences" icon="sliders" onClick={onOpenPreferences} />
       </div>
     </header>
   )
