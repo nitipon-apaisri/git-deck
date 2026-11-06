@@ -13,6 +13,7 @@ const state = (extra: Partial<OperationState> = {}): OperationState => ({
   kind: 'merge',
   target: 'abc1234',
   conflicted: ['a.txt'],
+  conflictKinds: { 'a.txt': 'both-modified' },
   ...extra
 })
 
@@ -25,12 +26,15 @@ test('operationTitle names the operation and the commit', () => {
 })
 
 test('operationHint counts the files left and says when none are', () => {
-  assert.match(operationHint(state()), /^1 file has conflicts\. Fix it/)
+  assert.match(operationHint(state()), /^1 file has conflicts\. Resolve it here or in your editor/)
   assert.match(
     operationHint(state({ conflicted: ['a', 'b'] })),
-    /^2 files have conflicts\. Fix them/
+    /^2 files have conflicts\. Resolve each one/
   )
-  assert.match(operationHint(state({ conflicted: [] })), /Every conflict is resolved/)
+  assert.match(
+    operationHint(state({ conflicted: [], conflictKinds: {} })),
+    /Every conflict is resolved/
+  )
 })
 
 test('conflictPreview caps the list', () => {
@@ -48,18 +52,23 @@ test('stash labels', () => {
 
 test('a revert reads as "Revert in progress"', () => {
   assert.equal(
-    operationTitle({ kind: 'revert', target: 'abc1234', conflicted: [] }),
+    operationTitle({ kind: 'revert', target: 'abc1234', conflicted: [], conflictKinds: {} }),
     'Revert in progress (abc1234)'
   )
 })
 
 test('a rebase with every conflict fixed says it will replay the next commit', () => {
   assert.match(
-    operationHint({ kind: 'rebase', target: 'abc1234', conflicted: [] }),
+    operationHint({ kind: 'rebase', target: 'abc1234', conflicted: [], conflictKinds: {} }),
     /replay the next commit, skip this one/
   )
   assert.match(
-    operationHint({ kind: 'rebase', target: null, conflicted: ['a.txt'] }),
+    operationHint({
+      kind: 'rebase',
+      target: null,
+      conflicted: ['a.txt'],
+      conflictKinds: { 'a.txt': 'both-modified' }
+    }),
     /^1 file has conflicts/
   )
 })
