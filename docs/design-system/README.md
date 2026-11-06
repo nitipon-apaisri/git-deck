@@ -58,7 +58,7 @@ Rules that came out of the migration:
 - Radius by role: islands and stat cards `radius-xl`; dialogs `radius-dialog`; rail buttons, project tiles and icon-grid buttons `radius-lg`; buttons, inputs, tree rows and icon buttons `radius-md`; host chips `radius-sm`; ref badges `radius-xs`; avatars, dots and pane markers `radius-round`.
 - Appearance: `appearance.css` holds the accent presets (`data-accent` on `<html>`) and the font choices (`data-font`). Motion uses `motion-fast` (hover, press), `motion-base` (dialogs, menus) and `ease-out`; reduced motion turns it off.
 - Shell: `toolbar-height` 48px on top (on macOS it is also the title bar: the traffic lights sit in its left `titlebar-inset` and the bar drags the window), `rail-width` 40px, `sidebar-width` 300px, tree rows `tree-row-height` 30px. The sidebar can collapse to the rail.
-- Split View: two panes side by side, each an island, joined by a `divider-width` (12px) draggable grip in `border-strong`. The active pane has a 1px `accent` outline and a numbered `neutral` marker. Below two times `pane-min-width` the panes stack.
+- Split View: two panes side by side, each an island, joined by a `divider-width` (12px) draggable grip in `border-strong`. The active pane has a 1px `accent` outline and a numbered `neutral` marker. Below two times `pane-min-width` the panes stack. In Split View the commit detail and Changes panels open under the graph, not beside it.
 - Shadows only on floating layers: `shadow-menu` for menus and popovers, `shadow-dialog` for dialogs. Resting islands use `shadow-island` (none in dark).
 
 ## Projects

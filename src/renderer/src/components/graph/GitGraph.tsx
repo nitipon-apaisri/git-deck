@@ -15,6 +15,7 @@ import { cn } from '@/lib/cn'
 import type { CheckoutTarget, DiffRequest, GraphCommit } from '@shared/types'
 import { refActions, type RefAction } from '../../lib/branchView'
 import type { BadgeView } from '../../lib/graphView'
+import { detailPlacement } from '../../lib/splitLayout'
 import { Button, Dialog, Icon, Menu, Spinner, type MenuEntry } from '../ui'
 import { useDiff, useStatus } from '../../state/changesData'
 import { DiffView } from '../repo/DiffView'
@@ -34,8 +35,10 @@ interface GitGraphProps {
   watchToken: number
   /** Tells the pane that the folder changed, so Info and the branches reload too. */
   onChanged: () => void
-  /** A narrow pane: no author or date column, and the detail opens as a drawer. */
+  /** A narrow pane: no author or date column. */
   narrow: boolean
+  /** Split View is on: the detail opens under the graph, as in a narrow pane. */
+  split: boolean
   /** Which pane this is. A swap changes it, and the scroll position is put back. */
   place: 1 | 2
   /** What a right-click may do. Absent: no menu (nothing is writable). */
@@ -72,6 +75,7 @@ export function GitGraph({
   watchToken,
   onChanged,
   narrow,
+  split,
   place,
   menuOps
 }: GitGraphProps) {
@@ -249,6 +253,7 @@ export function GitGraph({
     )
   }
 
+  const placement = detailPlacement(split, narrow)
   const firstLoad = rows.length === 0 && (loading || (!done && error === null))
   const emptyRepo = rows.length === 0 && done && error === null
   const failedFirst = rows.length === 0 && error !== null
@@ -262,11 +267,8 @@ export function GitGraph({
       <div
         className={cn(
           'relative grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,1fr)] gap-3',
-          selected && !narrow && 'grid-cols-[minmax(0,1fr)_minmax(280px,360px)]',
-          // A narrow pane: the detail covers the list as a drawer instead of squeezing it.
-          selected &&
-            narrow &&
-            '[&>aside]:absolute [&>aside]:inset-[0_0_0_auto] [&>aside]:z-[1] [&>aside]:w-[min(360px,100%)] [&>aside]:shadow-[var(--shadow-menu)]'
+          selected && placement === 'side' && 'grid-cols-[minmax(0,1fr)_minmax(280px,360px)]',
+          selected && placement === 'below' && 'grid-rows-[minmax(0,1fr)_minmax(160px,40%)]'
         )}
       >
         {firstLoad ? (

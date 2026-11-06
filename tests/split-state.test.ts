@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
   DIVIDER,
+  detailPlacement,
   MIN_PANE_HEIGHT,
   MIN_PANE_WIDTH,
   effectiveOrientation,
@@ -382,6 +383,13 @@ test('clear empties both panes and turns Split View off but keeps the layout', (
   assert.equal(next.active, 0)
   assert.equal(next.orientation, 'vertical')
   assert.equal(next.ratio, 0.4)
+})
+
+test('the detail opens below the graph in Split View or a narrow pane, else beside it', () => {
+  assert.equal(detailPlacement(false, false), 'side')
+  assert.equal(detailPlacement(true, false), 'below')
+  assert.equal(detailPlacement(false, true), 'below')
+  assert.equal(detailPlacement(true, true), 'below')
 })
 
 // shortcuts

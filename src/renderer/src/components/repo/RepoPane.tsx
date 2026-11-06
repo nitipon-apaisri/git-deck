@@ -246,6 +246,7 @@ export function RepoPane({
               watchToken={actions.watchToken}
               onChanged={actions.refresh}
               narrow={narrow}
+              split={split}
               place={paneNumber}
               menuOps={
                 linkedPath

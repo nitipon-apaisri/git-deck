@@ -67,6 +67,10 @@ export function trackTemplate(ratio: number, orientation: Orientation): string {
 
 export const isNarrow = (width: number): boolean => width > 0 && width < NARROW_PANE
 
+/** Split View and narrow panes have no room beside the graph, so the detail opens under it. */
+export const detailPlacement = (split: boolean, narrow: boolean): 'side' | 'below' =>
+  split || narrow ? 'below' : 'side'
+
 export type ShortcutAction = 'toggle' | 'pane1' | 'pane2' | 'search'
 
 export interface KeyLike {
