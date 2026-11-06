@@ -262,3 +262,12 @@ Newest first. Template:
   - Continue stages the files that were conflicted, then runs `commit --no-edit` (merge) or `cherry-pick --continue` with `GIT_EDITOR=true`. It refuses while a conflicted file still holds a `<<<<<<<` or `>>>>>>>` line, so unfixed markers are not committed. Deleted files count as resolved. Abort is confirmed in main and undoes the conflict fixes too.
   - The banner sits in the pane header, not in the graph, so it shows on every tab. Merge entries on a branch or remote badge say which branch they merge into, with a second entry that always makes a merge commit (`--no-ff`). Neither is offered with a detached HEAD.
 - **Not verified:** none of the new screens (Stash button and dialog, conflict banner, merge and cherry-pick menu entries) was run in a live Electron window, and no dark and light boards exist for them. The git, service and pure-logic layers are covered by temp-repo and unit tests.
+
+## Auto-refresh on disk changes
+
+- The app now follows edits made outside it. Main watches each linked folder with Node's `fs.watch` (recursive, no chokidar: `dependencies` stays `react` and `react-dom`, no native modules) and its git dir, resolved with `rev-parse --absolute-git-dir --git-common-dir` so linked worktrees work. `objects/`, `logs/`, `*.lock` and `FETCH_HEAD` in the git dir, and `.git/` and `node_modules` in the worktree, are ignored. Events are debounced 300 ms and sent as `repo:changed`.
+  - One watcher per folder, reference-counted in the service, so two panes on the same repo share it.
+  - Git runs with `GIT_OPTIONAL_LOCKS=0` so our own `git status` does not rewrite the index and trigger the watcher.
+  - The renderer keeps a `watchToken` apart from `reloadToken`. It reloads status, diff, branches, stashes and the operation banner. The graph reloads only when HEAD moves (`status.head`) or the WIP state flips, so typing in an editor does not reset graph pages and scroll. A branch created or deleted without a new commit does not redraw the graph until the next reload.
+  - A throttled window `focus` listener bumps the same token, as a net for folders that cannot be watched. Events are ignored while an app action runs, because that action refreshes at the end.
+- **Not verified:** not run in a live Electron window. The watcher is covered by a temp-repo test (edit, commit, checkout, stop).

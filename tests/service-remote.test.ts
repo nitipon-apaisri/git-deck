@@ -80,6 +80,7 @@ async function setup(opts: { stub: boolean; confirms?: boolean[] }) {
     store,
     ui,
     emitProgress: (p) => progress.push(p),
+    emitRepoChanged: () => {},
     git: gitOps
   })
   return {

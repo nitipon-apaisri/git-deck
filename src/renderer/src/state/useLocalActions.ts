@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { errorMessage } from '../lib/errors'
 import type { CloneProtocol, GitProgress } from '@shared/api'
 import type { CheckoutTarget, PullMode } from '@shared/types'
@@ -12,6 +12,8 @@ export interface LocalActions {
   error: string | null
   /** Changes after a fetch, a clone or a link, so tabs that read the folder reload. */
   reloadToken: number
+  /** Changes when files or refs change on disk: status, branches and stashes reload. */
+  watchToken: number
   clone: (protocol: CloneProtocol) => void
   link: () => void
   unlink: () => void
@@ -53,6 +55,39 @@ export function useLocalActions(
   const [progress, setProgress] = useState<GitProgress | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
+  // Bumped when files or refs change on disk. Separate from `reloadToken` so a plain edit
+  // refreshes status and branches without resetting the graph's pages and scroll.
+  const [watchToken, setWatchToken] = useState(0)
+  const busyRef = useRef<LocalBusy>(null)
+  useEffect(() => {
+    busyRef.current = busy
+  }, [busy])
+
+  useEffect(() => {
+    if (!linkedPath) return
+    const bump = (): void => {
+      // An app action refreshes everything when it ends.
+      if (busyRef.current === null) setWatchToken((n) => n + 1)
+    }
+    void window.api.local.watch(linkedPath).catch(() => {})
+    const off = window.api.local.onRepoChanged((p) => {
+      if (p === linkedPath) bump()
+    })
+    // Safety net for folders that cannot be watched: look again when the window returns.
+    let last = 0
+    const onFocus = (): void => {
+      const now = Date.now()
+      if (now - last < 1000) return
+      last = now
+      bump()
+    }
+    window.addEventListener('focus', onFocus)
+    return () => {
+      off()
+      window.removeEventListener('focus', onFocus)
+      void window.api.local.unwatch(linkedPath).catch(() => {})
+    }
+  }, [linkedPath])
 
   // Several panes may clone, pull or push at once: each keeps only its own repository's lines.
   useEffect(
@@ -241,6 +276,7 @@ export function useLocalActions(
     progress,
     error,
     reloadToken,
+    watchToken,
     clone,
     link,
     unlink,

@@ -63,6 +63,15 @@ const api: Api = {
     repos: () => call(IPC.localRepos),
     open: () => call(IPC.localOpen),
     remove: (repoKey) => call(IPC.localRemove, repoKey),
+    watch: (path) => call(IPC.localWatch, path),
+    unwatch: (path) => call(IPC.localUnwatch, path),
+    onRepoChanged: (cb) => {
+      const listener = (_event: unknown, path: string): void => cb(path)
+      ipcRenderer.on(IPC.repoChanged, listener)
+      return () => {
+        ipcRenderer.removeListener(IPC.repoChanged, listener)
+      }
+    },
     onGitProgress: (cb) => {
       const listener = (_event: unknown, progress: GitProgress): void => cb(progress)
       ipcRenderer.on(IPC.gitProgress, listener)

@@ -25,6 +25,7 @@ import type {
 } from '../shared/types'
 import * as realGit from './git'
 import { gitAuthEnv } from './gitAuth'
+import { watchRepo as realWatchRepo } from './watcher'
 import { createProvider as realCreateProvider, normalizeBaseUrl } from './providers'
 import type { GitProvider } from './providers/types'
 import type { Store } from './store'
@@ -32,7 +33,9 @@ import { allowHostTemporarily, setInsecureHosts } from './tls'
 import { isHttp } from './urls'
 
 /** `Api` minus the renderer-only event subscription. */
-export type MainApi = Omit<Api, 'local'> & { local: Omit<Api['local'], 'onGitProgress'> }
+export type MainApi = Omit<Api, 'local'> & {
+  local: Omit<Api['local'], 'onGitProgress' | 'onRepoChanged'>
+}
 
 export interface Ui {
   /** `null` when cancelled. */
@@ -82,6 +85,9 @@ export interface ServiceDeps {
   store: Store
   ui: Ui
   emitProgress(progress: GitProgress): void
+  emitRepoChanged(path: string): void
+  /** Replaceable in tests. */
+  watchRepo?: typeof realWatchRepo
   createProvider?: (account: Pick<Account, 'id' | 'type' | 'baseUrl'>, token: string) => GitProvider
   git?: GitOps
 }
@@ -227,6 +233,9 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
   const cloning = new Set<string>()
   /** Folders with a pull or push running: one network write at a time per folder. */
   const remoteBusy = new Set<string>()
+  const watchRepo = deps.watchRepo ?? realWatchRepo
+  /** One watcher per folder, shared by every pane that shows it. */
+  const watched = new Map<string, { count: number; stop: Promise<() => void> }>()
 
   /** Callers that ask for the same thing while it is running share one request. */
   function once<T>(key: string, job: () => Promise<T>): Promise<T> {
@@ -593,6 +602,28 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
         await store.removeLink(repoKey)
       }),
       clone: guard(cloneInto),
+      watch: guard(async (path) => {
+        linkedRepoKey(path)
+        const path_ = path as string
+        const entry = watched.get(path_)
+        if (entry) {
+          entry.count += 1
+          return
+        }
+        const stop = watchRepo(path_, () => deps.emitRepoChanged(path_)).catch(() => () => {})
+        watched.set(path_, { count: 1, stop })
+        await stop
+      }),
+      unwatch: guard(async (path) => {
+        // No link check: closing must work even after the folder was unlinked.
+        if (typeof path !== 'string') throw new Error('Invalid path')
+        const entry = watched.get(path)
+        if (!entry) return
+        entry.count -= 1
+        if (entry.count > 0) return
+        watched.delete(path)
+        ;(await entry.stop)()
+      }),
       info: guard(async (path) => {
         linkedRepoKey(path)
         return git.getLocalInfo(path)

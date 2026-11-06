@@ -30,6 +30,8 @@ interface GitGraphProps {
   visible: boolean
   /** Changes after a fetch, a clone or a link: the history is read again. */
   reloadToken: number
+  /** Changes when files or refs change on disk: status and diff reload, the graph only if HEAD moved. */
+  watchToken: number
   /** Tells the pane that the folder changed, so Info and the branches reload too. */
   onChanged: () => void
   /** A narrow pane: no author or date column, and the detail opens as a drawer. */
@@ -67,6 +69,7 @@ export function GitGraph({
   defaultBranch,
   visible,
   reloadToken,
+  watchToken,
   onChanged,
   narrow,
   place,
@@ -74,11 +77,11 @@ export function GitGraph({
 }: GitGraphProps) {
   const idPrefix = useId()
   const now = useNow()
-  const statusState = useStatus(path, reloadToken, visible)
+  const statusState = useStatus(path, reloadToken + watchToken, visible)
   const { status } = statusState
   // Uncommitted changes sit on top of HEAD as a "// WIP" row. No commits yet: no row.
   const wipHead = status && status.entries.length > 0 ? status.head : null
-  const graph = useGraph(path, reloadToken, wipHead)
+  const graph = useGraph(path, reloadToken, wipHead, status?.head ?? null)
   const { rows, loading, done, error, loadMore, reload } = graph
 
   const viewport = useRef<HTMLDivElement>(null)
@@ -104,7 +107,7 @@ export function GitGraph({
     diffFile && (diffFile.source === 'commit' ? diffFile.hash === selected?.hash : wipSelected)
       ? diffFile
       : null
-  const diff = useDiff(path, openDiff, reloadToken)
+  const diff = useDiff(path, openDiff, reloadToken + watchToken)
 
   // The last file was committed or discarded while the WIP row was selected.
   if (selectedHash === WIP_HASH && wipHead === null && status !== null) setSelectedHash(null)

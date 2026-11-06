@@ -40,7 +40,7 @@ async function setup(confirms: boolean[] = []) {
     reveal: () => {},
     openExternal: async () => {}
   }
-  const { api } = createService({ store, ui, emitProgress: () => {} })
+  const { api } = createService({ store, ui, emitProgress: () => {}, emitRepoChanged: () => {} })
   return { api, dir, featureHash, confirmed: () => confirmed }
 }
 
