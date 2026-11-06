@@ -532,6 +532,14 @@ function HostRow({ node, expanded, searching, state, onToggle, onRefresh }: Host
               onClick={onRefresh}
             />
           ) : null}
+          {!state?.loading && !state?.error ? (
+            <IconButton
+              label={`Refresh ${account.label}`}
+              icon="refresh"
+              className="size-6"
+              onClick={onRefresh}
+            />
+          ) : null}
           {known ? <span>{count}</span> : null}
         </>
       }
