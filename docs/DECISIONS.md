@@ -8,6 +8,17 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-07: Scope selector and filter moved to the toolbar
+
+- **Question:** where the project selector and the repository filter live, and what happens when the sidebar is collapsed.
+- **Options considered:** a sidebar-width block on the left of the toolbar, a compact row, or centred like a command bar.
+- **Decision and why:**
+  - Both sit on the left of the 48 px toolbar, after the macOS traffic-light inset: the existing `ScopeSwitcher` (210 px) and a new `RepoFilter` beside it, then the split-view buttons stay on the right. The sidebar keeps the project error banners and the "Project overview" button.
+  - The filter text moved from `Sidebar` to `App`, so the toolbar writes it and the sidebar reads it. Typing while the sidebar is collapsed opens it, so the results are never hidden. The `Cmd/Ctrl+F` shortcut still finds `[data-search-input]`, now always rendered.
+  - The block is hidden until there is an account, a local repository or a project scope, so an empty app has no dead filter. The toolbar drags the window, so labels are opted out of dragging as buttons already were.
+  - No board in `docs/ui-boards/` shows this layout. It uses tokens and existing components only. Gap logged.
+- **Checked in the window:** light and dark toolbar, the scope menu opens under the selector, typing filters the sidebar ("No repositories match"), and a collapsed sidebar reopens when typing. **Not checked:** dragging the window by the toolbar, a project scope with several projects, Escape behaviour by hand, a narrow window.
+
 ## 2026-11-07: Phase 16 as built
 
 - **Question:** what was built, what the checks showed, and what was not checked.

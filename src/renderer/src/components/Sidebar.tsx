@@ -11,7 +11,6 @@ import { readStored, writeStored } from '../state/storage'
 import { useNow } from '../state/useNow'
 import { BrandLogo } from './ui/BrandLogo'
 import { RepoProjectMenu } from './projects/RepoProjectMenu'
-import { ScopeSwitcher } from './projects/ScopeSwitcher'
 import {
   Button,
   ErrorBanner,
@@ -49,10 +48,7 @@ export interface SidebarProjects {
   /** The project list could not be read from main. */
   loadError: string | null
   onRetryLoad: () => void
-  /** `null` picks "All repositories". */
-  onScope: (projectId: string | null) => void
   onNewProject: (repoKeys?: string[]) => void
-  onManage: () => void
   /** Opens the project's form, where repositories are added. */
   onEditScope: () => void
   onOverview: () => void
@@ -70,6 +66,8 @@ interface SidebarProps {
   byAccount: Record<string, AccountRepos>
   /** repo key -> local folder */
   links: Record<string, string>
+  /** The filter text from the toolbar. */
+  query: string
   selectedKey: string | null
   /** repo key -> the pane (1 or 2) that shows it. Empty when split view is off. */
   paneMarks: Record<string, 1 | 2>
@@ -91,6 +89,7 @@ export function Sidebar({
   accounts,
   byAccount,
   links,
+  query,
   selectedKey,
   paneMarks,
   onSelect,
@@ -102,7 +101,6 @@ export function Sidebar({
   onRefreshAll,
   projects: proj
 }: SidebarProps) {
-  const [query, setQuery] = useState('')
   const [menu, setMenu] = useState<{ repo: Repo; x: number; y: number } | null>(null)
   const [collapsed, setCollapsed] = useState<Set<string>>(readCollapsed)
   const now = useNow()
@@ -186,31 +184,6 @@ export function Sidebar({
       ) : (
         <>
           <div className="flex flex-col gap-2 px-2.5 pt-2.5 pb-2">
-            <ScopeSwitcher
-              projects={proj.projects}
-              scope={scope}
-              onSelect={proj.onScope}
-              onNew={() => proj.onNewProject()}
-              onManage={proj.onManage}
-            />
-            <label className="flex h-8 items-center gap-2 rounded-md border border-[var(--border-strong)] px-2.5 text-muted-foreground focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[var(--focus-ring)]">
-              <Icon name="search" size="sm" />
-              <input
-                type="search"
-                className="min-w-0 flex-1 border-0 bg-transparent text-foreground outline-0 placeholder:text-muted-foreground"
-                data-search-input
-                onKeyDown={(e) => {
-                  // Escape clears the filter, and a second one leaves the field.
-                  if (e.key !== 'Escape') return
-                  if (query !== '') setQuery('')
-                  else e.currentTarget.blur()
-                }}
-                aria-label={scope ? 'Filter repositories in this project' : 'Filter repositories'}
-                placeholder={scope ? 'Filter in project' : 'Filter repositories'}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-            </label>
             {proj.loadError ? (
               <ErrorBanner onRetry={proj.onRetryLoad}>
                 Could not load your projects: {proj.loadError}

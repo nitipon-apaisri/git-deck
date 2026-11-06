@@ -53,6 +53,7 @@ export function App() {
     setSettingsSection(section)
     setDialog('settings')
   }
+  const [query, setQuery] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(() => readStored(SIDEBAR_KEY) !== 'closed')
 
   function toggleSidebar(): void {
@@ -224,6 +225,21 @@ export function App() {
           split.setOrientation(layout.orientation === 'horizontal' ? 'vertical' : 'horizontal')
         }
         onSwap={split.swap}
+        showScope={state.ready && (state.accounts.length > 0 || repos.length > 0 || scope !== null)}
+        projects={projects}
+        scope={scope}
+        onScope={chooseScope}
+        onNewProject={() => setForm({ editId: null, repoKeys: [] })}
+        onManage={() => setDialog('projects')}
+        query={query}
+        onQueryChange={(value) => {
+          setQuery(value)
+          // The results show in the sidebar, so open it when someone starts typing.
+          if (value !== '' && !sidebarOpen) {
+            setSidebarOpen(true)
+            writeStored(SIDEBAR_KEY, 'open')
+          }
+        }}
       />
       <div className="flex min-h-0 flex-1 gap-1.5 px-1.5 pb-1.5">
         <Rail
@@ -241,6 +257,7 @@ export function App() {
             accounts={state.accounts}
             byAccount={state.byAccount}
             links={state.links}
+            query={query}
             selectedKey={selectedKey}
             paneMarks={paneMarks}
             onSelect={selectRepo}
@@ -259,9 +276,7 @@ export function App() {
               loadError: projectsApi.loadError,
               onRetryLoad: () => void projectsApi.reload(),
               onDismissError: () => setProjectError(null),
-              onScope: chooseScope,
               onNewProject: (repoKeys = []) => setForm({ editId: null, repoKeys }),
-              onManage: () => setDialog('projects'),
               onEditScope: () => scope && setForm({ editId: scope.id, repoKeys: [] }),
               onOverview: () => setOverviewOn(true),
               onToggleMember: (projectId, repoKey, member) =>
