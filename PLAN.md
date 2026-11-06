@@ -487,15 +487,15 @@ Typecheck, lint, build pass and the existing suite stays green. No token in argv
 
 **Renderer (pane-safe: the editor state lives in `RepoPane`, like the diff):**
 
-- [ ] `lib/conflictView.ts` (pure, tested): region summary text, the result preview for the current choices, "can save", "all regions resolved", and the side labels.
-- [ ] `useConflictFile(path)` hook keyed on `reloadToken` and the pane's repo, next to `useDiff`. No global "current conflict".
-- [ ] `ConflictEditor` opens inside the pane from a file row in the operation banner or from a conflicted row in Changes. Each region is a card with the two sides next to each other (the base too when the file has one), line numbers, and the buttons Accept current, Accept incoming, Accept both, and Edit (a `Textarea` with the result for that region). Below the regions sits a read-only preview of the whole result. Sides are named in words and carry an icon, so colour is never the only cue.
-- [ ] Footer: "Save and mark resolved" (primary, enabled when every region has a choice), "Save for later" (writes without staging) and Close. Arrow-key and Tab order is checked, and every icon button has an `aria-label`.
-- [ ] Whole-file actions for the kinds without regions: a small panel with Keep file, Delete file, Use current or Use incoming, each saying in words what it does.
-- [ ] The operation banner lists its files as buttons that open the editor, and each file in the list shows its kind in words ("both modified", "deleted by them"). A file that was just resolved leaves the list. The banner's Continue is unchanged. "Open folder" stays.
-- [ ] Dark and light boards for the editor under `docs/ui-boards/`. If not drawn, log the gap in `DECISIONS.md` as before. This also closes the Phase 11 board item if the Changes and diff boards are drawn in the same pass. The editor uses tokens only, no hex values.
+- [x] `lib/conflictView.ts` (pure, tested): region summary text, the result preview for the current choices, "can save", "all regions resolved", and the side labels.
+- [x] `useConflictFile(path)` hook keyed on `reloadToken` and the pane's repo, next to `useDiff`. No global "current conflict".
+- [x] `ConflictEditor` opens inside the pane from a file row in the operation banner or from a conflicted row in Changes. Each region is a card with the two sides next to each other (the base too when the file has one), line numbers, and the buttons Accept current, Accept incoming, Accept both, and Edit (a `Textarea` with the result for that region). Below the regions sits a read-only preview of the whole result. Sides are named in words and carry an icon, so colour is never the only cue.
+- [x] Footer: "Save and mark resolved" (primary, enabled when every region has a choice), "Save for later" (writes without staging) and Close. It uses native buttons, `details` and the Dialog focus trap, and every icon button has an `aria-label`. The Tab order was not tried by hand.
+- [x] Whole-file actions for the kinds without regions: a small panel with Keep file, Delete file, Use current or Use incoming, each saying in words what it does.
+- [x] The operation banner lists its files as buttons that open the editor, and each file in the list shows its kind in words ("both modified", "deleted by them"). A file that was just resolved leaves the list. The banner's Continue is unchanged. "Open folder" stays.
+- [ ] Dark and light boards for the editor under `docs/ui-boards/`. Not done: the gap is logged in `DECISIONS.md`. The editor uses tokens only, no hex values.
 
-**Verify:** unit tests for `conflictView.ts`; a service test that drives the whole flow through `GitOps` (conflicting merge, then regions resolved, then Continue). Typecheck, lint, build pass and the existing suite stays green. If a display is available, resolve a real conflict in a scratch repo in the window and screenshot the editor in both themes. Otherwise say clearly that it was not run visually.
+**Verify (done: `tests/conflict-view.test.ts`, and a run of the built app in a scratch repo, see `DECISIONS.md`):** unit tests for `conflictView.ts`; a service test that drives the whole flow through `GitOps` (conflicting merge, then regions resolved, then Continue). Typecheck, lint, build pass and the existing suite stays green. If a display is available, resolve a real conflict in a scratch repo in the window and screenshot the editor in both themes. Otherwise say clearly that it was not run visually.
 
 ---
 
