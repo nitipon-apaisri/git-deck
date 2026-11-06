@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Tabs as TabsPrimitive } from 'radix-ui'
+import * as TabsPrimitive from '@radix-ui/react-tabs'
 
 export interface TabItem {
   id: string

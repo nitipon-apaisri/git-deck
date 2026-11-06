@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { RadioGroup } from 'radix-ui'
+import * as RadioGroup from '@radix-ui/react-radio-group'
 import { cn } from '@/lib/cn'
 
 export interface Choice<T extends string> {

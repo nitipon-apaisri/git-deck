@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
-import { DropdownMenu } from 'radix-ui'
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { cn } from '@/lib/cn'
 import { Icon } from './Icon'
 

@@ -1,4 +1,4 @@
-import { Progress } from 'radix-ui'
+import * as Progress from '@radix-ui/react-progress'
 
 interface ProgressBarProps {
   /** 0 to 100. `null` shows a moving bar for work that reports no percentage. */
