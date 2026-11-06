@@ -16,7 +16,7 @@ Desktop Git client (Electron + React + TypeScript) for GitHub, GitLab.com and se
 ## Workflow
 
 - Do the phase you are asked to do, run its **Verify** steps, tick its boxes in `PLAN.md`, then stop.
-- Keep dependencies minimal. Runtime dependencies are `react` and `react-dom` only. Fonts and build tools are devDependencies. No native modules.
+- Keep dependencies minimal. The packaged app has no runtime dependencies beyond what Vite bundles: `package.json` `dependencies` stays `react` and `react-dom`. UI libraries (shadcn's Radix, Tailwind, `class-variance-authority`, `clsx`, `tailwind-merge`), fonts and build tools are devDependencies. No native modules.
 - If something is ambiguous, pick the default from `PLAN.md` and record it in `docs/DECISIONS.md`.
 - If there is no display, say plainly what was not checked visually.
 
@@ -71,7 +71,7 @@ Format: `{emoji} ({type}): {imperative, concise message}`. One logical change an
 
 ## UI rules
 
-- Style with tokens only: `var(--island)`, `var(--text)` and so on from `tokens.css`. No hex values in components.
+- Style with shadcn/ui components and Tailwind classes. Colours come only from the tokens in `tokens.css` (`var(--island)`, `var(--text)` and so on, or the shadcn names mapped onto them in `shadcn.css`). No hex values in components. Theme is `data-theme` on `<html>`.
 - Theme is `data-theme` on `<html>`, set before first paint.
 - Reuse the components in `src/renderer/src/components/ui/`. Status uses a word or icon as well as colour. Icon-only buttons have `aria-label`.
 
