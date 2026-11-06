@@ -31,6 +31,8 @@ export function Modal({ onClose, className, label, children }: ModalProps) {
           onInteractOutside={(event) => event.preventDefault()}
           onCloseAutoFocus={(event) => {
             event.preventDefault()
+            // Not if something else took focus meanwhile, such as the next dialog.
+            if (document.activeElement !== document.body) return
             if (opener instanceof HTMLElement && opener.isConnected) opener.focus()
           }}
           onOpenAutoFocus={(event) => {

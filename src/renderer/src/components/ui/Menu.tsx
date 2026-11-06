@@ -99,6 +99,8 @@ export function Menu({ label, at, entries, minWidth, onClose }: MenuProps) {
           {...openAutoFocus}
           onCloseAutoFocus={(event) => {
             event.preventDefault()
+            // Not if something else took focus meanwhile: a dialog this menu opened has it now.
+            if (document.activeElement !== document.body) return
             if (opener instanceof HTMLElement && opener.isConnected) opener.focus()
           }}
           onKeyDown={(event: KeyboardEvent) => {
