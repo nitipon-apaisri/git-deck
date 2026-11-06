@@ -113,9 +113,9 @@ export function Sidebar({
     const repos = view
       ? view.reposByAccount
       : Object.fromEntries(Object.entries(byAccount).map(([id, a]) => [id, a.repos]))
-    // Local repositories lead the list. They are not part of any project.
+    // Local repositories lead the list, in a project too when it holds some.
     const withLocal =
-      !view && (repos[LOCAL_ACCOUNT_ID]?.length ?? 0) > 0 ? [LOCAL_GROUP, ...accounts] : accounts
+      (repos[LOCAL_ACCOUNT_ID]?.length ?? 0) > 0 ? [LOCAL_GROUP, ...accounts] : accounts
     const tree = buildTree(withLocal, repos, query)
     // In a project, a host with none of its repositories would be an empty heading.
     return view ? tree.filter((node) => node.total > 0) : tree
@@ -398,14 +398,14 @@ function SidebarRow({
   const local = isLocalRepo(repo)
   return (
     <TreeRow
-      level="repo"
+      level={row.flat ? 'repo-flat' : 'repo'}
       selected={repo.key === selectedKey}
       onClick={() => onSelect(repo.key)}
       leading={<Icon name={local ? 'folder' : 'repo'} size="sm" />}
-      title={local ? repo.description : repo.fullName}
+      title={repo.fullName}
       onContextMenu={(e) => {
         e.preventDefault()
-        if (!local) onMenu(repo, e.clientX, e.clientY)
+        onMenu(repo, e.clientX, e.clientY)
       }}
       action={
         <>
@@ -416,18 +416,17 @@ function SidebarRow({
               className="size-6"
               onClick={() => onRemoveLocal(repo.key)}
             />
-          ) : (
-            <IconButton
-              label={`Project options for ${repo.name}`}
-              icon="more"
-              className="size-6"
-              aria-haspopup="menu"
-              onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect()
-                onMenu(repo, rect.left, rect.bottom + 4)
-              }}
-            />
-          )}
+          ) : null}
+          <IconButton
+            label={`Project options for ${repo.name}`}
+            icon="more"
+            className="size-6"
+            aria-haspopup="menu"
+            onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect()
+              onMenu(repo, rect.left, rect.bottom + 4)
+            }}
+          />
           <IconButton
             label={`Open ${repo.name} in split view`}
             icon="columns"

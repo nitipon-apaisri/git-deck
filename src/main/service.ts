@@ -393,7 +393,35 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
     })
   }
 
+  /** A summary for a repository opened from a folder, read from git alone. */
+  function fetchLocalSummary(repoKey: string): Promise<Cached<RepoSummary>> {
+    return once(`summary:${repoKey}`, async () => {
+      const path = store.getLinks()[repoKey]
+      if (!store.getLocalRepos().some((r) => r.key === repoKey) || !path) {
+        throw new Error('Repository not found. Open the folder again and try again.')
+      }
+      const info = await git.getLocalInfo(path)
+      const summary: RepoSummary = {
+        commitCount: info.commitCount,
+        contributorCount: null,
+        contributors: [],
+        branchCount: info.localBranches,
+        tagCount: info.tags,
+        openChangeRequests: null,
+        languages: [],
+        license: null,
+        createdAt: info.firstCommitAt ? new Date(info.firstCommitAt * 1000).toISOString() : null,
+        lastActivityAt: info.lastCommitAt ? new Date(info.lastCommitAt * 1000).toISOString() : null,
+        sizeKb: info.sizeKb,
+        topics: []
+      }
+      await store.setCachedSummary(repoKey, summary)
+      return store.getCachedSummary(repoKey) ?? { data: summary, fetchedAt: Date.now() }
+    })
+  }
+
   function fetchSummary(repoKey: string): Promise<Cached<RepoSummary>> {
+    if (parseRepoKey(repoKey).accountId === LOCAL_ACCOUNT) return fetchLocalSummary(repoKey)
     const repo = requireRepo(repoKey)
     return once(`summary:${repoKey}`, async () => {
       const account = requireAccount(repo.accountId)
@@ -550,7 +578,8 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
 
   function checkKeys(keys: unknown, accountsMustExist: boolean): string[] {
     if (!Array.isArray(keys)) throw new Error('Invalid repository list')
-    const known = new Set(store.listAccounts().map((a) => a.id))
+    // A repository opened from a folder has the account id `local`, which always exists.
+    const known = new Set([...store.listAccounts().map((a) => a.id), LOCAL_ACCOUNT])
     for (const key of keys) {
       const { accountId } = parseRepoKey(key)
       if (accountsMustExist && !known.has(accountId)) {

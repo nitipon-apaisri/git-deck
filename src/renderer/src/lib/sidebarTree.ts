@@ -20,7 +20,8 @@ export interface AccountNode {
 export type TreeRow =
   | { kind: 'host'; key: string; node: AccountNode; expanded: boolean }
   | { kind: 'namespace'; key: string; node: NamespaceNode; expanded: boolean }
-  | { kind: 'repo'; key: string; repo: Repo }
+  /** `flat` repositories sit straight under their host, with no group row between. */
+  | { kind: 'repo'; key: string; repo: Repo; flat: boolean }
 
 const byName = (a: string, b: string): number =>
   a.localeCompare(b, undefined, { sensitivity: 'base' })
@@ -92,11 +93,17 @@ export function flattenTree(
     const hostOpen = searching || !collapsed.has(node.account.id)
     rows.push({ kind: 'host', key: node.account.id, node, expanded: hostOpen })
     if (!hostOpen) continue
+    if (node.account.id === LOCAL_ACCOUNT_ID) {
+      // Local repositories are listed by name alone: their parent folder is no group.
+      const repos = node.namespaces.flatMap((ns) => ns.repos).sort((a, b) => byName(a.name, b.name))
+      for (const repo of repos) rows.push({ kind: 'repo', key: repo.key, repo, flat: true })
+      continue
+    }
     for (const ns of node.namespaces) {
       const nsOpen = searching || !collapsed.has(ns.key)
       rows.push({ kind: 'namespace', key: ns.key, node: ns, expanded: nsOpen })
       if (!nsOpen) continue
-      for (const repo of ns.repos) rows.push({ kind: 'repo', key: repo.key, repo })
+      for (const repo of ns.repos) rows.push({ kind: 'repo', key: repo.key, repo, flat: false })
     }
   }
   return rows

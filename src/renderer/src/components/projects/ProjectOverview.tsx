@@ -18,6 +18,7 @@ import {
   type SortKey,
   type SortState
 } from '../../lib/projectRows'
+import { isLocalRepo } from '../../lib/localRepos'
 import { remoteIdOf } from '../../lib/projectForm'
 import { useFetchAll } from '../../state/useFetchAll'
 import { useNow } from '../../state/useNow'
@@ -378,7 +379,9 @@ function Row({
               {repo.name}
             </button>
             <span className="truncate text-[12px] text-muted-foreground">
-              {account?.label ?? repo.accountId} · {repo.namespace}
+              {isLocalRepo(repo)
+                ? 'Local'
+                : `${account?.label ?? repo.accountId} · ${repo.namespace}`}
             </span>
           </span>
           {loading ? <Spinner label={`Loading ${repo.name}`} /> : null}
