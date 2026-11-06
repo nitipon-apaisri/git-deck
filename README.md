@@ -2,7 +2,7 @@
 
 A desktop Git client for GitHub, GitLab.com and self-hosted GitLab. Browse every repository you can reach, read its commit graph, group repositories from different hosts into Projects, and put two repositories side by side.
 
-GitDeck reads. It does not stage, commit, push or resolve conflicts (see [Known limits](#known-limits-and-roadmap)).
+GitDeck is read-only today. Staging, commit, diff, branches, push and pull, stash, cherry-pick and merge are planned as Phases 11 to 13 below, and it will not resolve merge conflicts itself (see [Known limits](#known-limits-and-roadmap)).
 
 Built with Electron, React and TypeScript.
 
@@ -125,7 +125,7 @@ Known limits:
 - Split View has two panes at most.
 - The graph shows the history that `git log` reports for the linked folder. Detached HEAD and graphs with more than about ten lanes at once were not checked.
 
-Not planned for this version: staging and committing, a diff viewer, merge-conflict tools, rebase and cherry-pick, creating pull or merge requests, OAuth sign-in (tokens only), a SQLite cache, auto-update and installers, more than two panes, drag-and-drop between projects, and cloning every repository of a project at once.
+Not planned for this version: a merge-conflict editor, rebase, line-level staging, creating pull or merge requests, OAuth sign-in (tokens only), a SQLite cache, auto-update and installers, more than two panes, drag-and-drop between projects, and cloning every repository of a project at once.
 
 ### Packaging later
 
@@ -145,3 +145,6 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 8: Split View (two repos at once)
 - [x] Phase 9: Projects
 - [x] Phase 10: Polish and docs
+- [ ] Phase 11: Changes, diff, stage, commit
+- [ ] Phase 12: Branches, checkout, push and pull
+- [ ] Phase 13: Stash, cherry-pick, merge
