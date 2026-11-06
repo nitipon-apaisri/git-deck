@@ -2,7 +2,6 @@ import { useState, type ReactNode } from 'react'
 import type { Account, AccountInput } from '@shared/types'
 import { errorMessage } from '../../lib/errors'
 import {
-  PRESETS,
   TOKEN_SCOPES,
   hostTileOf,
   hostnameOf,
@@ -38,11 +37,15 @@ type Status =
   | { kind: 'ok'; text: ReactNode }
   | { kind: 'error'; text: string }
 
-const PRESET_CHOICES: readonly Choice<PresetId>[] = PRESETS.map((p) => ({
+// Two columns, grouped by product: GitHub on the left, GitLab on the right, each with its
+// self-hosted variant underneath.
+const PRESET_ORDER: readonly PresetId[] = ['github', 'gitlab', 'github-enterprise', 'gitlab-self']
+
+const PRESET_CHOICES: readonly Choice<PresetId>[] = PRESET_ORDER.map(presetOf).map((p) => ({
   value: p.id,
   title: p.title,
   sub: p.sub,
-  leading: <HostTile tile={p.tile} host={p.host} size={28} />
+  leading: <HostTile tile={p.tile} host={p.host} size={28} brand={p.type} />
 }))
 
 function scopeList(scopes: readonly string[]): ReactNode {
@@ -175,7 +178,7 @@ export function IntegrationsSection({
               const { tile, host: kind } = hostTileOf(account.type, account.baseUrl)
               return (
                 <li key={account.id} className={styles.account}>
-                  <HostTile tile={tile} host={kind} size={28} />
+                  <HostTile tile={tile} host={kind} size={28} brand={account.type} />
                   <span className={styles.accountText}>
                     <span className={styles.accountName}>{account.label}</span>
                     <span className={styles.accountSub}>

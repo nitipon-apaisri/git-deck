@@ -9,6 +9,7 @@ import { buildTree, flattenTree, type AccountNode, type TreeRow as Row } from '.
 import type { AccountRepos } from '../lib/workspaceReducer'
 import { readStored, writeStored } from '../state/storage'
 import { useNow } from '../state/useNow'
+import { BrandLogo } from './ui/BrandLogo'
 import { RepoProjectMenu } from './projects/RepoProjectMenu'
 import { ScopeSwitcher } from './projects/ScopeSwitcher'
 import {
@@ -150,6 +151,8 @@ export function Sidebar({
     null
   )
 
+  const isEmpty = accounts.length === 0 && !hasLocal && !scope
+
   return (
     <Island as="aside" aria-label="Repositories" className={styles.sidebar}>
       {loading ? (
@@ -158,14 +161,27 @@ export function Sidebar({
         <div className={styles.loadError}>
           <ErrorBanner onRetry={onRetryLoad}>Could not load your accounts: {loadError}</ErrorBanner>
         </div>
-      ) : accounts.length === 0 && !hasLocal && !scope ? (
+      ) : isEmpty ? (
         <div className={styles.empty}>
           <h2 className={styles.emptyTitle}>No repositories</h2>
           <p className={styles.emptyText}>
             Open a local repository, or add an account in Settings.
           </p>
-          <Button variant="primary" icon="folder" onClick={onOpenLocal}>
-            Open
+          <Button
+            variant="primary"
+            icon="folder"
+            className={styles.emptyAction}
+            onClick={onOpenLocal}
+          >
+            Open a repository
+          </Button>
+          <Button className={styles.emptyAction} onClick={onConnect}>
+            Connect to
+            <BrandLogo brand="gitlab" />
+            GitLab
+            <span aria-hidden="true">/</span>
+            <BrandLogo brand="github" />
+            GitHub
           </Button>
         </div>
       ) : (
@@ -272,36 +288,38 @@ export function Sidebar({
           </nav>
         </>
       )}
-      <div className={styles.footer}>
-        {scope ? (
-          <Button variant="ghost" icon="plus" onClick={proj.onEditScope}>
-            Add repositories
-          </Button>
-        ) : (
-          <>
-            <Button variant="ghost" icon="plus" onClick={onConnect}>
-              Connect account
+      {isEmpty ? null : (
+        <div className={styles.footer}>
+          {scope ? (
+            <Button variant="ghost" icon="plus" onClick={proj.onEditScope}>
+              Add repositories
             </Button>
-            <Button
-              variant="ghost"
-              icon="folder"
-              aria-label="Open a local repository"
-              onClick={onOpenLocal}
-            >
-              Open
-            </Button>
-          </>
-        )}
-        <span
-          className={styles.updated}
-          title={lastFetched !== null ? `Updated ${timeAgo(lastFetched, now)}` : undefined}
-        >
-          {anyLoading ? 'Updating…' : lastFetched !== null ? timeAgo(lastFetched, now) : ''}
-        </span>
-        {accounts.length > 0 ? (
-          <IconButton label="Refresh all" icon="refresh" onClick={onRefreshAll} />
-        ) : null}
-      </div>
+          ) : (
+            <>
+              <Button variant="ghost" icon="plus" onClick={onConnect}>
+                Connect account
+              </Button>
+              <Button
+                variant="ghost"
+                icon="folder"
+                aria-label="Open a local repository"
+                onClick={onOpenLocal}
+              >
+                Open
+              </Button>
+            </>
+          )}
+          <span
+            className={styles.updated}
+            title={lastFetched !== null ? `Updated ${timeAgo(lastFetched, now)}` : undefined}
+          >
+            {anyLoading ? 'Updating…' : lastFetched !== null ? timeAgo(lastFetched, now) : ''}
+          </span>
+          {accounts.length > 0 ? (
+            <IconButton label="Refresh all" icon="refresh" onClick={onRefreshAll} />
+          ) : null}
+        </div>
+      )}
       {menu ? (
         <RepoProjectMenu
           repo={menu.repo}

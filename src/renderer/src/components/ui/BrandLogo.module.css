@@ -1,0 +1,14 @@
+.logo {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.onDark {
+  display: none;
+}
+:global([data-theme='dark']) .onLight {
+  display: none;
+}
+:global([data-theme='dark']) .onDark {
+  display: inline;
+}
