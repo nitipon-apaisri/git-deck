@@ -7,6 +7,29 @@ GitDeck is a desktop Git client for people who work across GitHub, GitLab.com an
 - **Two themes, one file.** Every component reads tokens only. Use the `dark` theme by default and switch with `data-theme="light"` on the root. Never hard-code a hex value.
 - **Pane-safe.** Anything that shows one repository must work at 360px wide (`pane-min-width`) and must not assume it owns the window.
 
+## shadcn/ui and Tailwind
+
+The app builds its components with shadcn/ui (Radix) and Tailwind v4. Tokens stay the source of truth: `src/renderer/src/shadcn.css` points shadcn's variable names at them, on `:root` and on any `[data-theme]` element so a themed preview re-resolves, and dark is `data-theme='dark'` through a custom `dark:` variant.
+
+| shadcn name | Token |
+| --- | --- |
+| `background`, `foreground` | `window`, `text` |
+| `card`, `popover` | `island`, `island-raised` |
+| `secondary`, `muted` | `island-raised` |
+| `muted-foreground` | `text-muted` |
+| `primary`, `primary-foreground` | `primary`, `on-primary` |
+| `accent` | `hover` (a fill, not the blue `accent` token) |
+| `border`, `input` | `line` |
+| `ring` | `focus-ring` |
+| `destructive` | `danger` |
+
+Rules that came out of the migration:
+
+- Colours come only from tokens: `bg-card`, or `bg-[var(--selection)]` for a token with no shadcn name. No hex values.
+- Use `text-[12px]`, never `text-xs` or `text-sm`: Tailwind's text sizes also set a line height, and the design inherits the 18px body line height.
+- Inside a `data-theme` element (the theme preview) use the raw tokens, which re-resolve there.
+- Element resets live in `@layer base` in `global.css`, so a utility such as `outline-0` beats them.
+
 ## Color
 
 - Ground: `window` behind everything, `island` for panels, `island-raised` for inputs and stat cards placed on an island, `hover` for hover fills. Rows are never striped.
