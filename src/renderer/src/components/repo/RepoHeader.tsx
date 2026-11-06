@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { Account, Repo } from '@shared/types'
 import { visibilityLabel } from '../../lib/repoView'
 import { Badge, Button, Icon, IconButton } from '../ui'
@@ -12,6 +13,8 @@ interface RepoHeaderProps {
   onOpenWeb: () => void
   /** Shows a close button when set (Split View only). */
   onClose?: () => void
+  /** The repository actions (branch, fetch, pull, push, open folder), on the same row. */
+  children?: ReactNode
 }
 
 export function RepoHeader({
@@ -20,12 +23,13 @@ export function RepoHeader({
   local = false,
   compact = false,
   onOpenWeb,
-  onClose
+  onClose,
+  children
 }: RepoHeaderProps) {
   return (
     <header className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <div className="flex min-w-0 flex-col gap-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
             <h1 className="m-0 text-[20px] leading-[26px] font-semibold [overflow-wrap:anywhere]">
               {repo.name}
@@ -41,10 +45,13 @@ export function RepoHeader({
             {repo.archived ? <Badge tone="warning">Archived</Badge> : null}
             {repo.fork ? <Badge>Fork</Badge> : null}
           </div>
-          <p className="m-0 text-[12px] leading-4 text-muted-foreground [overflow-wrap:anywhere]">
-            {local ? 'Not on a host' : `${account ? `${account.label} · ` : ''}${repo.fullName}`}
-          </p>
+          {local ? null : (
+            <p className="m-0 text-[12px] leading-4 text-muted-foreground [overflow-wrap:anywhere]">
+              {`${account ? `${account.label} · ` : ''}${repo.fullName}`}
+            </p>
+          )}
         </div>
+        {children}
         <div className="flex flex-none items-center gap-1">
           {local ? null : compact ? (
             <IconButton label="Open on web" icon="external" onClick={onOpenWeb} />

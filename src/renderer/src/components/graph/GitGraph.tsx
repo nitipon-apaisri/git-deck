@@ -4,7 +4,6 @@ import { useCommitDetail, useGraph } from '../../state/graphData'
 import { useNow } from '../../state/useNow'
 import {
   ROW_HEIGHT,
-  loadedText,
   moveIndex,
   needsNextPage,
   scrollToRow,
@@ -15,7 +14,7 @@ import { cn } from '@/lib/cn'
 import type { CheckoutTarget, GraphCommit } from '@shared/types'
 import { refActions, type RefAction } from '../../lib/branchView'
 import type { BadgeView } from '../../lib/graphView'
-import { Button, Dialog, Icon, IconButton, Menu, Spinner, type MenuEntry } from '../ui'
+import { Button, Dialog, Icon, Menu, Spinner, type MenuEntry } from '../ui'
 import { useDiff } from '../../state/changesData'
 import { DiffView } from '../repo/DiffView'
 import { CommitDetailPanel } from './CommitDetailPanel'
@@ -29,8 +28,6 @@ interface GitGraphProps {
   visible: boolean
   /** Changes after a fetch, a clone or a link: the history is read again. */
   reloadToken: number
-  fetching: boolean
-  onFetch: () => void
   /** A narrow pane: no author or date column, and the detail opens as a drawer. */
   narrow: boolean
   /** Which pane this is. A swap changes it, and the scroll position is put back. */
@@ -60,8 +57,6 @@ export function GitGraph({
   defaultBranch,
   visible,
   reloadToken,
-  fetching,
-  onFetch,
   narrow,
   place,
   menuOps
@@ -231,20 +226,6 @@ export function GitGraph({
       data-detail={selected ? 'open' : 'closed'}
       data-narrow={narrow ? 'true' : undefined}
     >
-      <div className="flex flex-none items-center gap-2">
-        <IconButton label="Reload graph" icon="refresh" disabled={loading} onClick={reload} />
-        <Button icon="download" disabled={fetching} onClick={onFetch}>
-          {fetching ? 'Fetching…' : 'Fetch'}
-        </Button>
-        {loading || fetching ? <Spinner label={fetching ? 'Fetching' : 'Loading commits'} /> : null}
-        <span
-          className="ml-auto text-[12px] whitespace-nowrap text-muted-foreground"
-          aria-live="polite"
-        >
-          {loadedText(rows.length, done || error !== null)}
-        </span>
-      </div>
-
       <div
         className={cn(
           'relative grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,1fr)] gap-3',

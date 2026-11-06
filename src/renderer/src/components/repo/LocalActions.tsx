@@ -134,7 +134,7 @@ export function LocalActions({
     const pushCount = state.ahead > 0 ? ` ↑${state.ahead}` : ''
 
     return (
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
         <Button
           icon="git-branch"
           disabled={working || !branches}
@@ -150,29 +150,16 @@ export function LocalActions({
           <Icon name="chevron-down" size="xs" />
         </Button>
         {compact ? (
-          <>
-            <IconButton
-              label="Open folder"
-              icon="folder"
-              disabled={working}
-              onClick={actions.openFolder}
-            />
-            <IconButton
-              label={busy === 'fetch' ? 'Fetching…' : 'Fetch'}
-              icon="refresh"
-              disabled={working}
-              onClick={actions.fetch}
-            />
-          </>
+          <IconButton
+            label={busy === 'fetch' ? 'Fetching…' : 'Fetch'}
+            icon="refresh"
+            disabled={working}
+            onClick={actions.fetch}
+          />
         ) : (
-          <>
-            <Button icon="folder" disabled={working} onClick={actions.openFolder}>
-              Open folder
-            </Button>
-            <Button icon="refresh" disabled={working} onClick={actions.fetch}>
-              {busy === 'fetch' ? 'Fetching…' : 'Fetch'}
-            </Button>
-          </>
+          <Button icon="refresh" disabled={working} onClick={actions.fetch}>
+            {busy === 'fetch' ? 'Fetching…' : 'Fetch'}
+          </Button>
         )}
         <span className="inline-flex items-center" role="group" aria-label="Pull">
           <Button
@@ -229,9 +216,19 @@ export function LocalActions({
             Unlink
           </Button>
         )}
-        <span className="hash min-w-0 flex-1 truncate text-muted-foreground" title={linkedPath}>
-          {linkedPath}
-        </span>
+        {compact ? (
+          <IconButton
+            label="Open folder"
+            icon="folder"
+            className="ml-auto"
+            disabled={working}
+            onClick={actions.openFolder}
+          />
+        ) : (
+          <Button icon="folder" className="ml-auto" disabled={working} onClick={actions.openFolder}>
+            Open folder
+          </Button>
+        )}
         {menu ? (
           <Menu
             label={menu.id === 'branch' ? 'Branches' : menu.id === 'pull' ? 'Pull' : 'Push'}
