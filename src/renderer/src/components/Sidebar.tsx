@@ -147,13 +147,13 @@ export function Sidebar({
         </div>
       ) : accounts.length === 0 && !scope ? (
         <div className={styles.empty}>
-          <h2 className={styles.emptyTitle}>No accounts yet</h2>
-          <p className={styles.emptyText}>
+          <h2 className={styles.emptyTitle}>No repositories</h2>
+          {/* <p className={styles.emptyText}>
             Connect GitHub or GitLab to see your repositories here.
-          </p>
-          <Button variant="primary" icon="plus" onClick={onConnect}>
+          </p> */}
+          {/* <Button variant="primary" icon="plus" onClick={onConnect}>
             Connect GitHub / GitLab
-          </Button>
+          </Button> */}
         </div>
       ) : (
         <>
