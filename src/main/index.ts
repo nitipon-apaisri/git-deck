@@ -1,10 +1,11 @@
 import { join } from 'node:path'
-import { app, BrowserWindow, net, safeStorage, session, shell } from 'electron'
+import { app, BrowserWindow, net, safeStorage, screen, session, shell } from 'electron'
 import { configureFetch } from './http'
 import { registerIpc } from './ipc'
 import { Store, type TokenCrypto } from './store'
 import { installCertVerifyProc } from './tls'
 import { isAppUrl as isAppUrlFor, isHttp } from './urls'
+import { fitToDisplays, loadWindowState, saveWindowState, type WindowState } from './windowState'
 
 // Only the dev server origin (dev) or our own bundle (prod) may be navigated to.
 const devUrl = process.env['ELECTRON_RENDERER_URL']
@@ -20,10 +21,16 @@ const tokenCrypto: TokenCrypto = {
   decrypt: (data) => safeStorage.decryptString(data)
 }
 
-function createWindow(): BrowserWindow {
+function createWindow(saved: WindowState): BrowserWindow {
+  const dir = app.getPath('userData')
+  const start = fitToDisplays(
+    saved,
+    screen.getAllDisplays().map((d) => d.workArea)
+  )
   const win = new BrowserWindow({
-    width: 1280,
-    height: 800,
+    width: start.width,
+    height: start.height,
+    ...(start.x !== undefined && start.y !== undefined ? { x: start.x, y: start.y } : {}),
     minWidth: 1100,
     minHeight: 700,
     show: false,
@@ -41,7 +48,25 @@ function createWindow(): BrowserWindow {
     }
   })
 
+  if (start.maximized) win.maximize()
   win.once('ready-to-show', () => win.show())
+
+  // Remember the normal (un-maximized) bounds, debounced while the user drags or resizes.
+  let timer: NodeJS.Timeout | undefined
+  const remember = (): void => {
+    if (win.isDestroyed() || win.isMinimized() || win.isFullScreen()) return
+    const { x, y, width, height } = win.getNormalBounds()
+    void saveWindowState(dir, { x, y, width, height, maximized: win.isMaximized() })
+  }
+  const rememberSoon = (): void => {
+    clearTimeout(timer)
+    timer = setTimeout(remember, 500)
+  }
+  win.on('resize', rememberSoon)
+  win.on('move', rememberSoon)
+  win.on('maximize', remember)
+  win.on('unmaximize', remember)
+  win.on('close', remember)
 
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (isHttp(url)) void shell.openExternal(url)
@@ -77,9 +102,12 @@ if (!app.requestSingleInstanceLock()) {
     await store.load()
     // Register before the window exists so the first renderer call finds a handler.
     registerIpc(store)()
-    createWindow()
+    const saved = await loadWindowState(app.getPath('userData'))
+    createWindow(saved)
     app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) createWindow()
+      if (BrowserWindow.getAllWindows().length === 0) {
+        void loadWindowState(app.getPath('userData')).then(createWindow)
+      }
     })
   })
 

@@ -51,7 +51,7 @@ export function TreeRow({
         className={cn(
           'flex min-h-[var(--tree-row-height)] min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent py-0 pr-0 pl-2 text-left text-[13px] text-inherit',
           quiet && 'min-h-[26px] pl-6 text-[12px]',
-          level === 'repo' && 'pl-6'
+          level === 'repo' && 'pl-11'
         )}
         onClick={onClick}
         aria-expanded={expanded}

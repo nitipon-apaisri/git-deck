@@ -40,21 +40,17 @@ export function useWorkspace(): Workspace {
     }
   }, [])
 
-  // Stale-while-revalidate: show what is cached now, then replace it from the host.
-  const loadAccount = useCallback(
-    async (accountId: string) => {
-      try {
-        const cached = await window.api.repos.cached(accountId)
-        if (cached) {
-          dispatch({ type: 'repos', accountId, repos: cached.data, fetchedAt: cached.fetchedAt })
-        }
-      } catch {
-        // No cache is not an error: the network fetch below fills the list.
+  // Launch shows the cache only: no host is contacted until the user presses a refresh icon.
+  const loadCached = useCallback(async (accountId: string) => {
+    try {
+      const cached = await window.api.repos.cached(accountId)
+      if (cached) {
+        dispatch({ type: 'repos', accountId, repos: cached.data, fetchedAt: cached.fetchedAt })
       }
-      await refresh(accountId)
-    },
-    [refresh]
-  )
+    } catch {
+      // No cache is not an error: the list stays empty until the user refreshes.
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -77,7 +73,7 @@ export function useWorkspace(): Workspace {
         } catch {
           // No local list is not fatal: the accounts below still load.
         }
-        await Promise.all(accounts.map((a) => loadAccount(a.id)))
+        await Promise.all(accounts.map((a) => loadCached(a.id)))
       } catch (err) {
         if (!cancelled) dispatch({ type: 'loadFailed', error: errorMessage(err) })
       }
@@ -85,7 +81,7 @@ export function useWorkspace(): Workspace {
     return () => {
       cancelled = true
     }
-  }, [loadAccount, attempt])
+  }, [loadCached, attempt])
 
   const retryLoad = useCallback(() => {
     dispatch({ type: 'loadStart' })
@@ -108,9 +104,10 @@ export function useWorkspace(): Workspace {
   const accountAdded = useCallback(
     (account: Account) => {
       dispatch({ type: 'accountAdded', account })
-      void loadAccount(account.id)
+      // A new account has no cache, so fetch it once now.
+      void refresh(account.id)
     },
-    [loadAccount]
+    [refresh]
   )
 
   const setLocalRepos = useCallback(async () => {
