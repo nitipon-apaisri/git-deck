@@ -12,7 +12,7 @@ export function Rail({
   sidebarOpen,
   onToggleSidebar,
   // onOpenAccounts,
-  onOpenProjects,
+  // onOpenProjects,
   onOpenPreferences
 }: RailProps) {
   return (
@@ -29,7 +29,7 @@ export function Rail({
           aria-pressed={sidebarOpen}
           onClick={onToggleSidebar}
         />
-        <IconButton size="rail" icon="layers" label="Projects" onClick={onOpenProjects} />
+        {/* <IconButston size="rail" icon="layers" label="Projects" onClick={onOpenProjects} /> */}
         {/* <IconButton size="rail" icon="users" label="Accounts" onClick={onOpenAccounts} /> */}
       </div>
       <IconButton size="rail" icon="sliders" label="Preferences" onClick={onOpenPreferences} />
