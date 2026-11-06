@@ -134,6 +134,8 @@ export interface StatusEntry {
 export interface RepoStatus {
   /** `null` when HEAD is detached. */
   branch: string | null
+  /** Hash of HEAD, `null` before the first commit. */
+  head: string | null
   entries: StatusEntry[]
 }
 

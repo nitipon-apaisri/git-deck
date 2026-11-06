@@ -43,6 +43,7 @@ test('parseStatus reads branch, changes, renames, conflicts and untracked files'
   ].join('\0')
   const status = parseStatus(raw)
   assert.equal(status.branch, 'main')
+  assert.equal(status.head, 'abc')
   const by = Object.fromEntries(status.entries.map((e) => [e.path, e]))
   assert.deepEqual([by['staged.txt'].index, by['staged.txt'].worktree], ['modified', null])
   assert.equal(by['worktree file.txt'].worktree, 'modified')
@@ -53,6 +54,7 @@ test('parseStatus reads branch, changes, renames, conflicts and untracked files'
   assert.equal(by['new dir/untracked.txt'].untracked, true)
   assert.equal(parseStatus('# branch.head (detached)\0').branch, null)
   assert.deepEqual(parseStatus('').entries, [])
+  assert.equal(parseStatus('# branch.oid (initial)\0').head, null)
 })
 
 test('parseUnifiedDiff numbers lines and counts changes', () => {
@@ -96,6 +98,7 @@ test('getStatus lists staged, unstaged and untracked files one by one', async ()
   git(dir, 'add', 'staged.txt')
   const status = await getStatus(dir)
   assert.equal(status.branch, 'main')
+  assert.match(status.head ?? '', /^[0-9a-f]{40}$/)
   const by = Object.fromEntries(status.entries.map((e) => [e.path, e]))
   assert.equal(by['a.txt'].worktree, 'modified')
   assert.equal(by['staged.txt'].index, 'added')

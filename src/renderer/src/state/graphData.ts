@@ -3,7 +3,7 @@ import { GraphLayout } from '@shared/graph-layout'
 import type { CommitDetail } from '@shared/types'
 import { errorMessage } from '../lib/errors'
 import { emptyPaging, pagingReducer, type GraphPaging } from '../lib/graphPaging'
-import { PAGE_SIZE } from '../lib/graphView'
+import { PAGE_SIZE, wipCommit } from '../lib/graphView'
 import { emptyResource, resourceReducer, type Resource } from '../lib/resource'
 
 // Both hooks keep their state inside the calling component, so two panes showing two
@@ -23,7 +23,12 @@ export interface GraphState {
  * generation: a reload, a new path or a new `reloadToken` starts a fresh layout and a
  * new generation, and a page that arrives for an older one is dropped.
  */
-export function useGraph(path: string | null, reloadToken: number): GraphState {
+export function useGraph(
+  path: string | null,
+  reloadToken: number,
+  /** Hash of HEAD while there are uncommitted changes: a "// WIP" row goes on top. */
+  wipHead: string | null = null
+): GraphState {
   const [paging, dispatch] = useReducer(pagingReducer, undefined, emptyPaging)
   const [nonce, setNonce] = useState(0)
 
@@ -32,23 +37,28 @@ export function useGraph(path: string | null, reloadToken: number): GraphState {
   const fetched = useRef(0)
   const inflight = useRef(false)
 
-  const loadPage = useCallback(async (folder: string, gen: number): Promise<void> => {
-    if (inflight.current) return
-    inflight.current = true
-    dispatch({ type: 'loading', gen })
-    try {
-      const commits = await window.api.local.graph(folder, fetched.current, PAGE_SIZE)
-      if (gen !== generation.current) return
-      fetched.current += commits.length
-      const rows = layout.current.add(commits)
-      dispatch({ type: 'page', gen, rows, requested: PAGE_SIZE })
-    } catch (err) {
-      if (gen === generation.current) dispatch({ type: 'failed', gen, error: errorMessage(err) })
-    } finally {
-      // A newer generation already cleared the flag for itself.
-      if (gen === generation.current) inflight.current = false
-    }
-  }, [])
+  const loadPage = useCallback(
+    async (folder: string, gen: number, wip: string | null): Promise<void> => {
+      if (inflight.current) return
+      inflight.current = true
+      dispatch({ type: 'loading', gen })
+      try {
+        const commits = await window.api.local.graph(folder, fetched.current, PAGE_SIZE)
+        if (gen !== generation.current) return
+        fetched.current += commits.length
+        // The WIP row is not a commit: it only ever leads the first page.
+        const first = fetched.current === commits.length && wip !== null
+        const rows = layout.current.add(first ? [wipCommit(wip), ...commits] : commits)
+        dispatch({ type: 'page', gen, rows, requested: PAGE_SIZE + (first ? 1 : 0) })
+      } catch (err) {
+        if (gen === generation.current) dispatch({ type: 'failed', gen, error: errorMessage(err) })
+      } finally {
+        // A newer generation already cleared the flag for itself.
+        if (gen === generation.current) inflight.current = false
+      }
+    },
+    []
+  )
 
   useEffect(() => {
     generation.current += 1
@@ -57,11 +67,11 @@ export function useGraph(path: string | null, reloadToken: number): GraphState {
     fetched.current = 0
     inflight.current = false
     dispatch({ type: 'reset', gen, path })
-    if (path !== null) void loadPage(path, gen)
-  }, [path, reloadToken, nonce, loadPage])
+    if (path !== null) void loadPage(path, gen, wipHead)
+  }, [path, reloadToken, nonce, wipHead, loadPage])
 
   const loadMore = useCallback(() => {
-    if (path !== null) void loadPage(path, generation.current)
+    if (path !== null) void loadPage(path, generation.current, null)
   }, [path, loadPage])
   const reload = useCallback(() => setNonce((n) => n + 1), [])
 

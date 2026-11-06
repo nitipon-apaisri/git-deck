@@ -12,12 +12,13 @@ import {
   edgePath,
   graphWidth,
   isHeadCommit,
+  isWipHash,
   laneTone,
   laneX,
   splitBadges
 } from '../../lib/graphView'
 import { shortHash } from '../../lib/repoView'
-import { Avatar, RefBadge } from '../ui'
+import { Avatar, Icon, RefBadge } from '../ui'
 
 // One stroke or fill per lane colour: laneTone() gives 1 to 6.
 const LINES = [
@@ -51,6 +52,8 @@ interface GraphRowViewProps {
   /** No author or date column. */
   compact: boolean
   selected: boolean
+  /** Changed files, for the "// WIP" row. */
+  wipCount?: number
   id: string
   onSelect: (hash: string) => void
   /** Right-click on the row (`ref` null) or on one of its badges. Absent when nothing is offered. */
@@ -60,6 +63,7 @@ interface GraphRowViewProps {
 /** Lane drawing for one row: lines first, then the node on top. */
 function Lanes({ row, lanes }: { row: GraphRow; lanes: number }) {
   const head = isHeadCommit(row.commit.refs)
+  const wip = isWipHash(row.commit.hash)
   const x = laneX(row.lane)
   const mid = ROW_HEIGHT / 2
   return (
@@ -78,9 +82,20 @@ function Lanes({ row, lanes }: { row: GraphRow; lanes: number }) {
       {row.edges
         .filter((e) => e.part !== 'through')
         .map((e, i) => (
-          <path key={`c${i}`} className={`${LINE} ${LINES[laneTone(e.color)]}`} d={edgePath(e)} />
+          <path
+            key={`c${i}`}
+            className={`${LINE} ${LINES[laneTone(e.color)]}${wip ? ' [stroke-dasharray:3_3]' : ''}`}
+            d={edgePath(e)}
+          />
         ))}
-      {head ? (
+      {wip ? (
+        <circle
+          className={`[fill:var(--island)] [stroke-width:2] [stroke-dasharray:3_2] ${LINES[laneTone(row.color)]}`}
+          cx={x}
+          cy={mid}
+          r={NODE_RADIUS}
+        />
+      ) : head ? (
         <circle
           className="[fill:var(--island)] [stroke-width:2] [stroke:var(--lane-1)]"
           cx={x}
@@ -103,11 +118,40 @@ function GraphRowViewBase({
   defaultBranch,
   compact,
   selected,
+  wipCount = 0,
   id,
   onSelect,
   onMenu
 }: GraphRowViewProps) {
   const { commit } = row
+  if (isWipHash(commit.hash)) {
+    return (
+      <div
+        id={id}
+        className="absolute inset-x-0 flex cursor-default items-center gap-2 rounded-md pr-3 whitespace-nowrap hover:bg-accent data-[selected=true]:bg-[var(--selection)]"
+        role="option"
+        aria-selected={selected}
+        aria-posinset={index + 1}
+        aria-setsize={total}
+        data-selected={selected ? 'true' : undefined}
+        style={{ top: index * ROW_HEIGHT, height: ROW_HEIGHT }}
+        onClick={() => onSelect(commit.hash)}
+      >
+        <Lanes row={row} lanes={lanes} />
+        <span className="hash rounded-md border border-dashed border-border px-2 text-[12px] leading-5 text-muted-foreground">
+          // WIP
+        </span>
+        <span
+          className="inline-flex items-center gap-1 text-[12px] text-[var(--warning-text)]"
+          title={`${wipCount} changed ${wipCount === 1 ? 'file' : 'files'}`}
+        >
+          <Icon name="edit" size="xs" />
+          {wipCount}
+          <span className="sr-only"> changed {wipCount === 1 ? 'file' : 'files'}, uncommitted</span>
+        </span>
+      </div>
+    )
+  }
   const author = authorLabel(commit.author, commit.email)
   const { shown, more } = splitBadges(badgeViews(commit.refs, defaultBranch))
   const hidden = badgeViews(commit.refs, defaultBranch)
