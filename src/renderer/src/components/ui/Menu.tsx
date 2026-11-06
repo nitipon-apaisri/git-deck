@@ -37,7 +37,7 @@ interface MenuProps {
 }
 
 const itemClass =
-  'flex min-h-[30px] cursor-pointer items-center gap-2.5 rounded-md border-0 bg-transparent px-2.5 text-left outline-none transition-[background-color,color] duration-[var(--motion-fast)] ease-[var(--ease-out)] data-[highlighted]:bg-accent data-[disabled]:cursor-default data-[disabled]:text-muted-foreground data-[disabled]:data-[highlighted]:bg-transparent'
+  'flex min-h-[30px] cursor-pointer items-center gap-2.5 rounded-md border-0 bg-transparent px-2.5 text-left transition-[background-color,color] duration-[var(--motion-fast)] ease-[var(--ease-out)] data-[highlighted]:bg-accent data-[disabled]:cursor-default data-[disabled]:text-muted-foreground data-[disabled]:data-[highlighted]:bg-transparent'
 
 /**
  * shadcn's dropdown menu on Radix, opened at a point: arrow keys, Home and End move, Enter and
