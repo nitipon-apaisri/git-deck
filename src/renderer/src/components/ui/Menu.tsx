@@ -117,7 +117,7 @@ export function Menu({ label, at, entries, minWidth, onClose }: MenuProps) {
               return (
                 <DropdownMenu.Label
                   key={entry.id}
-                  className="px-2.5 pt-1.5 pb-1 text-xs text-muted-foreground"
+                  className="px-2.5 pt-1.5 pb-1 text-[12px] text-muted-foreground"
                 >
                   {entry.label}
                 </DropdownMenu.Label>
@@ -128,7 +128,9 @@ export function Menu({ label, at, entries, minWidth, onClose }: MenuProps) {
                 {entry.leading}
                 <span className="min-w-0 flex-1 truncate">{entry.label}</span>
                 {entry.trailing ? (
-                  <span className="flex-none text-xs text-muted-foreground">{entry.trailing}</span>
+                  <span className="flex-none text-[12px] text-muted-foreground">
+                    {entry.trailing}
+                  </span>
                 ) : null}
               </>
             )

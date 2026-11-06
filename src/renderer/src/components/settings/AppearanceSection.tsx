@@ -5,8 +5,16 @@ import type { ThemeSetting } from '../../lib/theme'
 import { useAccent, useFont } from '../../state/appearance'
 import { Icon } from '../ui'
 import { ThemePreview } from './ThemePreview'
-import styles from './Option.module.css'
-import section from './Section.module.css'
+import { cn } from '@/lib/cn'
+
+// Shared by the pickers: a section, its title and hint, and a selectable card.
+const STACK = 'flex flex-col gap-6'
+const BLOCK = 'flex flex-col gap-1.5'
+const LABEL = 'm-0 text-[13px] leading-[18px] font-semibold'
+const HINT = 'mt-0 mb-2 text-[12px] leading-4 text-muted-foreground'
+const GROUP = 'grid gap-2'
+const CARD =
+  'flex cursor-pointer flex-col gap-2 rounded-lg border border-border bg-transparent p-2 text-left text-foreground transition-[background-color,border-color] duration-[var(--motion-fast)] ease-[var(--ease-out)] hover:bg-accent aria-checked:border-[var(--accent)] aria-checked:bg-[var(--selection)] aria-checked:hover:bg-[var(--selection)]'
 
 const THEME_LABELS: Record<ThemeSetting, { title: string; sub: string }> = {
   system: { title: 'System', sub: 'Follows your OS' },
@@ -53,17 +61,13 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
   const fontKeys = useRadioKeys<FontId>(fontIds, font, setFont)
 
   return (
-    <div className={section.stack}>
-      <section className={section.block} aria-labelledby="set-theme">
-        <h3 id="set-theme" className={section.label}>
+    <div className={STACK}>
+      <section className={BLOCK} aria-labelledby="set-theme">
+        <h3 id="set-theme" className={LABEL}>
           Theme
         </h3>
-        <p className={section.hint}>System follows your OS appearance.</p>
-        <div
-          role="radiogroup"
-          aria-labelledby="set-theme"
-          className={`${styles.group} ${styles.cards}`}
-        >
+        <p className={HINT}>System follows your OS appearance.</p>
+        <div role="radiogroup" aria-labelledby="set-theme" className={cn(GROUP, 'grid-cols-3')}>
           {THEME_ORDER.map((value, index) => (
             <button
               key={value}
@@ -72,25 +76,25 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
               role="radio"
               aria-checked={value === theme}
               tabIndex={themeKeys.tab(value)}
-              className={`${styles.card} ${value === theme ? styles.checked : ''}`}
+              className={CARD}
               onClick={() => onThemeChange(value)}
               onKeyDown={(e) => themeKeys.onKeyDown(e, index)}
             >
               <ThemePreview setting={value} />
               <span>
-                <span className={styles.cardLabel}>{THEME_LABELS[value].title}</span>
+                <span className="font-medium">{THEME_LABELS[value].title}</span>
               </span>
             </button>
           ))}
         </div>
       </section>
 
-      <section className={section.block} aria-labelledby="set-accent">
-        <h3 id="set-accent" className={section.label}>
+      <section className={BLOCK} aria-labelledby="set-accent">
+        <h3 id="set-accent" className={LABEL}>
           Accent colour
         </h3>
-        <p className={section.hint}>Used for the primary button, selection and focus ring.</p>
-        <div role="radiogroup" aria-labelledby="set-accent" className={styles.swatches}>
+        <p className={HINT}>Used for the primary button, selection and focus ring.</p>
+        <div role="radiogroup" aria-labelledby="set-accent" className="flex items-center gap-3">
           {ACCENTS.map((a, index) => (
             <button
               key={a.id}
@@ -101,29 +105,25 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
               title={a.label}
               aria-checked={a.id === accent}
               tabIndex={accentKeys.tab(a.id)}
-              className={styles.swatch}
+              className="group grid size-8 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-primary-foreground transition-shadow duration-[var(--motion-fast)] ease-[var(--ease-out)] aria-checked:shadow-[0_0_0_2px_var(--island),0_0_0_4px_var(--primary)]"
               onClick={() => setAccent(a.id)}
               onKeyDown={(e) => accentKeys.onKeyDown(e, index)}
             >
               <AccentDot id={a.id} checked={a.id === accent} />
             </button>
           ))}
-          <span className={styles.swatchName} aria-hidden="true">
+          <span className="ml-1.5 text-muted-foreground" aria-hidden="true">
             {ACCENTS.find((a) => a.id === accent)?.label}
           </span>
         </div>
       </section>
 
-      <section className={section.block} aria-labelledby="set-font">
-        <h3 id="set-font" className={section.label}>
+      <section className={BLOCK} aria-labelledby="set-font">
+        <h3 id="set-font" className={LABEL}>
           Font family
         </h3>
-        <p className={section.hint}>Applies to the whole app. Code and hashes stay monospaced.</p>
-        <div
-          role="radiogroup"
-          aria-labelledby="set-font"
-          className={`${styles.group} ${styles.fonts}`}
-        >
+        <p className={HINT}>Applies to the whole app. Code and hashes stay monospaced.</p>
+        <div role="radiogroup" aria-labelledby="set-font" className={cn(GROUP, 'grid-cols-2')}>
           {FONTS.map((f, index) => (
             <button
               key={f.id}
@@ -132,14 +132,14 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
               role="radio"
               aria-checked={f.id === font}
               tabIndex={fontKeys.tab(f.id)}
-              className={`${styles.card} ${f.id === font ? styles.checked : ''}`}
+              className={CARD}
               onClick={() => setFont(f.id)}
               onKeyDown={(e) => fontKeys.onKeyDown(e, index)}
             >
-              <span className={styles.cardLabel} style={{ fontFamily: f.family }}>
+              <span className="font-medium" style={{ fontFamily: f.family }}>
                 {f.label}
               </span>
-              <span className={styles.fontSample} style={{ fontFamily: f.family }}>
+              <span className="text-[12px] text-muted-foreground" style={{ fontFamily: f.family }}>
                 The quick brown fox jumps over the lazy dog
               </span>
             </button>
@@ -153,7 +153,11 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
 /** Shows that accent in the current theme: `appearance.css` also matches `data-accent-dot`. */
 function AccentDot({ id, checked }: { id: Accent; checked: boolean }) {
   return (
-    <span className={styles.dot} data-accent-dot={id} aria-hidden="true">
+    <span
+      className="grid size-7 place-items-center rounded-full bg-[var(--primary)] transition-transform duration-[var(--motion-fast)] ease-[var(--ease-out)] group-hover:scale-[1.08]"
+      data-accent-dot={id}
+      aria-hidden="true"
+    >
       {checked ? <Icon name="check" size="sm" /> : null}
     </span>
   )

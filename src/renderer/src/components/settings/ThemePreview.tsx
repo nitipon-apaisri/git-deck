@@ -1,19 +1,27 @@
 import type { ThemeSetting } from '../../lib/theme'
-import styles from './ThemePreview.module.css'
 
-/** A tiny mock of the app shell. It carries its own `data-theme`, so it draws with that theme's tokens. */
+const LINE = 'h-1 rounded-[2px] bg-[var(--line)]'
+
+/**
+ * A tiny mock of the app shell. It carries its own `data-theme`, so it draws with that theme's
+ * tokens. It uses the raw tokens: they re-resolve inside a `data-theme` element.
+ */
 function Mock({ theme }: { theme: 'dark' | 'light' }) {
   return (
-    <span className={styles.mock} data-theme={theme} aria-hidden="true">
-      <span className={styles.rail} />
-      <span className={styles.side}>
-        <span className={styles.line} />
-        <span className={styles.line} />
-        <span className={`${styles.line} ${styles.selected}`} />
+    <span
+      className="flex h-16 w-full gap-1 rounded-sm bg-[var(--window)] p-[5px]"
+      data-theme={theme}
+      aria-hidden="true"
+    >
+      <span className="w-1.5 rounded-[2px] bg-[var(--island-raised)]" />
+      <span className="flex w-[30%] flex-col gap-1 rounded-[var(--radius-xs)] bg-[var(--island)] p-1">
+        <span className={LINE} />
+        <span className={LINE} />
+        <span className="h-1 rounded-[2px] bg-[var(--accent)]" />
       </span>
-      <span className={styles.main}>
-        <span className={styles.bar} />
-        <span className={styles.line} />
+      <span className="flex flex-1 flex-col gap-1 rounded-[var(--radius-xs)] bg-[var(--island)] p-1">
+        <span className="h-2 w-1/2 rounded-[2px] bg-[var(--text-muted)]" />
+        <span className={LINE} />
       </span>
     </span>
   )
@@ -22,11 +30,11 @@ function Mock({ theme }: { theme: 'dark' | 'light' }) {
 export function ThemePreview({ setting }: { setting: ThemeSetting }) {
   if (setting === 'system') {
     return (
-      <span className={styles.split} aria-hidden="true">
-        <span className={styles.half}>
+      <span className="relative block h-16 w-full" aria-hidden="true">
+        <span className="absolute inset-0 overflow-hidden [clip-path:inset(0_50%_0_0)]">
           <Mock theme="light" />
         </span>
-        <span className={`${styles.half} ${styles.right}`}>
+        <span className="absolute inset-0 overflow-hidden [clip-path:inset(0_0_0_50%)]">
           <Mock theme="dark" />
         </span>
       </span>

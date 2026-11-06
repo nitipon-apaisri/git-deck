@@ -9,7 +9,11 @@ interface AvatarProps {
   size?: 24 | 28 | 32
 }
 
-const SIZES = { 24: 'size-6 text-[10px]', 28: 'size-7 text-[11px]', 32: 'size-8 text-xs' } as const
+const SIZES = {
+  24: 'size-6 text-[10px]',
+  28: 'size-7 text-[11px]',
+  32: 'size-8 text-[12px]'
+} as const
 const TONES = [
   'bg-[var(--avatar-1)]',
   'bg-[var(--avatar-2)]',

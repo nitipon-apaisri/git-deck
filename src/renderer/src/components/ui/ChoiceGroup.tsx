@@ -42,7 +42,7 @@ export function ChoiceGroup<T extends string>({
           <span className="flex min-w-0 flex-col">
             <span className="font-medium">{option.title}</span>
             {option.sub ? (
-              <span className="text-xs text-muted-foreground">{option.sub}</span>
+              <span className="text-[12px] text-muted-foreground">{option.sub}</span>
             ) : null}
           </span>
         </RadioGroup.Item>

@@ -21,7 +21,6 @@ import { useShortcuts } from './state/useShortcuts'
 import { useSplit } from './state/useSplit'
 import { useTheme } from './state/theme'
 import { useWorkspace } from './state/workspace'
-import styles from './App.module.css'
 
 type DialogName = 'settings' | 'projects' | null
 
@@ -208,7 +207,7 @@ export function App() {
   useShortcuts(onShortcut)
 
   return (
-    <div className={styles.app}>
+    <div className="flex h-full flex-col bg-background text-foreground">
       <Toolbar
         insetTitleBar={hasInsetTitleBar(navigator.userAgent)}
         accounts={state.accounts}
@@ -221,7 +220,7 @@ export function App() {
         }
         onSwap={split.swap}
       />
-      <div className={styles.body}>
+      <div className="flex min-h-0 flex-1 gap-1.5 px-1.5 pb-1.5">
         <Rail
           sidebarOpen={sidebarOpen}
           onToggleSidebar={toggleSidebar}

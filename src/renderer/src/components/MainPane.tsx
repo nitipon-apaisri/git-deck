@@ -6,7 +6,6 @@ import { RepoPane } from './repo/RepoPane'
 import { EmptyPane, type EmptyKind } from './split/EmptyPane'
 import { SplitView } from './split/SplitView'
 import { Island } from './ui'
-import styles from './MainPane.module.css'
 
 interface MainPaneProps {
   split: Split
@@ -74,14 +73,14 @@ export function MainPane({
 
   if (overview) {
     return (
-      <main className={styles.main} aria-label="Project overview">
-        <Island className={styles.overview}>{overview}</Island>
+      <main className="flex min-h-0 min-w-0 flex-1" aria-label="Project overview">
+        <Island className="flex-1">{overview}</Island>
       </main>
     )
   }
 
   return (
-    <main className={styles.main} aria-label="Repositories">
+    <main className="flex min-h-0 min-w-0 flex-1" aria-label="Repositories">
       <SplitView
         enabled={state.enabled}
         orientation={state.orientation}

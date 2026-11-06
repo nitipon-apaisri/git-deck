@@ -8,7 +8,8 @@
  * shadcn's variable names, pointed at our tokens (tokens.css stays the single source of truth,
  * so light, dark and System keep working). `--primary` already exists in tokens.css.
  */
-:root {
+:root,
+[data-theme] {
   --background: var(--window);
   --foreground: var(--text);
   --card: var(--island);

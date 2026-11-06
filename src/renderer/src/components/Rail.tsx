@@ -1,5 +1,4 @@
 import { IconButton } from './ui'
-import styles from './Rail.module.css'
 
 interface RailProps {
   sidebarOpen: boolean
@@ -17,11 +16,11 @@ export function Rail({
   onOpenPreferences
 }: RailProps) {
   return (
-    <nav className={styles.rail} aria-label="Main">
-      <div className={styles.group}>
-        {/* <span className={styles.mark} role="img" aria-label="GitDeck" title="GitDeck">
-          <Icon name="git-branch" />
-        </span> */}
+    <nav
+      className="flex w-[var(--rail-width)] flex-none flex-col items-center justify-between pb-1"
+      aria-label="Main"
+    >
+      <div className="flex flex-col gap-1">
         <IconButton
           size="rail"
           icon="repo"

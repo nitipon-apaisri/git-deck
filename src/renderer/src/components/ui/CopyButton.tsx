@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { IconButton } from './Button'
-import styles from './CopyButton.module.css'
 
 interface CopyButtonProps {
   text: string
@@ -34,7 +33,10 @@ export function CopyButton({ text, what }: CopyButtonProps) {
         icon={status === 'copied' ? 'check' : 'copy'}
         onClick={() => void copy()}
       />
-      <span className={styles.live} role="status">
+      <span
+        className="absolute size-px overflow-hidden whitespace-nowrap [clip-path:inset(50%)]"
+        role="status"
+      >
         {status === 'copied'
           ? `Copied ${what}`
           : status === 'failed'
