@@ -16,7 +16,8 @@ Newest first. Template:
   - The renderer keeps the selection beside the diff object it was made on (`DiffView`), so a reloaded diff drops it without an effect. `lib/lineSelection.ts` holds the pure helpers. Shift-click ticks a range from the last clicked line in the same hunk.
   - Tests: `tests/line-staging.test.ts` (patch rules, CRLF, no-newline, temp-repo stage, unstage, round trip, refusals) and a service validation test. Suite: 467 passing; typecheck, lint, format and build pass.
   - The checkbox column and the "Stage N lines", "Select all" and "Clear" buttons have no dark or light board in `docs/ui-boards/`; they use tokens and the existing ghost button only. Gap logged.
-- **Not verified:** the diff dialog was not run in the window, in either theme. Only the tests, typecheck, lint and build ran.
+- **Live check (2026-11-07):** the built app was driven over a DevTools port on a scratch repo with one hunk of two removed and three added lines. Light and dark both render the checkbox column, the red and green rows and the "Stage N lines", "Select all" and "Clear" buttons cleanly. Ticking a removed and an added line and clicking "Stage 2 lines" put exactly that pair in the index and left the work tree alone; the diff reloaded and the selection cleared. On the staged diff, "Unstage 1 line" moved only the ticked line back. A shift-click from the first changed line to the last ticked every changed line between, and the button read "Stage 4 lines". Shift was sent as a synthetic click event with the shift key set.
+- **Not verified:** keyboard use and screen-reader behaviour of the checkboxes.
 
 ## 2026-11-07: Phase 16 scope (line-level staging)
 
