@@ -48,6 +48,7 @@ export type SplitAction =
   | { type: 'setRatio'; ratio: number }
   | { type: 'pruneRepos'; validKeys: ReadonlySet<string> }
   | { type: 'toggle' }
+  | { type: 'clear' }
 
 export const otherPane = (pane: PaneId): PaneId => (pane === 0 ? 1 : 0)
 
@@ -117,6 +118,9 @@ export function splitReducer(state: SplitState, action: SplitAction): SplitState
       }
       return next
     }
+    case 'clear':
+      // Another project: both panes go, the layout the user chose (orientation, ratio) stays.
+      return { ...defaultSplit(), orientation: state.orientation, ratio: state.ratio }
     case 'toggle': {
       if (state.enabled) return { ...state, enabled: false }
       // An empty pane is where the user is about to pick a repository.

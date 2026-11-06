@@ -103,6 +103,8 @@ export function App() {
 
   function chooseScope(id: string | null): void {
     const next = id ?? ALL_SCOPE
+    // A different project starts clean: no repository carried over in either pane.
+    if (next !== scopeId) split.clear()
     setScopeId(next)
     writeStored(SCOPE_KEY, next)
     setOverviewOn(id !== null)
