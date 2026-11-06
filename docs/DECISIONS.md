@@ -248,3 +248,17 @@ Newest first. Template:
   - Branches and tracking counts come from a new `local.branches` call (a few `for-each-ref` runs) that every linked pane reads, instead of widening `getLocalInfo`, which runs a dozen commands and only the Info tab needs.
   - The right-click menu on a graph row or ref badge is built from the pure `refActions`, so it is tested without a DOM.
 - **Not verified:** none of the new screens (branch menu, split Pull and Push buttons, name dialog, graph context menus) was run in a live Electron window, and no dark and light boards exist for them. The git, service and pure-logic layers are covered by tests. Remote branch lists are not capped, so a repository with thousands of remote branches gives a long menu.
+
+## 2026-11-06: Phase 13 as built
+
+- **Question:** where the stash list lives now that the Changes tab is gone, how a stopped merge or cherry-pick is found and finished, and how stash entries are named safely.
+- **Decision and why:**
+  - The stash list and the "Stash changes" form sit in a Stash dialog opened from a `Stash · n` button in the repo header. `PLAN.md` put the list in the Changes tab, but Changes is now the graph's WIP panel, which exists only while the tree is dirty. A stash is most useful when the tree is clean, so the list needs a place that is always there.
+  - Every stash call carries the entry's index and its commit hash. Git renumbers the list on each push or drop, so a stale index would hit the wrong stash. A mismatch fails with "The stash list changed". Drop is confirmed in main.
+  - A stash message goes in as the value of `-m`, so a message such as `--include-untracked` stays text.
+  - Cherry-pick and merge return `{ conflicted: true }` when they stop on conflicts and throw for everything else. A run that stops with nothing to resolve (a cherry-pick that became empty) is aborted and reported as "already in the branch". A failed start with no state left (local edits in the way) is a plain error.
+  - Cherry-picking a merge commit is refused and not offered in the menu: it needs `-m <mainline>` and a choice the UI does not have.
+  - Only one merge or cherry-pick at a time. The state is read from `MERGE_HEAD` and `CHERRY_PICK_HEAD` through `rev-parse --git-path`, so a state left from a past session, another tool, or a conflicting "Pull and merge" shows the same banner on open.
+  - Continue stages the files that were conflicted, then runs `commit --no-edit` (merge) or `cherry-pick --continue` with `GIT_EDITOR=true`. It refuses while a conflicted file still holds a `<<<<<<<` or `>>>>>>>` line, so unfixed markers are not committed. Deleted files count as resolved. Abort is confirmed in main and undoes the conflict fixes too.
+  - The banner sits in the pane header, not in the graph, so it shows on every tab. Merge entries on a branch or remote badge say which branch they merge into, with a second entry that always makes a merge commit (`--no-ff`). Neither is offered with a detached HEAD.
+- **Not verified:** none of the new screens (Stash button and dialog, conflict banner, merge and cherry-pick menu entries) was run in a live Electron window, and no dark and light boards exist for them. The git, service and pure-logic layers are covered by temp-repo and unit tests.

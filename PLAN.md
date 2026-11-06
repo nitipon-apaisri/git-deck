@@ -400,10 +400,10 @@ Scope decision and reasons: `docs/DECISIONS.md` (2026-11-06, git write features)
 
 ## Phase 13 — Stash, cherry-pick, merge
 
-- [ ] Stash: push (message, include-untracked option), list, apply, pop, drop (confirmed). The list sits in the Changes tab.
-- [ ] `cherryPick(hash)` from the commit context menu and `merge(branch)` (with a `--no-ff` option).
-- [ ] On conflict, read the state from `status`, show a banner with the conflicted files, and offer Abort (`cherry-pick --abort` or `merge --abort`) and Continue after the user resolves the files elsewhere (`local.reveal` opens the folder). There is no in-app conflict editor.
-- [ ] On open, detect an in-progress merge or cherry-pick through `rev-parse --git-path MERGE_HEAD` and `CHERRY_PICK_HEAD`.
+- [x] Stash: push (message, include-untracked option), list, apply, pop, drop (confirmed). The list sits in a Stash dialog opened from the repo header, not in the Changes panel (see `DECISIONS.md`).
+- [x] `cherryPick(hash)` from the commit context menu and `merge(branch)` (with a `--no-ff` option).
+- [x] On conflict, read the state from `status`, show a banner with the conflicted files, and offer Abort (`cherry-pick --abort` or `merge --abort`) and Continue after the user resolves the files elsewhere (`local.reveal` opens the folder). There is no in-app conflict editor.
+- [x] On open, detect an in-progress merge or cherry-pick through `rev-parse --git-path MERGE_HEAD` and `CHERRY_PICK_HEAD`.
 
 **Verify:** temp-repo tests cover stash round trips, a clean cherry-pick, a conflicting cherry-pick then abort, a clean merge, a conflicting merge then abort, and resuming an in-progress state. Typecheck, lint, build pass.
 

@@ -147,4 +147,4 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 10: Polish and docs
 - [x] Phase 11: Changes, diff, stage, commit
 - [x] Phase 12: Branches, checkout, push and pull
-- [ ] Phase 13: Stash, cherry-pick, merge
+- [x] Phase 13: Stash, cherry-pick, merge
