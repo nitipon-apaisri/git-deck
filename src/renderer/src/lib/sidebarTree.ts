@@ -35,6 +35,10 @@ export function matchesQuery(repo: Repo, query: string): boolean {
   )
 }
 
+/** A local repository keeps its folder path in `description`; group by the folder it lives in. */
+const parentFolder = (path: string): string => path.replace(/[\\/]+[^\\/]*[\\/]*$/, '') || path
+const folderName = (path: string): string => path.split(/[\\/]/).filter(Boolean).pop() ?? path
+
 export const namespaceKey = (accountId: string, namespace: string): string =>
   `${accountId}\u0000${namespace}`
 
@@ -51,11 +55,13 @@ export function buildTree(
     const visible = all.filter((r) => matchesQuery(r, query))
     // While searching, hosts with nothing to show would only be noise.
     if (searching && visible.length === 0) continue
+    const local = account.id === LOCAL_ACCOUNT_ID
     const groups = new Map<string, Repo[]>()
     for (const repo of visible) {
-      const list = groups.get(repo.namespace)
+      const group = local ? parentFolder(repo.description) : repo.namespace
+      const list = groups.get(group)
       if (list) list.push(repo)
-      else groups.set(repo.namespace, [repo])
+      else groups.set(group, [repo])
     }
     const own = account.username.toLowerCase()
     const namespaces = [...groups.entries()]
@@ -65,9 +71,9 @@ export function buildTree(
         if (aOwn !== bOwn) return aOwn ? -1 : 1
         return byName(a, b)
       })
-      .map(([name, repos]) => ({
-        key: namespaceKey(account.id, name),
-        name,
+      .map(([group, repos]) => ({
+        key: namespaceKey(account.id, group),
+        name: local ? folderName(group) : group,
         repos: [...repos].sort((a, b) => byName(a.name, b.name))
       }))
     nodes.push({ account, namespaces, total: all.length, matched: visible.length })
@@ -86,13 +92,6 @@ export function flattenTree(
     const hostOpen = searching || !collapsed.has(node.account.id)
     rows.push({ kind: 'host', key: node.account.id, node, expanded: hostOpen })
     if (!hostOpen) continue
-    if (node.account.id === LOCAL_ACCOUNT_ID) {
-      // Local repositories sit directly under their heading: one folder name each.
-      for (const ns of node.namespaces) {
-        for (const repo of ns.repos) rows.push({ kind: 'repo', key: repo.key, repo })
-      }
-      continue
-    }
     for (const ns of node.namespaces) {
       const nsOpen = searching || !collapsed.has(ns.key)
       rows.push({ kind: 'namespace', key: ns.key, node: ns, expanded: nsOpen })
