@@ -12,7 +12,9 @@ import {
   widestLane
 } from '../../lib/graphView'
 import { cn } from '@/lib/cn'
-import { Button, Icon, IconButton, Spinner } from '../ui'
+import { Button, Dialog, Icon, IconButton, Spinner } from '../ui'
+import { useDiff } from '../../state/changesData'
+import { DiffView } from '../repo/DiffView'
 import { CommitDetailPanel } from './CommitDetailPanel'
 import { GraphRowView } from './GraphRowView'
 
@@ -68,6 +70,13 @@ export function GitGraph({
   )
   const selected = selectedIndex >= 0 ? rows[selectedIndex].commit : null
   const detail = useCommitDetail(path, selected?.hash ?? null)
+  // The file whose diff is open, for the selected commit only.
+  const [diffFile, setDiffFile] = useState<{ hash: string; path: string } | null>(null)
+  const openDiff = diffFile && diffFile.hash === selected?.hash ? diffFile : null
+  const diff = useDiff(
+    path,
+    openDiff ? { source: 'commit', hash: openDiff.hash, path: openDiff.path } : null
+  )
 
   const linked = path !== null
   useEffect(() => {
@@ -250,7 +259,17 @@ export function GitGraph({
             state={detail}
             defaultBranch={defaultBranch}
             onClose={() => setSelectedHash(null)}
+            onOpenFile={(file) => setDiffFile({ hash: selected.hash, path: file })}
           />
+        ) : null}
+        {openDiff ? (
+          <Dialog
+            title={`Changes in commit ${openDiff.hash.slice(0, 7)}`}
+            width={960}
+            onClose={() => setDiffFile(null)}
+          >
+            <DiffView path={openDiff.path} state={diff} />
+          </Dialog>
         ) : null}
       </div>
     </div>

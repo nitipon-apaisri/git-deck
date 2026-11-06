@@ -16,6 +16,8 @@ export interface LocalActions {
   unlink: () => void
   fetch: () => void
   openFolder: () => void
+  /** The folder changed (stage, commit, …): graph, Info and Changes read it again. */
+  refresh: () => void
 }
 
 /**
@@ -100,5 +102,7 @@ export function useLocalActions(
     void run(null, () => window.api.local.reveal(linkedPath))
   }, [run, linkedPath])
 
-  return { busy, progress, error, reloadToken, clone, link, unlink, fetch, openFolder }
+  const refresh = useCallback(() => setReloadToken((n) => n + 1), [])
+
+  return { busy, progress, error, reloadToken, clone, link, unlink, fetch, openFolder, refresh }
 }

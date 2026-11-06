@@ -1,7 +1,7 @@
 // Split View state: a pure reducer with no DOM, so it runs under tsx tests.
 
 export type PaneId = 0 | 1
-export type TabName = 'overview' | 'graph' | 'info'
+export type TabName = 'overview' | 'graph' | 'changes' | 'info'
 export type Orientation = 'horizontal' | 'vertical' // horizontal = side by side
 
 export interface PaneState {
@@ -25,7 +25,7 @@ export const RATIO_MAX = 0.75
 /** What one arrow key press moves the divider. */
 export const RATIO_STEP = 0.02
 
-const TABS: readonly TabName[] = ['overview', 'graph', 'info']
+const TABS: readonly TabName[] = ['overview', 'graph', 'changes', 'info']
 
 export const emptyPane = (): PaneState => ({ repoKey: null, tab: 'overview' })
 

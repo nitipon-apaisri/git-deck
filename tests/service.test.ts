@@ -20,6 +20,14 @@ import { setInsecureHosts, verifyResultFor } from '../src/main/tls'
 import type { Account, AccountInput, Repo, RepoSummary } from '../src/shared/types'
 import { branchyRepo, emptyRepo, git, tempDir } from './helpers'
 
+// The service runs real git, which needs an identity and no user config.
+process.env.GIT_AUTHOR_NAME = 'Test'
+process.env.GIT_AUTHOR_EMAIL = 'test@example.com'
+process.env.GIT_COMMITTER_NAME = 'Test'
+process.env.GIT_COMMITTER_EMAIL = 'test@example.com'
+process.env.GIT_CONFIG_GLOBAL = '/dev/null'
+process.env.GIT_CONFIG_SYSTEM = '/dev/null'
+
 const TOKEN = 'test-token-abc'
 const crypto: TokenCrypto = {
   isAvailable: () => true,
@@ -574,6 +582,94 @@ test('concurrent project creates all persist', async () => {
   const r = await rig()
   await Promise.all(['A', 'B', 'C', 'D'].map((name) => r.api.projects.create({ name })))
   assert.equal((await r.api.projects.list()).length, 4)
+})
+
+// Working tree
+
+async function linkedRig(): Promise<{ r: Rig; dir: string }> {
+  const r = await rig()
+  const dir = emptyRepo()
+  await writeFile(join(dir, 'a.txt'), 'one\n')
+  git(dir, 'add', '.')
+  git(dir, 'commit', '-q', '-m', 'first')
+  r.picks.push(dir)
+  r.confirms.push(true)
+  const linked = await r.api.local.link('acc1:1')
+  assert.ok(linked)
+  return { r, dir: linked }
+}
+
+test('working tree calls need a linked folder and valid arguments', async () => {
+  const { r, dir } = await linkedRig()
+  const other = emptyRepo()
+  await assert.rejects(r.api.local.status(other), /not linked/)
+  await assert.rejects(r.api.local.stage(other, ['a.txt']), /not linked/)
+  await assert.rejects(r.api.local.createCommit(other, 'x', false), /not linked/)
+  await assert.rejects(r.api.local.stage(dir, []), /at least one file/)
+  await assert.rejects(r.api.local.stage(dir, [42 as unknown as string]), /not valid/)
+  await assert.rejects(r.api.local.stage(dir, ['a\0b']), /not valid/)
+  await assert.rejects(r.api.local.stage(dir, 'a.txt' as unknown as string[]), /at least one file/)
+  await assert.rejects(r.api.local.createCommit(dir, 5 as unknown as string, false), /not valid/)
+  await assert.rejects(
+    r.api.local.createCommit(dir, 'x', 'yes' as unknown as boolean),
+    /true or false/
+  )
+  await assert.rejects(
+    r.api.local.diff(dir, { source: 'nope' as 'commit', path: 'a.txt' }),
+    /source is not valid/
+  )
+  await assert.rejects(r.api.local.diff(dir, null as never), /not valid/)
+})
+
+test('stage, diff and commit work end to end through the service', async () => {
+  const { r, dir } = await linkedRig()
+  await writeFile(join(dir, 'a.txt'), 'one\ntwo\n')
+  const status = await r.api.local.status(dir)
+  assert.equal(status.entries[0].worktree, 'modified')
+  const diff = await r.api.local.diff(dir, { source: 'worktree', path: 'a.txt' })
+  assert.equal(diff.additions, 1)
+  await r.api.local.stage(dir, ['a.txt'])
+  assert.equal((await r.api.local.status(dir)).entries[0].index, 'modified')
+  await r.api.local.createCommit(dir, 'Add two', false)
+  assert.equal(git(dir, 'log', '-1', '--format=%s'), 'Add two')
+  assert.deepEqual((await r.api.local.status(dir)).entries, [])
+})
+
+test('discard asks first and does nothing when declined', async () => {
+  const { r, dir } = await linkedRig()
+  await writeFile(join(dir, 'a.txt'), 'changed\n')
+  const confirmedBefore = r.confirmed
+  r.confirms.push(false)
+  assert.equal(await r.api.local.discard(dir, ['a.txt']), false)
+  assert.equal(r.confirmed, confirmedBefore + 1)
+  assert.equal(await readFile(join(dir, 'a.txt'), 'utf8'), 'changed\n')
+  r.confirms.push(true)
+  assert.equal(await r.api.local.discard(dir, ['a.txt']), true)
+  assert.equal(await readFile(join(dir, 'a.txt'), 'utf8'), 'one\n')
+})
+
+test('writes to one repository run one after another', async () => {
+  const { r, dir } = await linkedRig()
+  for (const name of ['b.txt', 'c.txt', 'd.txt', 'e.txt']) {
+    await writeFile(join(dir, name), `${name}\n`)
+  }
+  // Four stages started together would collide on index.lock if they overlapped.
+  await Promise.all(
+    ['b.txt', 'c.txt', 'd.txt', 'e.txt'].map((name) => r.api.local.stage(dir, [name]))
+  )
+  assert.equal(
+    git(dir, 'diff', '--cached', '--name-only').split('\n').sort().join(),
+    'b.txt,c.txt,d.txt,e.txt'
+  )
+})
+
+test('git errors reach the caller without a token', async () => {
+  const { r, dir } = await linkedRig()
+  await assert.rejects(r.api.local.createCommit(dir, 'nothing staged', false), (err: Error) => {
+    assert.ok(err.message.length > 0)
+    assert.ok(!err.message.includes(TOKEN))
+    return true
+  })
 })
 
 // IPC table

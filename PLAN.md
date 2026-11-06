@@ -129,6 +129,9 @@ interface Api {
     fetch(path)
     reveal(path)
     onCloneProgress(cb): () => void
+    // Phases 11 to 13 (planned): status, diff, stage, unstage, discard, createCommit,
+    // checkout, createBranch, renameBranch, deleteBranch, pull, push,
+    // stash*, cherryPick, merge, abortOperation, continueOperation, onProgress
   }
   openExternal(url): Promise<void> // http/https only
   projects: {
@@ -354,6 +357,58 @@ A **Project is a named group of repos from any connected host or account, with a
 
 ---
 
+## Phase 11 — Changes, diff, stage, commit
+
+Scope decision and reasons: `docs/DECISIONS.md` (2026-11-06, git write features). Phases 11 to 13 each run on their own branch and stop at their Verify steps.
+
+**Groundwork (main):**
+
+- [x] `git.ts`: export a typed write helper over the private `run`, with optional `stdin` and `timeout`. Commit messages go in on stdin (`commit -F -`), never through argv. Put `--` before every user-supplied path. Validate refs with `git check-ref-format` and hashes with `HASH_RE`.
+- [x] Per-repo write serialisation so two writes never fight over `index.lock`. Done as a per-path queue (`serial` in `service.ts`), not `once`, because `once` would drop the second call's arguments.
+- [x] Add each new git function to the `GitOps` pick in `service.ts`, and each new method to `Api.local`, `IPC`, the preload, `ipcTable.ts` and a `guard()`ed service method that starts with `linkedRepoKey(path)`.
+
+**Main:**
+
+- [x] `getStatus(cwd)`: `status --porcelain=v2 -z --branch`, parsed into staged, unstaged, untracked and conflicted entries (renames and deletes included).
+- [x] `getDiff`: working-tree, staged and per-commit diffs parsed into hunks and lines. Cap the size, and report binary or oversized files instead of loading them.
+- [x] `stage`, `unstage`, `stageAll`, `discard` (confirmed), `createCommit(message, { amend })`. Hunk staging through `git apply --cached` was a stretch goal and is not done; line staging is out.
+
+**Renderer:**
+
+- [x] New `Changes` tab (`TabName`, its sanitiser and `RepoPane` tab list): staged and unstaged lists, stage toggles, message box, one primary Commit button, amend option.
+- [x] `DiffView`: opens inside the pane from a Changes row or from a file row in the commit detail panel. Unified view only.
+- [x] `useStatus` and `useDiff` hooks keyed on `reloadToken`; `LocalInfo.dirtyFiles` linking to the tab was left out.
+- [ ] Add dark and light boards for Changes and the diff under `docs/ui-boards/`. Not done: the gap is logged in `DECISIONS.md`. The new `Textarea` and diff lines use tokens only.
+
+**Verify:**
+
+- `tests/git.test.ts` covers status (each state), diff parsing, stage, unstage, discard, commit and amend against temp repos. Argument-injection cases (a path that starts with `-`, a path outside the repo) are rejected.
+- `tests/service.test.ts` covers the new channels, including the handler-coverage assertion.
+- Typecheck, lint, build pass and the existing suite stays green.
+- If a display is available, stage, commit and amend in a scratch repo, then screenshot Changes and a diff in both themes. Otherwise say clearly that this was not run visually.
+
+## Phase 12 — Branches, checkout, push and pull
+
+- [ ] `checkout` (branch, remote branch as a tracking branch, detached commit), `createBranch`, `renameBranch`, `deleteBranch` (confirmed, never the current branch).
+- [ ] `pull` (`--ff-only` by default, a clear "diverged" error, merge-pull as an explicit option) and `push` (sets upstream when there is none; force only as `--force-with-lease`, confirmed).
+- [ ] Reuse `gitAuthEnv` through the `fetchLocal` pattern. The header is scoped to the account's origin, so a remote on another host fails with a clear message and never prompts.
+- [ ] Generalise `clone:progress` into a `git:progress` event and use it for push and pull.
+- [ ] Renderer: branch menu in `LocalActions`; push and pull buttons driven by ahead and behind; `onContextMenu` on graph rows and ref badges using the point-anchored `Menu`.
+- [ ] README token scopes: pushing needs write access (GitHub classic `repo`, or fine-grained contents write; GitLab `write_repository`). Read-only tokens keep working for everything else.
+
+**Verify:** temp-repo tests with a bare repo as the remote cover checkout, branch create, rename and delete, fast-forward pull, diverged pull, push, set-upstream and rejected push. No token in argv, errors or `.git/config`. Typecheck, lint, build pass.
+
+## Phase 13 — Stash, cherry-pick, merge
+
+- [ ] Stash: push (message, include-untracked option), list, apply, pop, drop (confirmed). The list sits in the Changes tab.
+- [ ] `cherryPick(hash)` from the commit context menu and `merge(branch)` (with a `--no-ff` option).
+- [ ] On conflict, read the state from `status`, show a banner with the conflicted files, and offer Abort (`cherry-pick --abort` or `merge --abort`) and Continue after the user resolves the files elsewhere (`local.reveal` opens the folder). There is no in-app conflict editor.
+- [ ] On open, detect an in-progress merge or cherry-pick through `rev-parse --git-path MERGE_HEAD` and `CHERRY_PICK_HEAD`.
+
+**Verify:** temp-repo tests cover stash round trips, a clean cherry-pick, a conflicting cherry-pick then abort, a clean merge, a conflicting merge then abort, and resuming an in-progress state. Typecheck, lint, build pass.
+
+---
+
 ## Graph algorithm (src/shared/graph-layout.ts)
 
 Stateful class so pages can be appended. Keep:
@@ -383,4 +438,4 @@ Row shape: `{ commit, lane, color, edges: { part: 'top'|'bottom'|'through', from
 
 ## Non-goals for this version
 
-Staging and committing, diff viewer, merge-conflict UI, rebase and cherry-pick, PR/MR creation, OAuth login (tokens only), SQLite cache, auto-update and installers, more than two split panes, drag-and-drop between projects, cloning all repos of a project at once.
+Merge-conflict editor, interactive rebase (and non-interactive rebase), line-level staging, PR/MR creation, OAuth login (tokens only), SQLite cache, auto-update and installers, more than two split panes, drag-and-drop between projects, cloning all repos of a project at once.

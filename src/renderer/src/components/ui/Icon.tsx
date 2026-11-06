@@ -40,6 +40,7 @@ const SHAPES = {
     </>
   ),
   plus: <path d="M12 5v14M5 12h14" />,
+  minus: <path d="M5 12h14" />,
   users: (
     <>
       <circle cx="9" cy="8" r="3.2" />

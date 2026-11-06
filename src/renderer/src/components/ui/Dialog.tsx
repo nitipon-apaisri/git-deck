@@ -58,8 +58,8 @@ export const ModalTitle = DialogPrimitive.Title
 interface DialogProps {
   title: string
   description?: string
-  /** 520 for most dialogs, 560 for the project dialog. */
-  width?: 520 | 560
+  /** 520 for most dialogs, 560 for the project dialog, 960 for a diff. */
+  width?: 520 | 560 | 960
   onClose: () => void
   children: ReactNode
   /** Test and secondary actions, left in the footer. */
@@ -79,7 +79,10 @@ export function Dialog({
   actions
 }: DialogProps) {
   return (
-    <Modal onClose={onClose} className={width === 560 ? 'w-[560px]' : undefined}>
+    <Modal
+      onClose={onClose}
+      className={width === 560 ? 'w-[560px]' : width === 960 ? 'w-[960px]' : undefined}
+    >
       <header className="flex items-start gap-3 px-6 pt-5 pb-3">
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <DialogPrimitive.Title className="m-0 text-[17px] leading-6 font-semibold">

@@ -12,6 +12,7 @@ import { useLocalActions } from '../../state/useLocalActions'
 import { useNow } from '../../state/useNow'
 import { ErrorBanner, Icon, IconButton, Island, Spinner, Tabs, panelId, tabId } from '../ui'
 import { GitGraph } from '../graph/GitGraph'
+import { ChangesTab } from './ChangesTab'
 import { InfoTab } from './InfoTab'
 import { LocalActions } from './LocalActions'
 import { OverviewTab } from './OverviewTab'
@@ -20,6 +21,7 @@ import { RepoHeader } from './RepoHeader'
 const TABS: { id: TabName; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'graph', label: 'Graph' },
+  { id: 'changes', label: 'Changes' },
   { id: 'info', label: 'Info' }
 ]
 /** A local repository has no host summary, so no Overview. */
@@ -84,6 +86,9 @@ export function RepoPane({
   // pages and selected commit survive a trip to another tab.
   const [graphSeen, setGraphSeen] = useState(tab === 'graph')
   if (tab === 'graph' && !graphSeen) setGraphSeen(true)
+  // Same for Changes: the commit message being written survives a trip to another tab.
+  const [changesSeen, setChangesSeen] = useState(tab === 'changes')
+  if (tab === 'changes' && !changesSeen) setChangesSeen(true)
   const [webError, setWebError] = useState<string | null>(null)
 
   const { summary, fetchedAt, loading, error, reload } = useRepoSummary(isLocal ? null : repo.key)
@@ -207,6 +212,17 @@ export function RepoPane({
               onFetch={actions.fetch}
               narrow={narrow}
               place={paneNumber}
+            />
+          </div>
+        ) : null}
+        {changesSeen ? (
+          <div className="flex min-w-0 flex-col [&[hidden]]:hidden" hidden={tab !== 'changes'}>
+            <ChangesTab
+              path={linkedPath ?? null}
+              reloadToken={actions.reloadToken}
+              onChanged={actions.refresh}
+              visible={tab === 'changes'}
+              narrow={narrow}
             />
           </div>
         ) : null}
