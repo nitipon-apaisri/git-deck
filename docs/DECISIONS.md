@@ -8,6 +8,21 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-06: Phase 15a as built
+
+- **Question:** how the conflict data layer reads files, what it refuses, and where it differs from the plan.
+- **Decision and why:**
+  - `getConflictFile` reads the work-tree file and parses its markers (`shared/conflict.ts`). `resolveConflictRegions` takes `{ path, fingerprint, choices }`, re-reads the file, checks the fingerprint, re-parses, builds the text itself and writes it through a temp file in the same folder, keeping the file mode. A `null` choice leaves a region open with its markers as read, so a half-done file can be saved. The file is staged only when no region is open and no marker line is left, which also covers edited text that itself contains a marker.
+  - The fingerprint is SHA-1 of the file bytes, computed in main with `node:crypto`. The plan put `conflictFingerprint` in `shared/`, but only main ever computes it, so it stays out of code the renderer bundles.
+  - A file is text only if it is a plain file, under 2 MiB, free of NUL bytes and valid UTF-8 (the bytes survive a decode and encode round trip). Anything else is `binary` or `too-large` and gets the whole-file actions only. Writing a Latin-1 file back through UTF-8 would corrupt it.
+  - `symlink` is the reason for any path that is not a plain file inside the repository: a symlink, or a path that passes through a symlinked folder out of the repo. Such a path is never read or written. `stillMarked` (used by Continue) now follows the same rule, so it can no longer read through a symlink. Its 5 MiB scan limit is unchanged.
+  - The parser keeps every line's own `\r` so a CRLF or mixed file is written back byte for byte. Edited text takes the file's dominant line ending. A second `=======` inside one conflict, a nested block, an unclosed block and a stray `<<<<<<<` or `>>>>>>>` line are refused (`unparseable`, with the line number) instead of guessed at. A lone `=======` outside a conflict is plain text.
+  - Whole-file actions are `ours`, `theirs`, `keep`, `delete` and `mark-resolved`. Which apply depends on the kind (`conflictActions`). `ours` and `theirs` use `checkout --ours|--theirs` then `add`. `delete` is `rm -f`, and the service asks first. A declined confirm returns `false` and changes nothing. A submodule conflict (mode 160000 in the index) only allows `delete`.
+  - The file must be one that `git status` lists as conflicted at that moment. A path that starts with `-` is only accepted if such a file really exists, and `--` goes before every path.
+  - The calls take their sides from `status`, not from the operation, so a conflicting `stash pop` works (labels "Current" and "Stash").
+  - `getOperation` was split into `findOperation` (kind and target) and the status read, so the conflict call can name the operation without a second status run.
+- **Not verified:** no screen exists yet in 15a. A file with no final newline whose last region ends the file was not checked against how git writes the closing marker. Windows paths were not checked.
+
 ## 2026-11-06: Phase 15 scope (merge-conflict editor)
 
 - **Question:** what an in-app conflict editor is, how much of it to build now, and how it stays safe.

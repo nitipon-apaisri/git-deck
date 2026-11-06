@@ -18,6 +18,9 @@ import type {
   AccountInput,
   Cached,
   CheckoutTarget,
+  ConflictAction,
+  ConflictChoice,
+  ConflictRequest,
   HunkRequest,
   DiffRequest,
   PullMode,
@@ -26,6 +29,7 @@ import type {
 } from '../shared/types'
 import * as realGit from './git'
 import { NO_OPERATION } from './git'
+import { MAX_REGION_TEXT } from '../shared/conflict'
 import { gitAuthEnv } from './gitAuth'
 import { watchRepo as realWatchRepo } from './watcher'
 import { createProvider as realCreateProvider, normalizeBaseUrl } from './providers'
@@ -98,6 +102,9 @@ export type GitOps = Pick<
   | 'skipOperation'
   | 'stageHunk'
   | 'unstageHunk'
+  | 'getConflictFile'
+  | 'resolveConflictRegions'
+  | 'resolveConflictFile'
 >
 
 export interface ServiceDeps {
@@ -232,6 +239,44 @@ function checkHunk(value: unknown): HunkRequest {
     throw new Error('The hunk is not valid')
   }
   return { path: h.path, source: h.source, index: h.index, fingerprint: h.fingerprint }
+}
+
+const CONFLICT_ACTIONS = new Set(['ours', 'theirs', 'keep', 'delete', 'mark-resolved'])
+const MAX_CONFLICT_CHOICES = 10_000
+const CONFLICT_WORDS = new Set(['ours', 'theirs', 'both', 'base'])
+
+function checkConflictPath(value: unknown): string {
+  if (
+    typeof value !== 'string' ||
+    !value ||
+    value.length > MAX_PATH_LENGTH ||
+    value.includes('\0')
+  ) {
+    throw new Error('The file path is not valid')
+  }
+  return value
+}
+
+function checkConflictRequest(value: unknown): ConflictRequest {
+  const r = value as Partial<ConflictRequest> | null
+  if (
+    typeof r !== 'object' ||
+    r === null ||
+    typeof r.fingerprint !== 'string' ||
+    !/^[0-9a-f]{40}$/.test(r.fingerprint) ||
+    !Array.isArray(r.choices) ||
+    r.choices.length > MAX_CONFLICT_CHOICES
+  ) {
+    throw new Error('The conflict request is not valid')
+  }
+  const choices = r.choices.map((c: unknown): ConflictChoice => {
+    if (c === null) return null
+    if (typeof c === 'string' && CONFLICT_WORDS.has(c)) return c as ConflictChoice
+    const text = (c as { text?: unknown } | null)?.text
+    if (typeof text === 'string' && text.length <= MAX_REGION_TEXT) return { text }
+    throw new Error('The conflict request is not valid')
+  })
+  return { path: checkConflictPath(r.path), fingerprint: r.fingerprint, choices }
 }
 
 function checkRemoteText(value: unknown, what: string, max: number): string {
@@ -1040,6 +1085,33 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
         linkedRepoKey(path)
         const request = checkHunk(hunk)
         return serial(path, () => git.unstageHunk(path, request))
+      }),
+      conflictFile: guard(async (path, file) => {
+        linkedRepoKey(path)
+        return git.getConflictFile(path, checkConflictPath(file))
+      }),
+      resolveConflict: guard(async (path, request) => {
+        linkedRepoKey(path)
+        const checked = checkConflictRequest(request)
+        return serial(path, () => git.resolveConflictRegions(path, checked))
+      }),
+      resolveConflictFile: guard(async (path, file, action) => {
+        linkedRepoKey(path)
+        const name = checkConflictPath(file)
+        if (typeof action !== 'string' || !CONFLICT_ACTIONS.has(action)) {
+          throw new Error('The conflict action is not valid')
+        }
+        if (action === 'delete') {
+          const ok = await ui.confirm({
+            message: `Delete ${name}?`,
+            detail:
+              'The file is removed from the work tree and the conflict is resolved by deleting it.',
+            confirmLabel: 'Delete'
+          })
+          if (!ok) return false
+        }
+        await serial(path, () => git.resolveConflictFile(path, name, action as ConflictAction))
+        return true
       }),
       reveal: guard(async (path) => {
         linkedRepoKey(path)

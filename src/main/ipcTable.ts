@@ -6,6 +6,8 @@ import type {
   AccountInput,
   CheckoutTarget,
   DiffRequest,
+  ConflictAction,
+  ConflictRequest,
   HunkRequest,
   PullMode,
   ResetMode
@@ -99,6 +101,11 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     localSkipOperation: ([path]) => api.local.skipOperation(path as string),
     localStageHunk: ([path, hunk]) => api.local.stageHunk(path as string, hunk as HunkRequest),
     localUnstageHunk: ([path, hunk]) => api.local.unstageHunk(path as string, hunk as HunkRequest),
+    localConflictFile: ([path, file]) => api.local.conflictFile(path as string, file as string),
+    localResolveConflict: ([path, request]) =>
+      api.local.resolveConflict(path as string, request as ConflictRequest),
+    localResolveConflictFile: ([path, file, action]) =>
+      api.local.resolveConflictFile(path as string, file as string, action as ConflictAction),
     localOperation: ([path]) => api.local.operation(path as string),
     localContinueOperation: ([path]) => api.local.continueOperation(path as string),
     localAbortOperation: ([path]) => api.local.abortOperation(path as string),

@@ -129,6 +129,8 @@ export interface StatusEntry {
   untracked: boolean
   /** Unmerged: the path has a merge conflict. */
   conflicted: boolean
+  /** How the two sides disagree, `null` unless `conflicted`. */
+  conflict: ConflictKind | null
 }
 
 export interface RepoStatus {
@@ -263,6 +265,86 @@ export interface TagEntry {
   message: string | null
   /** Unix seconds: when the tag was made, or its commit's date for a lightweight tag. */
   createdAt: number
+}
+
+/** The `XY` of an unmerged path: "us" is the current side, "them" the incoming one. */
+export type ConflictKind =
+  | 'both-modified'
+  | 'both-added'
+  | 'deleted-by-us'
+  | 'deleted-by-them'
+  | 'added-by-us'
+  | 'added-by-them'
+  | 'both-deleted'
+
+/** Whole-file ways out. `ours` and `theirs` are git's sides (see `sideLabels`). */
+export type ConflictAction = 'ours' | 'theirs' | 'keep' | 'delete' | 'mark-resolved'
+
+export interface SideLabels {
+  ours: string
+  theirs: string
+}
+
+/** One `<<<<<<<` block. Lines keep their own trailing `\r`, so a CRLF file is written back as read. */
+export interface ConflictRegion {
+  type: 'conflict'
+  ours: string[]
+  /** The common ancestor, only in `diff3` and `zdiff3` files. */
+  base: string[] | null
+  theirs: string[]
+  oursLabel: string
+  baseLabel: string | null
+  theirsLabel: string
+  /** The marker lines as read, so a region left open is written back unchanged. */
+  marks: { start: string; base: string | null; sep: string; end: string }
+}
+
+export interface ConflictText {
+  type: 'text'
+  lines: string[]
+}
+
+export type ConflictSegment = ConflictText | ConflictRegion
+
+/** What replaces one region. `null` leaves it open. `both` is ours, then theirs. */
+export type ConflictChoice = 'ours' | 'theirs' | 'both' | 'base' | { text: string } | null
+
+export type ConflictUnsupported =
+  /** No markers to edit: use the whole-file actions. */
+  'whole-file' | 'binary' | 'too-large' | 'submodule' | 'symlink' | 'unparseable'
+
+export interface ConflictFile {
+  path: string
+  kind: ConflictKind
+  /** Why there are no regions, `null` when `segments` is set. */
+  unsupported: ConflictUnsupported | null
+  /** Say what is wrong when `unsupported` is `unparseable`. */
+  detail: string | null
+  /** `null` unless `segments` is set. */
+  eol: '\n' | '\r\n' | null
+  finalNewline: boolean
+  segments: ConflictSegment[] | null
+  /** Names the content that `segments` came from. Send it back with the choices. */
+  fingerprint: string | null
+  actions: ConflictAction[]
+  /** The merge, cherry-pick, revert or rebase the conflict belongs to, `null` for a stash. */
+  operation: OperationKind | null
+  labels: SideLabels
+}
+
+export interface ConflictRequest {
+  path: string
+  fingerprint: string
+  /** One entry per region, in file order. */
+  choices: ConflictChoice[]
+}
+
+export interface ConflictSaveResult {
+  /** No region is left open and the file is staged, so it left the conflict list. */
+  staged: boolean
+  /** Regions still holding markers. */
+  open: number
+  fingerprint: string
 }
 
 export interface OperationResult {
