@@ -42,7 +42,7 @@ const PRESET_CHOICES: readonly Choice<PresetId>[] = PRESETS.map((p) => ({
   value: p.id,
   title: p.title,
   sub: p.sub,
-  leading: <HostTile tile={p.tile} host={p.host} size={28} />
+  leading: <HostTile tile={p.tile} host={p.host} size={28} logo />
 }))
 
 function scopeList(scopes: readonly string[]): ReactNode {
@@ -175,7 +175,7 @@ export function IntegrationsSection({
               const { tile, host: kind } = hostTileOf(account.type, account.baseUrl)
               return (
                 <li key={account.id} className={styles.account}>
-                  <HostTile tile={tile} host={kind} size={28} />
+                  <HostTile tile={tile} host={kind} size={28} logo />
                   <span className={styles.accountText}>
                     <span className={styles.accountName}>{account.label}</span>
                     <span className={styles.accountSub}>
