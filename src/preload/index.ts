@@ -1,7 +1,7 @@
 // The only bridge between the sandboxed page and main. Every call is a fixed
 // channel with plain data, so the page never gets ipcRenderer itself.
 import { contextBridge, ipcRenderer } from 'electron'
-import { IPC, type Api, type CloneProgress, type IpcResult } from '../shared/api'
+import { IPC, type Api, type GitProgress, type IpcResult } from '../shared/api'
 
 async function call<T>(channel: string, ...args: unknown[]): Promise<T> {
   const result = (await ipcRenderer.invoke(channel, ...args)) as IpcResult<T>
@@ -42,14 +42,22 @@ const api: Api = {
     stageAll: (path) => call(IPC.localStageAll, path),
     discard: (path, files) => call(IPC.localDiscard, path, files),
     createCommit: (path, message, amend) => call(IPC.localCreateCommit, path, message, amend),
+    branches: (path) => call(IPC.localBranches, path),
+    checkout: (path, target) => call(IPC.localCheckout, path, target),
+    createBranch: (path, name, startPoint, checkout) =>
+      call(IPC.localCreateBranch, path, name, startPoint, checkout),
+    renameBranch: (path, from, to) => call(IPC.localRenameBranch, path, from, to),
+    deleteBranch: (path, name) => call(IPC.localDeleteBranch, path, name),
+    pull: (path, mode) => call(IPC.localPull, path, mode),
+    push: (path, force) => call(IPC.localPush, path, force),
     repos: () => call(IPC.localRepos),
     open: () => call(IPC.localOpen),
     remove: (repoKey) => call(IPC.localRemove, repoKey),
-    onCloneProgress: (cb) => {
-      const listener = (_event: unknown, progress: CloneProgress): void => cb(progress)
-      ipcRenderer.on(IPC.cloneProgress, listener)
+    onGitProgress: (cb) => {
+      const listener = (_event: unknown, progress: GitProgress): void => cb(progress)
+      ipcRenderer.on(IPC.gitProgress, listener)
       return () => {
-        ipcRenderer.removeListener(IPC.cloneProgress, listener)
+        ipcRenderer.removeListener(IPC.gitProgress, listener)
       }
     }
   },

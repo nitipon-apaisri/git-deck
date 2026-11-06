@@ -232,3 +232,19 @@ Newest first. Template:
   - The Changes tab stays mounted after the first visit, so a half-written message survives a trip to another tab. It reads the folder again whenever it becomes visible.
   - Design boards for Changes and the diff were not made. The screens use existing tokens and components only. Boards are still owed.
   - Hunk staging (stretch goal) and the `dirtyFiles` link to the tab were left out.
+
+## 2026-11-06: Phase 12 as built
+
+- **Question:** how branch, pull and push calls pick a remote and sign in, what a force push and a delete may do, and where the renderer reads tracking counts.
+- **Decision and why:**
+  - The remote is read from git's own config, never from the caller: the current branch's upstream remote, else `origin`, else the only remote. With several remotes and none named `origin`, it refuses to guess. Push sets the upstream only when there is none, and plain `git push` otherwise, so git's `push.default` refuses a differently named upstream instead of creating a stray branch.
+  - A token goes to the account's own origin only (`remoteAuthEnv`). An HTTPS remote on another host fails before git starts, with a message naming both hosts. SSH and local-path remotes get no token. `GIT_TERMINAL_PROMPT=0` already stops any prompt.
+  - Pull is `--ff-only` unless the user picks "Pull and merge" (`--no-rebase --no-edit`, so a `pull.rebase` setting and an editor stay out of it). A diverged fast-forward becomes a plain "the branches have diverged" message.
+  - Force push is `--force-with-lease` only, asks through `ui.confirm` in main, and is offered only when there is an upstream.
+  - Branch delete is `git branch -d`, never `-D`: git refuses unmerged work and the message reaches the user. The current branch is refused in `git.ts`, and the context menu does not offer it. The remote branch is never touched.
+  - Branch names are checked with `git check-ref-format --branch` and a leading `-` is refused. Existing names must exist as `refs/heads/` or `refs/remotes/` before they reach git.
+  - One pull or push per folder at a time (`remoteBusy`). Pull also joins the write queue, because it changes the work tree. Push does not, so staging stays usable while it uploads.
+  - `clone:progress` became `git:progress` and carries `op` (`clone`, `pull`, `push`). A failed run reports the last few non-progress stderr lines, so a rejected push says why.
+  - Branches and tracking counts come from a new `local.branches` call (a few `for-each-ref` runs) that every linked pane reads, instead of widening `getLocalInfo`, which runs a dozen commands and only the Info tab needs.
+  - The right-click menu on a graph row or ref badge is built from the pure `refActions`, so it is tested without a DOM.
+- **Not verified:** none of the new screens (branch menu, split Pull and Push buttons, name dialog, graph context menus) was run in a live Electron window, and no dark and light boards exist for them. The git, service and pure-logic layers are covered by tests. Remote branch lists are not capped, so a repository with thousands of remote branches gives a long menu.

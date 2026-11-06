@@ -2,12 +2,12 @@
 // can prove every channel is wired.
 import { IPC, type IpcResult } from '../shared/api'
 import type { CloneProtocol, ProjectCreateInput, ProjectPatchInput } from '../shared/api'
-import type { AccountInput, DiffRequest } from '../shared/types'
+import type { AccountInput, CheckoutTarget, DiffRequest, PullMode } from '../shared/types'
 import type { MainApi } from './service'
 
 export type Handler = (args: unknown[]) => Promise<unknown>
 
-export type RequestChannel = Exclude<keyof typeof IPC, 'cloneProgress'>
+export type RequestChannel = Exclude<keyof typeof IPC, 'gitProgress'>
 
 // The casts mark the trust boundary: the service validates every argument at runtime.
 export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
@@ -39,6 +39,20 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     localDiscard: ([path, files]) => api.local.discard(path as string, files as string[]),
     localCreateCommit: ([path, message, amend]) =>
       api.local.createCommit(path as string, message as string, amend as boolean),
+    localBranches: ([path]) => api.local.branches(path as string),
+    localCheckout: ([path, target]) => api.local.checkout(path as string, target as CheckoutTarget),
+    localCreateBranch: ([path, name, startPoint, checkout]) =>
+      api.local.createBranch(
+        path as string,
+        name as string,
+        startPoint as string | null,
+        checkout as boolean
+      ),
+    localRenameBranch: ([path, from, to]) =>
+      api.local.renameBranch(path as string, from as string, to as string),
+    localDeleteBranch: ([path, name]) => api.local.deleteBranch(path as string, name as string),
+    localPull: ([path, mode]) => api.local.pull(path as string, mode as PullMode),
+    localPush: ([path, force]) => api.local.push(path as string, force as boolean),
     localRepos: () => api.local.repos(),
     localOpen: () => api.local.open(),
     localRemove: ([key]) => api.local.remove(key as string),

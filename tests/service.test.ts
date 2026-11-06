@@ -99,7 +99,7 @@ interface Rig {
   confirmed: number
   revealed: string[]
   opened: string[]
-  progress: { repoKey: string; line: string; percent: number | null }[]
+  progress: { repoKey: string; op: string; line: string; percent: number | null }[]
   fetchEnvs: { cwd: string; env: Record<string, string> }[]
   cloneCalls: { url: string; dest: string; env: Record<string, string> }[]
   cloneGate?: Promise<void>
@@ -162,7 +162,7 @@ async function rig(opts: { seed?: boolean } = { seed: true }): Promise<Rig> {
   const service = createService({
     store,
     ui,
-    emitCloneProgress: (p) => r.progress.push(p),
+    emitProgress: (p) => r.progress.push(p),
     createProvider: () => r.provider,
     git: gitOps
   })
@@ -245,7 +245,7 @@ test('accounts.add refuses when secure storage is unavailable', async () => {
   const { api } = createService({
     store,
     ui: {} as Ui,
-    emitCloneProgress: () => {},
+    emitProgress: () => {},
     createProvider: () => ({
       verify: async () => ({ username: 'octo' }),
       listRepos: async () => [],
@@ -447,8 +447,8 @@ test('clone: progress carries the repo key, the link is stored, HTTPS gets auth'
   const root = await r.api.local.clone('acc1:1', 'https')
   assert.equal(root, realpathSync(join(parent, 'hello')))
   assert.deepEqual(r.progress, [
-    { repoKey: 'acc1:1', line: "Cloning into 'x'...", percent: null },
-    { repoKey: 'acc1:1', line: 'Receiving objects:  42% (21/50)', percent: 42 }
+    { repoKey: 'acc1:1', op: 'clone', line: "Cloning into 'x'...", percent: null },
+    { repoKey: 'acc1:1', op: 'clone', line: 'Receiving objects:  42% (21/50)', percent: 42 }
   ])
   assert.equal((await r.api.local.links())['acc1:1'], root)
   assert.equal(r.cloneCalls[0].url, 'https://github.com/octo/hello.git')
@@ -677,7 +677,7 @@ test('git errors reach the caller without a token', async () => {
 test('every request channel has a handler, and each dispatches to the service', async () => {
   const r = await rig()
   const handlers = buildHandlers(r.api)
-  const requests = Object.keys(IPC).filter((k) => k !== 'cloneProgress')
+  const requests = Object.keys(IPC).filter((k) => k !== 'gitProgress')
   assert.deepEqual(Object.keys(handlers).sort(), requests.sort())
   assert.equal(
     new Set(Object.values(IPC)).size,

@@ -3,15 +3,19 @@ import { execFile, spawn } from 'node:child_process'
 import { Semaphore } from './semaphore'
 import { parseUnifiedDiff } from '../shared/diff'
 import type {
+  BranchList,
   ChangeKind,
+  CheckoutTarget,
   CommitDetail,
   CommitFile,
   DiffRequest,
   FileDiff,
   GraphCommit,
   GraphRef,
+  LocalBranch,
   LocalInfo,
   LocalRemote,
+  PullMode,
   RepoStatus,
   StatusEntry
 } from '../shared/types'
@@ -267,40 +271,270 @@ export function cloneRepo(
   env: Record<string, string> = {},
   onLine: (line: string) => void = () => {}
 ): Promise<void> {
-  return slots.run(() => cloneProcess(url, dest, env, onLine))
+  return slots.run(() =>
+    progressProcess(undefined, ['clone', '--progress', '--', url, dest], env, onLine)
+  )
 }
 
-function cloneProcess(
-  url: string,
-  dest: string,
+// Lines git prints while it works. They are progress, not the reason a command failed.
+const PROGRESS_RE =
+  /^(remote: )?(Enumerating|Counting|Compressing|Writing|Receiving|Resolving|Total|Delta compression|Cloning into|Updating files|Unpacking|Checking out)/i
+
+/**
+ * Runs git and reports each stderr line as it arrives (git rewrites progress with a carriage return).
+ * A failure carries the last few lines that are not progress, so a rejected push says why.
+ */
+function progressProcess(
+  cwd: string | undefined,
+  args: string[],
   env: Record<string, string>,
   onLine: (line: string) => void
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    const child = spawn('git', ['clone', '--progress', '--', url, dest], { env: gitEnv(env) })
+    const child = spawn('git', args, { cwd, env: gitEnv(env) })
     let buffer = ''
     let last = ''
+    const reasons: string[] = []
+    const take = (line: string): void => {
+      if (!line) return
+      last = line
+      if (!PROGRESS_RE.test(line)) reasons.push(line)
+      onLine(line)
+    }
     child.stderr.setEncoding('utf8')
     child.stderr.on('data', (chunk: string) => {
       buffer += chunk
       const parts = buffer.split(/[\r\n]/)
       buffer = parts.pop() ?? ''
-      for (const line of parts) {
-        if (!line) continue
-        last = line
-        onLine(line)
-      }
+      for (const line of parts) take(line)
     })
     child.on('error', (err) => reject(err))
     child.on('close', (code) => {
-      if (buffer) {
-        last = buffer
-        onLine(buffer)
-      }
+      take(buffer)
       if (code === 0) resolve()
-      else reject(new Error(last || `git clone exited with code ${code}`))
+      else {
+        const why = reasons.slice(-5).join('\n') || last
+        reject(new Error(why || `git ${args[0]} exited with code ${code}`))
+      }
     })
   })
+}
+
+// Branches, checkout, pull and push
+
+/** Throws unless `name` is a valid short branch name that does not look like an option. */
+export async function assertBranchName(cwd: string, name: string): Promise<void> {
+  if (typeof name !== 'string' || !name || name.length > 255 || name.startsWith('-')) {
+    throw new Error(`"${String(name).slice(0, 60)}" is not a valid branch name`)
+  }
+  if ((await tryRun(cwd, ['check-ref-format', '--branch', name])) === null || /^@/.test(name)) {
+    throw new Error(`"${name}" is not a valid branch name`)
+  }
+}
+
+async function refExists(cwd: string, ref: string): Promise<boolean> {
+  return (await tryRun(cwd, ['show-ref', '--verify', '--quiet', ref])) !== null
+}
+
+async function currentBranch(cwd: string): Promise<string | null> {
+  return tryRun(cwd, ['symbolic-ref', '--short', '-q', 'HEAD'])
+}
+
+function parseTrack(track: string): { ahead: number; behind: number; gone: boolean } {
+  const ahead = /ahead (\d+)/.exec(track)
+  const behind = /behind (\d+)/.exec(track)
+  return {
+    ahead: ahead ? Number(ahead[1]) : 0,
+    behind: behind ? Number(behind[1]) : 0,
+    gone: track.trim() === 'gone'
+  }
+}
+
+export async function listBranches(cwd: string): Promise<BranchList> {
+  const current = await currentBranch(cwd)
+  const format = ['%(refname:short)', '%(upstream:short)', '%(upstream:track,nobracket)'].join(FS)
+  const localRaw = (await tryRun(cwd, ['for-each-ref', 'refs/heads', `--format=${format}`])) ?? ''
+  const local: LocalBranch[] = []
+  for (const line of localRaw.split('\n')) {
+    if (!line) continue
+    const [name, upstream, track] = line.split(FS)
+    local.push({
+      name,
+      upstream: upstream || null,
+      ...parseTrack(track ?? ''),
+      current: name === current
+    })
+  }
+  local.sort((a, b) => Number(b.current) - Number(a.current) || a.name.localeCompare(b.name))
+  const remoteRaw =
+    (await tryRun(cwd, ['for-each-ref', 'refs/remotes', '--format=%(refname)'])) ?? ''
+  const remote = remoteRaw
+    .split('\n')
+    .filter((ref) => ref && !ref.endsWith('/HEAD'))
+    .map((ref) => ref.slice('refs/remotes/'.length))
+    .sort()
+  const remotesRaw = (await tryRun(cwd, ['remote'])) ?? ''
+  return {
+    current,
+    detached:
+      current === null && (await tryRun(cwd, ['rev-parse', '--verify', '-q', 'HEAD'])) !== null,
+    local,
+    remote,
+    remotes: remotesRaw.split('\n').filter(Boolean)
+  }
+}
+
+export async function checkout(cwd: string, target: CheckoutTarget): Promise<void> {
+  if (target.kind === 'commit') {
+    if (!HASH_RE.test(target.hash)) throw new Error('Invalid commit hash')
+    await run(cwd, ['checkout', '--detach', target.hash, '--'])
+    return
+  }
+  if (target.kind === 'branch') {
+    if (!(await refExists(cwd, `refs/heads/${target.name}`))) {
+      throw new Error(`There is no branch named "${target.name}"`)
+    }
+    await run(cwd, ['checkout', target.name, '--'])
+    return
+  }
+  if (target.kind !== 'remote') throw new Error('Unknown checkout target')
+  if (!(await refExists(cwd, `refs/remotes/${target.name}`))) {
+    throw new Error(`There is no remote branch named "${target.name}"`)
+  }
+  const slash = target.name.indexOf('/')
+  const localName = target.name.slice(slash + 1)
+  if (slash < 1 || !localName) throw new Error('Not a remote branch')
+  await assertBranchName(cwd, localName)
+  if (await refExists(cwd, `refs/heads/${localName}`)) {
+    // Already have it: switch to it instead of failing on a name clash.
+    await run(cwd, ['checkout', localName, '--'])
+    return
+  }
+  await run(cwd, ['checkout', '--track', '-b', localName, target.name])
+}
+
+export async function createBranch(
+  cwd: string,
+  name: string,
+  startPoint: string | null,
+  switchTo: boolean
+): Promise<void> {
+  await assertBranchName(cwd, name)
+  if (await refExists(cwd, `refs/heads/${name}`)) {
+    throw new Error(`A branch named "${name}" already exists`)
+  }
+  let start: string[] = []
+  if (startPoint !== null) {
+    const isHash = HASH_RE.test(startPoint)
+    const isRef =
+      (await refExists(cwd, `refs/heads/${startPoint}`)) ||
+      (await refExists(cwd, `refs/remotes/${startPoint}`))
+    if (!isHash && !isRef) throw new Error('The starting point is not a branch or a commit')
+    start = [startPoint]
+  }
+  if (switchTo) await run(cwd, ['checkout', '-b', name, ...start])
+  else await run(cwd, ['branch', '--', name, ...start])
+}
+
+export async function renameBranch(cwd: string, from: string, to: string): Promise<void> {
+  if (!(await refExists(cwd, `refs/heads/${from}`))) {
+    throw new Error(`There is no branch named "${from}"`)
+  }
+  await assertBranchName(cwd, to)
+  await run(cwd, ['branch', '-m', '--', from, to])
+}
+
+/** Safe delete: git refuses a branch with commits that are not merged anywhere else. */
+export async function deleteBranch(cwd: string, name: string): Promise<void> {
+  if (!(await refExists(cwd, `refs/heads/${name}`))) {
+    throw new Error(`There is no branch named "${name}"`)
+  }
+  if (name === (await currentBranch(cwd))) {
+    throw new Error(
+      'You cannot delete the branch that is checked out. Switch to another one first.'
+    )
+  }
+  await run(cwd, ['branch', '-d', '--', name])
+}
+
+export interface RemoteTarget {
+  remote: string
+  /** Credentials already stripped. */
+  url: string
+  /** The checked-out branch already tracks a branch on `remote`. */
+  hasUpstream: boolean
+  branch: string
+}
+
+/**
+ * The remote a pull or push talks to: the upstream's remote, else `origin`, else the only
+ * remote. Never a guess between several.
+ */
+export async function getRemoteTarget(cwd: string): Promise<RemoteTarget> {
+  const branch = await currentBranch(cwd)
+  if (!branch) throw new Error('Check out a branch first. HEAD is detached.')
+  const remotes = await getRemotes(cwd)
+  if (remotes.length === 0) throw new Error('This repository has no remote')
+  const tracked = await tryRun(cwd, ['config', '--get', `branch.${branch}.remote`])
+  const merge = await tryRun(cwd, ['config', '--get', `branch.${branch}.merge`])
+  const hasUpstream = !!tracked && tracked !== '.' && !!merge
+  const name = hasUpstream
+    ? tracked
+    : (remotes.find((r) => r.name === 'origin') ?? (remotes.length === 1 ? remotes[0] : null))?.name
+  if (!name)
+    throw new Error('Several remotes exist and none is named origin. Set an upstream first.')
+  const remote = remotes.find((r) => r.name === name)
+  if (!remote) throw new Error(`The remote "${name}" is not configured`)
+  return { remote: remote.name, url: remote.url, hasUpstream, branch }
+}
+
+function explainPull(message: string): Error {
+  if (/not possible to fast-forward|diverging branches|cannot fast-forward/i.test(message)) {
+    return new Error(
+      'The branches have diverged: this branch and its upstream each have commits the other lacks. Pull and merge instead, or push after resolving it elsewhere.'
+    )
+  }
+  return new Error(message)
+}
+
+export async function pull(
+  cwd: string,
+  mode: PullMode,
+  env: Record<string, string> = {},
+  onLine: (line: string) => void = () => {}
+): Promise<void> {
+  if (mode !== 'ff-only' && mode !== 'merge') throw new Error('Unknown pull mode')
+  const target = await getRemoteTarget(cwd)
+  if (!target.hasUpstream) {
+    throw new Error(`"${target.branch}" has no upstream branch to pull from. Push it first.`)
+  }
+  // `--no-rebase` and `--no-edit` keep a user's pull.rebase setting and an editor out of it.
+  const flags = mode === 'ff-only' ? ['--ff-only'] : ['--no-rebase', '--no-edit']
+  try {
+    await slots.run(() => progressProcess(cwd, ['pull', '--progress', ...flags], env, onLine))
+  } catch (err) {
+    throw explainPull(err instanceof Error ? err.message : String(err))
+  }
+}
+
+export interface PushOptions {
+  /** `--force-with-lease`: refuses if the remote moved since the last fetch. */
+  forceWithLease?: boolean
+}
+
+export async function push(
+  cwd: string,
+  options: PushOptions = {},
+  env: Record<string, string> = {},
+  onLine: (line: string) => void = () => {}
+): Promise<void> {
+  const target = await getRemoteTarget(cwd)
+  const args = ['push', '--progress']
+  if (options.forceWithLease) args.push('--force-with-lease')
+  // Remote and branch come from git's own config, never from the caller. Plain `git push`
+  // follows the upstream and refuses when its branch name differs.
+  if (!target.hasUpstream) args.push('--set-upstream', target.remote, target.branch)
+  await slots.run(() => progressProcess(cwd, args, env, onLine))
 }
 
 // Working tree: status, diff, stage, unstage, discard, commit

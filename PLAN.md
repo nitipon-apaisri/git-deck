@@ -389,12 +389,12 @@ Scope decision and reasons: `docs/DECISIONS.md` (2026-11-06, git write features)
 
 ## Phase 12 — Branches, checkout, push and pull
 
-- [ ] `checkout` (branch, remote branch as a tracking branch, detached commit), `createBranch`, `renameBranch`, `deleteBranch` (confirmed, never the current branch).
-- [ ] `pull` (`--ff-only` by default, a clear "diverged" error, merge-pull as an explicit option) and `push` (sets upstream when there is none; force only as `--force-with-lease`, confirmed).
-- [ ] Reuse `gitAuthEnv` through the `fetchLocal` pattern. The header is scoped to the account's origin, so a remote on another host fails with a clear message and never prompts.
-- [ ] Generalise `clone:progress` into a `git:progress` event and use it for push and pull.
-- [ ] Renderer: branch menu in `LocalActions`; push and pull buttons driven by ahead and behind; `onContextMenu` on graph rows and ref badges using the point-anchored `Menu`.
-- [ ] README token scopes: pushing needs write access (GitHub classic `repo`, or fine-grained contents write; GitLab `write_repository`). Read-only tokens keep working for everything else.
+- [x] `checkout` (branch, remote branch as a tracking branch, detached commit), `createBranch`, `renameBranch`, `deleteBranch` (confirmed, never the current branch).
+- [x] `pull` (`--ff-only` by default, a clear "diverged" error, merge-pull as an explicit option) and `push` (sets upstream when there is none; force only as `--force-with-lease`, confirmed).
+- [x] Reuse `gitAuthEnv` through the `fetchLocal` pattern. The header is scoped to the account's origin, so a remote on another host fails with a clear message and never prompts.
+- [x] Generalise `clone:progress` into a `git:progress` event and use it for push and pull.
+- [x] Renderer: branch menu in `LocalActions`; push and pull buttons driven by ahead and behind; `onContextMenu` on graph rows and ref badges using the point-anchored `Menu`.
+- [x] README token scopes: pushing needs write access (GitHub classic `repo`, or fine-grained contents write; GitLab `write_repository`). Read-only tokens keep working for everything else.
 
 **Verify:** temp-repo tests with a bare repo as the remote cover checkout, branch create, rename and delete, fast-forward pull, diverged pull, push, set-upstream and rejected push. No token in argv, errors or `.git/config`. Typecheck, lint, build pass.
 

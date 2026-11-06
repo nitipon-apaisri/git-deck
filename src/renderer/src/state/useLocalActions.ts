@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { errorMessage } from '../lib/errors'
-import type { CloneProgress, CloneProtocol } from '@shared/api'
+import type { CloneProtocol, GitProgress } from '@shared/api'
+import type { CheckoutTarget, PullMode } from '@shared/types'
 
-export type LocalBusy = 'clone' | 'link' | 'fetch' | null
+export type LocalBusy = 'clone' | 'link' | 'fetch' | 'pull' | 'push' | 'branch' | null
 
 export interface LocalActions {
   busy: LocalBusy
-  /** Latest clone line for this repository only, while a clone runs. */
-  progress: CloneProgress | null
+  /** Latest line of a clone, pull or push for this repository only, while it runs. */
+  progress: GitProgress | null
   error: string | null
   /** Changes after a fetch, a clone or a link, so tabs that read the folder reload. */
   reloadToken: number
@@ -15,6 +16,18 @@ export interface LocalActions {
   link: () => void
   unlink: () => void
   fetch: () => void
+  pull: (mode: PullMode) => void
+  /** `force` is a force push with lease: main asks the user first. */
+  push: (force: boolean) => void
+  checkout: (target: CheckoutTarget) => void
+  deleteBranch: (name: string) => void
+  /** These two resolve with the problem, so a dialog can show it beside the field. */
+  createBranch: (
+    name: string,
+    startPoint: string | null,
+    checkout: boolean
+  ) => Promise<string | null>
+  renameBranch: (from: string, to: string) => Promise<string | null>
   openFolder: () => void
   /** The folder changed (stage, commit, …): graph, Info and Changes read it again. */
   refresh: () => void
@@ -31,14 +44,14 @@ export function useLocalActions(
   onLinksChanged: () => void
 ): LocalActions {
   const [busy, setBusy] = useState<LocalBusy>(null)
-  const [progress, setProgress] = useState<CloneProgress | null>(null)
+  const [progress, setProgress] = useState<GitProgress | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
 
-  // Several panes may clone at once: each keeps only the lines for its own repository.
+  // Several panes may clone, pull or push at once: each keeps only its own repository's lines.
   useEffect(
     () =>
-      window.api.local.onCloneProgress((p) => {
+      window.api.local.onGitProgress((p) => {
         if (p.repoKey === repoKey) setProgress(p)
       }),
     [repoKey]
@@ -104,5 +117,102 @@ export function useLocalActions(
 
   const refresh = useCallback(() => setReloadToken((n) => n + 1), [])
 
-  return { busy, progress, error, reloadToken, clone, link, unlink, fetch, openFolder, refresh }
+  const pull = useCallback(
+    (mode: PullMode) => {
+      if (!linkedPath) return
+      void run('pull', async () => {
+        try {
+          await window.api.local.pull(linkedPath, mode)
+        } finally {
+          // A failed merge pull can still have moved things.
+          setReloadToken((n) => n + 1)
+        }
+      })
+    },
+    [run, linkedPath]
+  )
+
+  const push = useCallback(
+    (force: boolean) => {
+      if (!linkedPath) return
+      void run('push', async () => {
+        await window.api.local.push(linkedPath, force) // false: the user declined the confirm
+        setReloadToken((n) => n + 1)
+      })
+    },
+    [run, linkedPath]
+  )
+
+  const checkout = useCallback(
+    (target: CheckoutTarget) => {
+      if (!linkedPath) return
+      void run('branch', async () => {
+        try {
+          await window.api.local.checkout(linkedPath, target)
+        } finally {
+          setReloadToken((n) => n + 1)
+        }
+      })
+    },
+    [run, linkedPath]
+  )
+
+  const deleteBranch = useCallback(
+    (name: string) => {
+      if (!linkedPath) return
+      void run('branch', async () => {
+        await window.api.local.deleteBranch(linkedPath, name)
+        setReloadToken((n) => n + 1)
+      })
+    },
+    [run, linkedPath]
+  )
+
+  const attempt = useCallback(
+    async (work: (path: string) => Promise<void>): Promise<string | null> => {
+      if (!linkedPath) return 'This repository is not on this computer'
+      setBusy('branch')
+      try {
+        await work(linkedPath)
+        setError(null)
+        return null
+      } catch (err) {
+        return errorMessage(err)
+      } finally {
+        setBusy(null)
+        setReloadToken((n) => n + 1)
+      }
+    },
+    [linkedPath]
+  )
+
+  const createBranch = useCallback(
+    (name: string, startPoint: string | null, checkoutNew: boolean) =>
+      attempt((path) => window.api.local.createBranch(path, name, startPoint, checkoutNew)),
+    [attempt]
+  )
+
+  const renameBranch = useCallback(
+    (from: string, to: string) => attempt((path) => window.api.local.renameBranch(path, from, to)),
+    [attempt]
+  )
+
+  return {
+    busy,
+    progress,
+    error,
+    reloadToken,
+    clone,
+    link,
+    unlink,
+    fetch,
+    pull,
+    push,
+    checkout,
+    deleteBranch,
+    createBranch,
+    renameBranch,
+    openFolder,
+    refresh
+  }
 }

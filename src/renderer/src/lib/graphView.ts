@@ -149,6 +149,8 @@ export type BadgeKind = 'head' | 'main' | 'feature' | 'project' | 'tag'
 
 export interface BadgeView {
   kind: BadgeKind
+  /** What the ref is in git, for the right-click menu. `kind` is only its look. */
+  refKind: GraphRef['kind']
   name: string
   /** The checked-out branch, drawn heavier. */
   current: boolean
@@ -169,14 +171,20 @@ export function badgeViews(refs: readonly GraphRef[], defaultBranch: string): Ba
       const current = ref.current === true
       switch (ref.kind) {
         case 'head':
-          return { kind: 'head', name: ref.name, current: false }
+          return { kind: 'head', refKind: 'head', name: ref.name, current: false }
         case 'tag':
-          return { kind: 'tag', name: ref.name, current: false }
+          return { kind: 'tag', refKind: 'tag', name: ref.name, current: false }
         case 'branch':
-          return { kind: ref.name === defaultBranch ? 'main' : 'feature', name: ref.name, current }
+          return {
+            kind: ref.name === defaultBranch ? 'main' : 'feature',
+            refKind: 'branch',
+            name: ref.name,
+            current
+          }
         case 'remote':
           return {
             kind: defaultBranch && ref.name.endsWith(`/${defaultBranch}`) ? 'main' : 'project',
+            refKind: 'remote',
             name: ref.name,
             current: false
           }

@@ -43,9 +43,9 @@ export function registerIpc(store: Store): () => void {
     store,
     ui: electronUi,
     // Every window gets the event; it carries the repoKey so the right pane filters.
-    emitCloneProgress: (progress) => {
+    emitProgress: (progress) => {
       for (const win of BrowserWindow.getAllWindows()) {
-        win.webContents.send(IPC.cloneProgress, progress)
+        win.webContents.send(IPC.gitProgress, progress)
       }
     }
   })

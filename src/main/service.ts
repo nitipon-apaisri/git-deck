@@ -1,10 +1,10 @@
 // The logic behind every IPC call. No electron import: dialogs, shell and event
-// delivery are injected (`Ui`, `emitCloneProgress`), so this runs under tsx tests.
+// delivery are injected (`Ui`, `emitProgress`), so this runs under tsx tests.
 import { randomUUID } from 'node:crypto'
 import { readdir } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { basename, join } from 'node:path'
-import type { Api, CloneProgress, CloneProtocol } from '../shared/api'
+import type { Api, CloneProtocol, GitProgress, GitProgressOp } from '../shared/api'
 import {
   addRepos,
   createProject,
@@ -13,7 +13,16 @@ import {
   type ProjectInput,
   type ProjectPatch
 } from '../shared/projects'
-import type { Account, AccountInput, Cached, DiffRequest, Repo, RepoSummary } from '../shared/types'
+import type {
+  Account,
+  AccountInput,
+  Cached,
+  CheckoutTarget,
+  DiffRequest,
+  PullMode,
+  Repo,
+  RepoSummary
+} from '../shared/types'
 import * as realGit from './git'
 import { gitAuthEnv } from './gitAuth'
 import { createProvider as realCreateProvider, normalizeBaseUrl } from './providers'
@@ -23,7 +32,7 @@ import { allowHostTemporarily, setInsecureHosts } from './tls'
 import { isHttp } from './urls'
 
 /** `Api` minus the renderer-only event subscription. */
-export type MainApi = Omit<Api, 'local'> & { local: Omit<Api['local'], 'onCloneProgress'> }
+export type MainApi = Omit<Api, 'local'> & { local: Omit<Api['local'], 'onGitProgress'> }
 
 export interface Ui {
   /** `null` when cancelled. */
@@ -49,12 +58,20 @@ export type GitOps = Pick<
   | 'unstagePaths'
   | 'discardPaths'
   | 'createCommit'
+  | 'listBranches'
+  | 'checkout'
+  | 'createBranch'
+  | 'renameBranch'
+  | 'deleteBranch'
+  | 'getRemoteTarget'
+  | 'pull'
+  | 'push'
 >
 
 export interface ServiceDeps {
   store: Store
   ui: Ui
-  emitCloneProgress(progress: CloneProgress): void
+  emitProgress(progress: GitProgress): void
   createProvider?: (account: Pick<Account, 'id' | 'type' | 'baseUrl'>, token: string) => GitProvider
   git?: GitOps
 }
@@ -147,6 +164,26 @@ function checkFileList(files: unknown): string[] {
   return files as string[]
 }
 
+function checkBranchName(name: unknown): string {
+  if (typeof name !== 'string' || !name || name.length > 255 || name.includes('\0')) {
+    throw new Error('The branch name is not valid')
+  }
+  return name
+}
+
+function checkTarget(target: unknown): CheckoutTarget {
+  const t = target as Partial<Record<string, unknown>> | null
+  if (!t || typeof t !== 'object') throw new Error('The checkout target is not valid')
+  if (t['kind'] === 'commit') {
+    if (typeof t['hash'] !== 'string') throw new Error('Invalid commit hash')
+    return { kind: 'commit', hash: t['hash'] }
+  }
+  if (t['kind'] === 'branch' || t['kind'] === 'remote') {
+    return { kind: t['kind'], name: checkBranchName(t['name']) }
+  }
+  throw new Error('The checkout target is not valid')
+}
+
 function checkDiffRequest(request: unknown): DiffRequest {
   const r = request as Partial<DiffRequest> | null
   if (!r || typeof r !== 'object') throw new Error('The diff request is not valid')
@@ -166,6 +203,8 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
   const inflight = new Map<string, Promise<unknown>>()
   const writeQueues = new Map<string, Promise<unknown>>()
   const cloning = new Set<string>()
+  /** Folders with a pull or push running: one network write at a time per folder. */
+  const remoteBusy = new Set<string>()
 
   /** Callers that ask for the same thing while it is running share one request. */
   function once<T>(key: string, job: () => Promise<T>): Promise<T> {
@@ -409,7 +448,7 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
       )
       if (entries && entries.length > 0) throw new Error(`${dest} already exists and is not empty`)
       await git.cloneRepo(url, dest, env, (line) =>
-        deps.emitCloneProgress({ repoKey, line, percent: percentOf(line) })
+        deps.emitProgress({ repoKey, op: 'clone', line, percent: percentOf(line) })
       )
       const root = (await git.repoRoot(dest)) ?? dest
       await store.setLink(repoKey, root)
@@ -425,6 +464,44 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
       const account = store.listAccounts().find((a) => a.id === parseRepoKey(repoKey).accountId)
       await git.gitFetch(path, account ? authEnvFor(account) : {})
     })
+  }
+
+  /**
+   * Auth for a pull or push. Only the account's own origin gets a token, so a remote on
+   * another host fails here with a plain message instead of a prompt. SSH remotes use the
+   * user's own keys.
+   */
+  function remoteAuthEnv(repoKey: string, remoteUrl: string): Record<string, string> {
+    if (!isHttp(remoteUrl)) return {}
+    const account = store.listAccounts().find((a) => a.id === parseRepoKey(repoKey).accountId)
+    if (!account) return {}
+    const remoteOrigin = new URL(remoteUrl).origin
+    if (remoteOrigin !== new URL(account.baseUrl).origin) {
+      throw new Error(
+        `This remote is on ${new URL(remoteUrl).host}, but the account for this repository is on ${account.host}. GitDeck only signs in to the account's own host.`
+      )
+    }
+    return authEnvFor(account)
+  }
+
+  /** Pull or push for one folder, with progress lines tagged for its pane. */
+  async function withRemote<T>(
+    path: string,
+    op: GitProgressOp,
+    job: (env: Record<string, string>, onLine: (line: string) => void) => Promise<T>
+  ): Promise<T> {
+    const repoKey = linkedRepoKey(path)
+    if (remoteBusy.has(path)) throw new Error('A pull or push is already running for this folder')
+    remoteBusy.add(path)
+    try {
+      const target = await git.getRemoteTarget(path)
+      const env = remoteAuthEnv(repoKey, target.url)
+      return await job(env, (line) =>
+        deps.emitProgress({ repoKey, op, line, percent: percentOf(line) })
+      )
+    } finally {
+      remoteBusy.delete(path)
+    }
   }
 
   // Projects
@@ -556,6 +633,66 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
         }
         if (typeof amend !== 'boolean') throw new Error('Amend must be true or false')
         return serial(path, () => git.createCommit(path, message, amend))
+      }),
+      branches: guard(async (path) => {
+        linkedRepoKey(path)
+        return git.listBranches(path)
+      }),
+      checkout: guard(async (path, target) => {
+        linkedRepoKey(path)
+        const checked = checkTarget(target)
+        return serial(path, () => git.checkout(path, checked))
+      }),
+      createBranch: guard(async (path, name, startPoint, checkout) => {
+        linkedRepoKey(path)
+        const branch = checkBranchName(name)
+        const start = startPoint === null ? null : checkBranchName(startPoint)
+        if (typeof checkout !== 'boolean') throw new Error('Checkout must be true or false')
+        return serial(path, () => git.createBranch(path, branch, start, checkout))
+      }),
+      renameBranch: guard(async (path, from, to) => {
+        linkedRepoKey(path)
+        const oldName = checkBranchName(from)
+        const newName = checkBranchName(to)
+        return serial(path, () => git.renameBranch(path, oldName, newName))
+      }),
+      deleteBranch: guard(async (path, name) => {
+        linkedRepoKey(path)
+        const branch = checkBranchName(name)
+        const ok = await ui.confirm({
+          message: `Delete the branch ${branch}?`,
+          detail:
+            'Git refuses if it has commits that are not merged anywhere else. The remote branch is not touched.',
+          confirmLabel: 'Delete'
+        })
+        if (!ok) return false
+        await serial(path, () => git.deleteBranch(path, branch))
+        return true
+      }),
+      pull: guard(async (path, mode) => {
+        linkedRepoKey(path)
+        if (mode !== 'ff-only' && mode !== 'merge') throw new Error('Unknown pull mode')
+        const pullMode: PullMode = mode
+        return serial(path, () =>
+          withRemote(path, 'pull', (env, onLine) => git.pull(path, pullMode, env, onLine))
+        )
+      }),
+      push: guard(async (path, force) => {
+        linkedRepoKey(path)
+        if (typeof force !== 'boolean') throw new Error('Force must be true or false')
+        if (force) {
+          const ok = await ui.confirm({
+            message: 'Force push this branch?',
+            detail:
+              'This replaces the remote branch with yours. It is refused if someone pushed since your last fetch, but commits that only the remote has will be lost.',
+            confirmLabel: 'Force push'
+          })
+          if (!ok) return false
+        }
+        await withRemote(path, 'push', (env, onLine) =>
+          git.push(path, { forceWithLease: force }, env, onLine)
+        )
+        return true
       }),
       reveal: guard(async (path) => {
         linkedRepoKey(path)
