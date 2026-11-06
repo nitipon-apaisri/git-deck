@@ -41,10 +41,9 @@ export function Toolbar({
 }: ToolbarProps) {
   return (
     <header
-      className="grid h-(--toolbar-height) flex-none grid-cols-[1fr_auto_1fr] items-center gap-2 group px-3 [-webkit-app-region:drag] [&_button]:[-webkit-app-region:no-drag] [&_label]:[-webkit-app-region:no-drag]"
+      className="flex h-(--toolbar-height) flex-none items-center gap-2 px-3 data-[inset=true]:pl-(--titlebar-inset) [-webkit-app-region:drag] [&_button]:[-webkit-app-region:no-drag] [&_label]:[-webkit-app-region:no-drag]"
       data-inset={insetTitleBar ? 'true' : undefined}
     >
-      <span />
       {showScope ? (
         <div className="w-[240px] min-w-0">
           <ScopeSwitcher
@@ -55,9 +54,8 @@ export function Toolbar({
             onManage={onManage}
           />
         </div>
-      ) : (
-        <span />
-      )}
+      ) : null}
+      <span className="flex-1" />
       <div className="flex items-center justify-end gap-1" role="group" aria-label="Split view">
         {splitEnabled ? (
           <>
