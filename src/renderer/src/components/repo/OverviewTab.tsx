@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import type { AccountType, Repo, RepoSummary } from '@shared/types'
+import { cn } from '@/lib/cn'
 import {
   TOP_CONTRIBUTORS,
   contributorRows,
@@ -9,7 +10,6 @@ import {
   statItems
 } from '../../lib/repoView'
 import { Avatar, Button, Skeleton, StatCard } from '../ui'
-import styles from './OverviewTab.module.css'
 
 interface OverviewTabProps {
   repo: Repo
@@ -18,6 +18,22 @@ interface OverviewTabProps {
   loading: boolean
   /** A narrow pane: two columns of stat cards. */
   narrow?: boolean
+}
+
+const HEADING = 'm-0 text-[15px] leading-[22px] font-semibold'
+const MUTED = 'm-0 text-[12px] leading-4 text-muted-foreground'
+const CONTRIBUTOR =
+  'grid min-h-[30px] grid-cols-[24px_minmax(80px,200px)_minmax(40px,1fr)_auto] items-center gap-2'
+// Palette colour per language tone (1 to 8), shared by the bar segments and the legend dots.
+const TONES: Record<number, string> = {
+  1: 'bg-[var(--proj-blue)]',
+  2: 'bg-[var(--proj-teal)]',
+  3: 'bg-[var(--proj-violet)]',
+  4: 'bg-[var(--proj-amber)]',
+  5: 'bg-[var(--proj-rose)]',
+  6: 'bg-[var(--proj-green)]',
+  7: 'bg-[var(--proj-pink)]',
+  8: 'bg-[var(--proj-gray)]'
 }
 
 export function OverviewTab({
@@ -39,8 +55,13 @@ export function OverviewTab({
   const segments = summary ? languageSegments(summary.languages) : []
 
   return (
-    <div className={styles.overview}>
-      <div className={styles.stats} data-narrow={narrow ? 'true' : undefined}>
+    <div className="flex flex-col gap-6">
+      <div
+        className={cn(
+          'grid gap-2',
+          narrow ? 'grid-cols-2' : 'grid-cols-[repeat(auto-fill,minmax(150px,1fr))]'
+        )}
+      >
         {statItems(repo, summary, accountType, loading).map((item) => (
           <StatCard
             key={item.id}
@@ -51,27 +72,35 @@ export function OverviewTab({
         ))}
       </div>
 
-      <section className={styles.section} aria-labelledby={`${id}-contributors`}>
-        <h2 className={styles.heading} id={`${id}-contributors`}>
+      <section className="flex flex-col gap-2" aria-labelledby={`${id}-contributors`}>
+        <h2 className={HEADING} id={`${id}-contributors`}>
           Contributors
         </h2>
         {shown.length > 0 ? (
           <>
-            <ul className={styles.contributors}>
+            <ul className="m-0 flex list-none flex-col gap-1 p-0">
               {shown.map((c) => (
-                <li key={c.key} className={styles.contributor}>
+                <li key={c.key} className={CONTRIBUTOR}>
                   <Avatar src={c.avatarUrl} name={c.name} size={24} />
-                  <span className={styles.name} title={c.name}>
+                  <span className="truncate" title={c.name}>
                     {c.name}
                   </span>
-                  <span className={styles.bar} aria-hidden="true">
-                    <span className={styles.barFill} style={{ width: `${c.share * 100}%` }} />
+                  <span
+                    className="h-1.5 overflow-hidden rounded-[var(--radius-xs)] bg-[var(--neutral)]"
+                    aria-hidden="true"
+                  >
+                    <span
+                      className="block h-full rounded-[inherit] bg-[var(--accent)]"
+                      style={{ width: `${c.share * 100}%` }}
+                    />
                   </span>
-                  <span className={styles.commits}>{plural(c.commits, 'commit')}</span>
+                  <span className="min-w-20 text-right text-[12px] whitespace-nowrap text-muted-foreground">
+                    {plural(c.commits, 'commit')}
+                  </span>
                 </li>
               ))}
             </ul>
-            <div className={styles.moreRow}>
+            <div className="flex flex-wrap items-center gap-2">
               {rows.length > TOP_CONTRIBUTORS ? (
                 <Button
                   variant="ghost"
@@ -82,16 +111,16 @@ export function OverviewTab({
                 </Button>
               ) : null}
               {total !== null && total > rows.length ? (
-                <span className={styles.muted}>
+                <span className={MUTED}>
                   Showing the top {rows.length} of {countText(total)}
                 </span>
               ) : null}
             </div>
           </>
         ) : pending ? (
-          <ul className={styles.contributors} aria-label="Loading contributors">
+          <ul className="m-0 flex list-none flex-col gap-1 p-0" aria-label="Loading contributors">
             {[0, 1, 2, 3].map((i) => (
-              <li key={i} className={styles.contributor}>
+              <li key={i} className={CONTRIBUTOR}>
                 <Skeleton
                   width={24}
                   height={24}
@@ -105,59 +134,64 @@ export function OverviewTab({
             ))}
           </ul>
         ) : (
-          <p className={styles.muted}>{summary ? 'No contributor data from the host.' : empty}</p>
+          <p className={MUTED}>{summary ? 'No contributor data from the host.' : empty}</p>
         )}
       </section>
 
-      <section className={styles.section} aria-labelledby={`${id}-languages`}>
-        <h2 className={styles.heading} id={`${id}-languages`}>
+      <section className="flex flex-col gap-2" aria-labelledby={`${id}-languages`}>
+        <h2 className={HEADING} id={`${id}-languages`}>
           Languages
         </h2>
         {segments.length > 0 ? (
           <>
             <div
-              className={styles.languageBar}
+              className="flex h-2.5 gap-0.5 overflow-hidden rounded-[var(--radius-xs)]"
               role="img"
               aria-label={`Languages: ${segments.map((s) => `${s.name} ${s.label}`).join(', ')}`}
             >
               {segments.map((s) => (
                 <span
                   key={s.name}
-                  className={styles.segment}
-                  data-tone={s.tone}
+                  className={cn('min-w-[3px] basis-0', TONES[s.tone] ?? TONES[8])}
                   style={{ flexGrow: s.percent }}
                   title={`${s.name} ${s.label}`}
                 />
               ))}
             </div>
-            <ul className={styles.legend}>
+            <ul className="m-0 flex list-none flex-wrap gap-x-4 gap-y-1.5 p-0">
               {segments.map((s) => (
-                <li key={s.name} className={styles.legendItem}>
-                  <span className={styles.dot} data-tone={s.tone} aria-hidden="true" />
+                <li key={s.name} className="inline-flex items-center gap-1.5">
+                  <span
+                    className={cn('size-2 rounded-full', TONES[s.tone] ?? TONES[8])}
+                    aria-hidden="true"
+                  />
                   {s.name}
-                  <span className={styles.muted}>{s.label}</span>
+                  <span className={MUTED}>{s.label}</span>
                 </li>
               ))}
             </ul>
           </>
         ) : pending ? (
-          <div className={styles.languageSkeleton}>
+          <div className="flex flex-col gap-2">
             <Skeleton height={8} label="Loading languages" />
             <Skeleton width="50%" />
           </div>
         ) : (
-          <p className={styles.muted}>{summary ? 'No language data from the host.' : empty}</p>
+          <p className={MUTED}>{summary ? 'No language data from the host.' : empty}</p>
         )}
       </section>
 
       {summary && summary.topics.length > 0 ? (
-        <section className={styles.section} aria-labelledby={`${id}-topics`}>
-          <h2 className={styles.heading} id={`${id}-topics`}>
+        <section className="flex flex-col gap-2" aria-labelledby={`${id}-topics`}>
+          <h2 className={HEADING} id={`${id}-topics`}>
             Topics
           </h2>
-          <ul className={styles.topics}>
+          <ul className="m-0 flex list-none flex-wrap gap-1.5 p-0">
             {summary.topics.map((topic) => (
-              <li key={topic} className={styles.topic}>
+              <li
+                key={topic}
+                className="rounded-lg bg-[var(--selection)] px-2 text-[12px] leading-[22px] text-[var(--accent-text)]"
+              >
                 {topic}
               </li>
             ))}
