@@ -8,6 +8,19 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-07: Phase 16 scope (line-level staging)
+
+- **Question:** how to stage single lines safely, and what stays out.
+- **Options considered:** a new pair of `stageLines` calls vs an optional `lines` on the hunk request; line selection across several hunks vs one hunk at a time; patching the index directly vs `git apply --cached`.
+- **Decision and why:**
+  - An optional `lines: number[]` on `HunkRequest`. The 14b path already re-reads the diff, checks the fingerprint and builds the patch in main, so a line selection is only a list of positions in that hunk. No new call, channel or confirm is needed, and the renderer still never sends patch text.
+  - One hunk per call. After a stage the diff changes and the indexes shift, so the UI clears its selection and reloads. Selecting across hunks would need to replay several patches against a moving diff.
+  - The patch is a pure function, `linePatch`, built from the raw hunk text so every byte is kept. Staging keeps a selected line, drops an unselected added line and turns an unselected removed line into context. Unstaging, which is a reverse apply on the index, swaps the last two. The counts in the header are recomputed and `--recount` is passed as a second guard.
+  - Refused on purpose: a partial selection in a hunk with a `\ No newline at end of file` note (the context line would need a different ending on each side), and a file created or deleted by the change (a half-created file has no clean patch). Whole-hunk and whole-file staging still work for both. `FileDiff.change` lets the UI hide the checkboxes instead of failing.
+  - Line-level discard stays out: it destroys work, and the confirm and undo story is a separate design. Selection across several hunks or files, and drag selection, also stay out.
+  - Still out: interactive rebase, line-level discard, a full-file three-way editor, `rerere`, external merge tools, submodule conflicts, pull or merge request creation, OAuth sign-in, a SQLite cache, auto-update and installers, more than two panes, drag-and-drop between projects, cloning every repository of a project at once.
+- **Not verified:** this entry records a plan. Nothing in Phase 16 is built yet.
+
 ## 2026-11-06: Phase 15b as built
 
 - **Question:** where the conflict editor lives, how a save works, and what a live run showed.

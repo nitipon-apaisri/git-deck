@@ -497,6 +497,42 @@ Typecheck, lint, build pass and the existing suite stays green. No token in argv
 
 **Verify (done: `tests/conflict-view.test.ts`, and a run of the built app in a scratch repo, see `DECISIONS.md`):** unit tests for `conflictView.ts`; a service test that drives the whole flow through `GitOps` (conflicting merge, then regions resolved, then Continue). Typecheck, lint, build pass and the existing suite stays green. If a display is available, resolve a real conflict in a scratch repo in the window and screenshot the editor in both themes. Otherwise say clearly that it was not run visually.
 
+## Phase 16 — Line-level staging
+
+Scope decision and reasons: `docs/DECISIONS.md` (2026-11-06, Phase 16 scope). It extends the hunk staging of 14b and the diff dialog, and needs no new IPC call. Runs on its own branch and stops at its Verify steps.
+
+**Groundwork:**
+
+- [ ] Reuse the 14b rules: the typed write helper, the per-repo write queue (`serial` in `service.ts`), `knownPaths`, `--` before the path, and the patch rebuilt in main from the file's own diff. Nothing the renderer sends is ever applied as text.
+- [ ] Same limits as hunk staging: tracked files only, not in conflict, not renamed, not binary or too large. In addition a file that the diff shows as created or deleted (`new file mode`, `deleted file mode`) is staged as a whole, because a half-created file has no clean patch.
+
+**Shared (`shared/diff.ts`, pure):**
+
+- [ ] `HunkRequest` gets an optional `lines: number[]`: positions in the hunk's `lines` array of the changed lines to stage or unstage. Absent means the whole hunk, as today. The fingerprint still names the hunk.
+- [ ] `FileDiff.change: 'created' | 'deleted' | null`, read by `parseUnifiedDiff` from the header lines before the first hunk, so the renderer can hide the line checkboxes for those files.
+- [ ] `linePatch(header, hunkText, selected, direction)` builds a patch for part of one hunk, from the raw hunk text so no byte changes (CRLF, tabs, trailing spaces). To stage (`direction: 'stage'`): a selected `+` or `-` stays, an unselected `+` is dropped, an unselected `-` becomes a context line. To unstage (`'unstage'`, applied with `--reverse`) the roles swap: an unselected `+` becomes a context line and an unselected `-` is dropped. The hunk header counts are recomputed from the lines kept. It refuses an empty selection, an index that is not an added or deleted line, a duplicate, and a hunk that holds a `\ No newline at end of file` note when only some lines are selected (the whole hunk still stages).
+
+**Main (`git.ts`, beside `stageHunk`):**
+
+- [ ] `stageHunk` and `unstageHunk` read `request.lines`. With lines they build `linePatch` from the same re-read diff and the same fingerprint check as 14b, then `git apply --cached --recount --whitespace=nowarn` on stdin (with `--reverse` to unstage). The work tree is never touched.
+- [ ] Refuse a stale hunk ("Reload the diff and try again"), an out-of-range, duplicate or non-integer index, more indexes than the hunk has lines, and a created or deleted file.
+- [ ] `checkHunk` in `service.ts` validates `lines` (an array of integers from 0 to the hunk size, capped) and passes it on. No new call, channel or confirm.
+
+**Renderer:**
+
+- [ ] `lib/lineSelection.ts` (pure, tested): toggle one line, select a range with shift-click, select or clear every changed line of a hunk, count, the button label ("Stage 3 lines", "Unstage 1 line"), and which hunks may be selected (no `note` line, a file that is not created or deleted).
+- [ ] `DiffView`: each added or removed line gets a checkbox in a new gutter column when the diff can be staged. A hunk with selected lines shows "Stage N lines" or "Unstage N lines" beside the existing hunk button, plus "Select all" and "Clear". A change is still marked by `+` and `−`, and a selected line by its checked box, never by colour alone. Every checkbox has an `aria-label` ("Select added line 12"). The selection belongs to the dialog and is cleared when the diff reloads, so it never refers to an old fingerprint. One hunk is staged per click, so no index shifts between calls.
+- [ ] `GitGraph.runHunk` passes `lines` through. Errors and the busy state use the 14b banner.
+- [ ] Dark and light boards: not drawn, log the gap in `DECISIONS.md` as before. The checkbox column uses tokens only.
+
+**Verify:**
+
+- `tests/diff.test.ts` or a new `tests/line-patch.test.ts` covers `linePatch` for every mix of added, removed and context lines in both directions, the recomputed counts, a no-newline hunk (refused for a partial selection, fine for all lines), CRLF kept byte for byte, and each refused selection.
+- Temp-repo tests (`tests/git-write.test.ts` or a new file): stage some lines of one hunk and check `git diff --cached` shows exactly those and the work tree is unchanged; stage the rest and get the same index as staging the file; unstage a subset; a round trip (stage then unstage the same lines, for a set of fixed selections) returns the index and work tree to where they started; a stale fingerprint, a bad index, an untracked, renamed, conflicted, created or deleted file are refused; a path that starts with `-` or is outside the repo is rejected.
+- Service tests cover the `lines` validation and the linked-folder check.
+- Typecheck, lint, build pass and the existing suite stays green. No token in argv, errors or `.git/config`.
+- Run the diff dialog on a scratch repo in the window, in both themes. If there is no display, say plainly that it was not run visually.
+
 ---
 
 ## Graph algorithm (src/shared/graph-layout.ts)
@@ -528,4 +564,4 @@ Row shape: `{ commit, lane, color, edges: { part: 'top'|'bottom'|'through', from
 
 ## Non-goals for this version
 
-Interactive rebase, line-level staging, a full-file three-way editor, `rerere`, external merge tools, submodule conflicts, PR/MR creation, OAuth login (tokens only), SQLite cache, auto-update and installers, more than two split panes, drag-and-drop between projects, cloning all repos of a project at once.
+Interactive rebase, line-level discard, a full-file three-way editor, `rerere`, external merge tools, submodule conflicts, PR/MR creation, OAuth login (tokens only), SQLite cache, auto-update and installers, more than two split panes, drag-and-drop between projects, cloning all repos of a project at once.
