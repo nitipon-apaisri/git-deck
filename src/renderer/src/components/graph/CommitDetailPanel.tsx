@@ -19,6 +19,8 @@ interface CommitDetailPanelProps {
   state: CommitDetailState
   defaultBranch: string
   onClose: () => void
+  /** Opens a changed file's diff. */
+  onOpenFile?: (path: string) => void
 }
 
 const FIELD =
@@ -28,7 +30,8 @@ export function CommitDetailPanel({
   commit,
   state,
   defaultBranch,
-  onClose
+  onClose,
+  onOpenFile
 }: CommitDetailPanelProps) {
   const [showAll, setShowAll] = useState(false)
   const author = authorLabel(commit.author, commit.email)
@@ -124,9 +127,20 @@ export function CommitDetailPanel({
                   key={f.path}
                   className="flex min-h-[26px] items-center gap-2 border-b border-border text-[12px] last:border-b-0"
                 >
-                  <span className="min-w-0 flex-1 truncate font-mono" title={f.path}>
-                    {f.path}
-                  </span>
+                  {onOpenFile ? (
+                    <button
+                      type="button"
+                      className="min-w-0 flex-1 cursor-pointer truncate border-0 bg-transparent p-0 text-left font-mono text-[12px] text-foreground underline-offset-2 hover:underline"
+                      title={`Show the changes in ${f.path}`}
+                      onClick={() => onOpenFile(f.path)}
+                    >
+                      {f.path}
+                    </button>
+                  ) : (
+                    <span className="min-w-0 flex-1 truncate font-mono" title={f.path}>
+                      {f.path}
+                    </span>
+                  )}
                   <span className="flex flex-none gap-1.5 font-mono">
                     <span
                       className={

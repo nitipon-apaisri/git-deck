@@ -363,22 +363,22 @@ Scope decision and reasons: `docs/DECISIONS.md` (2026-11-06, git write features)
 
 **Groundwork (main):**
 
-- [ ] `git.ts`: export a typed write helper over the private `run`, with optional `stdin` and `timeout`. Commit messages go in on stdin (`commit -F -`), never through argv. Put `--` before every user-supplied path. Validate refs with `git check-ref-format` and hashes with `HASH_RE`.
-- [ ] Per-repo write serialisation: wrap each mutation in `once('write:' + path, …)` so two writes never fight over `index.lock`.
-- [ ] Add each new git function to the `GitOps` pick in `service.ts`, and each new method to `Api.local`, `IPC`, the preload, `ipcTable.ts` and a `guard()`ed service method that starts with `linkedRepoKey(path)`.
+- [x] `git.ts`: export a typed write helper over the private `run`, with optional `stdin` and `timeout`. Commit messages go in on stdin (`commit -F -`), never through argv. Put `--` before every user-supplied path. Validate refs with `git check-ref-format` and hashes with `HASH_RE`.
+- [x] Per-repo write serialisation so two writes never fight over `index.lock`. Done as a per-path queue (`serial` in `service.ts`), not `once`, because `once` would drop the second call's arguments.
+- [x] Add each new git function to the `GitOps` pick in `service.ts`, and each new method to `Api.local`, `IPC`, the preload, `ipcTable.ts` and a `guard()`ed service method that starts with `linkedRepoKey(path)`.
 
 **Main:**
 
-- [ ] `getStatus(cwd)`: `status --porcelain=v2 -z --branch`, parsed into staged, unstaged, untracked and conflicted entries (renames and deletes included).
-- [ ] `getDiff`: working-tree, staged and per-commit diffs parsed into hunks and lines. Cap the size, and report binary or oversized files instead of loading them.
-- [ ] `stage`, `unstage`, `stageAll`, `discard` (confirmed), `createCommit(message, { amend })`. Hunk staging through `git apply --cached` is a stretch goal; line staging is out.
+- [x] `getStatus(cwd)`: `status --porcelain=v2 -z --branch`, parsed into staged, unstaged, untracked and conflicted entries (renames and deletes included).
+- [x] `getDiff`: working-tree, staged and per-commit diffs parsed into hunks and lines. Cap the size, and report binary or oversized files instead of loading them.
+- [x] `stage`, `unstage`, `stageAll`, `discard` (confirmed), `createCommit(message, { amend })`. Hunk staging through `git apply --cached` was a stretch goal and is not done; line staging is out.
 
 **Renderer:**
 
-- [ ] New `Changes` tab (`TabName`, its sanitiser and `RepoPane` tab list): staged and unstaged lists, stage toggles, message box, one primary Commit button, amend option.
-- [ ] `DiffView`: opens inside the pane from a Changes row or from a file row in the commit detail panel. Unified view only.
-- [ ] `useStatus` and `useDiff` hooks keyed on `reloadToken`; `LocalInfo.dirtyFiles` links to the tab.
-- [ ] New `ui/` pieces (`Textarea`, diff lines) use tokens only. Add dark and light boards under `docs/ui-boards/` first, or log the gap in `DECISIONS.md`.
+- [x] New `Changes` tab (`TabName`, its sanitiser and `RepoPane` tab list): staged and unstaged lists, stage toggles, message box, one primary Commit button, amend option.
+- [x] `DiffView`: opens inside the pane from a Changes row or from a file row in the commit detail panel. Unified view only.
+- [x] `useStatus` and `useDiff` hooks keyed on `reloadToken`; `LocalInfo.dirtyFiles` linking to the tab was left out.
+- [ ] Add dark and light boards for Changes and the diff under `docs/ui-boards/`. Not done: the gap is logged in `DECISIONS.md`. The new `Textarea` and diff lines use tokens only.
 
 **Verify:**
 

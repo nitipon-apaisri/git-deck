@@ -5,10 +5,13 @@ import type {
   Account,
   Cached,
   CommitDetail,
+  DiffRequest,
+  FileDiff,
   GraphCommit,
   LocalInfo,
   Project,
   Repo,
+  RepoStatus,
   RepoSummary,
   VerifiedUser
 } from './types'
@@ -65,6 +68,15 @@ export interface Api {
     commit(path: string, hash: string): Promise<CommitDetail>
     fetch(path: string): Promise<void>
     reveal(path: string): Promise<void>
+    /** Staged, unstaged, untracked and conflicted files. */
+    status(path: string): Promise<RepoStatus>
+    diff(path: string, request: DiffRequest): Promise<FileDiff>
+    stage(path: string, files: string[]): Promise<void>
+    unstage(path: string, files: string[]): Promise<void>
+    stageAll(path: string): Promise<void>
+    /** Asks first. Resolves `false` when the user declines. */
+    discard(path: string, files: string[]): Promise<boolean>
+    createCommit(path: string, message: string, amend: boolean): Promise<void>
     /** Repositories opened from a folder, without an account. */
     repos(): Promise<Repo[]>
     /** Folder picker. `null` when cancelled. Opening the same folder twice gives one entry. */
@@ -105,6 +117,13 @@ export const IPC = {
   localCommit: 'local:commit',
   localFetch: 'local:fetch',
   localReveal: 'local:reveal',
+  localStatus: 'local:status',
+  localDiff: 'local:diff',
+  localStage: 'local:stage',
+  localUnstage: 'local:unstage',
+  localStageAll: 'local:stageAll',
+  localDiscard: 'local:discard',
+  localCreateCommit: 'local:createCommit',
   localRepos: 'local:repos',
   localOpen: 'local:open',
   localRemove: 'local:remove',

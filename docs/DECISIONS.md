@@ -220,3 +220,15 @@ Newest first. Template:
   - Pushing needs a token with write access, which v1's read-only scopes do not have. The README token section changes in Phase 12. Reads keep working with the old scopes.
   - Known limit carried over: git auth is injected for the account's origin only, so a remote on a different host fails with a message instead of prompting.
   - No design boards exist for staging, diff or stash. They are added under `docs/ui-boards/` before the screens are built, or the gap is logged here.
+
+## 2026-11-06: Phase 11 as built
+
+- **Question:** how to serialise writes, where the commit-file diff opens, and what to do about design boards.
+- **Decision and why:**
+  - Writes to one folder go through a per-path promise queue (`serial` in `service.ts`). `once` would hand the second caller the first caller's result and drop its arguments.
+  - Every path argument must be a path `git status` lists (or the old side of a rename), then goes after `--`. This also rejects `-flags` and paths outside the repository.
+  - `discard` asks through `ui.confirm` in main and resolves `false` when declined, so the renderer cannot skip the prompt.
+  - A commit's file diff opens in a wide dialog from the graph's detail panel (280 to 360 px is too narrow). The Changes tab shows its diff beside the lists, or under them in a narrow pane.
+  - The Changes tab stays mounted after the first visit, so a half-written message survives a trip to another tab. It reads the folder again whenever it becomes visible.
+  - Design boards for Changes and the diff were not made. The screens use existing tokens and components only. Boards are still owed.
+  - Hunk staging (stretch goal) and the `dirtyFiles` link to the tab were left out.

@@ -13,7 +13,7 @@ import {
   type ProjectInput,
   type ProjectPatch
 } from '../shared/projects'
-import type { Account, AccountInput, Cached, Repo, RepoSummary } from '../shared/types'
+import type { Account, AccountInput, Cached, DiffRequest, Repo, RepoSummary } from '../shared/types'
 import * as realGit from './git'
 import { gitAuthEnv } from './gitAuth'
 import { createProvider as realCreateProvider, normalizeBaseUrl } from './providers'
@@ -42,6 +42,13 @@ export type GitOps = Pick<
   | 'getCommitDetail'
   | 'gitFetch'
   | 'cloneRepo'
+  | 'getStatus'
+  | 'getDiff'
+  | 'stagePaths'
+  | 'stageAll'
+  | 'unstagePaths'
+  | 'discardPaths'
+  | 'createCommit'
 >
 
 export interface ServiceDeps {
@@ -54,6 +61,9 @@ export interface ServiceDeps {
 
 const MAX_GRAPH_PAGE = 2000
 const MAX_TOKEN_LENGTH = 512
+const MAX_FILES_PER_CALL = 5000
+const MAX_PATH_LENGTH = 4096
+const MAX_MESSAGE_LENGTH = 100_000
 const MAX_LABEL_LENGTH = 60
 /** The account id of repositories opened from a folder. A real account id is a UUID. */
 export const LOCAL_ACCOUNT = 'local'
@@ -125,12 +135,36 @@ function cloneUrlFor(repo: Repo, protocol: CloneProtocol): string {
   throw new Error('Clone protocol must be https or ssh')
 }
 
+function checkFileList(files: unknown): string[] {
+  if (!Array.isArray(files) || files.length === 0 || files.length > MAX_FILES_PER_CALL) {
+    throw new Error('Choose at least one file')
+  }
+  for (const file of files) {
+    if (typeof file !== 'string' || !file || file.length > MAX_PATH_LENGTH || file.includes('\0')) {
+      throw new Error('A file name is not valid')
+    }
+  }
+  return files as string[]
+}
+
+function checkDiffRequest(request: unknown): DiffRequest {
+  const r = request as Partial<DiffRequest> | null
+  if (!r || typeof r !== 'object') throw new Error('The diff request is not valid')
+  if (r.source !== 'worktree' && r.source !== 'staged' && r.source !== 'commit') {
+    throw new Error('The diff source is not valid')
+  }
+  const [path] = checkFileList([r.path])
+  if (r.source === 'commit' && typeof r.hash !== 'string') throw new Error('Invalid commit hash')
+  return { source: r.source, path, hash: r.source === 'commit' ? r.hash : undefined }
+}
+
 export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHosts(): void } {
   const { store, ui } = deps
   const git: GitOps = deps.git ?? realGit
   const makeProvider = deps.createProvider ?? realCreateProvider
 
   const inflight = new Map<string, Promise<unknown>>()
+  const writeQueues = new Map<string, Promise<unknown>>()
   const cloning = new Set<string>()
 
   /** Callers that ask for the same thing while it is running share one request. */
@@ -140,6 +174,21 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
     const promise = job().finally(() => inflight.delete(key))
     inflight.set(key, promise)
     return promise
+  }
+
+  /**
+   * Writes to one repository run one after another, so two of them never fight over
+   * `index.lock`. Unlike `once`, every call runs, with its own arguments.
+   */
+  function serial<T>(path: string, job: () => Promise<T>): Promise<T> {
+    const previous = writeQueues.get(path) ?? Promise.resolve()
+    const result = previous.catch(() => {}).then(job)
+    const tail = result.catch(() => {})
+    writeQueues.set(path, tail)
+    void tail.then(() => {
+      if (writeQueues.get(path) === tail) writeQueues.delete(path)
+    })
+    return result
   }
 
   function syncInsecureHosts(): void {
@@ -462,6 +511,52 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
         return git.getCommitDetail(path, hash)
       }),
       fetch: guard(async (path) => fetchLocal(path)),
+      status: guard(async (path) => {
+        linkedRepoKey(path)
+        return git.getStatus(path)
+      }),
+      diff: guard(async (path, request) => {
+        linkedRepoKey(path)
+        return git.getDiff(path, checkDiffRequest(request))
+      }),
+      stage: guard(async (path, files) => {
+        linkedRepoKey(path)
+        const list = checkFileList(files)
+        return serial(path, () => git.stagePaths(path, list))
+      }),
+      unstage: guard(async (path, files) => {
+        linkedRepoKey(path)
+        const list = checkFileList(files)
+        return serial(path, () => git.unstagePaths(path, list))
+      }),
+      stageAll: guard(async (path) => {
+        linkedRepoKey(path)
+        return serial(path, () => git.stageAll(path))
+      }),
+      discard: guard(async (path, files) => {
+        linkedRepoKey(path)
+        const list = checkFileList(files)
+        const ok = await ui.confirm({
+          message:
+            list.length === 1
+              ? `Discard changes to ${list[0]}?`
+              : `Discard changes to ${list.length} files?`,
+          detail:
+            'Changes that are not staged are lost, and new files are deleted. This cannot be undone.',
+          confirmLabel: 'Discard'
+        })
+        if (!ok) return false
+        await serial(path, () => git.discardPaths(path, list))
+        return true
+      }),
+      createCommit: guard(async (path, message, amend) => {
+        linkedRepoKey(path)
+        if (typeof message !== 'string' || message.length > MAX_MESSAGE_LENGTH) {
+          throw new Error('The commit message is not valid')
+        }
+        if (typeof amend !== 'boolean') throw new Error('Amend must be true or false')
+        return serial(path, () => git.createCommit(path, message, amend))
+      }),
       reveal: guard(async (path) => {
         linkedRepoKey(path)
         ui.reveal(path)

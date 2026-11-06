@@ -2,7 +2,7 @@
 // can prove every channel is wired.
 import { IPC, type IpcResult } from '../shared/api'
 import type { CloneProtocol, ProjectCreateInput, ProjectPatchInput } from '../shared/api'
-import type { AccountInput } from '../shared/types'
+import type { AccountInput, DiffRequest } from '../shared/types'
 import type { MainApi } from './service'
 
 export type Handler = (args: unknown[]) => Promise<unknown>
@@ -31,6 +31,14 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     localCommit: ([path, hash]) => api.local.commit(path as string, hash as string),
     localFetch: ([path]) => api.local.fetch(path as string),
     localReveal: ([path]) => api.local.reveal(path as string),
+    localStatus: ([path]) => api.local.status(path as string),
+    localDiff: ([path, request]) => api.local.diff(path as string, request as DiffRequest),
+    localStage: ([path, files]) => api.local.stage(path as string, files as string[]),
+    localUnstage: ([path, files]) => api.local.unstage(path as string, files as string[]),
+    localStageAll: ([path]) => api.local.stageAll(path as string),
+    localDiscard: ([path, files]) => api.local.discard(path as string, files as string[]),
+    localCreateCommit: ([path, message, amend]) =>
+      api.local.createCommit(path as string, message as string, amend as boolean),
     localRepos: () => api.local.repos(),
     localOpen: () => api.local.open(),
     localRemove: ([key]) => api.local.remove(key as string),

@@ -114,6 +114,62 @@ export interface CommitDetail {
   files: CommitFile[]
 }
 
+/** What happened to a path, as `git status` reports it for the index or the work tree. */
+export type ChangeKind = 'added' | 'modified' | 'deleted' | 'renamed' | 'copied' | 'typechange'
+
+export interface StatusEntry {
+  /** Relative to the repository root, with `/` separators. */
+  path: string
+  /** The old path of a rename or copy. */
+  origPath: string | null
+  /** Change staged in the index, `null` when none. */
+  index: ChangeKind | null
+  /** Change in the work tree not yet staged, `null` when none. */
+  worktree: ChangeKind | null
+  untracked: boolean
+  /** Unmerged: the path has a merge conflict. */
+  conflicted: boolean
+}
+
+export interface RepoStatus {
+  /** `null` when HEAD is detached. */
+  branch: string | null
+  entries: StatusEntry[]
+}
+
+export type DiffSource = 'worktree' | 'staged' | 'commit'
+
+export interface DiffRequest {
+  source: DiffSource
+  path: string
+  /** Required when `source` is `commit`. */
+  hash?: string
+}
+
+export interface DiffLine {
+  type: 'context' | 'add' | 'del' | 'note'
+  text: string
+  /** Line number in the old file, `null` for added lines and notes. */
+  oldNo: number | null
+  /** Line number in the new file, `null` for deleted lines and notes. */
+  newNo: number | null
+}
+
+export interface DiffHunk {
+  header: string
+  lines: DiffLine[]
+}
+
+export interface FileDiff {
+  path: string
+  binary: boolean
+  /** The patch is too large to show. `hunks` is empty and the counts are zero. */
+  tooLarge: boolean
+  additions: number
+  deletions: number
+  hunks: DiffHunk[]
+}
+
 export interface LocalRemote {
   name: string
   /** Credentials already stripped. */
