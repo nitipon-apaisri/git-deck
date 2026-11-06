@@ -9,6 +9,7 @@ import { buildTree, flattenTree, type AccountNode, type TreeRow as Row } from '.
 import type { AccountRepos } from '../lib/workspaceReducer'
 import { readStored, writeStored } from '../state/storage'
 import { useNow } from '../state/useNow'
+import { BrandLogo } from './ui/BrandLogo'
 import { RepoProjectMenu } from './projects/RepoProjectMenu'
 import { ScopeSwitcher } from './projects/ScopeSwitcher'
 import {
@@ -176,10 +177,10 @@ export function Sidebar({
           </Button>
           <Button className={styles.emptyAction} onClick={onConnect}>
             Connect to
-            <HostTile tile="GL" host="gitlab" />
+            <BrandLogo brand="gitlab" />
             GitLab
             <span aria-hidden="true">/</span>
-            <HostTile tile="GH" host="github" />
+            <BrandLogo brand="github" />
             GitHub
           </Button>
         </div>
