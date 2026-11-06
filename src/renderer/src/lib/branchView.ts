@@ -1,6 +1,6 @@
 // Pure: no DOM, so it runs under tsx tests. Decides what the branch menu and the
 // Push and Pull buttons show for one repository.
-import type { BranchList, GraphRef, LocalBranch } from '../../../shared/types'
+import type { BranchList, GraphRef, LocalBranch, ResetMode } from '../../../shared/types'
 
 export function currentBranch(list: BranchList | null): LocalBranch | null {
   return list?.local.find((b) => b.current) ?? null
@@ -90,6 +90,9 @@ export type RefAction =
   | { type: 'delete-branch'; name: string }
   | { type: 'merge'; branch: string; noFf: boolean }
   | { type: 'cherry-pick'; hash: string }
+  | { type: 'create-tag'; hash: string }
+  | { type: 'revert'; hash: string }
+  | { type: 'reset'; hash: string; mode: ResetMode }
   | { type: 'copy'; text: string; what: string }
 
 export interface RefActionItem {
@@ -106,7 +109,7 @@ export interface RefActionContext {
   currentBranch: string | null
   /** The commit has two or more parents. Cherry-picking one needs a mainline: not offered. */
   isMerge: boolean
-  /** A merge or cherry-pick is waiting for the user: starting another is not offered. */
+  /** A merge, cherry-pick or revert is waiting for the user: starting another is not offered. */
   operationActive: boolean
 }
 
@@ -203,6 +206,34 @@ export function refActions(
       action: { type: 'cherry-pick', hash },
       group: 'commit'
     })
+  }
+  if (canStart && context.currentBranch && !context.isMerge) {
+    items.push({
+      id: 'revert',
+      label: `Revert this commit on ${context.currentBranch}`,
+      action: { type: 'revert', hash },
+      group: 'commit'
+    })
+  }
+  if (context) {
+    items.push({
+      id: 'create-tag',
+      label: 'Create tag here…',
+      action: { type: 'create-tag', hash },
+      group: 'commit'
+    })
+  }
+  if (canStart) {
+    const target = context.currentBranch ?? 'HEAD'
+    for (const mode of ['soft', 'mixed', 'hard'] as const) {
+      items.push({
+        id: `reset-${mode}`,
+        label: `Reset ${target} to here (${mode})${mode === 'hard' ? '…' : ''}`,
+        action: { type: 'reset', hash, mode },
+        danger: mode === 'hard',
+        group: 'commit'
+      })
+    }
   }
   items.push({
     id: 'copy-hash',

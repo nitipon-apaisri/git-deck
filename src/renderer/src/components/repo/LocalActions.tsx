@@ -16,6 +16,8 @@ interface LocalActionsProps {
   onRenameBranch: (from: string) => void
   stashCount: number
   onStash: () => void
+  onTags: () => void
+  onRemotes: () => void
   /** A narrow pane: Open folder, Fetch, Pull and Push show only their icon. */
   compact?: boolean
 }
@@ -40,6 +42,8 @@ export function LocalActions({
   onRenameBranch,
   stashCount,
   onStash,
+  onTags,
+  onRemotes,
   compact = false
 }: LocalActionsProps) {
   const { busy } = actions
@@ -218,6 +222,8 @@ export function LocalActions({
           className="size-9"
           onClick={onStash}
         />
+        <IconButton label="Tags" icon="tag" className="size-9" onClick={onTags} />
+        <IconButton label="Remotes" icon="globe" className="size-9" onClick={onRemotes} />
         {busy === 'fetch' || busy === 'branch' ? (
           <Spinner label={busy === 'fetch' ? 'Fetching' : 'Switching branches'} />
         ) : null}

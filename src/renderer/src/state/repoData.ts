@@ -179,7 +179,7 @@ export function useStashes(path: string | null, reloadToken: number): StashesSta
 }
 
 export interface OperationStateResult {
-  /** The merge or cherry-pick waiting for the user. Found again after a restart. */
+  /** The merge, cherry-pick or revert waiting for the user. Found again after a restart. */
   operation: OperationState | null
   error: string | null
 }

@@ -45,3 +45,10 @@ test('stash labels', () => {
   assert.equal(stashButtonLabel(0), 'Stash')
   assert.equal(stashButtonLabel(3), 'Stash · 3')
 })
+
+test('a revert reads as "Revert in progress"', () => {
+  assert.equal(
+    operationTitle({ kind: 'revert', target: 'abc1234', conflicted: [] }),
+    'Revert in progress (abc1234)'
+  )
+})

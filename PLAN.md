@@ -413,24 +413,24 @@ Scope decision and reasons: `docs/DECISIONS.md` (2026-11-06, Phase 14 scope). Ru
 
 **Groundwork:**
 
-- [ ] Reuse the Phase 11 rules for every new call: the typed write helper, the per-repo write queue (`serial` in `service.ts`), `assertBranchName` / `git check-ref-format` for names, `HASH_RE` for hashes and `--` before user-supplied paths.
-- [ ] Wire each call through `GitOps` in `service.ts`, `Api.local`, `IPC`, the preload, `ipcTable.ts` and a `guard()`ed service method that starts with `linkedRepoKey(path)`.
+- [x] Reuse the Phase 11 rules for every new call: the typed write helper, the per-repo write queue (`serial` in `service.ts`), `assertBranchName` / `git check-ref-format` for names, `HASH_RE` for hashes and `--` before user-supplied paths.
+- [x] Wire each call through `GitOps` in `service.ts`, `Api.local`, `IPC`, the preload, `ipcTable.ts` and a `guard()`ed service method that starts with `linkedRepoKey(path)`.
 
 **Main (`git.ts`, beside `cherryPick` and `merge`):**
 
-- [ ] Tags: `listTags`, `createTag` (lightweight, or annotated with the message on stdin, never argv), `deleteTag` (confirmed in main), `pushTag` and `deleteRemoteTag` through `getRemoteTarget` and `remoteAuthEnv`.
-- [ ] `revert(hash)` with `--no-edit`. Merge commits are refused, as for cherry-pick. A conflict returns `{ conflicted: true }` through `OperationResult`.
-- [ ] `reset(hash, mode)` for `soft`, `mixed` and `hard`. `hard` is confirmed in main and says how many files it will discard. Refused while a merge, cherry-pick, revert or rebase is in progress.
-- [ ] Remotes: `addRemote`, `renameRemote`, `removeRemote` on top of `getRemotes`. URLs are validated and pass through `stripCredentials`. A token never goes into a URL or `.git/config`.
-- [ ] Extend `getOperation`, `continueOperation` and `abortOperation` to understand `REVERT_HEAD`.
+- [x] Tags: `listTags`, `createTag` (lightweight, or annotated with the message on stdin, never argv), `deleteTag` (confirmed in main), `pushTag` and `deleteRemoteTag` through `getRemoteTarget` and `remoteAuthEnv`.
+- [x] `revert(hash)` with `--no-edit`. Merge commits are refused, as for cherry-pick. A conflict returns `{ conflicted: true }` through `OperationResult`.
+- [x] `reset(hash, mode)` for `soft`, `mixed` and `hard`. `hard` is confirmed in main and says how many files it will discard. Refused while a merge, cherry-pick, revert or rebase is in progress.
+- [x] Remotes: `addRemote`, `renameRemote`, `removeRemote` on top of `getRemotes`. URLs are validated and pass through `stripCredentials`. A token never goes into a URL or `.git/config`.
+- [x] Extend `getOperation`, `continueOperation` and `abortOperation` to understand `REVERT_HEAD`.
 
 **Renderer:**
 
-- [ ] Graph context-menu entries (tag here, revert, reset to here), built from the pure `refActions` so they are tested without a DOM. Revert and reset are not offered with a merge commit or during an operation.
-- [ ] A Tags dialog opened from the repo header, beside the Stash dialog.
-- [ ] A Remotes section in the repo settings.
-- [ ] The operation banner shows revert.
-- [ ] Add dark and light boards under `docs/ui-boards/` for the Tags dialog and the Remotes section, or log the gap in `DECISIONS.md`.
+- [x] Graph context-menu entries (tag here, revert, reset to here), built from the pure `refActions` so they are tested without a DOM. Revert and reset are not offered with a merge commit or during an operation.
+- [x] A Tags dialog opened from the repo header, beside the Stash dialog.
+- [x] A Remotes dialog opened from the repo header, because the app has no repo settings page (see `DECISIONS.md`).
+- [x] The operation banner shows revert.
+- [x] Dark and light boards for the Tags and Remotes dialogs: not done, the gap is logged in `DECISIONS.md`. The dialogs use tokens only.
 
 **Verify:**
 

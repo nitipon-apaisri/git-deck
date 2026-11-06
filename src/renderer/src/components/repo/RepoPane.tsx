@@ -24,7 +24,9 @@ import { LocalActions } from './LocalActions'
 import { OverviewTab } from './OverviewTab'
 import { OperationBanner } from './OperationBanner'
 import { RepoHeader } from './RepoHeader'
+import { RemotesDialog } from './RemotesDialog'
 import { StashDialog } from './StashDialog'
+import { TagsDialog } from './TagsDialog'
 
 const TABS: { id: TabName; label: string }[] = [
   { id: 'overview', label: 'Overview' },
@@ -102,6 +104,9 @@ export function RepoPane({
   const { stashes } = useStashes(linkedPath ?? null, actions.reloadToken + actions.watchToken)
   const { operation } = useOperation(linkedPath ?? null, actions.reloadToken + actions.watchToken)
   const [stashOpen, setStashOpen] = useState(false)
+  // `hash` is the commit a new tag points at, `null` for the checked-out one.
+  const [tagsRequest, setTagsRequest] = useState<{ hash: string | null } | null>(null)
+  const [remotesOpen, setRemotesOpen] = useState(false)
   const [nameRequest, setNameRequest] = useState<BranchNameRequest | null>(null)
   // Only read the folder while the Info tab is showing it.
   const local = useLocalInfo(
@@ -163,6 +168,8 @@ export function RepoPane({
             onRenameBranch={(from) => setNameRequest({ kind: 'rename', from })}
             stashCount={stashes.length}
             onStash={() => setStashOpen(true)}
+            onTags={() => setTagsRequest({ hash: null })}
+            onRemotes={() => setRemotesOpen(true)}
           />
         </RepoHeader>
         {operation ? (
@@ -259,6 +266,9 @@ export function RepoPane({
                       renameBranch: (from) => setNameRequest({ kind: 'rename', from }),
                       cherryPick: actions.cherryPick,
                       merge: actions.merge,
+                      revert: actions.revert,
+                      reset: actions.reset,
+                      createTag: (hash) => setTagsRequest({ hash }),
                       currentBranch: branches?.current ?? null,
                       operationActive: operation !== null
                     }
@@ -291,6 +301,21 @@ export function RepoPane({
           stashes={stashes}
           onChanged={actions.refresh}
           onClose={() => setStashOpen(false)}
+        />
+      ) : null}
+      {tagsRequest && linkedPath ? (
+        <TagsDialog
+          path={linkedPath}
+          startHash={tagsRequest.hash}
+          onChanged={actions.refresh}
+          onClose={() => setTagsRequest(null)}
+        />
+      ) : null}
+      {remotesOpen && linkedPath ? (
+        <RemotesDialog
+          path={linkedPath}
+          onChanged={actions.refresh}
+          onClose={() => setRemotesOpen(false)}
         />
       ) : null}
       {nameRequest ? (

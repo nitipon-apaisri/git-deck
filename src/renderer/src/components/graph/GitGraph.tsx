@@ -12,7 +12,7 @@ import {
   widestLane
 } from '../../lib/graphView'
 import { cn } from '@/lib/cn'
-import type { CheckoutTarget, DiffRequest, GraphCommit } from '@shared/types'
+import type { CheckoutTarget, DiffRequest, GraphCommit, ResetMode } from '@shared/types'
 import { refActions, type RefAction } from '../../lib/branchView'
 import type { BadgeView } from '../../lib/graphView'
 import { detailPlacement } from '../../lib/splitLayout'
@@ -54,9 +54,13 @@ export interface GraphMenuOps {
   renameBranch: (name: string) => void
   cherryPick: (hash: string) => void
   merge: (branch: string, noFf: boolean) => void
+  revert: (hash: string) => void
+  reset: (hash: string, mode: ResetMode) => void
+  /** Opens the Tags dialog on this commit. */
+  createTag: (hash: string) => void
   /** The checked-out branch, `null` while detached. */
   currentBranch: string | null
-  /** A merge or cherry-pick is waiting, so no second one starts. */
+  /** A merge, cherry-pick or revert is waiting, so no second one starts. */
   operationActive: boolean
 }
 
@@ -184,6 +188,12 @@ export function GitGraph({
         return menuOps.merge(action.branch, action.noFf)
       case 'cherry-pick':
         return menuOps.cherryPick(action.hash)
+      case 'revert':
+        return menuOps.revert(action.hash)
+      case 'reset':
+        return menuOps.reset(action.hash, action.mode)
+      case 'create-tag':
+        return menuOps.createTag(action.hash)
       case 'copy':
         void navigator.clipboard?.writeText(action.text).catch(() => {})
     }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { errorMessage } from '../lib/errors'
 import type { CloneProtocol, GitProgress } from '@shared/api'
-import type { CheckoutTarget, PullMode } from '@shared/types'
+import type { CheckoutTarget, PullMode, ResetMode } from '@shared/types'
 
 export type LocalBusy = 'clone' | 'link' | 'fetch' | 'pull' | 'push' | 'branch' | null
 
@@ -36,6 +36,9 @@ export interface LocalActions {
   /** A conflict does not fail: the pane's banner (from `operation`) takes it from there. */
   cherryPick: (hash: string) => void
   merge: (branch: string, noFf: boolean) => void
+  revert: (hash: string) => void
+  /** A hard reset asks in main first. */
+  reset: (hash: string, mode: ResetMode) => void
   continueOperation: () => void
   /** Main asks first. */
   abortOperation: () => void
@@ -209,7 +212,7 @@ export function useLocalActions(
     [run, linkedPath]
   )
 
-  // Merge and cherry-pick may stop on conflicts, which is a result, not an error.
+  // Merge, cherry-pick and revert may stop on conflicts, which is a result, not an error.
   const operate = useCallback(
     (work: (path: string) => Promise<unknown>) => {
       if (!linkedPath) return
@@ -231,6 +234,14 @@ export function useLocalActions(
   const merge = useCallback(
     (branch: string, noFf: boolean) =>
       operate((path) => window.api.local.merge(path, branch, noFf)),
+    [operate]
+  )
+  const revert = useCallback(
+    (hash: string) => operate((path) => window.api.local.revert(path, hash)),
+    [operate]
+  )
+  const reset = useCallback(
+    (hash: string, mode: ResetMode) => operate((path) => window.api.local.reset(path, hash, mode)),
     [operate]
   )
   const continueOperation = useCallback(
@@ -291,6 +302,8 @@ export function useLocalActions(
     refresh,
     cherryPick,
     merge,
+    revert,
+    reset,
     continueOperation,
     abortOperation
   }

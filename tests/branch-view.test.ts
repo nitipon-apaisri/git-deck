@@ -157,3 +157,43 @@ test('refActions offers cherry-pick on a plain commit only when it is safe to st
   const none = refActions({ kind: 'branch', name: 'feature' }, 'abc1234')
   assert.ok(!ids(none).includes('cherry-pick') && !ids(none).includes('merge'))
 })
+
+test('refActions offers revert, tag and reset on a commit, each only when it is safe', () => {
+  const all = ids(refActions(null, 'abc1234', ctx))
+  for (const id of ['revert', 'create-tag', 'reset-soft', 'reset-mixed', 'reset-hard']) {
+    assert.ok(all.includes(id), id)
+  }
+  const items = refActions(null, 'abc1234', ctx)
+  assert.deepEqual(items.find((i) => i.id === 'revert')?.action, {
+    type: 'revert',
+    hash: 'abc1234'
+  })
+  assert.deepEqual(items.find((i) => i.id === 'create-tag')?.action, {
+    type: 'create-tag',
+    hash: 'abc1234'
+  })
+  const hard = items.find((i) => i.id === 'reset-hard')
+  assert.deepEqual(hard?.action, { type: 'reset', hash: 'abc1234', mode: 'hard' })
+  assert.equal(hard?.danger, true)
+  assert.match(hard?.label ?? '', /Reset main to here \(hard\)…/)
+  assert.ok(!items.find((i) => i.id === 'reset-soft')?.danger)
+
+  // A merge commit cannot be reverted without a mainline, but it can be tagged and reset to.
+  const merge = ids(refActions(null, 'abc1234', { ...ctx, isMerge: true }))
+  assert.ok(
+    !merge.includes('revert') && merge.includes('create-tag') && merge.includes('reset-soft')
+  )
+  // Detached: no revert, reset says HEAD.
+  const detached = refActions(null, 'abc1234', { ...ctx, currentBranch: null })
+  assert.ok(!ids(detached).includes('revert'))
+  assert.match(detached.find((i) => i.id === 'reset-mixed')?.label ?? '', /Reset HEAD to here/)
+  // While an operation waits only tagging stays.
+  const busy = ids(refActions(null, 'abc1234', { ...ctx, operationActive: true }))
+  assert.ok(busy.includes('create-tag'))
+  assert.ok(!busy.includes('revert') && !busy.includes('reset-hard'))
+  // A pane that cannot write offers none of them.
+  const none = ids(refActions(null, 'abc1234'))
+  assert.ok(
+    !none.includes('create-tag') && !none.includes('revert') && !none.includes('reset-soft')
+  )
+})

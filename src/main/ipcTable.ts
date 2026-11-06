@@ -2,7 +2,13 @@
 // can prove every channel is wired.
 import { IPC, type IpcResult } from '../shared/api'
 import type { CloneProtocol, ProjectCreateInput, ProjectPatchInput } from '../shared/api'
-import type { AccountInput, CheckoutTarget, DiffRequest, PullMode } from '../shared/types'
+import type {
+  AccountInput,
+  CheckoutTarget,
+  DiffRequest,
+  PullMode,
+  ResetMode
+} from '../shared/types'
 import type { MainApi } from './service'
 
 export type Handler = (args: unknown[]) => Promise<unknown>
@@ -67,6 +73,27 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     localCherryPick: ([path, hash]) => api.local.cherryPick(path as string, hash as string),
     localMerge: ([path, branch, noFf]) =>
       api.local.merge(path as string, branch as string, noFf as boolean),
+    localTags: ([path]) => api.local.tags(path as string),
+    localCreateTag: ([path, name, hash, message]) =>
+      api.local.createTag(
+        path as string,
+        name as string,
+        hash as string | null,
+        message as string | null
+      ),
+    localDeleteTag: ([path, name]) => api.local.deleteTag(path as string, name as string),
+    localPushTag: ([path, name]) => api.local.pushTag(path as string, name as string),
+    localDeleteRemoteTag: ([path, name]) =>
+      api.local.deleteRemoteTag(path as string, name as string),
+    localRevert: ([path, hash]) => api.local.revert(path as string, hash as string),
+    localReset: ([path, hash, mode]) =>
+      api.local.reset(path as string, hash as string, mode as ResetMode),
+    localRemotes: ([path]) => api.local.remotes(path as string),
+    localAddRemote: ([path, name, url]) =>
+      api.local.addRemote(path as string, name as string, url as string),
+    localRenameRemote: ([path, from, to]) =>
+      api.local.renameRemote(path as string, from as string, to as string),
+    localRemoveRemote: ([path, name]) => api.local.removeRemote(path as string, name as string),
     localOperation: ([path]) => api.local.operation(path as string),
     localContinueOperation: ([path]) => api.local.continueOperation(path as string),
     localAbortOperation: ([path]) => api.local.abortOperation(path as string),
