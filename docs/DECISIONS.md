@@ -8,6 +8,16 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-07: Phase 16 as built
+
+- **Question:** what was built, what the checks showed, and what was not checked.
+- **Decision and why:**
+  - As planned: optional `HunkRequest.lines`, `linePatch` and `FileDiff.change` in `shared/diff.ts`, `hunkPatch` in `git.ts` builds the line patch from the re-read diff after the fingerprint check, applied with `git apply --cached --recount`. `checkHunk` validates `lines` in the service. No new IPC call.
+  - The renderer keeps the selection beside the diff object it was made on (`DiffView`), so a reloaded diff drops it without an effect. `lib/lineSelection.ts` holds the pure helpers. Shift-click ticks a range from the last clicked line in the same hunk.
+  - Tests: `tests/line-staging.test.ts` (patch rules, CRLF, no-newline, temp-repo stage, unstage, round trip, refusals) and a service validation test. Suite: 467 passing; typecheck, lint, format and build pass.
+  - The checkbox column and the "Stage N lines", "Select all" and "Clear" buttons have no dark or light board in `docs/ui-boards/`; they use tokens and the existing ghost button only. Gap logged.
+- **Not verified:** the diff dialog was not run in the window, in either theme. Only the tests, typecheck, lint and build ran.
+
 ## 2026-11-07: Phase 16 scope (line-level staging)
 
 - **Question:** how to stage single lines safely, and what stays out.
@@ -19,7 +29,7 @@ Newest first. Template:
   - Refused on purpose: a partial selection in a hunk with a `\ No newline at end of file` note (the context line would need a different ending on each side), and a file created or deleted by the change (a half-created file has no clean patch). Whole-hunk and whole-file staging still work for both. `FileDiff.change` lets the UI hide the checkboxes instead of failing.
   - Line-level discard stays out: it destroys work, and the confirm and undo story is a separate design. Selection across several hunks or files, and drag selection, also stay out.
   - Still out: interactive rebase, line-level discard, a full-file three-way editor, `rerere`, external merge tools, submodule conflicts, pull or merge request creation, OAuth sign-in, a SQLite cache, auto-update and installers, more than two panes, drag-and-drop between projects, cloning every repository of a project at once.
-- **Not verified:** this entry records a plan. Nothing in Phase 16 is built yet.
+- **Not verified:** this entry records the plan. See "Phase 16 as built" above.
 
 ## 2026-11-06: Phase 15b as built
 
