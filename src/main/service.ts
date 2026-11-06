@@ -223,6 +223,8 @@ function checkTagName(name: unknown): string {
   return name
 }
 
+const MAX_HUNK_LINES = 100_000
+
 function checkHunk(value: unknown): HunkRequest {
   const h = value as Partial<HunkRequest> | null
   if (
@@ -234,11 +236,22 @@ function checkHunk(value: unknown): HunkRequest {
     h.path.includes('\0') ||
     (h.source !== 'worktree' && h.source !== 'staged') ||
     typeof h.index !== 'number' ||
-    typeof h.fingerprint !== 'string'
+    typeof h.fingerprint !== 'string' ||
+    (h.lines !== undefined &&
+      (!Array.isArray(h.lines) ||
+        h.lines.length > MAX_HUNK_LINES ||
+        h.lines.some((n) => !Number.isInteger(n) || n < 0 || n > MAX_HUNK_LINES)))
   ) {
     throw new Error('The hunk is not valid')
   }
-  return { path: h.path, source: h.source, index: h.index, fingerprint: h.fingerprint }
+  const request: HunkRequest = {
+    path: h.path,
+    source: h.source,
+    index: h.index,
+    fingerprint: h.fingerprint
+  }
+  if (h.lines !== undefined) request.lines = h.lines
+  return request
 }
 
 const CONFLICT_ACTIONS = new Set(['ours', 'theirs', 'keep', 'delete', 'mark-resolved'])

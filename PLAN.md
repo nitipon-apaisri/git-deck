@@ -503,27 +503,27 @@ Scope decision and reasons: `docs/DECISIONS.md` (2026-11-06, Phase 16 scope). It
 
 **Groundwork:**
 
-- [ ] Reuse the 14b rules: the typed write helper, the per-repo write queue (`serial` in `service.ts`), `knownPaths`, `--` before the path, and the patch rebuilt in main from the file's own diff. Nothing the renderer sends is ever applied as text.
-- [ ] Same limits as hunk staging: tracked files only, not in conflict, not renamed, not binary or too large. In addition a file that the diff shows as created or deleted (`new file mode`, `deleted file mode`) is staged as a whole, because a half-created file has no clean patch.
+- [x] Reuse the 14b rules: the typed write helper, the per-repo write queue (`serial` in `service.ts`), `knownPaths`, `--` before the path, and the patch rebuilt in main from the file's own diff. Nothing the renderer sends is ever applied as text.
+- [x] Same limits as hunk staging: tracked files only, not in conflict, not renamed, not binary or too large. In addition a file that the diff shows as created or deleted (`new file mode`, `deleted file mode`) is staged as a whole, because a half-created file has no clean patch.
 
 **Shared (`shared/diff.ts`, pure):**
 
-- [ ] `HunkRequest` gets an optional `lines: number[]`: positions in the hunk's `lines` array of the changed lines to stage or unstage. Absent means the whole hunk, as today. The fingerprint still names the hunk.
-- [ ] `FileDiff.change: 'created' | 'deleted' | null`, read by `parseUnifiedDiff` from the header lines before the first hunk, so the renderer can hide the line checkboxes for those files.
-- [ ] `linePatch(header, hunkText, selected, direction)` builds a patch for part of one hunk, from the raw hunk text so no byte changes (CRLF, tabs, trailing spaces). To stage (`direction: 'stage'`): a selected `+` or `-` stays, an unselected `+` is dropped, an unselected `-` becomes a context line. To unstage (`'unstage'`, applied with `--reverse`) the roles swap: an unselected `+` becomes a context line and an unselected `-` is dropped. The hunk header counts are recomputed from the lines kept. It refuses an empty selection, an index that is not an added or deleted line, a duplicate, and a hunk that holds a `\ No newline at end of file` note when only some lines are selected (the whole hunk still stages).
+- [x] `HunkRequest` gets an optional `lines: number[]`: positions in the hunk's `lines` array of the changed lines to stage or unstage. Absent means the whole hunk, as today. The fingerprint still names the hunk.
+- [x] `FileDiff.change: 'created' | 'deleted' | null`, read by `parseUnifiedDiff` from the header lines before the first hunk, so the renderer can hide the line checkboxes for those files.
+- [x] `linePatch(header, hunkText, selected, direction)` builds a patch for part of one hunk, from the raw hunk text so no byte changes (CRLF, tabs, trailing spaces). To stage (`direction: 'stage'`): a selected `+` or `-` stays, an unselected `+` is dropped, an unselected `-` becomes a context line. To unstage (`'unstage'`, applied with `--reverse`) the roles swap: an unselected `+` becomes a context line and an unselected `-` is dropped. The hunk header counts are recomputed from the lines kept. It refuses an empty selection, an index that is not an added or deleted line, a duplicate, and a hunk that holds a `\ No newline at end of file` note when only some lines are selected (the whole hunk still stages).
 
 **Main (`git.ts`, beside `stageHunk`):**
 
-- [ ] `stageHunk` and `unstageHunk` read `request.lines`. With lines they build `linePatch` from the same re-read diff and the same fingerprint check as 14b, then `git apply --cached --recount --whitespace=nowarn` on stdin (with `--reverse` to unstage). The work tree is never touched.
-- [ ] Refuse a stale hunk ("Reload the diff and try again"), an out-of-range, duplicate or non-integer index, more indexes than the hunk has lines, and a created or deleted file.
-- [ ] `checkHunk` in `service.ts` validates `lines` (an array of integers from 0 to the hunk size, capped) and passes it on. No new call, channel or confirm.
+- [x] `stageHunk` and `unstageHunk` read `request.lines`. With lines they build `linePatch` from the same re-read diff and the same fingerprint check as 14b, then `git apply --cached --recount --whitespace=nowarn` on stdin (with `--reverse` to unstage). The work tree is never touched.
+- [x] Refuse a stale hunk ("Reload the diff and try again"), an out-of-range, duplicate or non-integer index, more indexes than the hunk has lines, and a created or deleted file.
+- [x] `checkHunk` in `service.ts` validates `lines` (an array of integers from 0 to the hunk size, capped) and passes it on. No new call, channel or confirm.
 
 **Renderer:**
 
-- [ ] `lib/lineSelection.ts` (pure, tested): toggle one line, select a range with shift-click, select or clear every changed line of a hunk, count, the button label ("Stage 3 lines", "Unstage 1 line"), and which hunks may be selected (no `note` line, a file that is not created or deleted).
-- [ ] `DiffView`: each added or removed line gets a checkbox in a new gutter column when the diff can be staged. A hunk with selected lines shows "Stage N lines" or "Unstage N lines" beside the existing hunk button, plus "Select all" and "Clear". A change is still marked by `+` and `−`, and a selected line by its checked box, never by colour alone. Every checkbox has an `aria-label` ("Select added line 12"). The selection belongs to the dialog and is cleared when the diff reloads, so it never refers to an old fingerprint. One hunk is staged per click, so no index shifts between calls.
-- [ ] `GitGraph.runHunk` passes `lines` through. Errors and the busy state use the 14b banner.
-- [ ] Dark and light boards: not drawn, log the gap in `DECISIONS.md` as before. The checkbox column uses tokens only.
+- [x] `lib/lineSelection.ts` (pure, tested): toggle one line, select a range with shift-click, select or clear every changed line of a hunk, count, the button label ("Stage 3 lines", "Unstage 1 line"), and which hunks may be selected (no `note` line, a file that is not created or deleted).
+- [x] `DiffView`: each added or removed line gets a checkbox in a new gutter column when the diff can be staged. A hunk with selected lines shows "Stage N lines" or "Unstage N lines" beside the existing hunk button, plus "Select all" and "Clear". A change is still marked by `+` and `−`, and a selected line by its checked box, never by colour alone. Every checkbox has an `aria-label` ("Select added line 12"). The selection belongs to the dialog and is cleared when the diff reloads, so it never refers to an old fingerprint. One hunk is staged per click, so no index shifts between calls.
+- [x] `GitGraph.runHunk` passes `lines` through. Errors and the busy state use the 14b banner.
+- [x] Dark and light boards: not drawn, log the gap in `DECISIONS.md` as before. The checkbox column uses tokens only.
 
 **Verify:**
 
