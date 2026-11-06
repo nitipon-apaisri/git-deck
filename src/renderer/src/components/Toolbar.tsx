@@ -1,7 +1,7 @@
 import type { Account } from '@shared/types'
 import { hostTileOf } from '../lib/presets'
 import type { Orientation } from '../lib/splitState'
-import { HostTile, Icon, IconButton } from './ui'
+import { HostTile, IconButton } from './ui'
 import styles from './Toolbar.module.css'
 
 interface ToolbarProps {
@@ -29,12 +29,6 @@ export function Toolbar({
   const names = accounts.map((a) => a.label).join(', ')
   return (
     <header className={styles.toolbar} data-inset={insetTitleBar ? 'true' : undefined}>
-      <div className={styles.brand}>
-        <span className={styles.mark} aria-hidden="true">
-          <Icon name="git-branch" size="sm" />
-        </span>
-        <span className={styles.name}>GitDeck</span>
-      </div>
       <span className={styles.spacer} />
       <div className={styles.split} role="group" aria-label="Split view">
         {splitEnabled ? (

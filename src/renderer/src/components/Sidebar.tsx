@@ -139,6 +139,12 @@ export function Sidebar({
 
   return (
     <Island as="aside" aria-label="Repositories" className={styles.sidebar}>
+      <div className={styles.brand}>
+        <span className={styles.mark} aria-hidden="true">
+          <Icon name="git-branch" size="sm" />
+        </span>
+        <span className={styles.name}>GitDeck</span>
+      </div>
       {loading ? (
         <SidebarSkeleton />
       ) : loadError ? (
