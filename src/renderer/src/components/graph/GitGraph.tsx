@@ -51,6 +51,8 @@ interface GitGraphProps {
   place: 1 | 2
   /** What a right-click may do. Absent: no menu (nothing is writable). */
   menuOps?: GraphMenuOps
+  /** Opens the pane's conflict editor for a file in conflict. Absent: the rows only show it. */
+  onResolveConflict?: (file: string) => void
 }
 
 export interface GraphMenuOps {
@@ -90,7 +92,8 @@ export function GitGraph({
   narrow,
   split,
   place,
-  menuOps
+  menuOps,
+  onResolveConflict
 }: GitGraphProps) {
   const idPrefix = useId()
   const now = useNow()
@@ -398,6 +401,7 @@ export function GitGraph({
           reload={statusState.reload}
           onChanged={onChanged}
           onOpenFile={(source, file) => setDiffFile({ source, path: file })}
+          onResolveFile={(file) => onResolveConflict?.(file)}
           onClose={() => setSelectedHash(null)}
         />
         {menu && menuOps ? (

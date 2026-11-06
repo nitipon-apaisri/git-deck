@@ -20,6 +20,7 @@ import { ErrorBanner, Icon, IconButton, Island, Spinner, Tabs, panelId, tabId } 
 import { GitGraph } from '../graph/GitGraph'
 import { InfoTab } from './InfoTab'
 import { BranchNameDialog, type BranchNameRequest } from './BranchNameDialog'
+import { ConflictEditor } from './ConflictEditor'
 import { LocalActions } from './LocalActions'
 import { OverviewTab } from './OverviewTab'
 import { OperationBanner } from './OperationBanner'
@@ -107,6 +108,8 @@ export function RepoPane({
   // `hash` is the commit a new tag points at, `null` for the checked-out one.
   const [tagsRequest, setTagsRequest] = useState<{ hash: string | null } | null>(null)
   const [remotesOpen, setRemotesOpen] = useState(false)
+  // The conflicted file open in the editor. It lives here, so each pane has its own.
+  const [conflictFile, setConflictFile] = useState<string | null>(null)
   const [nameRequest, setNameRequest] = useState<BranchNameRequest | null>(null)
   // Only read the folder while the Info tab is showing it.
   const local = useLocalInfo(
@@ -179,6 +182,7 @@ export function RepoPane({
             onContinue={actions.continueOperation}
             onAbort={actions.abortOperation}
             onSkip={actions.skipOperation}
+            onResolveFile={setConflictFile}
             onOpenFolder={actions.openFolder}
           />
         ) : null}
@@ -256,6 +260,7 @@ export function RepoPane({
               narrow={narrow}
               split={split}
               place={paneNumber}
+              onResolveConflict={linkedPath ? setConflictFile : undefined}
               menuOps={
                 linkedPath
                   ? {
@@ -318,6 +323,15 @@ export function RepoPane({
           path={linkedPath}
           onChanged={actions.refresh}
           onClose={() => setRemotesOpen(false)}
+        />
+      ) : null}
+      {conflictFile && linkedPath ? (
+        <ConflictEditor
+          path={linkedPath}
+          file={conflictFile}
+          reloadToken={actions.reloadToken + actions.watchToken}
+          onChanged={actions.refresh}
+          onClose={() => setConflictFile(null)}
         />
       ) : null}
       {nameRequest ? (

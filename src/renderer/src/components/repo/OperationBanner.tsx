@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import type { OperationState } from '@shared/types'
+import { conflictKindText } from '../../lib/conflictView'
 import { conflictPreview, operationHint, operationTitle } from '../../lib/operationView'
 import { Button, Icon } from '../ui'
 
@@ -11,7 +13,9 @@ interface OperationBannerProps {
   onAbort: () => void
   /** Rebase only: drop the commit it stopped on. Main asks the user to confirm. */
   onSkip?: () => void
-  /** Opens the folder, where the files are fixed. There is no conflict editor. */
+  /** Opens the conflict editor for one of the files. */
+  onResolveFile: (path: string) => void
+  /** Opens the folder, for fixing a file in another editor. */
   onOpenFolder: () => void
 }
 
@@ -22,9 +26,11 @@ export function OperationBanner({
   onContinue,
   onAbort,
   onSkip,
+  onResolveFile,
   onOpenFolder
 }: OperationBannerProps) {
-  const { shown, more } = conflictPreview(state.conflicted)
+  const [all, setAll] = useState(false)
+  const { shown, more } = conflictPreview(state.conflicted, all ? state.conflicted.length : 5)
   return (
     <section
       className="flex flex-col gap-2 rounded-md bg-[var(--warning-bg)] px-3 py-2 text-[var(--warning-text)]"
@@ -41,13 +47,35 @@ export function OperationBanner({
         </div>
       </div>
       {shown.length > 0 ? (
-        <ul className="m-0 flex list-none flex-col gap-0.5 p-0 pl-6 font-mono text-[12px]">
-          {shown.map((path) => (
-            <li key={path} className="[overflow-wrap:anywhere]">
-              {path}
+        <ul className="m-0 flex list-none flex-col gap-0.5 p-0 pl-6 text-[12px]">
+          {shown.map((path) => {
+            const kind = state.conflictKinds[path]
+            return (
+              <li key={path} className="flex min-w-0 items-center gap-2">
+                <button
+                  type="button"
+                  className="min-w-0 cursor-pointer border-0 bg-transparent p-0 text-left font-mono text-[12px] text-inherit underline decoration-dotted underline-offset-2 [overflow-wrap:anywhere] hover:decoration-solid focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+                  disabled={busy}
+                  onClick={() => onResolveFile(path)}
+                  aria-label={`Resolve ${path}`}
+                >
+                  {path}
+                </button>
+                {kind ? <span className="flex-none">({conflictKindText(kind)})</span> : null}
+              </li>
+            )
+          })}
+          {more > 0 ? (
+            <li>
+              <button
+                type="button"
+                className="cursor-pointer border-0 bg-transparent p-0 text-[12px] text-inherit underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+                onClick={() => setAll(true)}
+              >
+                Show {more} more
+              </button>
             </li>
-          ))}
-          {more > 0 ? <li>and {more} more</li> : null}
+          ) : null}
         </ul>
       ) : null}
       <div className="flex flex-wrap items-center gap-2 pl-6">

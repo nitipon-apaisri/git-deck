@@ -12,6 +12,7 @@ import {
   unstagedKind,
   type RowKind
 } from '../../lib/changesView'
+import { quickAction } from '../../lib/conflictView'
 import { errorMessage } from '../../lib/errors'
 import {
   Button,
@@ -36,6 +37,8 @@ interface ChangesPanelProps {
   onChanged: () => void
   /** Opens a file's diff. */
   onOpenFile: (source: 'staged' | 'worktree', path: string) => void
+  /** Opens the conflict editor for a file in conflict. */
+  onResolveFile: (path: string) => void
   onClose: () => void
   /** Not the selected row: stays mounted but out of sight. */
   hidden: boolean
@@ -147,6 +150,7 @@ export function ChangesPanel({
   reload,
   onChanged,
   onOpenFile,
+  onResolveFile,
   onClose,
   hidden
 }: ChangesPanelProps) {
@@ -225,12 +229,20 @@ export function ChangesPanel({
               kind="conflicted"
               selected={false}
               disabled={busy}
-              onSelect={() => undefined}
+              onSelect={() => onResolveFile(e.path)}
               actions={[
+                {
+                  label: 'Resolve conflicts in',
+                  icon: 'edit',
+                  run: () => onResolveFile(e.path)
+                },
                 {
                   label: 'Mark as resolved:',
                   icon: 'check',
-                  run: () => void act(() => window.api.local.stage(path, [e.path]))
+                  run: () =>
+                    void act(() =>
+                      window.api.local.resolveConflictFile(path, e.path, quickAction(e.conflict))
+                    )
                 }
               ]}
             />

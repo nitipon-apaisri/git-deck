@@ -244,6 +244,8 @@ export interface OperationState {
   target: string | null
   /** Paths git could not combine and the user has not staged yet. */
   conflicted: string[]
+  /** How each of those paths conflicts. */
+  conflictKinds: Record<string, ConflictKind>
 }
 
 export type ResetMode = 'soft' | 'mixed' | 'hard'
