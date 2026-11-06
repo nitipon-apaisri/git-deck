@@ -228,6 +228,6 @@ test('a conflicting merge can be resolved and continued, and an old state is fou
 test('continue and abort refuse when nothing is in progress', async () => {
   const dir = emptyRepo()
   commit(dir, 'a.txt', 'first')
-  await assert.rejects(continueOperation(dir), /no merge or cherry-pick/)
-  await assert.rejects(abortOperation(dir), /no merge or cherry-pick/)
+  await assert.rejects(continueOperation(dir), /no merge, cherry-pick or revert/)
+  await assert.rejects(abortOperation(dir), /no merge, cherry-pick or revert/)
 })

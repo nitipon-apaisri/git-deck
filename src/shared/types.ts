@@ -219,15 +219,36 @@ export interface StashEntry {
   createdAt: number
 }
 
-export type OperationKind = 'merge' | 'cherry-pick'
+export type OperationKind = 'merge' | 'cherry-pick' | 'revert'
 
-/** A merge or cherry-pick that stopped and waits for the user. */
+/** A merge, cherry-pick or revert that stopped and waits for the user. */
 export interface OperationState {
   kind: OperationKind
-  /** Short hash of the commit being merged or picked. */
+  /** Short hash of the commit being merged, picked or reverted. */
   target: string | null
   /** Paths git could not combine and the user has not staged yet. */
   conflicted: string[]
+}
+
+export type ResetMode = 'soft' | 'mixed' | 'hard'
+
+/** What a hard reset to a commit would throw away. Shown in the confirm. */
+export interface ResetImpact {
+  /** Commits on the current branch that the commit does not contain. */
+  commits: number
+  /** Tracked files with staged or unstaged changes. Untracked files are never touched. */
+  files: number
+}
+
+export interface TagEntry {
+  name: string
+  /** The commit the tag points at (an annotated tag is followed to its commit). */
+  hash: string
+  annotated: boolean
+  /** First line of an annotated tag's message. */
+  message: string | null
+  /** Unix seconds: when the tag was made, or its commit's date for a lightweight tag. */
+  createdAt: number
 }
 
 export interface OperationResult {

@@ -11,6 +11,7 @@ import type {
   FileDiff,
   GraphCommit,
   LocalInfo,
+  LocalRemote,
   OperationResult,
   OperationState,
   Project,
@@ -18,7 +19,9 @@ import type {
   Repo,
   RepoStatus,
   RepoSummary,
+  ResetMode,
   StashEntry,
+  TagEntry,
   VerifiedUser
 } from './types'
 
@@ -113,7 +116,29 @@ export interface Api {
     cherryPick(path: string, hash: string): Promise<OperationResult>
     /** `branch` is local or remote (`origin/x`). `noFf` always makes a merge commit. */
     merge(path: string, branch: string, noFf: boolean): Promise<OperationResult>
-    /** The merge or cherry-pick waiting for the user, or `null`. */
+    tags(path: string): Promise<TagEntry[]>
+    /** `hash` is a commit, or `null` for HEAD. A message makes an annotated tag. */
+    createTag(
+      path: string,
+      name: string,
+      hash: string | null,
+      message: string | null
+    ): Promise<void>
+    /** Asks first. Deletes the local tag only. Resolves `false` when declined. */
+    deleteTag(path: string, name: string): Promise<boolean>
+    pushTag(path: string, name: string): Promise<void>
+    /** Asks first. Resolves `false` when declined. */
+    deleteRemoteTag(path: string, name: string): Promise<boolean>
+    /** `conflicted` means it stopped: read `operation`, then continue or abort. */
+    revert(path: string, hash: string): Promise<OperationResult>
+    /** A hard reset asks first. Resolves `false` when declined. */
+    reset(path: string, hash: string, mode: ResetMode): Promise<boolean>
+    remotes(path: string): Promise<LocalRemote[]>
+    addRemote(path: string, name: string, url: string): Promise<void>
+    renameRemote(path: string, from: string, to: string): Promise<void>
+    /** Asks first. Resolves `false` when declined. */
+    removeRemote(path: string, name: string): Promise<boolean>
+    /** The merge, cherry-pick or revert waiting for the user, or `null`. */
     operation(path: string): Promise<OperationState | null>
     /** Stages the fixed files and finishes the operation. */
     continueOperation(path: string): Promise<void>
@@ -185,6 +210,17 @@ export const IPC = {
   localStashDrop: 'local:stashDrop',
   localCherryPick: 'local:cherryPick',
   localMerge: 'local:merge',
+  localTags: 'local:tags',
+  localCreateTag: 'local:createTag',
+  localDeleteTag: 'local:deleteTag',
+  localPushTag: 'local:pushTag',
+  localDeleteRemoteTag: 'local:deleteRemoteTag',
+  localRevert: 'local:revert',
+  localReset: 'local:reset',
+  localRemotes: 'local:remotes',
+  localAddRemote: 'local:addRemote',
+  localRenameRemote: 'local:renameRemote',
+  localRemoveRemote: 'local:removeRemote',
   localOperation: 'local:operation',
   localContinueOperation: 'local:continueOperation',
   localAbortOperation: 'local:abortOperation',

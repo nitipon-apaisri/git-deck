@@ -103,6 +103,6 @@ test('a conflicting cherry-pick can be resolved and continued through the servic
 test('abort with nothing in progress reports it without asking', async () => {
   const s = await setup()
   git(s.dir, 'checkout', '-q', 'main')
-  await assert.rejects(s.api.local.abortOperation(s.dir), /no merge or cherry-pick/)
+  await assert.rejects(s.api.local.abortOperation(s.dir), /no merge, cherry-pick or revert/)
   assert.equal(s.confirmed(), 0)
 })

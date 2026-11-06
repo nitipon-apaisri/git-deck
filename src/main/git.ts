@@ -22,8 +22,11 @@ import type {
   OperationState,
   PullMode,
   RepoStatus,
+  ResetImpact,
+  ResetMode,
   StashEntry,
-  StatusEntry
+  StatusEntry,
+  TagEntry
 } from '../shared/types'
 
 const MAX_BUFFER = 64 * 1024 * 1024
@@ -839,17 +842,26 @@ async function gitPathExists(cwd: string, name: string): Promise<string | null> 
   return existsSync(full) ? full : null
 }
 
-/** The merge or cherry-pick waiting for the user, or `null`. */
+const OPERATION_FILES: [string, OperationKind][] = [
+  ['MERGE_HEAD', 'merge'],
+  ['CHERRY_PICK_HEAD', 'cherry-pick'],
+  ['REVERT_HEAD', 'revert']
+]
+
+export const NO_OPERATION = 'There is no merge, cherry-pick or revert in progress'
+
+/** The merge, cherry-pick or revert waiting for the user, or `null`. */
 export async function getOperation(cwd: string): Promise<OperationState | null> {
-  let kind: OperationKind
-  let file = await gitPathExists(cwd, 'MERGE_HEAD')
-  if (file) {
-    kind = 'merge'
-  } else {
-    file = await gitPathExists(cwd, 'CHERRY_PICK_HEAD')
-    if (!file) return null
-    kind = 'cherry-pick'
+  let kind: OperationKind | null = null
+  let file: string | null = null
+  for (const [name, candidate] of OPERATION_FILES) {
+    file = await gitPathExists(cwd, name)
+    if (file) {
+      kind = candidate
+      break
+    }
   }
+  if (!file || !kind) return null
   let target: string | null
   try {
     const first = readFileSync(file, 'utf8').split('\n')[0].trim()
@@ -957,12 +969,12 @@ function stillMarked(cwd: string, paths: string[]): string[] {
 }
 
 /**
- * Stages the files the user fixed, then finishes the merge or cherry-pick. Refuses while a
+ * Stages the files the user fixed, then finishes the merge, cherry-pick or revert. Refuses while a
  * file still holds conflict markers.
  */
 export async function continueOperation(cwd: string): Promise<void> {
   const state = await getOperation(cwd)
-  if (!state) throw new Error('There is no merge or cherry-pick in progress')
+  if (!state) throw new Error(NO_OPERATION)
   const marked = stillMarked(cwd, state.conflicted)
   if (marked.length > 0) {
     throw new Error(
@@ -973,11 +985,239 @@ export async function continueOperation(cwd: string): Promise<void> {
   // `true` as the editor accepts the message git prepared.
   const env = { GIT_EDITOR: 'true' }
   if (state.kind === 'merge') await run(cwd, ['commit', '--no-edit'], env)
-  else await run(cwd, ['cherry-pick', '--continue'], env)
+  else await run(cwd, [state.kind, '--continue'], env)
 }
 
 export async function abortOperation(cwd: string): Promise<void> {
   const state = await getOperation(cwd)
-  if (!state) throw new Error('There is no merge or cherry-pick in progress')
+  if (!state) throw new Error(NO_OPERATION)
   await run(cwd, [state.kind, '--abort'])
+}
+
+// Tags, revert, reset and remotes
+
+/** Throws unless `name` is a valid tag name that does not look like an option. */
+export async function assertTagName(cwd: string, name: string): Promise<void> {
+  if (typeof name !== 'string' || !name || name.length > 255 || name.startsWith('-')) {
+    throw new Error(`"${String(name).slice(0, 60)}" is not a valid tag name`)
+  }
+  if ((await tryRun(cwd, ['check-ref-format', `refs/tags/${name}`])) === null) {
+    throw new Error(`"${name}" is not a valid tag name`)
+  }
+}
+
+async function assertCommit(cwd: string, hash: unknown): Promise<string> {
+  if (typeof hash !== 'string' || !HASH_RE.test(hash)) throw new Error('Invalid commit hash')
+  if ((await tryRun(cwd, ['cat-file', '-e', `${hash}^{commit}`])) === null) {
+    throw new Error('That commit does not exist in this repository')
+  }
+  return hash
+}
+
+const MAX_TAG_MESSAGE = 5000
+
+export async function listTags(cwd: string): Promise<TagEntry[]> {
+  const format =
+    [
+      '%(refname)',
+      '%(objecttype)',
+      '%(*objectname)',
+      '%(objectname)',
+      '%(creatordate:unix)',
+      '%(contents:subject)'
+    ].join('%1f') + '%1e'
+  const out =
+    (await tryRun(cwd, [
+      'for-each-ref',
+      '--sort=-creatordate',
+      `--format=${format}`,
+      'refs/tags'
+    ])) ?? ''
+  const tags: TagEntry[] = []
+  for (const row of out.split(RS)) {
+    const text = row.replace(/^\n/, '')
+    if (!text) continue
+    const [ref, type, target, object, at, subject] = text.split(FS)
+    const annotated = type === 'tag'
+    tags.push({
+      name: ref.replace(/^refs\/tags\//, ''),
+      hash: annotated && target ? target : object,
+      annotated,
+      message: annotated ? subject || null : null,
+      createdAt: toInt(at) ?? 0
+    })
+  }
+  return tags
+}
+
+/** A tag at `hash`, or at HEAD when `hash` is `null`. A message makes it annotated. */
+export async function createTag(
+  cwd: string,
+  name: string,
+  hash: string | null,
+  message: string | null
+): Promise<void> {
+  await assertTagName(cwd, name)
+  const target = hash === null ? 'HEAD' : await assertCommit(cwd, hash)
+  if (hash === null && (await tryRun(cwd, ['rev-parse', '--verify', '-q', 'HEAD'])) === null) {
+    throw new Error('There is no commit to tag yet')
+  }
+  if (await refExists(cwd, `refs/tags/${name}`)) throw new Error(`The tag "${name}" already exists`)
+  const text = (message ?? '').trim()
+  if (text.length > MAX_TAG_MESSAGE) throw new Error('The tag message is too long')
+  // The message goes in on stdin, never as an argument.
+  if (text) await exec(cwd, ['tag', '-a', '-F', '-', name, target], { stdin: text + '\n' })
+  else await run(cwd, ['tag', name, target])
+}
+
+export async function deleteTag(cwd: string, name: string): Promise<void> {
+  await assertTagName(cwd, name)
+  if (!(await refExists(cwd, `refs/tags/${name}`))) throw new Error(`There is no tag "${name}"`)
+  await run(cwd, ['tag', '-d', name])
+}
+
+/**
+ * The remote a tag goes to: `origin`, else the only remote. Unlike pull and push it does not
+ * need a checked-out branch, because a tag belongs to no branch.
+ */
+export async function getTagRemote(cwd: string): Promise<RemoteTarget> {
+  const remotes = await getRemotes(cwd)
+  if (remotes.length === 0) throw new Error('This repository has no remote')
+  const remote =
+    remotes.find((r) => r.name === 'origin') ?? (remotes.length === 1 ? remotes[0] : null)
+  if (!remote) throw new Error('Several remotes exist and none is named origin.')
+  return { remote: remote.name, url: remote.url, hasUpstream: false, branch: '' }
+}
+
+async function tagRefspec(cwd: string, name: string, deleting: boolean): Promise<string[]> {
+  await assertTagName(cwd, name)
+  const target = await getTagRemote(cwd)
+  // Deleting only needs the name, because the local tag may already be gone.
+  if (!deleting && !(await refExists(cwd, `refs/tags/${name}`))) {
+    throw new Error(`There is no tag "${name}"`)
+  }
+  const ref = `refs/tags/${name}`
+  return ['push', '--progress', '--', target.remote, deleting ? `:${ref}` : ref]
+}
+
+export async function pushTag(
+  cwd: string,
+  name: string,
+  env: Record<string, string> = {},
+  onLine: (line: string) => void = () => {}
+): Promise<void> {
+  const args = await tagRefspec(cwd, name, false)
+  await slots.run(() => progressProcess(cwd, args, env, onLine))
+}
+
+export async function deleteRemoteTag(
+  cwd: string,
+  name: string,
+  env: Record<string, string> = {},
+  onLine: (line: string) => void = () => {}
+): Promise<void> {
+  const args = await tagRefspec(cwd, name, true)
+  await slots.run(() => progressProcess(cwd, args, env, onLine))
+}
+
+/** Reverts one commit onto the current branch. Stops on conflicts, like a cherry-pick. */
+export async function revert(cwd: string, hash: string): Promise<OperationResult> {
+  await assertCommit(cwd, hash)
+  await assertNoOperation(cwd)
+  const parents = (await tryRun(cwd, ['rev-list', '--parents', '-n', '1', hash])) ?? ''
+  if (parents.split(' ').length > 2) {
+    throw new Error(
+      'This is a merge commit. Reverting a merge needs a mainline, which is not supported.'
+    )
+  }
+  if ((await currentBranch(cwd)) === null) {
+    throw new Error('Check out a branch first. HEAD is detached.')
+  }
+  try {
+    await run(cwd, ['revert', '--no-edit', hash])
+    return { conflicted: false }
+  } catch (err) {
+    const state = await getOperation(cwd)
+    if (state && state.conflicted.length === 0) {
+      // Stopped with nothing to resolve: the commit was already undone.
+      await tryRun(cwd, ['revert', '--abort'])
+      throw new Error('Nothing to revert: the changes of this commit are already undone.', {
+        cause: err
+      })
+    }
+    return settle(cwd, ['revert', '--abort'], err)
+  }
+}
+
+/** What a hard reset to `hash` would lose, for the confirm. */
+export async function getResetImpact(cwd: string, hash: string): Promise<ResetImpact> {
+  await assertCommit(cwd, hash)
+  const count = toInt(await tryRun(cwd, ['rev-list', '--count', `${hash}..HEAD`]))
+  const status = await getStatus(cwd)
+  return {
+    commits: count ?? 0,
+    files: status.entries.filter((e) => !e.untracked).length
+  }
+}
+
+export async function reset(cwd: string, hash: string, mode: ResetMode): Promise<void> {
+  if (mode !== 'soft' && mode !== 'mixed' && mode !== 'hard') throw new Error('Unknown reset mode')
+  await assertCommit(cwd, hash)
+  await assertNoOperation(cwd)
+  await run(cwd, ['reset', `--${mode}`, hash])
+}
+
+const REMOTE_URL_RE =
+  /^(?:(?:https?|ssh|git):\/\/[^\s/@:]+(?::\d+)?(?:\/\S*)?|(?:https?|ssh|git):\/\/[^\s/@]+@[^\s/@:]+(?::\d+)?(?:\/\S*)?|[A-Za-z0-9._-]+@[A-Za-z0-9.-]+:\S+|\/\S*|[A-Za-z]:[\\/]\S*)$/
+
+/** Throws unless `name` is a safe remote name that does not look like an option. */
+export async function assertRemoteName(cwd: string, name: string): Promise<void> {
+  if (typeof name !== 'string' || !name || name.length > 100 || name.startsWith('-')) {
+    throw new Error('The remote name is not valid')
+  }
+  if (
+    /\s/.test(name) ||
+    (await tryRun(cwd, ['check-ref-format', `refs/remotes/${name}/x`])) === null
+  ) {
+    throw new Error('The remote name is not valid')
+  }
+}
+
+/** Throws for a URL that carries a secret or could run a helper program. */
+export function assertRemoteUrl(url: string): string {
+  const value = typeof url === 'string' ? url.trim() : ''
+  if (!value || value.length > 2048 || value.startsWith('-') || value.includes('::')) {
+    throw new Error('The remote URL is not valid')
+  }
+  // `https://token@host` and `https://user:password@host` keep secrets out of .git/config.
+  if (/^https?:\/\/[^/]*@/i.test(value) || /^[a-z]+:\/\/[^/@]*:[^/@]*@/i.test(value)) {
+    throw new Error('Do not put a username, password or token in the URL. Sign in with an account.')
+  }
+  if (!REMOTE_URL_RE.test(value)) throw new Error('The remote URL is not valid')
+  return value
+}
+
+async function remoteExists(cwd: string, name: string): Promise<boolean> {
+  return (await getRemotes(cwd)).some((r) => r.name === name)
+}
+
+export async function addRemote(cwd: string, name: string, url: string): Promise<void> {
+  await assertRemoteName(cwd, name)
+  const clean = assertRemoteUrl(url)
+  if (await remoteExists(cwd, name)) throw new Error(`The remote "${name}" already exists`)
+  await run(cwd, ['remote', 'add', '--', name, clean])
+}
+
+export async function renameRemote(cwd: string, from: string, to: string): Promise<void> {
+  await assertRemoteName(cwd, from)
+  await assertRemoteName(cwd, to)
+  if (!(await remoteExists(cwd, from))) throw new Error(`There is no remote "${from}"`)
+  if (await remoteExists(cwd, to)) throw new Error(`The remote "${to}" already exists`)
+  await run(cwd, ['remote', 'rename', '--', from, to])
+}
+
+export async function removeRemote(cwd: string, name: string): Promise<void> {
+  await assertRemoteName(cwd, name)
+  if (!(await remoteExists(cwd, name))) throw new Error(`There is no remote "${name}"`)
+  await run(cwd, ['remote', 'remove', '--', name])
 }

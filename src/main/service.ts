@@ -24,6 +24,7 @@ import type {
   RepoSummary
 } from '../shared/types'
 import * as realGit from './git'
+import { NO_OPERATION } from './git'
 import { gitAuthEnv } from './gitAuth'
 import { watchRepo as realWatchRepo } from './watcher'
 import { createProvider as realCreateProvider, normalizeBaseUrl } from './providers'
@@ -79,6 +80,19 @@ export type GitOps = Pick<
   | 'getOperation'
   | 'continueOperation'
   | 'abortOperation'
+  | 'listTags'
+  | 'createTag'
+  | 'deleteTag'
+  | 'getTagRemote'
+  | 'pushTag'
+  | 'deleteRemoteTag'
+  | 'revert'
+  | 'getResetImpact'
+  | 'reset'
+  | 'getRemotes'
+  | 'addRemote'
+  | 'renameRemote'
+  | 'removeRemote'
 >
 
 export interface ServiceDeps {
@@ -188,6 +202,21 @@ function checkBranchName(name: unknown): string {
 }
 
 const MAX_STASH_MESSAGE_LENGTH = 500
+const MAX_TAG_MESSAGE_LENGTH = 5000
+
+function checkTagName(name: unknown): string {
+  if (typeof name !== 'string' || !name || name.length > 255 || name.includes('\0')) {
+    throw new Error('The tag name is not valid')
+  }
+  return name
+}
+
+function checkRemoteText(value: unknown, what: string, max: number): string {
+  if (typeof value !== 'string' || !value || value.length > max || value.includes('\0')) {
+    throw new Error(`The ${what} is not valid`)
+  }
+  return value
+}
 
 function checkStashRef(index: unknown, hash: unknown): { index: number; hash: string } {
   if (typeof index !== 'number' || !Number.isInteger(index) || index < 0 || index > 10_000) {
@@ -547,13 +576,14 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
   async function withRemote<T>(
     path: string,
     op: GitProgressOp,
-    job: (env: Record<string, string>, onLine: (line: string) => void) => Promise<T>
+    job: (env: Record<string, string>, onLine: (line: string) => void) => Promise<T>,
+    pick: (cwd: string) => Promise<{ url: string }> = git.getRemoteTarget
   ): Promise<T> {
     const repoKey = linkedRepoKey(path)
     if (remoteBusy.has(path)) throw new Error('A pull or push is already running for this folder')
     remoteBusy.add(path)
     try {
-      const target = await git.getRemoteTarget(path)
+      const target = await pick(path)
       const env = remoteAuthEnv(repoKey, target.url)
       return await job(env, (line) =>
         deps.emitProgress({ repoKey, op, line, percent: percentOf(line) })
@@ -834,7 +864,7 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
       abortOperation: guard(async (path) => {
         linkedRepoKey(path)
         const state = await git.getOperation(path)
-        if (!state) throw new Error('There is no merge or cherry-pick in progress')
+        if (!state) throw new Error(NO_OPERATION)
         const ok = await ui.confirm({
           message: `Abort the ${state.kind}?`,
           detail: 'Everything the operation changed is undone, including your conflict fixes.',
@@ -842,6 +872,121 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
         })
         if (!ok) return false
         await serial(path, () => git.abortOperation(path))
+        return true
+      }),
+      tags: guard(async (path) => {
+        linkedRepoKey(path)
+        return git.listTags(path)
+      }),
+      createTag: guard(async (path, name, hash, message) => {
+        linkedRepoKey(path)
+        const tag = checkTagName(name)
+        if (hash !== null && typeof hash !== 'string') throw new Error('Invalid commit hash')
+        if (
+          message !== null &&
+          (typeof message !== 'string' || message.length > MAX_TAG_MESSAGE_LENGTH)
+        ) {
+          throw new Error('The tag message is not valid')
+        }
+        return serial(path, () => git.createTag(path, tag, hash, message))
+      }),
+      deleteTag: guard(async (path, name) => {
+        linkedRepoKey(path)
+        const tag = checkTagName(name)
+        const ok = await ui.confirm({
+          message: `Delete the tag ${tag}?`,
+          detail:
+            'Only the local tag is deleted. A copy on the remote stays until you delete it there.',
+          confirmLabel: 'Delete'
+        })
+        if (!ok) return false
+        await serial(path, () => git.deleteTag(path, tag))
+        return true
+      }),
+      pushTag: guard(async (path, name) => {
+        linkedRepoKey(path)
+        const tag = checkTagName(name)
+        await withRemote(
+          path,
+          'push',
+          (env, onLine) => git.pushTag(path, tag, env, onLine),
+          git.getTagRemote
+        )
+      }),
+      deleteRemoteTag: guard(async (path, name) => {
+        linkedRepoKey(path)
+        const tag = checkTagName(name)
+        const ok = await ui.confirm({
+          message: `Delete the tag ${tag} on the remote?`,
+          detail: 'Anyone who already fetched it keeps their copy. The local tag is not touched.',
+          confirmLabel: 'Delete on remote'
+        })
+        if (!ok) return false
+        await withRemote(
+          path,
+          'push',
+          (env, onLine) => git.deleteRemoteTag(path, tag, env, onLine),
+          git.getTagRemote
+        )
+        return true
+      }),
+      revert: guard(async (path, hash) => {
+        linkedRepoKey(path)
+        if (typeof hash !== 'string') throw new Error('Invalid commit hash')
+        return serial(path, () => git.revert(path, hash))
+      }),
+      reset: guard(async (path, hash, mode) => {
+        linkedRepoKey(path)
+        if (typeof hash !== 'string') throw new Error('Invalid commit hash')
+        if (mode !== 'soft' && mode !== 'mixed' && mode !== 'hard') {
+          throw new Error('Unknown reset mode')
+        }
+        if (mode === 'hard') {
+          const impact = await git.getResetImpact(path, hash)
+          const lost = [
+            impact.commits > 0
+              ? `${impact.commits} commit${impact.commits === 1 ? '' : 's'} leave this branch`
+              : null,
+            impact.files > 0
+              ? `${impact.files} file${impact.files === 1 ? '' : 's'} with changes ${impact.files === 1 ? 'is' : 'are'} overwritten`
+              : null
+          ].filter(Boolean)
+          const ok = await ui.confirm({
+            message: `Hard reset to ${hash.slice(0, 7)}?`,
+            detail: `${lost.length > 0 ? `${lost.join(' and ')}. ` : ''}Staged and unstaged changes to tracked files are lost. Commits can still be found in the reflog, changes cannot.`,
+            confirmLabel: 'Hard reset'
+          })
+          if (!ok) return false
+        }
+        await serial(path, () => git.reset(path, hash, mode))
+        return true
+      }),
+      remotes: guard(async (path) => {
+        linkedRepoKey(path)
+        return git.getRemotes(path)
+      }),
+      addRemote: guard(async (path, name, url) => {
+        linkedRepoKey(path)
+        const remote = checkRemoteText(name, 'remote name', 100)
+        const address = checkRemoteText(url, 'remote URL', 2048)
+        return serial(path, () => git.addRemote(path, remote, address))
+      }),
+      renameRemote: guard(async (path, from, to) => {
+        linkedRepoKey(path)
+        const oldName = checkRemoteText(from, 'remote name', 100)
+        const newName = checkRemoteText(to, 'remote name', 100)
+        return serial(path, () => git.renameRemote(path, oldName, newName))
+      }),
+      removeRemote: guard(async (path, name) => {
+        linkedRepoKey(path)
+        const remote = checkRemoteText(name, 'remote name', 100)
+        const ok = await ui.confirm({
+          message: `Remove the remote ${remote}?`,
+          detail: 'Its remote-tracking branches are deleted here. Nothing changes on the server.',
+          confirmLabel: 'Remove'
+        })
+        if (!ok) return false
+        await serial(path, () => git.removeRemote(path, remote))
         return true
       }),
       reveal: guard(async (path) => {
