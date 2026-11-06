@@ -118,3 +118,42 @@ test('refActions: a remote branch checks out as tracking, a tag only copies, a r
   )
   assert.deepEqual(row[1].action, { type: 'create-branch', startPoint: 'abc1234' })
 })
+
+const ctx = { currentBranch: 'main', isMerge: false, operationActive: false }
+const ids = (items: { id: string }[]): string[] => items.map((i) => i.id)
+
+test('refActions offers merge for other branches and remote branches, not the current one', () => {
+  const other = refActions({ kind: 'branch', name: 'feature' }, 'abc1234', ctx)
+  assert.ok(ids(other).includes('merge') && ids(other).includes('merge-no-ff'))
+  const merge = other.find((i) => i.id === 'merge')
+  assert.deepEqual(merge?.action, { type: 'merge', branch: 'feature', noFf: false })
+  assert.match(merge?.label ?? '', /Merge feature into main/)
+  assert.equal(other.find((i) => i.id === 'merge-no-ff')?.action.type, 'merge')
+
+  const remote = refActions({ kind: 'remote', name: 'origin/dev' }, 'abc1234', ctx)
+  assert.ok(ids(remote).includes('merge'))
+  const current = refActions({ kind: 'branch', name: 'main', current: true }, 'abc1234', ctx)
+  assert.ok(!ids(current).includes('merge'))
+  const tag = refActions({ kind: 'tag', name: 'v1' }, 'abc1234', ctx)
+  assert.ok(!ids(tag).includes('merge'))
+})
+
+test('refActions offers cherry-pick on a plain commit only when it is safe to start', () => {
+  assert.ok(ids(refActions(null, 'abc1234', ctx)).includes('cherry-pick'))
+  const item = refActions(null, 'abc1234', ctx).find((i) => i.id === 'cherry-pick')
+  assert.deepEqual(item?.action, { type: 'cherry-pick', hash: 'abc1234' })
+  assert.match(item?.label ?? '', /onto main/)
+  // A merge commit needs a mainline, HEAD must be a branch, and one operation at a time.
+  assert.ok(!ids(refActions(null, 'abc1234', { ...ctx, isMerge: true })).includes('cherry-pick'))
+  assert.ok(
+    !ids(refActions(null, 'abc1234', { ...ctx, currentBranch: null })).includes('cherry-pick')
+  )
+  const busy = refActions({ kind: 'branch', name: 'feature' }, 'abc1234', {
+    ...ctx,
+    operationActive: true
+  })
+  assert.ok(!ids(busy).includes('cherry-pick') && !ids(busy).includes('merge'))
+  // No context means a pane that cannot write.
+  const none = refActions({ kind: 'branch', name: 'feature' }, 'abc1234')
+  assert.ok(!ids(none).includes('cherry-pick') && !ids(none).includes('merge'))
+})

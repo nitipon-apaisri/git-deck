@@ -47,6 +47,12 @@ export interface GraphMenuOps {
   deleteBranch: (name: string) => void
   createBranch: (startPoint: string, startLabel: string) => void
   renameBranch: (name: string) => void
+  cherryPick: (hash: string) => void
+  merge: (branch: string, noFf: boolean) => void
+  /** The checked-out branch, `null` while detached. */
+  currentBranch: string | null
+  /** A merge or cherry-pick is waiting, so no second one starts. */
+  operationActive: boolean
 }
 
 /**
@@ -167,6 +173,10 @@ export function GitGraph({
         return menuOps.renameBranch(action.name)
       case 'delete-branch':
         return menuOps.deleteBranch(action.name)
+      case 'merge':
+        return menuOps.merge(action.branch, action.noFf)
+      case 'cherry-pick':
+        return menuOps.cherryPick(action.hash)
       case 'copy':
         void navigator.clipboard?.writeText(action.text).catch(() => {})
     }
@@ -175,7 +185,12 @@ export function GitGraph({
   function menuEntries(commit: GraphCommit, ref: BadgeView | null): MenuEntry[] {
     const items = refActions(
       ref ? { kind: ref.refKind, name: ref.name, current: ref.current } : null,
-      commit.hash
+      commit.hash,
+      menuOps && {
+        currentBranch: menuOps.currentBranch,
+        isMerge: commit.parents.length > 1,
+        operationActive: menuOps.operationActive
+      }
     )
     const entries: MenuEntry[] = []
     items.forEach((item, i) => {

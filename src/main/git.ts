@@ -1,5 +1,7 @@
 // Local git service. No electron import, so it runs under tsx tests.
 import { execFile, spawn } from 'node:child_process'
+import { existsSync, readFileSync, statSync } from 'node:fs'
+import { resolve, sep } from 'node:path'
 import { Semaphore } from './semaphore'
 import { parseUnifiedDiff } from '../shared/diff'
 import type {
@@ -15,8 +17,12 @@ import type {
   LocalBranch,
   LocalInfo,
   LocalRemote,
+  OperationKind,
+  OperationResult,
+  OperationState,
   PullMode,
   RepoStatus,
+  StashEntry,
   StatusEntry
 } from '../shared/types'
 
@@ -732,4 +738,229 @@ export async function createCommit(cwd: string, message: string, amend: boolean)
   else args.push('--no-edit')
   // The message goes in on stdin, so it never appears in a process list.
   await exec(cwd, args, { stdin: text ? `${text}\n` : undefined })
+}
+
+// Stash, cherry-pick and merge
+
+const MAX_STASH_MESSAGE = 500
+
+function stashRef(index: number): string {
+  if (!Number.isInteger(index) || index < 0 || index > 10_000) throw new Error('Invalid stash')
+  return `stash@{${index}}`
+}
+
+/** `%gs` reads "On main: message" or "WIP on main: abc1234 subject". */
+export function parseStashSubject(subject: string): { branch: string | null; message: string } {
+  const named = /^On ([^:]+): ([\s\S]*)$/.exec(subject)
+  if (named) return { branch: named[1], message: named[2] }
+  const wip = /^WIP on ([^:]+): ([\s\S]*)$/.exec(subject)
+  if (wip) return { branch: wip[1], message: `WIP: ${wip[2]}` }
+  return { branch: null, message: subject }
+}
+
+export async function listStashes(cwd: string): Promise<StashEntry[]> {
+  const format = ['%H', '%ct', '%gs'].join('%x1f') + '%x1e'
+  const out = (await tryRun(cwd, ['stash', 'list', `--format=${format}`])) ?? ''
+  const entries: StashEntry[] = []
+  for (const row of out.split(RS)) {
+    const text = row.replace(/^\n/, '')
+    if (!text) continue
+    const [hash, at, subject] = text.split(FS)
+    entries.push({
+      index: entries.length,
+      hash,
+      createdAt: toInt(at) ?? 0,
+      ...parseStashSubject(subject ?? '')
+    })
+  }
+  return entries
+}
+
+/** The stash must still be at `index` with the hash the user saw. */
+async function checkStash(cwd: string, index: number, hash: string): Promise<string> {
+  const ref = stashRef(index)
+  if (typeof hash !== 'string' || !HASH_RE.test(hash)) throw new Error('Invalid stash')
+  const now = await tryRun(cwd, ['rev-parse', '--verify', '-q', ref])
+  if (!now || !now.toLowerCase().startsWith(hash.toLowerCase())) {
+    throw new Error('The stash list changed. Reload it and try again.')
+  }
+  return ref
+}
+
+export async function stashPush(
+  cwd: string,
+  message: string,
+  includeUntracked: boolean
+): Promise<void> {
+  const text = message.trim()
+  if (text.length > MAX_STASH_MESSAGE) throw new Error('The stash message is too long')
+  const args = ['stash', 'push']
+  if (includeUntracked) args.push('--include-untracked')
+  // The message is the value of -m, so it cannot be read as an option.
+  if (text) args.push('-m', text)
+  const out = await run(cwd, args)
+  // Git exits 0 and says so on stdout when there was nothing to save.
+  if (/no local changes to save/i.test(out)) throw new Error('There are no changes to stash')
+}
+
+export async function stashApply(cwd: string, index: number, hash: string): Promise<void> {
+  await run(cwd, ['stash', 'apply', '--quiet', await checkStash(cwd, index, hash)])
+}
+
+export async function stashPop(cwd: string, index: number, hash: string): Promise<void> {
+  await run(cwd, ['stash', 'pop', '--quiet', await checkStash(cwd, index, hash)])
+}
+
+export async function stashDrop(cwd: string, index: number, hash: string): Promise<void> {
+  await run(cwd, ['stash', 'drop', '--quiet', await checkStash(cwd, index, hash)])
+}
+
+async function gitPathExists(cwd: string, name: string): Promise<string | null> {
+  const rel = await tryRun(cwd, ['rev-parse', '--git-path', name])
+  if (!rel) return null
+  const full = resolve(cwd, rel)
+  return existsSync(full) ? full : null
+}
+
+/** The merge or cherry-pick waiting for the user, or `null`. */
+export async function getOperation(cwd: string): Promise<OperationState | null> {
+  let kind: OperationKind
+  let file = await gitPathExists(cwd, 'MERGE_HEAD')
+  if (file) {
+    kind = 'merge'
+  } else {
+    file = await gitPathExists(cwd, 'CHERRY_PICK_HEAD')
+    if (!file) return null
+    kind = 'cherry-pick'
+  }
+  let target: string | null
+  try {
+    const first = readFileSync(file, 'utf8').split('\n')[0].trim()
+    target = HASH_RE.test(first) ? first.slice(0, 7) : null
+  } catch {
+    target = null
+  }
+  const status = await getStatus(cwd)
+  return {
+    kind,
+    target,
+    conflicted: status.entries.filter((e) => e.conflicted).map((e) => e.path)
+  }
+}
+
+async function assertNoOperation(cwd: string): Promise<void> {
+  const state = await getOperation(cwd)
+  if (state) {
+    throw new Error(
+      `A ${state.kind} is already in progress. Continue or abort it before starting another.`
+    )
+  }
+}
+
+/** After a stop: conflicts mean the user decides, anything else is an error to report. */
+async function settle(cwd: string, abort: string[], failure: unknown): Promise<OperationResult> {
+  const state = await getOperation(cwd)
+  if (state && state.conflicted.length > 0) return { conflicted: true }
+  if (state) {
+    // Stopped without conflicts, for example a cherry-pick that became empty.
+    await tryRun(cwd, abort)
+  }
+  throw failure instanceof Error ? failure : new Error(String(failure))
+}
+
+export async function cherryPick(cwd: string, hash: string): Promise<OperationResult> {
+  if (typeof hash !== 'string' || !HASH_RE.test(hash)) throw new Error('Invalid commit hash')
+  if ((await tryRun(cwd, ['cat-file', '-e', `${hash}^{commit}`])) === null) {
+    throw new Error('That commit does not exist in this repository')
+  }
+  await assertNoOperation(cwd)
+  const parents = (await tryRun(cwd, ['rev-list', '--parents', '-n', '1', hash])) ?? ''
+  if (parents.split(' ').length > 2) {
+    throw new Error(
+      'This is a merge commit. Cherry-picking a merge needs a mainline, which is not supported.'
+    )
+  }
+  try {
+    await run(cwd, ['cherry-pick', hash])
+    return { conflicted: false }
+  } catch (err) {
+    const state = await getOperation(cwd)
+    if (state && state.conflicted.length === 0) {
+      // Stopped with nothing to resolve: the changes are already in the branch.
+      await tryRun(cwd, ['cherry-pick', '--abort'])
+      throw new Error('Nothing to apply: the changes of this commit are already in the branch.', {
+        cause: err
+      })
+    }
+    return settle(cwd, ['cherry-pick', '--abort'], err)
+  }
+}
+
+export async function merge(
+  cwd: string,
+  branch: string,
+  options: { noFf?: boolean } = {}
+): Promise<OperationResult> {
+  if (typeof branch !== 'string' || !branch || branch.startsWith('-')) {
+    throw new Error('Invalid branch name')
+  }
+  const isLocal = await refExists(cwd, `refs/heads/${branch}`)
+  if (!isLocal && !(await refExists(cwd, `refs/remotes/${branch}`))) {
+    throw new Error(`There is no branch named "${branch}"`)
+  }
+  await assertNoOperation(cwd)
+  // `--no-edit` keeps an editor out of it. Without `--no-ff` git may fast-forward.
+  const args = ['merge', '--no-edit', options.noFf ? '--no-ff' : '--ff', branch]
+  try {
+    await run(cwd, args)
+    return { conflicted: false }
+  } catch (err) {
+    return settle(cwd, ['merge', '--abort'], err)
+  }
+}
+
+const CONFLICT_MARKER = /^(<{7}|>{7})( |$)/m
+const MAX_SCAN_BYTES = 5 * 1024 * 1024
+
+/** Files that still carry conflict markers. Missing, huge and binary files are skipped. */
+function stillMarked(cwd: string, paths: string[]): string[] {
+  const marked: string[] = []
+  for (const path of paths) {
+    const full = resolve(cwd, path)
+    if (full !== cwd && !full.startsWith(cwd + sep)) continue
+    try {
+      const info = statSync(full)
+      if (!info.isFile() || info.size > MAX_SCAN_BYTES) continue
+      if (CONFLICT_MARKER.test(readFileSync(full, 'utf8'))) marked.push(path)
+    } catch {
+      // Deleted by the user: that is a resolution.
+    }
+  }
+  return marked
+}
+
+/**
+ * Stages the files the user fixed, then finishes the merge or cherry-pick. Refuses while a
+ * file still holds conflict markers.
+ */
+export async function continueOperation(cwd: string): Promise<void> {
+  const state = await getOperation(cwd)
+  if (!state) throw new Error('There is no merge or cherry-pick in progress')
+  const marked = stillMarked(cwd, state.conflicted)
+  if (marked.length > 0) {
+    throw new Error(
+      `These files still contain conflict markers: ${marked.slice(0, 5).join(', ')}${marked.length > 5 ? ', ...' : ''}`
+    )
+  }
+  if (state.conflicted.length > 0) await run(cwd, ['add', '-A', '--', ...state.conflicted])
+  // `true` as the editor accepts the message git prepared.
+  const env = { GIT_EDITOR: 'true' }
+  if (state.kind === 'merge') await run(cwd, ['commit', '--no-edit'], env)
+  else await run(cwd, ['cherry-pick', '--continue'], env)
+}
+
+export async function abortOperation(cwd: string): Promise<void> {
+  const state = await getOperation(cwd)
+  if (!state) throw new Error('There is no merge or cherry-pick in progress')
+  await run(cwd, [state.kind, '--abort'])
 }

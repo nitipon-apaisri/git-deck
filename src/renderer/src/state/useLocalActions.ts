@@ -31,6 +31,12 @@ export interface LocalActions {
   openFolder: () => void
   /** The folder changed (stage, commit, …): graph, Info and Changes read it again. */
   refresh: () => void
+  /** A conflict does not fail: the pane's banner (from `operation`) takes it from there. */
+  cherryPick: (hash: string) => void
+  merge: (branch: string, noFf: boolean) => void
+  continueOperation: () => void
+  /** Main asks first. */
+  abortOperation: () => void
 }
 
 /**
@@ -168,6 +174,39 @@ export function useLocalActions(
     [run, linkedPath]
   )
 
+  // Merge and cherry-pick may stop on conflicts, which is a result, not an error.
+  const operate = useCallback(
+    (work: (path: string) => Promise<unknown>) => {
+      if (!linkedPath) return
+      void run('branch', async () => {
+        try {
+          await work(linkedPath)
+        } finally {
+          setReloadToken((n) => n + 1)
+        }
+      })
+    },
+    [run, linkedPath]
+  )
+
+  const cherryPick = useCallback(
+    (hash: string) => operate((path) => window.api.local.cherryPick(path, hash)),
+    [operate]
+  )
+  const merge = useCallback(
+    (branch: string, noFf: boolean) =>
+      operate((path) => window.api.local.merge(path, branch, noFf)),
+    [operate]
+  )
+  const continueOperation = useCallback(
+    () => operate((path) => window.api.local.continueOperation(path)),
+    [operate]
+  )
+  const abortOperation = useCallback(
+    () => operate((path) => window.api.local.abortOperation(path)),
+    [operate]
+  )
+
   const attempt = useCallback(
     async (work: (path: string) => Promise<void>): Promise<string | null> => {
       if (!linkedPath) return 'This repository is not on this computer'
@@ -213,6 +252,10 @@ export function useLocalActions(
     createBranch,
     renameBranch,
     openFolder,
-    refresh
+    refresh,
+    cherryPick,
+    merge,
+    continueOperation,
+    abortOperation
   }
 }

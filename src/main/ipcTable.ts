@@ -53,6 +53,21 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     localDeleteBranch: ([path, name]) => api.local.deleteBranch(path as string, name as string),
     localPull: ([path, mode]) => api.local.pull(path as string, mode as PullMode),
     localPush: ([path, force]) => api.local.push(path as string, force as boolean),
+    localStashes: ([path]) => api.local.stashes(path as string),
+    localStashPush: ([path, message, untracked]) =>
+      api.local.stashPush(path as string, message as string, untracked as boolean),
+    localStashApply: ([path, index, hash]) =>
+      api.local.stashApply(path as string, index as number, hash as string),
+    localStashPop: ([path, index, hash]) =>
+      api.local.stashPop(path as string, index as number, hash as string),
+    localStashDrop: ([path, index, hash]) =>
+      api.local.stashDrop(path as string, index as number, hash as string),
+    localCherryPick: ([path, hash]) => api.local.cherryPick(path as string, hash as string),
+    localMerge: ([path, branch, noFf]) =>
+      api.local.merge(path as string, branch as string, noFf as boolean),
+    localOperation: ([path]) => api.local.operation(path as string),
+    localContinueOperation: ([path]) => api.local.continueOperation(path as string),
+    localAbortOperation: ([path]) => api.local.abortOperation(path as string),
     localRepos: () => api.local.repos(),
     localOpen: () => api.local.open(),
     localRemove: ([key]) => api.local.remove(key as string),

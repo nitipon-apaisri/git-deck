@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { BranchList, Repo } from '@shared/types'
 import { remoteOnly, remoteState, trackingText } from '../../lib/branchView'
+import { stashButtonLabel } from '../../lib/operationView'
 import type { LocalActions as Actions } from '../../state/useLocalActions'
 import { Button, Icon, IconButton, Menu, ProgressBar, Spinner, type MenuEntry } from '../ui'
 
@@ -12,6 +13,8 @@ interface LocalActionsProps {
   branches: BranchList | null
   onNewBranch: () => void
   onRenameBranch: (from: string) => void
+  stashCount: number
+  onStash: () => void
   /** A narrow pane: Open folder, Fetch, Pull and Push show only their icon. */
   compact?: boolean
 }
@@ -28,6 +31,8 @@ export function LocalActions({
   branches,
   onNewBranch,
   onRenameBranch,
+  stashCount,
+  onStash,
   compact = false
 }: LocalActionsProps) {
   const { busy } = actions
@@ -203,6 +208,13 @@ export function LocalActions({
             onClick={(e) => open('push', e.currentTarget)}
           />
         </span>
+        {compact ? (
+          <IconButton label={stashButtonLabel(stashCount)} icon="layers" onClick={onStash} />
+        ) : (
+          <Button icon="layers" title="Stash changes" onClick={onStash}>
+            {stashButtonLabel(stashCount)}
+          </Button>
+        )}
         {busy === 'fetch' || busy === 'branch' ? (
           <Spinner label={busy === 'fetch' ? 'Fetching' : 'Switching branches'} />
         ) : null}

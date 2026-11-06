@@ -11,11 +11,14 @@ import type {
   FileDiff,
   GraphCommit,
   LocalInfo,
+  OperationResult,
+  OperationState,
   Project,
   PullMode,
   Repo,
   RepoStatus,
   RepoSummary,
+  StashEntry,
   VerifiedUser
 } from './types'
 
@@ -99,6 +102,23 @@ export interface Api {
     pull(path: string, mode: PullMode): Promise<void>
     /** Sets the upstream when there is none. A forced push asks first: `false` when declined. */
     push(path: string, force: boolean): Promise<boolean>
+    stashes(path: string): Promise<StashEntry[]>
+    stashPush(path: string, message: string, includeUntracked: boolean): Promise<void>
+    /** `hash` is the entry's hash, so a list that changed since it was read is refused. */
+    stashApply(path: string, index: number, hash: string): Promise<void>
+    stashPop(path: string, index: number, hash: string): Promise<void>
+    /** Asks first. Resolves `false` when the user declines. */
+    stashDrop(path: string, index: number, hash: string): Promise<boolean>
+    /** `conflicted` means it stopped: read `operation`, then continue or abort. */
+    cherryPick(path: string, hash: string): Promise<OperationResult>
+    /** `branch` is local or remote (`origin/x`). `noFf` always makes a merge commit. */
+    merge(path: string, branch: string, noFf: boolean): Promise<OperationResult>
+    /** The merge or cherry-pick waiting for the user, or `null`. */
+    operation(path: string): Promise<OperationState | null>
+    /** Stages the fixed files and finishes the operation. */
+    continueOperation(path: string): Promise<void>
+    /** Asks first. Resolves `false` when the user declines. */
+    abortOperation(path: string): Promise<boolean>
     /** Repositories opened from a folder, without an account. */
     repos(): Promise<Repo[]>
     /** Folder picker. `null` when cancelled. Opening the same folder twice gives one entry. */
@@ -153,6 +173,16 @@ export const IPC = {
   localDeleteBranch: 'local:deleteBranch',
   localPull: 'local:pull',
   localPush: 'local:push',
+  localStashes: 'local:stashes',
+  localStashPush: 'local:stashPush',
+  localStashApply: 'local:stashApply',
+  localStashPop: 'local:stashPop',
+  localStashDrop: 'local:stashDrop',
+  localCherryPick: 'local:cherryPick',
+  localMerge: 'local:merge',
+  localOperation: 'local:operation',
+  localContinueOperation: 'local:continueOperation',
+  localAbortOperation: 'local:abortOperation',
   localRepos: 'local:repos',
   localOpen: 'local:open',
   localRemove: 'local:remove',
