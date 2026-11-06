@@ -178,6 +178,7 @@ export function RepoPane({
             busy={actions.busy !== null}
             onContinue={actions.continueOperation}
             onAbort={actions.abortOperation}
+            onSkip={actions.skipOperation}
             onOpenFolder={actions.openFolder}
           />
         ) : null}
@@ -266,6 +267,7 @@ export function RepoPane({
                       renameBranch: (from) => setNameRequest({ kind: 'rename', from }),
                       cherryPick: actions.cherryPick,
                       merge: actions.merge,
+                      rebase: actions.rebase,
                       revert: actions.revert,
                       reset: actions.reset,
                       createTag: (hash) => setTagsRequest({ hash }),

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
   DIFF_LINE_LIMIT,
+  canStageHunks,
   commitBlocker,
   countText,
   diffTotalsText,
@@ -110,4 +111,21 @@ test('limitHunks cuts the last hunk and drops the ones after it', () => {
     [3]
   )
   assert.deepEqual(limitHunks(hunks, 0), [])
+})
+
+test('hunks can be staged for a tracked, unconflicted, unrenamed file with a change on that side', () => {
+  const entry = {
+    untracked: false,
+    conflicted: false,
+    origPath: null,
+    index: null,
+    worktree: 'modified' as const
+  }
+  assert.equal(canStageHunks(entry, 'worktree'), true)
+  assert.equal(canStageHunks(entry, 'staged'), false, 'nothing staged')
+  assert.equal(canStageHunks({ ...entry, index: 'added', worktree: null }, 'staged'), true)
+  assert.equal(canStageHunks({ ...entry, untracked: true }, 'worktree'), false)
+  assert.equal(canStageHunks({ ...entry, conflicted: true }, 'worktree'), false)
+  assert.equal(canStageHunks({ ...entry, origPath: 'old.txt' }, 'worktree'), false)
+  assert.equal(canStageHunks(undefined, 'worktree'), false)
 })

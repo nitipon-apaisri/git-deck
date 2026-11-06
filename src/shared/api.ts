@@ -10,6 +10,7 @@ import type {
   DiffRequest,
   FileDiff,
   GraphCommit,
+  HunkRequest,
   LocalInfo,
   LocalRemote,
   OperationResult,
@@ -138,7 +139,14 @@ export interface Api {
     renameRemote(path: string, from: string, to: string): Promise<void>
     /** Asks first. Resolves `false` when declined. */
     removeRemote(path: string, name: string): Promise<boolean>
-    /** The merge, cherry-pick or revert waiting for the user, or `null`. */
+    /** `onto` is a local or remote branch (`origin/x`) or a commit hash. Non-interactive. */
+    rebase(path: string, onto: string): Promise<OperationResult>
+    /** Rebase only. Asks first, resolves `false` when declined. */
+    skipOperation(path: string): Promise<boolean>
+    /** Stage one hunk of a tracked file. Main rebuilds the patch, so a stale diff is refused. */
+    stageHunk(path: string, hunk: HunkRequest): Promise<void>
+    unstageHunk(path: string, hunk: HunkRequest): Promise<void>
+    /** The merge, cherry-pick, revert or rebase waiting for the user, or `null`. */
     operation(path: string): Promise<OperationState | null>
     /** Stages the fixed files and finishes the operation. */
     continueOperation(path: string): Promise<void>
@@ -221,6 +229,10 @@ export const IPC = {
   localAddRemote: 'local:addRemote',
   localRenameRemote: 'local:renameRemote',
   localRemoveRemote: 'local:removeRemote',
+  localRebase: 'local:rebase',
+  localSkipOperation: 'local:skipOperation',
+  localStageHunk: 'local:stageHunk',
+  localUnstageHunk: 'local:unstageHunk',
   localOperation: 'local:operation',
   localContinueOperation: 'local:continueOperation',
   localAbortOperation: 'local:abortOperation',

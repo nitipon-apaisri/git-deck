@@ -148,6 +148,20 @@ export interface DiffRequest {
   hash?: string
 }
 
+/**
+ * One hunk of a file's staged or unstaged diff. Main rebuilds the patch from the file itself,
+ * so a hunk the renderer saw is only named here, never sent back as text.
+ */
+export interface HunkRequest {
+  path: string
+  /** Where the hunk was read: `worktree` to stage it, `staged` to unstage it. */
+  source: 'worktree' | 'staged'
+  /** Position of the hunk in the file's diff. */
+  index: number
+  /** `hunkFingerprint` of its lines: a diff that changed since it was read is refused. */
+  fingerprint: string
+}
+
 export interface DiffLine {
   type: 'context' | 'add' | 'del' | 'note'
   text: string
@@ -219,9 +233,9 @@ export interface StashEntry {
   createdAt: number
 }
 
-export type OperationKind = 'merge' | 'cherry-pick' | 'revert'
+export type OperationKind = 'merge' | 'cherry-pick' | 'revert' | 'rebase'
 
-/** A merge, cherry-pick or revert that stopped and waits for the user. */
+/** A merge, cherry-pick, revert or rebase that stopped and waits for the user. */
 export interface OperationState {
   kind: OperationKind
   /** Short hash of the commit being merged, picked or reverted. */

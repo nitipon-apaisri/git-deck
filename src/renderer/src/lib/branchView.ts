@@ -91,6 +91,7 @@ export type RefAction =
   | { type: 'merge'; branch: string; noFf: boolean }
   | { type: 'cherry-pick'; hash: string }
   | { type: 'create-tag'; hash: string }
+  | { type: 'rebase'; onto: string }
   | { type: 'revert'; hash: string }
   | { type: 'reset'; hash: string; mode: ResetMode }
   | { type: 'copy'; text: string; what: string }
@@ -109,7 +110,7 @@ export interface RefActionContext {
   currentBranch: string | null
   /** The commit has two or more parents. Cherry-picking one needs a mainline: not offered. */
   isMerge: boolean
-  /** A merge, cherry-pick or revert is waiting for the user: starting another is not offered. */
+  /** A merge, cherry-pick, revert or rebase is waiting: starting another is not offered. */
   operationActive: boolean
 }
 
@@ -174,6 +175,12 @@ export function refActions(
         label: `Merge ${ref.name} into ${context.currentBranch} (always a merge commit)`,
         action: { type: 'merge', branch: ref.name, noFf: true },
         group: 'ref'
+      },
+      {
+        id: 'rebase',
+        label: `Rebase ${context.currentBranch} onto ${ref.name}`,
+        action: { type: 'rebase', onto: ref.name },
+        group: 'ref'
       }
     )
   }
@@ -204,6 +211,14 @@ export function refActions(
       id: 'cherry-pick',
       label: `Cherry-pick onto ${context.currentBranch}`,
       action: { type: 'cherry-pick', hash },
+      group: 'commit'
+    })
+  }
+  if (canStart && context.currentBranch) {
+    items.push({
+      id: 'rebase-commit',
+      label: `Rebase ${context.currentBranch} onto this commit`,
+      action: { type: 'rebase', onto: hash },
       group: 'commit'
     })
   }

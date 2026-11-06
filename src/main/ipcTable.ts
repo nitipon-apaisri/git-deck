@@ -6,6 +6,7 @@ import type {
   AccountInput,
   CheckoutTarget,
   DiffRequest,
+  HunkRequest,
   PullMode,
   ResetMode
 } from '../shared/types'
@@ -94,6 +95,10 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     localRenameRemote: ([path, from, to]) =>
       api.local.renameRemote(path as string, from as string, to as string),
     localRemoveRemote: ([path, name]) => api.local.removeRemote(path as string, name as string),
+    localRebase: ([path, onto]) => api.local.rebase(path as string, onto as string),
+    localSkipOperation: ([path]) => api.local.skipOperation(path as string),
+    localStageHunk: ([path, hunk]) => api.local.stageHunk(path as string, hunk as HunkRequest),
+    localUnstageHunk: ([path, hunk]) => api.local.unstageHunk(path as string, hunk as HunkRequest),
     localOperation: ([path]) => api.local.operation(path as string),
     localContinueOperation: ([path]) => api.local.continueOperation(path as string),
     localAbortOperation: ([path]) => api.local.abortOperation(path as string),

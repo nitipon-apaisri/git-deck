@@ -197,3 +197,31 @@ test('refActions offers revert, tag and reset on a commit, each only when it is 
     !none.includes('create-tag') && !none.includes('revert') && !none.includes('reset-soft')
   )
 })
+
+test('refActions offers rebase onto a branch, a remote branch and a commit when it is safe to start', () => {
+  const other = refActions({ kind: 'branch', name: 'feature' }, 'abc1234', ctx)
+  const onBranch = other.find((i) => i.id === 'rebase')
+  assert.deepEqual(onBranch?.action, { type: 'rebase', onto: 'feature' })
+  assert.match(onBranch?.label ?? '', /Rebase main onto feature/)
+  const remote = refActions({ kind: 'remote', name: 'origin/dev' }, 'abc1234', ctx)
+  assert.deepEqual(remote.find((i) => i.id === 'rebase')?.action, {
+    type: 'rebase',
+    onto: 'origin/dev'
+  })
+  const row = refActions(null, 'abc1234', ctx).find((i) => i.id === 'rebase-commit')
+  assert.deepEqual(row?.action, { type: 'rebase', onto: 'abc1234' })
+  assert.match(row?.label ?? '', /Rebase main onto this commit/)
+  // Not onto the current branch, not detached, not while another operation waits, not read-only.
+  const current = refActions({ kind: 'branch', name: 'main', current: true }, 'abc1234', ctx)
+  assert.ok(!ids(current).includes('rebase'))
+  assert.ok(
+    !ids(refActions(null, 'abc1234', { ...ctx, currentBranch: null })).includes('rebase-commit')
+  )
+  const busy = ids(
+    refActions({ kind: 'branch', name: 'feature' }, 'abc1234', { ...ctx, operationActive: true })
+  )
+  assert.ok(!busy.includes('rebase') && !busy.includes('rebase-commit'))
+  assert.ok(!ids(refActions(null, 'abc1234')).includes('rebase-commit'))
+  // A merge commit can be a rebase target.
+  assert.ok(ids(refActions(null, 'abc1234', { ...ctx, isMerge: true })).includes('rebase-commit'))
+})

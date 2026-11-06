@@ -151,3 +151,84 @@ test('remotes: add and rename need no confirm, remove asks and keeps no token', 
   )
   assert.doesNotMatch(readFileSync(join(s.dir, '.git/config'), 'utf8'), /tok3n/)
 })
+
+// Phase 14b
+
+import { hunkFingerprint } from '../src/shared/diff'
+
+async function rebaseSetup(confirms: boolean[] = []) {
+  const s = await setup(confirms)
+  git(s.dir, 'checkout', '-q', '-b', 'feature', s.first)
+  commit(s.dir, 'a.txt', 'feature edit')
+  git(s.dir, 'checkout', '-q', 'main')
+  return s
+}
+
+test('rebase and hunk calls need a linked folder and valid arguments', async () => {
+  const s = await setup()
+  const other = emptyRepo()
+  const l = s.api.local
+  const hunk = { path: 'a.txt', source: 'worktree' as const, index: 0, fingerprint: '00000000' }
+  await assert.rejects(l.rebase(other, 'main'), /not linked/)
+  await assert.rejects(l.skipOperation(other), /not linked/)
+  await assert.rejects(l.stageHunk(other, hunk), /not linked/)
+  await assert.rejects(l.unstageHunk(other, hunk), /not linked/)
+  await assert.rejects(l.rebase(s.dir, 5 as never), /not valid/)
+  await assert.rejects(l.rebase(s.dir, ''), /not valid/)
+  await assert.rejects(l.stageHunk(s.dir, null as never), /not valid/)
+  await assert.rejects(l.stageHunk(s.dir, { ...hunk, source: 'other' as never }), /not valid/)
+  await assert.rejects(l.stageHunk(s.dir, { ...hunk, index: '0' as never }), /not valid/)
+  await assert.rejects(l.stageHunk(s.dir, { ...hunk, path: '' }), /not valid/)
+  assert.equal(s.confirmed(), 0)
+})
+
+test('a conflicting rebase is skipped only after confirming, then aborted after confirming', async () => {
+  const s = await rebaseSetup([false, true])
+  git(s.dir, 'checkout', '-q', 'feature')
+  assert.deepEqual(await s.api.local.rebase(s.dir, 'main'), { conflicted: true })
+  assert.equal((await s.api.local.operation(s.dir))?.kind, 'rebase')
+  assert.equal(await s.api.local.skipOperation(s.dir), false)
+  assert.equal((await s.api.local.operation(s.dir))?.kind, 'rebase', 'declined: still stopped')
+  assert.equal(await s.api.local.skipOperation(s.dir), true)
+  assert.equal(await s.api.local.operation(s.dir), null)
+  assert.equal(git(s.dir, 'symbolic-ref', '--short', 'HEAD'), 'feature')
+})
+
+test('skip refuses when there is no rebase, and does not ask', async () => {
+  const s = await setup()
+  await assert.rejects(s.api.local.skipOperation(s.dir), /no merge, cherry-pick, revert or rebase/)
+  assert.equal(s.confirmed(), 0)
+})
+
+test('a clean rebase goes through the service', async () => {
+  const s = await setup()
+  git(s.dir, 'checkout', '-q', '-b', 'topic', s.first)
+  commit(s.dir, 'c.txt', 'topic work')
+  assert.deepEqual(await s.api.local.rebase(s.dir, 'main'), { conflicted: false })
+  assert.equal(git(s.dir, 'merge-base', 'main', 'topic'), git(s.dir, 'rev-parse', 'main'))
+})
+
+test('a hunk is staged and unstaged through the service', async () => {
+  const s = await setup()
+  writeFileSync(join(s.dir, 'a.txt'), 'edited\n')
+  const unstaged = await s.api.local.diff(s.dir, { source: 'worktree', path: 'a.txt' })
+  const request = {
+    path: 'a.txt',
+    source: 'worktree' as const,
+    index: 0,
+    fingerprint: hunkFingerprint(unstaged.hunks[0].lines)
+  }
+  await s.api.local.stageHunk(s.dir, request)
+  assert.match(git(s.dir, 'diff', '--cached'), /edited/)
+  const staged = await s.api.local.diff(s.dir, { source: 'staged', path: 'a.txt' })
+  await s.api.local.unstageHunk(s.dir, {
+    ...request,
+    source: 'staged',
+    fingerprint: hunkFingerprint(staged.hunks[0].lines)
+  })
+  assert.equal(git(s.dir, 'diff', '--cached'), '')
+  await assert.rejects(
+    s.api.local.stageHunk(s.dir, { ...request, fingerprint: 'ffffffff' }),
+    /changed since/
+  )
+})

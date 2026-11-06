@@ -12,11 +12,19 @@ import {
   widestLane
 } from '../../lib/graphView'
 import { cn } from '@/lib/cn'
-import type { CheckoutTarget, DiffRequest, GraphCommit, ResetMode } from '@shared/types'
+import type {
+  CheckoutTarget,
+  DiffRequest,
+  GraphCommit,
+  HunkRequest,
+  ResetMode
+} from '@shared/types'
+import { errorMessage } from '../../lib/errors'
+import { canStageHunks } from '../../lib/changesView'
 import { refActions, type RefAction } from '../../lib/branchView'
 import type { BadgeView } from '../../lib/graphView'
 import { detailPlacement } from '../../lib/splitLayout'
-import { Button, Dialog, Icon, Menu, Spinner, type MenuEntry } from '../ui'
+import { Button, Dialog, ErrorBanner, Icon, Menu, Spinner, type MenuEntry } from '../ui'
 import { useDiff, useStatus } from '../../state/changesData'
 import { DiffView } from '../repo/DiffView'
 import { ChangesPanel } from './ChangesPanel'
@@ -54,13 +62,14 @@ export interface GraphMenuOps {
   renameBranch: (name: string) => void
   cherryPick: (hash: string) => void
   merge: (branch: string, noFf: boolean) => void
+  rebase: (onto: string) => void
   revert: (hash: string) => void
   reset: (hash: string, mode: ResetMode) => void
   /** Opens the Tags dialog on this commit. */
   createTag: (hash: string) => void
   /** The checked-out branch, `null` while detached. */
   currentBranch: string | null
-  /** A merge, cherry-pick or revert is waiting, so no second one starts. */
+  /** A merge, cherry-pick, revert or rebase is waiting, so no second one starts. */
   operationActive: boolean
 }
 
@@ -116,6 +125,24 @@ export function GitGraph({
       ? diffFile
       : null
   const diff = useDiff(path, openDiff, reloadToken + watchToken)
+  const [hunkBusy, setHunkBusy] = useState(false)
+  const [hunkError, setHunkError] = useState<string | null>(null)
+
+  async function runHunk(source: 'worktree' | 'staged', request: HunkRequest): Promise<void> {
+    if (!path || hunkBusy) return
+    setHunkBusy(true)
+    setHunkError(null)
+    try {
+      if (source === 'staged') await window.api.local.unstageHunk(path, request)
+      else await window.api.local.stageHunk(path, request)
+    } catch (err) {
+      setHunkError(errorMessage(err))
+    } finally {
+      setHunkBusy(false)
+      // Status, the diff and the Changes lists read the folder again.
+      onChanged()
+    }
+  }
 
   // The last file was committed or discarded while the WIP row was selected.
   if (selectedHash === WIP_HASH && wipHead === null && status !== null) setSelectedHash(null)
@@ -188,6 +215,8 @@ export function GitGraph({
         return menuOps.merge(action.branch, action.noFf)
       case 'cherry-pick':
         return menuOps.cherryPick(action.hash)
+      case 'rebase':
+        return menuOps.rebase(action.onto)
       case 'revert':
         return menuOps.revert(action.hash)
       case 'reset':
@@ -389,7 +418,32 @@ export function GitGraph({
             width={960}
             onClose={() => setDiffFile(null)}
           >
-            <DiffView path={openDiff.path} state={diff} />
+            {hunkError ? (
+              <ErrorBanner onDismiss={() => setHunkError(null)}>{hunkError}</ErrorBanner>
+            ) : null}
+            <DiffView
+              path={openDiff.path}
+              state={diff}
+              hunkAction={
+                openDiff.source !== 'commit' &&
+                canStageHunks(
+                  status?.entries.find((e) => e.path === openDiff.path),
+                  openDiff.source
+                )
+                  ? {
+                      label: openDiff.source === 'staged' ? 'Unstage hunk' : 'Stage hunk',
+                      busy: hunkBusy,
+                      onRun: (index, fingerprint) =>
+                        void runHunk(openDiff.source as 'worktree' | 'staged', {
+                          path: openDiff.path,
+                          source: openDiff.source as 'worktree' | 'staged',
+                          index,
+                          fingerprint
+                        })
+                    }
+                  : undefined
+              }
+            />
           </Dialog>
         ) : null}
       </div>

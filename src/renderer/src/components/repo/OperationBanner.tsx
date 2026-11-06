@@ -9,16 +9,19 @@ interface OperationBannerProps {
   onContinue: () => void
   /** Main asks the user to confirm. */
   onAbort: () => void
+  /** Rebase only: drop the commit it stopped on. Main asks the user to confirm. */
+  onSkip?: () => void
   /** Opens the folder, where the files are fixed. There is no conflict editor. */
   onOpenFolder: () => void
 }
 
-/** A merge, cherry-pick or revert stopped and waits: what is left, and the way out. */
+/** A merge, cherry-pick, revert or rebase stopped and waits: what is left, and the way out. */
 export function OperationBanner({
   state,
   busy,
   onContinue,
   onAbort,
+  onSkip,
   onOpenFolder
 }: OperationBannerProps) {
   const { shown, more } = conflictPreview(state.conflicted)
@@ -51,6 +54,11 @@ export function OperationBanner({
         <Button variant="primary" icon="check" disabled={busy} onClick={onContinue}>
           Continue
         </Button>
+        {state.kind === 'rebase' && onSkip ? (
+          <Button disabled={busy} onClick={onSkip}>
+            Skip commit
+          </Button>
+        ) : null}
         <Button disabled={busy} onClick={onAbort}>
           Abort {state.kind}
         </Button>

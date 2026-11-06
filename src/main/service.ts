@@ -18,6 +18,7 @@ import type {
   AccountInput,
   Cached,
   CheckoutTarget,
+  HunkRequest,
   DiffRequest,
   PullMode,
   Repo,
@@ -93,6 +94,10 @@ export type GitOps = Pick<
   | 'addRemote'
   | 'renameRemote'
   | 'removeRemote'
+  | 'rebase'
+  | 'skipOperation'
+  | 'stageHunk'
+  | 'unstageHunk'
 >
 
 export interface ServiceDeps {
@@ -209,6 +214,24 @@ function checkTagName(name: unknown): string {
     throw new Error('The tag name is not valid')
   }
   return name
+}
+
+function checkHunk(value: unknown): HunkRequest {
+  const h = value as Partial<HunkRequest> | null
+  if (
+    typeof h !== 'object' ||
+    h === null ||
+    typeof h.path !== 'string' ||
+    !h.path ||
+    h.path.length > MAX_PATH_LENGTH ||
+    h.path.includes('\0') ||
+    (h.source !== 'worktree' && h.source !== 'staged') ||
+    typeof h.index !== 'number' ||
+    typeof h.fingerprint !== 'string'
+  ) {
+    throw new Error('The hunk is not valid')
+  }
+  return { path: h.path, source: h.source, index: h.index, fingerprint: h.fingerprint }
 }
 
 function checkRemoteText(value: unknown, what: string, max: number): string {
@@ -988,6 +1011,35 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
         if (!ok) return false
         await serial(path, () => git.removeRemote(path, remote))
         return true
+      }),
+      rebase: guard(async (path, onto) => {
+        linkedRepoKey(path)
+        const target = checkBranchName(onto)
+        return serial(path, () => git.rebase(path, target))
+      }),
+      skipOperation: guard(async (path) => {
+        linkedRepoKey(path)
+        const state = await git.getOperation(path)
+        if (!state) throw new Error(NO_OPERATION)
+        if (state.kind !== 'rebase') throw new Error('Only a rebase can skip a commit')
+        const ok = await ui.confirm({
+          message: 'Skip this commit?',
+          detail: 'The commit the rebase stopped on is dropped, and its changes are not applied.',
+          confirmLabel: 'Skip commit'
+        })
+        if (!ok) return false
+        await serial(path, () => git.skipOperation(path))
+        return true
+      }),
+      stageHunk: guard(async (path, hunk) => {
+        linkedRepoKey(path)
+        const request = checkHunk(hunk)
+        return serial(path, () => git.stageHunk(path, request))
+      }),
+      unstageHunk: guard(async (path, hunk) => {
+        linkedRepoKey(path)
+        const request = checkHunk(hunk)
+        return serial(path, () => git.unstageHunk(path, request))
       }),
       reveal: guard(async (path) => {
         linkedRepoKey(path)

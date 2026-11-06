@@ -441,11 +441,11 @@ Scope decision and reasons: `docs/DECISIONS.md` (2026-11-06, Phase 14 scope). Ru
 
 ## Phase 14b — Rebase and hunk staging
 
-- [ ] `rebase(onto)`, non-interactive only. Read the state from `rebase-merge` and `rebase-apply` through `rev-parse --git-path`. Refuse a detached HEAD and a dirty tree.
-- [ ] Extend `continueOperation` and `abortOperation`, and add `skipOperation`, for rebase. Reuse the conflict banner and add Skip. Opening a repo mid-rebase shows the banner.
-- [ ] Pushing a rebased branch goes through the existing `--force-with-lease` confirm. Nothing pushes by itself.
-- [ ] `stageHunk` and `unstageHunk` through `git apply --cached`, using the hunks that `src/shared/diff.ts` already parses. The patch goes in on stdin and is rebuilt from the diff in main, not taken from the renderer. Line-level staging stays out.
-- [ ] Renderer: per-hunk Stage and Unstage buttons in `DiffView`, a "Rebase onto" entry on branch badges and graph rows, and Skip in the banner.
+- [x] `rebase(onto)`, non-interactive only. Read the state from `rebase-merge` and `rebase-apply` through `rev-parse --git-path`. Refuse a detached HEAD and a dirty tree.
+- [x] Extend `continueOperation` and `abortOperation`, and add `skipOperation`, for rebase. Reuse the conflict banner and add Skip. Opening a repo mid-rebase shows the banner.
+- [x] Pushing a rebased branch goes through the existing `--force-with-lease` confirm. Nothing pushes by itself.
+- [x] `stageHunk` and `unstageHunk` through `git apply --cached`, using the hunks that `src/shared/diff.ts` already parses. The patch goes in on stdin and is rebuilt from the diff in main, not taken from the renderer. Line-level staging stays out.
+- [x] Renderer: per-hunk Stage and Unstage buttons in `DiffView`, a "Rebase onto" entry on branch badges and graph rows, and Skip in the banner.
 
 **Verify:** temp-repo tests cover a clean rebase, a conflicting rebase then abort, skip, resuming an in-progress rebase, and hunk stage and unstage round trips (including a new file and a deletion), plus argument-injection cases. Typecheck, lint, build pass. Say plainly if the screens were not run in a live window.
 
