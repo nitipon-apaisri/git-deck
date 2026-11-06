@@ -2,7 +2,6 @@ import { useState, type ReactNode } from 'react'
 import type { Account, AccountInput } from '@shared/types'
 import { errorMessage } from '../../lib/errors'
 import {
-  PRESETS,
   TOKEN_SCOPES,
   hostTileOf,
   hostnameOf,
@@ -38,7 +37,11 @@ type Status =
   | { kind: 'ok'; text: ReactNode }
   | { kind: 'error'; text: string }
 
-const PRESET_CHOICES: readonly Choice<PresetId>[] = PRESETS.map((p) => ({
+// Two columns, grouped by product: GitHub on the left, GitLab on the right, each with its
+// self-hosted variant underneath.
+const PRESET_ORDER: readonly PresetId[] = ['github', 'gitlab', 'github-enterprise', 'gitlab-self']
+
+const PRESET_CHOICES: readonly Choice<PresetId>[] = PRESET_ORDER.map(presetOf).map((p) => ({
   value: p.id,
   title: p.title,
   sub: p.sub,
