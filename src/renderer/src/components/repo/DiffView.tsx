@@ -3,6 +3,14 @@ import { cn } from '@/lib/cn'
 import { hunkFingerprint } from '@shared/diff'
 import type { DiffLine } from '@shared/types'
 import {
+  buttonLabel,
+  canSelectLines,
+  selectAllChanged,
+  selectRange,
+  toggleLine,
+  type LineSelection
+} from '../../lib/lineSelection'
+import {
   DIFF_LINE_LIMIT,
   diffTotalsText,
   limitHunks,
@@ -21,7 +29,9 @@ interface DiffViewProps {
     label: string
     /** A stage or unstage is running, so the buttons wait. */
     busy: boolean
-    onRun: (index: number, fingerprint: string) => void
+    onRun: (index: number, fingerprint: string, lines?: number[]) => void
+    /** Direction of the per-line button. Present when single lines may be staged. */
+    lineDirection?: 'stage' | 'unstage'
   }
 }
 
@@ -42,6 +52,17 @@ export function DiffView({ path, state, onClose, hunkAction }: DiffViewProps) {
   const { diff } = state
   const [expanded, setExpanded] = useState<string | null>(null)
   const total = diff ? diff.hunks.reduce((n, h) => n + h.lines.length, 0) : 0
+  type Picked = { hunk: number; lines: LineSelection; anchor: number }
+  const none: Picked = { hunk: -1, lines: [], anchor: -1 }
+  const [pickedRaw, setPickedRaw] = useState<Picked & { of: unknown }>({ of: null, ...none })
+  // A reloaded diff is a new object with new fingerprints: a selection made on the old one is
+  // ignored, so it never refers to a stale hunk.
+  const picked: Picked = pickedRaw.of === diff ? pickedRaw : none
+  const setPicked = (next: Picked | ((p: Picked) => Picked)) =>
+    setPickedRaw((prev) => {
+      const current = prev.of === diff ? prev : none
+      return { of: diff, ...(typeof next === 'function' ? next(current) : next) }
+    })
   const showAll = expanded === path
   const shown = diff ? limitHunks(diff.hunks, showAll ? total : visibleLineCount(total)) : []
 
@@ -95,10 +116,51 @@ export function DiffView({ path, state, onClose, hunkAction }: DiffViewProps) {
           <div className="w-max min-w-full">
             {shown.map((hunk, h) => {
               const lines = hunk.lines
+              const splittable =
+                !!hunkAction?.lineDirection && !!diff && canSelectLines(diff, diff.hunks[h])
+              const mine = picked.hunk === h ? picked.lines : []
               return (
                 <div key={h}>
                   <div className="flex items-center gap-2 bg-secondary px-3 py-0.5 text-muted-foreground">
                     <span className="min-w-0 flex-1">{hunk.header}</span>
+                    {splittable && mine.length > 0 ? (
+                      <Button
+                        variant="ghost"
+                        className="sticky right-2 h-6 flex-none px-2 text-[12px]"
+                        disabled={hunkAction.busy}
+                        onClick={() =>
+                          hunkAction.onRun(h, hunkFingerprint(diff!.hunks[h].lines), [...mine])
+                        }
+                      >
+                        {buttonLabel(hunkAction.lineDirection!, mine.length)}
+                      </Button>
+                    ) : null}
+                    {splittable ? (
+                      <>
+                        <Button
+                          variant="ghost"
+                          className="h-6 flex-none px-2 text-[12px]"
+                          onClick={() =>
+                            setPicked({
+                              hunk: h,
+                              lines: selectAllChanged(diff!.hunks[h]),
+                              anchor: -1
+                            })
+                          }
+                        >
+                          Select all
+                        </Button>
+                        {mine.length > 0 ? (
+                          <Button
+                            variant="ghost"
+                            className="h-6 flex-none px-2 text-[12px]"
+                            onClick={() => setPicked({ hunk: -1, lines: [], anchor: -1 })}
+                          >
+                            Clear
+                          </Button>
+                        ) : null}
+                      </>
+                    ) : null}
                     {hunkAction && diff ? (
                       <Button
                         variant="ghost"
@@ -113,8 +175,40 @@ export function DiffView({ path, state, onClose, hunkAction }: DiffViewProps) {
                   </div>
                   {lines.map((line, i) => {
                     const look = LINE[line.type]
+                    const changed = line.type === 'add' || line.type === 'del'
                     return (
                       <div key={i} className={cn('flex whitespace-pre', look.row)}>
+                        {hunkAction?.lineDirection &&
+                        diff &&
+                        canSelectLines(diff, diff.hunks[h]) ? (
+                          <span className="flex w-6 flex-none items-center justify-center">
+                            {changed ? (
+                              <input
+                                type="checkbox"
+                                className="m-0 cursor-pointer accent-[var(--accent)]"
+                                checked={mine.includes(i)}
+                                disabled={hunkAction.busy}
+                                aria-label={
+                                  line.type === 'add'
+                                    ? `Select added line ${line.newNo}`
+                                    : `Select removed line ${line.oldNo}`
+                                }
+                                onClick={(e) => {
+                                  const hunkData = diff.hunks[h]
+                                  setPicked((p) => {
+                                    const base = p.hunk === h ? p.lines : []
+                                    const next =
+                                      e.shiftKey && p.hunk === h && p.anchor >= 0
+                                        ? selectRange(base, hunkData, p.anchor, i)
+                                        : toggleLine(base, hunkData, i)
+                                    return { hunk: h, lines: next, anchor: i }
+                                  })
+                                }}
+                                onChange={() => undefined}
+                              />
+                            ) : null}
+                          </span>
+                        ) : null}
                         <span
                           className="w-10 flex-none px-1 text-right text-muted-foreground select-none"
                           aria-hidden

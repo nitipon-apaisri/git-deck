@@ -437,12 +437,14 @@ export function GitGraph({
                   ? {
                       label: openDiff.source === 'staged' ? 'Unstage hunk' : 'Stage hunk',
                       busy: hunkBusy,
-                      onRun: (index, fingerprint) =>
+                      lineDirection: openDiff.source === 'staged' ? 'unstage' : 'stage',
+                      onRun: (index, fingerprint, lines) =>
                         void runHunk(openDiff.source as 'worktree' | 'staged', {
                           path: openDiff.path,
                           source: openDiff.source as 'worktree' | 'staged',
                           index,
-                          fingerprint
+                          fingerprint,
+                          ...(lines ? { lines } : {})
                         })
                     }
                   : undefined
