@@ -119,7 +119,7 @@ docs           Design system, UI boards, DECISIONS.md.
 
 Known limits:
 
-- GitDeck was developed and checked on macOS, against mock GitHub Enterprise and GitLab servers. It has not been run against github.com or gitlab.com, or on Windows or Linux.
+- GitDeck was developed and checked on macOS, against mock GitHub Enterprise and GitLab servers, and it has been used against a real self-hosted GitLab instance. It has not been run against github.com or gitlab.com, or on Windows or Linux.
 - A repository's summary can take a moment on a large repository: counts come from several API calls, and a host that rate-limits you may return partial counts. Partial totals are marked as such.
 - Only the first 25 contributors of each repository are read, so contributor totals are approximate.
 - The sidebar list and the project form's repository list are not virtualised. An account with many thousands of repositories will feel slow there. The filter helps.
