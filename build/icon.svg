@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>GitDeck</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6ea1fa"/>
+      <stop offset="1" stop-color="#2e69dc"/>
+    </linearGradient>
+  </defs>
+  <circle cx="512" cy="512" r="440" fill="url(#bg)"/>
+  <g fill="none" stroke="#ffffff" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M400 296V728"/>
+    <path d="M400 640C400 520 624 540 624 400"/>
+  </g>
+  <g fill="#ffffff">
+    <circle cx="400" cy="296" r="64"/>
+    <circle cx="400" cy="728" r="64"/>
+    <circle cx="624" cy="400" r="64"/>
+  </g>
+</svg>

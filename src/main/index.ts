@@ -21,6 +21,10 @@ const tokenCrypto: TokenCrypto = {
   decrypt: (data) => safeStorage.decryptString(data)
 }
 
+// Source of the packaged icons too: build/icon.{icns,ico,png}. Used for the window on Windows/Linux
+// and the dock in dev on macOS (packaged macOS builds take icon.icns from the bundle).
+const iconPath = join(app.getAppPath(), 'build', 'icon.png')
+
 function createWindow(saved: WindowState): BrowserWindow {
   const dir = app.getPath('userData')
   const start = fitToDisplays(
@@ -35,6 +39,7 @@ function createWindow(saved: WindowState): BrowserWindow {
     minHeight: 700,
     show: false,
     title: 'GitDeck',
+    icon: iconPath,
     backgroundColor: '#000000',
     // On macOS the toolbar doubles as the title bar, beside the traffic lights.
     ...(process.platform === 'darwin'
@@ -95,6 +100,7 @@ if (!app.requestSingleInstanceLock()) {
   })
 
   void app.whenReady().then(async () => {
+    if (process.platform === 'darwin') app.dock?.setIcon(iconPath)
     // net.fetch uses the OS certificate store, so internal CAs work.
     configureFetch((input, init) => net.fetch(input, init))
     installCertVerifyProc(session.defaultSession)
