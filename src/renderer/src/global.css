@@ -27,10 +27,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-button,
-input {
-  font: inherit;
-  color: inherit;
+/* In a layer so Tailwind utilities on a button (text colour, font) still win. */
+@layer base {
+  button,
+  input {
+    font: inherit;
+    color: inherit;
+  }
 }
 
 /* Focus is a solid 2px ring with a 2px offset on everything focusable. Never removed. */
