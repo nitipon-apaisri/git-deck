@@ -56,6 +56,15 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
   --animate-skeleton: skeleton-pulse 1.4s ease-in-out infinite;
+  --animate-progress-slide: progress-slide 1.1s ease-in-out infinite;
+  @keyframes progress-slide {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(300%);
+    }
+  }
   @keyframes skeleton-pulse {
     50% {
       opacity: 0.45;
