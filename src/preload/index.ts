@@ -35,6 +35,9 @@ const api: Api = {
     commit: (path, hash) => call(IPC.localCommit, path, hash),
     fetch: (path) => call(IPC.localFetch, path),
     reveal: (path) => call(IPC.localReveal, path),
+    repos: () => call(IPC.localRepos),
+    open: () => call(IPC.localOpen),
+    remove: (repoKey) => call(IPC.localRemove, repoKey),
     onCloneProgress: (cb) => {
       const listener = (_event: unknown, progress: CloneProgress): void => cb(progress)
       ipcRenderer.on(IPC.cloneProgress, listener)

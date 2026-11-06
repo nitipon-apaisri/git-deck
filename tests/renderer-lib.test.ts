@@ -12,6 +12,7 @@ import {
 import { DEFAULT_FONT, FONTS, parseFont, readFont, writeFont } from '../src/renderer/src/lib/font'
 import { sectionAfterKey } from '../src/renderer/src/lib/settingsSections'
 import { avatarIndex, initialsOf, timeAgo, truncateMiddle } from '../src/renderer/src/lib/format'
+import { LOCAL_GROUP, isLocalKey } from '../src/renderer/src/lib/localRepos'
 import { hasInsetTitleBar } from '../src/renderer/src/lib/platform'
 import { PRESETS, hostTileOf, tokenUrl, tryNormalize } from '../src/renderer/src/lib/presets'
 import {
@@ -442,4 +443,22 @@ test('settings sections: arrows wrap, Home and End jump, other keys do nothing',
   assert.equal(sectionAfterKey('integrations', 'Home'), 'appearance')
   assert.equal(sectionAfterKey('appearance', 'End'), 'integrations')
   assert.equal(sectionAfterKey('appearance', 'Enter'), null)
+})
+
+// local repositories in the sidebar tree
+
+test('local repositories: one heading, repos directly under it, no namespace rows', () => {
+  const mk = (name: string): Repo => repo('local', name, 'local', name)
+  const nodes = buildTree([LOCAL_GROUP], { local: [mk('b'), mk('a')] }, '')
+  const rows = flattenTree(nodes, new Set(), false)
+  assert.deepEqual(
+    rows.map((r) => r.kind),
+    ['host', 'repo', 'repo']
+  )
+  assert.deepEqual(
+    rows.filter((r) => r.kind === 'repo').map((r) => (r.kind === 'repo' ? r.repo.name : '')),
+    ['a', 'b']
+  )
+  assert.equal(flattenTree(nodes, new Set(['local']), false).length, 1)
+  assert.ok(isLocalKey('local:abc') && !isLocalKey('acc1:1'))
 })

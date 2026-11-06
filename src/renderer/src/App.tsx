@@ -28,8 +28,17 @@ type DialogName = 'settings' | 'projects' | null
 const SIDEBAR_KEY = 'gitdeck.sidebar'
 
 export function App() {
-  const { state, refresh, refreshAll, refreshLinks, accountAdded, removeAccount, retryLoad } =
-    useWorkspace()
+  const {
+    state,
+    refresh,
+    refreshAll,
+    refreshLinks,
+    accountAdded,
+    removeAccount,
+    openLocal,
+    removeLocal,
+    retryLoad
+  } = useWorkspace()
   const split = useSplit()
   const { state: layout } = split
   const projectsApi = useProjects()
@@ -115,6 +124,22 @@ export function App() {
     try {
       await work
       setProjectError(null)
+    } catch (err) {
+      setProjectError(errorMessage(err))
+    }
+  }
+  async function openLocalRepo(): Promise<void> {
+    try {
+      const repo = await openLocal()
+      if (repo) selectRepo(repo.key)
+      setProjectError(null)
+    } catch (err) {
+      setProjectError(errorMessage(err))
+    }
+  }
+  async function removeLocalRepo(key: string): Promise<void> {
+    try {
+      await removeLocal(key)
     } catch (err) {
       setProjectError(errorMessage(err))
     }
@@ -217,6 +242,8 @@ export function App() {
             onSelect={selectRepo}
             onOpenInSplit={openRepoInSplit}
             onConnect={() => openSettings('integrations')}
+            onOpenLocal={() => void openLocalRepo()}
+            onRemoveLocal={(key) => void removeLocalRepo(key)}
             onRefresh={(id) => void refresh(id)}
             onRefreshAll={() => void refreshAll()}
             projects={{

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { readFile, readdir } from 'node:fs/promises'
+import { readFile, readdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { test } from 'node:test'
 import { createProject } from '../src/shared/projects'
@@ -107,4 +107,51 @@ test('cached repos are not dropped by a refresh that no longer lists them', asyn
   await store.setProjects([createProject([], { name: 'p', repoKeys: ['a:1'] })])
   await store.setCachedRepos('a', [])
   assert.deepEqual(store.getProjects()[0].repoKeys, ['a:1'])
+})
+
+test('local repositories: add is idempotent, removal drops the link, accounts leave them alone', async () => {
+  const { store, dir } = await newStore()
+  const local = {
+    key: 'local:abc123abc123',
+    accountId: 'local',
+    remoteId: 'abc123abc123',
+    name: 'demo',
+    fullName: 'demo',
+    namespace: 'local',
+    description: '/tmp/demo',
+    visibility: 'private',
+    defaultBranch: 'main',
+    webUrl: '',
+    httpUrl: '',
+    sshUrl: '',
+    stars: 0,
+    forks: 0,
+    openIssues: 0,
+    updatedAt: '',
+    archived: false,
+    fork: false
+  } as const
+  await store.saveAccount(account('a1'), 'tok')
+  await store.addLocalRepo({ ...local }, '/tmp/demo')
+  await store.addLocalRepo({ ...local }, '/tmp/demo')
+  assert.equal(store.getLocalRepos().length, 1)
+  await store.removeAccount('a1')
+  const reloaded = new Store(dir, fakeCrypto())
+  await reloaded.load()
+  assert.equal(reloaded.getLocalRepos().length, 1)
+  assert.equal(reloaded.getLinks()[local.key], '/tmp/demo')
+  await reloaded.removeLocalRepo(local.key)
+  assert.equal(reloaded.getLocalRepos().length, 0)
+  assert.equal(reloaded.getLinks()[local.key], undefined)
+})
+
+test('a config file written before local repositories existed still loads', async () => {
+  const dir = tempDir()
+  await writeFile(
+    join(dir, 'config.json'),
+    JSON.stringify({ accounts: [], tokens: {}, links: {}, projects: [] })
+  )
+  const store = new Store(dir, fakeCrypto())
+  await store.load()
+  assert.deepEqual(store.getLocalRepos(), [])
 })

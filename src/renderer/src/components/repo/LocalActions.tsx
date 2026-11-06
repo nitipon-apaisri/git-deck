@@ -54,14 +54,16 @@ export function LocalActions({ repo, linkedPath, actions, compact = false }: Loc
           </>
         )}
         {busy === 'fetch' ? <Spinner label="Fetching" /> : null}
-        <Button
-          variant="ghost"
-          disabled={working}
-          onClick={actions.unlink}
-          title="Forget this folder. Nothing is deleted from disk."
-        >
-          Unlink
-        </Button>
+        {repo.accountId === 'local' ? null : (
+          <Button
+            variant="ghost"
+            disabled={working}
+            onClick={actions.unlink}
+            title="Forget this folder. Nothing is deleted from disk."
+          >
+            Unlink
+          </Button>
+        )}
         <span className={`${styles.path} hash`} title={linkedPath}>
           {linkedPath}
         </span>

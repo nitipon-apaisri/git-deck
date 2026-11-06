@@ -8,6 +8,16 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-06: Open a local repository
+
+- **Question:** Can a folder be opened without any account?
+- **Decision and why:**
+  - Yes. Open adds a local-only repository: main resolves the folder's git root, gives it the key `local:<12 hex of sha1(root)>` (so the same folder is one entry) and stores it in `config.json` (`localRepos`) plus the existing `links` table. Because every read-only git call is gated by that table, the graph, Info, Fetch and Reveal work unchanged.
+  - A real account id is a UUID, so `local` cannot collide with one. `local.unlink` refuses local keys and `local.remove` refuses everything else.
+  - Local repositories show under a "Local" group at the top of the sidebar, have no Overview tab (no host summary), no Open on web and no Unlink, and open on the Graph tab. Remove only forgets the entry.
+  - Left out: local repositories in Projects, an Overview built from git alone, matching a folder's remote to an account repository, and drag-and-drop of a folder.
+  - Not checked in the window: the native folder picker itself (the service tests use a fake picker), and Windows and Linux paths.
+
 ## 2026-11-06: Settings, accents, fonts and motion
 
 - **Question:** Preferences should look like lens, hold Appearance and Integrations, and the main pane should stop asking to connect an account.

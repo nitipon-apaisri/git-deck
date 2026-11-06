@@ -18,6 +18,8 @@ interface Config {
   /** repo key -> local folder */
   links: Record<string, string>
   projects: Project[]
+  /** Folders opened without an account. Their links are in `links` too. */
+  localRepos: Repo[]
 }
 
 interface CacheFile {
@@ -25,7 +27,13 @@ interface CacheFile {
   summaries: Record<string, Cached<RepoSummary>>
 }
 
-const emptyConfig = (): Config => ({ accounts: [], tokens: {}, links: {}, projects: [] })
+const emptyConfig = (): Config => ({
+  accounts: [],
+  tokens: {},
+  links: {},
+  projects: [],
+  localRepos: []
+})
 const emptyCache = (): CacheFile => ({ repos: {}, summaries: {} })
 
 async function readJson<T>(path: string, fallback: () => T): Promise<T> {
@@ -134,6 +142,25 @@ export class Store {
   }
 
   async removeLink(repoKey: string): Promise<void> {
+    delete this.config.links[repoKey]
+    await this.persist('config')
+  }
+
+  // Local-only repositories
+
+  getLocalRepos(): Repo[] {
+    return structuredClone(this.config.localRepos)
+  }
+
+  /** Same key twice keeps one entry. The folder is linked in the same write. */
+  async addLocalRepo(repo: Repo, path: string): Promise<void> {
+    this.config.localRepos = [...this.config.localRepos.filter((r) => r.key !== repo.key), repo]
+    this.config.links[repo.key] = path
+    await this.persist('config')
+  }
+
+  async removeLocalRepo(repoKey: string): Promise<void> {
+    this.config.localRepos = this.config.localRepos.filter((r) => r.key !== repoKey)
     delete this.config.links[repoKey]
     await this.persist('config')
   }

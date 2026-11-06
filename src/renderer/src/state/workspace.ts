@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useReducer, useState } from 'react'
 import { errorMessage } from '../lib/errors'
 import { reducer, initial } from '../lib/workspaceReducer'
-import type { Account } from '@shared/types'
+import type { Account, Repo } from '@shared/types'
+import { LOCAL_ACCOUNT_ID } from '../lib/localRepos'
 
 export type { AccountRepos, WorkspaceState } from '../lib/workspaceReducer'
 import type { WorkspaceState } from '../lib/workspaceReducer'
@@ -17,6 +18,10 @@ export interface Workspace {
   accountAdded: (account: Account) => void
   /** Removes through main, then forgets the account here. Rejects with a plain message. */
   removeAccount: (accountId: string) => Promise<void>
+  /** Folder picker, then adds the folder as a local repository. `null` when cancelled. */
+  openLocal: () => Promise<Repo | null>
+  /** Forgets a local repository. The folder stays on disk. */
+  removeLocal: (repoKey: string) => Promise<void>
   /** Runs the first load again after it failed. */
   retryLoad: () => void
 }
@@ -62,6 +67,16 @@ export function useWorkspace(): Workspace {
         ])
         if (cancelled) return
         dispatch({ type: 'loaded', secureStorage, accounts, links })
+        try {
+          dispatch({
+            type: 'repos',
+            accountId: LOCAL_ACCOUNT_ID,
+            repos: await window.api.local.repos(),
+            fetchedAt: Date.now()
+          })
+        } catch {
+          // No local list is not fatal: the accounts below still load.
+        }
         await Promise.all(accounts.map((a) => loadAccount(a.id)))
       } catch (err) {
         if (!cancelled) dispatch({ type: 'loadFailed', error: errorMessage(err) })
@@ -98,6 +113,38 @@ export function useWorkspace(): Workspace {
     [loadAccount]
   )
 
+  const setLocalRepos = useCallback(async () => {
+    dispatch({
+      type: 'repos',
+      accountId: LOCAL_ACCOUNT_ID,
+      repos: await window.api.local.repos(),
+      fetchedAt: Date.now()
+    })
+    dispatch({ type: 'links', links: await window.api.local.links() })
+  }, [])
+
+  const openLocal = useCallback(async () => {
+    try {
+      const repo = await window.api.local.open()
+      if (repo) await setLocalRepos()
+      return repo
+    } catch (err) {
+      throw new Error(errorMessage(err), { cause: err })
+    }
+  }, [setLocalRepos])
+
+  const removeLocal = useCallback(
+    async (repoKey: string) => {
+      try {
+        await window.api.local.remove(repoKey)
+        await setLocalRepos()
+      } catch (err) {
+        throw new Error(errorMessage(err), { cause: err })
+      }
+    },
+    [setLocalRepos]
+  )
+
   const removeAccount = useCallback(async (accountId: string) => {
     try {
       await window.api.accounts.remove(accountId)
@@ -107,5 +154,15 @@ export function useWorkspace(): Workspace {
     dispatch({ type: 'accountRemoved', accountId })
   }, [])
 
-  return { state, refresh, refreshAll, refreshLinks, accountAdded, removeAccount, retryLoad }
+  return {
+    state,
+    refresh,
+    refreshAll,
+    refreshLinks,
+    accountAdded,
+    removeAccount,
+    openLocal,
+    removeLocal,
+    retryLoad
+  }
 }
