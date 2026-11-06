@@ -1,6 +1,5 @@
 import type { Account, Project } from '@shared/types'
 import type { Orientation } from '../lib/splitState'
-import { RepoFilter } from './RepoFilter'
 import { ScopeSwitcher } from './projects/ScopeSwitcher'
 import { IconButton } from './ui'
 
@@ -15,15 +14,13 @@ interface ToolbarProps {
   onToggleSplit: () => void
   onToggleOrientation: () => void
   onSwap: () => void
-  /** The scope selector and filter show once there is something to filter. */
+  /** The scope selector shows once there is something to select. */
   showScope: boolean
   projects: Project[]
   scope: Project | null
   onScope: (projectId: string | null) => void
   onNewProject: () => void
   onManage: () => void
-  query: string
-  onQueryChange: (value: string) => void
   onOpenPreferences: () => void
 }
 
@@ -40,8 +37,6 @@ export function Toolbar({
   onScope,
   onNewProject,
   onManage,
-  query,
-  onQueryChange,
   onOpenPreferences
 }: ToolbarProps) {
   return (
@@ -51,17 +46,14 @@ export function Toolbar({
     >
       <span />
       {showScope ? (
-        <div className="flex w-[min(520px,45vw)] min-w-0 items-center gap-2">
-          <div className="w-[210px] flex-none">
-            <ScopeSwitcher
-              projects={projects}
-              scope={scope}
-              onSelect={onScope}
-              onNew={onNewProject}
-              onManage={onManage}
-            />
-          </div>
-          <RepoFilter value={query} onChange={onQueryChange} scoped={scope !== null} />
+        <div className="w-[240px] min-w-0">
+          <ScopeSwitcher
+            projects={projects}
+            scope={scope}
+            onSelect={onScope}
+            onNew={onNewProject}
+            onManage={onManage}
+          />
         </div>
       ) : (
         <span />

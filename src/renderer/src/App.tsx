@@ -52,7 +52,6 @@ export function App() {
     setSettingsSection(section)
     setDialog('settings')
   }
-  const [query, setQuery] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(() => readStored(SIDEBAR_KEY) !== 'closed')
 
   const repos = Object.values(state.byAccount).flatMap((a) => a.repos)
@@ -224,15 +223,6 @@ export function App() {
         onNewProject={() => setForm({ editId: null, repoKeys: [] })}
         onManage={() => setDialog('projects')}
         onOpenPreferences={() => openSettings('appearance')}
-        query={query}
-        onQueryChange={(value) => {
-          setQuery(value)
-          // The results show in the sidebar, so open it when someone starts typing.
-          if (value !== '' && !sidebarOpen) {
-            setSidebarOpen(true)
-            writeStored(SIDEBAR_KEY, 'open')
-          }
-        }}
       />
       <div className="flex min-h-0 flex-1 gap-1.5 px-1.5 pb-1.5">
         {sidebarOpen ? (
@@ -243,7 +233,6 @@ export function App() {
             accounts={state.accounts}
             byAccount={state.byAccount}
             links={state.links}
-            query={query}
             selectedKey={selectedKey}
             paneMarks={paneMarks}
             onSelect={selectRepo}
