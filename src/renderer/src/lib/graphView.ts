@@ -1,6 +1,6 @@
 // Pure view-model helpers for the commit graph. No DOM, so they run under tsx.
 import type { GraphEdge } from '../../../shared/graph-layout'
-import type { CommitDetail, GraphRef } from '../../../shared/types'
+import type { CommitDetail, GraphCommit, GraphRef } from '../../../shared/types'
 import { timeAgo } from './format'
 import { unixDateText } from './repoView'
 
@@ -203,6 +203,22 @@ export function splitBadges(badges: readonly BadgeView[], max = MAX_BADGES): Bad
 }
 
 /** HEAD is drawn as a ring. A detached HEAD is a `head` ref with no branch beside it. */
+/** Hash of the "// WIP" row: uncommitted changes drawn as a commit on top of HEAD. */
+export const WIP_HASH = 'WIP'
+
+/** The synthetic commit the layout draws for uncommitted changes. */
+export const wipCommit = (head: string): GraphCommit => ({
+  hash: WIP_HASH,
+  parents: [head],
+  author: '',
+  email: '',
+  date: 0,
+  refs: [],
+  subject: ''
+})
+
+export const isWipHash = (hash: string): boolean => hash === WIP_HASH
+
 export const isHeadCommit = (refs: readonly GraphRef[]): boolean =>
   refs.some((ref) => ref.kind === 'head')
 

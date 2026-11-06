@@ -4,6 +4,7 @@ import { useCommitDetail, useGraph } from '../../state/graphData'
 import { useNow } from '../../state/useNow'
 import {
   ROW_HEIGHT,
+  WIP_HASH,
   moveIndex,
   needsNextPage,
   scrollToRow,
@@ -11,12 +12,13 @@ import {
   widestLane
 } from '../../lib/graphView'
 import { cn } from '@/lib/cn'
-import type { CheckoutTarget, GraphCommit } from '@shared/types'
+import type { CheckoutTarget, DiffRequest, GraphCommit } from '@shared/types'
 import { refActions, type RefAction } from '../../lib/branchView'
 import type { BadgeView } from '../../lib/graphView'
 import { Button, Dialog, Icon, Menu, Spinner, type MenuEntry } from '../ui'
-import { useDiff } from '../../state/changesData'
+import { useDiff, useStatus } from '../../state/changesData'
 import { DiffView } from '../repo/DiffView'
+import { ChangesPanel } from './ChangesPanel'
 import { CommitDetailPanel } from './CommitDetailPanel'
 import { GraphRowView } from './GraphRowView'
 
@@ -28,6 +30,8 @@ interface GitGraphProps {
   visible: boolean
   /** Changes after a fetch, a clone or a link: the history is read again. */
   reloadToken: number
+  /** Tells the pane that the folder changed, so Info and the branches reload too. */
+  onChanged: () => void
   /** A narrow pane: no author or date column, and the detail opens as a drawer. */
   narrow: boolean
   /** Which pane this is. A swap changes it, and the scroll position is put back. */
@@ -57,13 +61,18 @@ export function GitGraph({
   defaultBranch,
   visible,
   reloadToken,
+  onChanged,
   narrow,
   place,
   menuOps
 }: GitGraphProps) {
   const idPrefix = useId()
   const now = useNow()
-  const graph = useGraph(path, reloadToken)
+  const statusState = useStatus(path, reloadToken, visible)
+  const { status } = statusState
+  // Uncommitted changes sit on top of HEAD as a "// WIP" row. No commits yet: no row.
+  const wipHead = status && status.entries.length > 0 ? status.head : null
+  const graph = useGraph(path, reloadToken, wipHead)
   const { rows, loading, done, error, loadMore, reload } = graph
 
   const viewport = useRef<HTMLDivElement>(null)
@@ -79,14 +88,20 @@ export function GitGraph({
     [rows, selectedHash]
   )
   const selected = selectedIndex >= 0 ? rows[selectedIndex].commit : null
-  const detail = useCommitDetail(path, selected?.hash ?? null)
-  // The file whose diff is open, for the selected commit only.
-  const [diffFile, setDiffFile] = useState<{ hash: string; path: string } | null>(null)
-  const openDiff = diffFile && diffFile.hash === selected?.hash ? diffFile : null
-  const diff = useDiff(
-    path,
-    openDiff ? { source: 'commit', hash: openDiff.hash, path: openDiff.path } : null
-  )
+  const wipSelected = selected?.hash === WIP_HASH
+  // The WIP row has no commit behind it, so it has no detail to read.
+  const selectedCommit = selected && !wipSelected ? selected : null
+  const detail = useCommitDetail(path, selectedCommit?.hash ?? null)
+  // The file whose diff is open, for the selected commit or for the WIP row.
+  const [diffFile, setDiffFile] = useState<DiffRequest | null>(null)
+  const openDiff =
+    diffFile && (diffFile.source === 'commit' ? diffFile.hash === selected?.hash : wipSelected)
+      ? diffFile
+      : null
+  const diff = useDiff(path, openDiff, reloadToken)
+
+  // The last file was committed or discarded while the WIP row was selected.
+  if (selectedHash === WIP_HASH && wipHead === null && status !== null) setSelectedHash(null)
 
   const linked = path !== null
   useEffect(() => {
@@ -283,6 +298,7 @@ export function GitGraph({
                   defaultBranch={defaultBranch}
                   compact={narrow}
                   selected={row.commit.hash === selectedHash}
+                  wipCount={status?.entries.length}
                   onSelect={select}
                   onMenu={menuOps ? openMenu : undefined}
                 />
@@ -301,16 +317,30 @@ export function GitGraph({
           ) : null}
         </div>
 
-        {selected ? (
+        {selectedCommit ? (
           <CommitDetailPanel
-            key={selected.hash}
-            commit={selected}
+            key={selectedCommit.hash}
+            commit={selectedCommit}
             state={detail}
             defaultBranch={defaultBranch}
             onClose={() => setSelectedHash(null)}
-            onOpenFile={(file) => setDiffFile({ hash: selected.hash, path: file })}
+            onOpenFile={(file) =>
+              setDiffFile({ source: 'commit', hash: selectedCommit.hash, path: file })
+            }
           />
         ) : null}
+        {/* Always mounted, so a commit message being written survives selecting a commit. */}
+        <ChangesPanel
+          path={path}
+          hidden={!wipSelected}
+          status={status}
+          loading={statusState.loading}
+          error={statusState.error}
+          reload={statusState.reload}
+          onChanged={onChanged}
+          onOpenFile={(source, file) => setDiffFile({ source, path: file })}
+          onClose={() => setSelectedHash(null)}
+        />
         {menu && menuOps ? (
           <Menu
             label="Commit actions"
@@ -321,7 +351,11 @@ export function GitGraph({
         ) : null}
         {openDiff ? (
           <Dialog
-            title={`Changes in commit ${openDiff.hash.slice(0, 7)}`}
+            title={
+              openDiff.source === 'commit'
+                ? `Changes in commit ${openDiff.hash?.slice(0, 7)}`
+                : `${openDiff.source === 'staged' ? 'Staged' : 'Unstaged'} changes`
+            }
             width={960}
             onClose={() => setDiffFile(null)}
           >

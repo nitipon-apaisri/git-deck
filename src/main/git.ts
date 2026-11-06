@@ -553,14 +553,19 @@ const kindOf = (letter: string): ChangeKind | null => KIND[letter] ?? null
 /** Parses `git status --porcelain=v2 -z --branch`. Entries are sorted by path. */
 export function parseStatus(raw: string): RepoStatus {
   let branch: string | null = null
+  let head: string | null = null
   const entries: StatusEntry[] = []
   const fields = raw.split('\0')
   for (let i = 0; i < fields.length; i++) {
     const field = fields[i]
     if (!field) continue
-    if (field.startsWith('# branch.head ')) {
-      const head = field.slice('# branch.head '.length)
-      branch = head === '(detached)' ? null : head
+    if (field.startsWith('# branch.oid ')) {
+      const oid = field.slice('# branch.oid '.length)
+      // "(initial)" is a repository with no commits yet.
+      head = oid === '(initial)' ? null : oid
+    } else if (field.startsWith('# branch.head ')) {
+      const name = field.slice('# branch.head '.length)
+      branch = name === '(detached)' ? null : name
     } else if (field.startsWith('# ')) {
       continue
     } else if (field.startsWith('1 ')) {
@@ -610,7 +615,7 @@ export function parseStatus(raw: string): RepoStatus {
     }
   }
   entries.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
-  return { branch, entries }
+  return { branch, head, entries }
 }
 
 export async function getStatus(cwd: string): Promise<RepoStatus> {

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import type { GraphRow } from '../src/shared/graph-layout'
+import { GraphLayout, type GraphRow } from '../src/shared/graph-layout'
 import type { GraphCommit, GraphRef } from '../src/shared/types'
 import {
   emptyPaging,
@@ -12,6 +12,8 @@ import {
   LOAD_AHEAD_ROWS,
   OVERSCAN,
   ROW_HEIGHT,
+  WIP_HASH,
+  wipCommit,
   additionsText,
   authorLabel,
   badgeViews,
@@ -377,4 +379,27 @@ test('paging: a failed page keeps the rows and stops loading', () => {
   assert.equal(s.error, 'offline')
   // a retry clears the error
   assert.equal(run([{ type: 'loading', gen: 1 }], s).error, null)
+})
+
+test('a WIP commit on top of HEAD draws a lane down to HEAD, even past other rows', () => {
+  const commit = (hash: string, parents: string[]): GraphCommit => ({
+    hash,
+    parents,
+    author: 'a',
+    email: 'a@b.c',
+    date: 1,
+    refs: [],
+    subject: hash
+  })
+  // "side" is newer than HEAD ("h"), so the WIP lane has to pass its row.
+  const rows = new GraphLayout().add([
+    wipCommit('h'),
+    commit('side', ['root']),
+    commit('h', ['root']),
+    commit('root', [])
+  ])
+  assert.equal(rows[0].commit.hash, WIP_HASH)
+  assert.equal(rows[0].edges.filter((e) => e.part === 'bottom').length, 1)
+  assert.ok(rows[1].edges.some((e) => e.part === 'through' && e.from === rows[0].lane))
+  assert.equal(rows[2].lane, rows[0].lane)
 })

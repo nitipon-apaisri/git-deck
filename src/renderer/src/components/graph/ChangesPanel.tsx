@@ -1,22 +1,18 @@
 import { useState } from 'react'
 import { cn } from '@/lib/cn'
-import type { StatusEntry } from '@shared/types'
+import type { RepoStatus, StatusEntry } from '@shared/types'
 import {
   commitBlocker,
   countText,
   groupStatus,
-  keepSelection,
   rowLetter,
   rowWord,
-  selectionRequest,
   splitPath,
   stagedKind,
   unstagedKind,
-  type RowKind,
-  type Selection
+  type RowKind
 } from '../../lib/changesView'
 import { errorMessage } from '../../lib/errors'
-import { useDiff, useStatus } from '../../state/changesData'
 import {
   Button,
   CheckOption,
@@ -27,19 +23,22 @@ import {
   Textarea,
   type IconName
 } from '../ui'
-import { DiffView } from './DiffView'
 
-interface ChangesTabProps {
-  /** The linked folder, or `null` when this repository has none. */
-  path: string | null
-  /** Changes after any action in the pane, so this tab reads the folder again. */
-  reloadToken: number
+interface ChangesPanelProps {
+  /** The linked folder. */
+  path: string
+  /** Read by the graph, which also needs it for the "// WIP" row. */
+  status: RepoStatus | null
+  loading: boolean
+  error: string | null
+  reload: () => void
   /** Tells the pane that the folder changed, so the graph and Info reload too. */
   onChanged: () => void
-  /** The tab is showing. It stays mounted so the message being written survives. */
-  visible: boolean
-  /** A narrow pane stacks the diff under the lists. */
-  narrow: boolean
+  /** Opens a file's diff. */
+  onOpenFile: (source: 'staged' | 'worktree', path: string) => void
+  onClose: () => void
+  /** Not the selected row: stays mounted but out of sight. */
+  hidden: boolean
 }
 
 const LETTER_STYLE: Record<RowKind, string> = {
@@ -136,28 +135,27 @@ function Section({ title, count, action, children }: SectionProps) {
 }
 
 /**
- * Staged and unstaged files, a diff for the one you pick, and the commit box. It
- * owns its own message, selection and busy state, like every other part of a pane.
+ * Staged and unstaged files and the commit box, in the graph's side panel while the
+ * "// WIP" row is selected. It owns its message and busy state, like every other part
+ * of a pane, and the graph keeps it mounted so the message survives.
  */
-export function ChangesTab({ path, reloadToken, onChanged, visible, narrow }: ChangesTabProps) {
-  const { status, loading, error, reload } = useStatus(path, reloadToken, visible)
-  const [selected, setSelected] = useState<Selection | null>(null)
+export function ChangesPanel({
+  path,
+  status,
+  loading,
+  error,
+  reload,
+  onChanged,
+  onOpenFile,
+  onClose,
+  hidden
+}: ChangesPanelProps) {
   const [message, setMessage] = useState('')
   const [amend, setAmend] = useState(false)
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
 
   const groups = groupStatus(status?.entries ?? [])
-  const current = keepSelection(selected, groups)
-  const diff = useDiff(path, current ? selectionRequest(current) : null, reloadToken)
-
-  if (path === null) {
-    return (
-      <p className="m-0 text-muted-foreground">
-        Clone or link this repository to a folder to see its changes.
-      </p>
-    )
-  }
 
   async function act(work: () => Promise<unknown>): Promise<void> {
     setBusy(true)
@@ -182,7 +180,6 @@ export function ChangesTab({ path, reloadToken, onChanged, visible, narrow }: Ch
   })
 
   async function commit(): Promise<void> {
-    if (!path) return
     await act(async () => {
       await window.api.local.createCommit(path, message, amend)
       setMessage('')
@@ -190,7 +187,7 @@ export function ChangesTab({ path, reloadToken, onChanged, visible, narrow }: Ch
     })
   }
 
-  const left = (
+  const body = (
     <div className="flex min-w-0 flex-col gap-3">
       <div className="flex flex-col gap-2">
         <Textarea
@@ -228,7 +225,7 @@ export function ChangesTab({ path, reloadToken, onChanged, visible, narrow }: Ch
               kind="conflicted"
               selected={false}
               disabled={busy}
-              onSelect={() => setSelected(null)}
+              onSelect={() => undefined}
               actions={[
                 {
                   label: 'Mark as resolved:',
@@ -259,9 +256,9 @@ export function ChangesTab({ path, reloadToken, onChanged, visible, narrow }: Ch
             key={e.path}
             entry={e}
             kind={stagedKind(e)}
-            selected={current?.source === 'staged' && current.path === e.path}
+            selected={false}
             disabled={busy}
-            onSelect={() => setSelected({ source: 'staged', path: e.path })}
+            onSelect={() => onOpenFile('staged', e.path)}
             actions={[
               {
                 label: 'Unstage',
@@ -291,9 +288,9 @@ export function ChangesTab({ path, reloadToken, onChanged, visible, narrow }: Ch
             key={e.path}
             entry={e}
             kind={unstagedKind(e)}
-            selected={current?.source === 'worktree' && current.path === e.path}
+            selected={false}
             disabled={busy}
-            onSelect={() => setSelected({ source: 'worktree', path: e.path })}
+            onSelect={() => onOpenFile('worktree', e.path)}
             actions={[
               {
                 label: 'Discard changes to',
@@ -319,48 +316,37 @@ export function ChangesTab({ path, reloadToken, onChanged, visible, narrow }: Ch
   )
 
   return (
-    <div className="flex min-w-0 flex-col gap-3">
-      <div className="flex items-center gap-2">
-        <span className="text-[12px] text-muted-foreground">
+    <aside
+      className="flex min-h-0 min-w-0 flex-col rounded-lg bg-secondary [&[hidden]]:hidden"
+      aria-label="Uncommitted changes"
+      hidden={hidden}
+    >
+      <div className="flex items-start gap-2 px-3 pt-3 pb-2">
+        <h3 className="m-0 min-w-0 flex-1 text-[15px] leading-[22px] font-semibold [overflow-wrap:anywhere]">
           {status
             ? `${countText(status.entries.length, 'changed file')}${status.branch ? ` on ${status.branch}` : ' (detached HEAD)'}`
-            : ''}
-        </span>
-        <span className="flex-1" />
+            : 'Changes'}
+        </h3>
         {loading ? <Spinner label="Reading changes" /> : null}
         <IconButton label="Reload changes" icon="refresh" disabled={loading} onClick={reload} />
+        <IconButton label="Close changes" icon="x" onClick={onClose} />
       </div>
-
-      {error ? (
-        <ErrorBanner onRetry={reload} retrying={loading}>
-          {status ? 'Could not refresh the changes: ' : 'Could not read the changes: '}
-          {error}
-        </ErrorBanner>
-      ) : null}
-
-      {!status && loading ? (
-        <div className="flex flex-col gap-3">
-          <Skeleton label="Reading changes" width="40%" />
-          <Skeleton width="80%" />
-          <Skeleton width="65%" />
-        </div>
-      ) : null}
-
-      {status || !error ? (
-        <div
-          className={cn(
-            'grid min-w-0 items-start gap-4',
-            narrow ? 'grid-cols-1' : 'grid-cols-[minmax(260px,340px)_minmax(0,1fr)]'
-          )}
-        >
-          {status ? left : null}
-          {current ? (
-            <DiffView path={current.path} state={diff} onClose={() => setSelected(null)} />
-          ) : status && !narrow ? (
-            <p className="m-0 text-muted-foreground">Select a file to see its changes.</p>
-          ) : null}
-        </div>
-      ) : null}
-    </div>
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-3 pb-3">
+        {error ? (
+          <ErrorBanner onRetry={reload} retrying={loading}>
+            {status ? 'Could not refresh the changes: ' : 'Could not read the changes: '}
+            {error}
+          </ErrorBanner>
+        ) : null}
+        {!status && loading ? (
+          <div className="flex flex-col gap-3">
+            <Skeleton label="Reading changes" width="40%" />
+            <Skeleton width="80%" />
+            <Skeleton width="65%" />
+          </div>
+        ) : null}
+        {status ? body : null}
+      </div>
+    </aside>
   )
 }
