@@ -8,6 +8,19 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-06: Phase 15b as built
+
+- **Question:** where the conflict editor lives, how a save works, and what a live run showed.
+- **Decision and why:**
+  - The editor is a 960 px dialog mounted in `RepoPane`, like the diff, Tags and Stash dialogs, so each pane owns its own (`conflictFile` state) and nothing is global. It opens from a file in the operation banner or from a conflicted row in the Changes panel (the row, or its new "Resolve conflicts in" button). The Changes route also serves a conflicting `stash pop`, which has no banner.
+  - The choices live in the editor, keyed by the file's fingerprint: a fresh reading of the file starts again. "Save and mark resolved" is enabled once every region has a choice and closes the dialog when main reports the file staged. "Save for later" keeps partial work and shows when some regions are still open. The preview and the Edit box start from the same `applyResolutions` that main uses, so what is shown is what is written.
+  - The two sides are named in words with a check, "Chosen" and a status badge, never by colour alone. Line numbers are those of the file as read, so they match another editor. A common ancestor shows in a collapsed `details` only when the file has one.
+  - `OperationState` gained `conflictKinds`, so the banner can say "both modified" or "deleted on one side, changed on the other" beside each file. The banner's file names are buttons that open the editor, capped at five with "Show N more".
+  - The quick "Mark as resolved" button in Changes used to stage the file as it was, markers included. A file staged that way left the conflicted list, so Continue's marker check never saw it and the markers could be committed. It now runs `resolveConflictFile` with `quickAction(kind)`: `mark-resolved` for a file with markers (refused while a marker line remains), `keep` for delete-versus-modify, `delete` (confirmed) for both-deleted.
+  - Boards: the files in `docs/ui-boards/` are design templates for a runtime that is not in the repo, so a board for the editor was not drawn. The gap stays open here and in `PLAN.md`. The editor uses tokens only, with no hex values.
+- **Verified in a live window:** the built app was started with Electron 44 and a remote-debugging port, on a scratch repo with a conflicting merge (two regions in one file, plus a file deleted on one side and changed on the other). The banner listed both files with their kinds. The editor opened from the banner and from the Changes panel, in light and in dark. Accept Current, Accept Incoming, Edit result and the result preview worked, and Save and mark resolved wrote the expected file and staged it. The whole-file panel kept the other file, and Continue finished the merge. The quick button refused a file that still had markers.
+- **Not verified:** use with the keyboard only, a screen reader, a pane narrower than 760 px (the sides stack by CSS), two editors in Split View at once, a very large file, a diff3 file in the window (parsed and tested, not drawn), and Windows or Linux.
+
 ## 2026-11-06: Phase 15a as built
 
 - **Question:** how the conflict data layer reads files, what it refuses, and where it differs from the plan.

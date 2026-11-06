@@ -75,6 +75,7 @@ test('a merge conflict comes back as regions with labels, actions and a fingerpr
   assert.equal(status.entries.find((e) => e.path === 'shared.txt')?.conflict, 'both-modified')
 
   const file = await getConflictFile(dir, 'shared.txt')
+  assert.deepEqual((await getOperation(dir))?.conflictKinds, { 'shared.txt': 'both-modified' })
   assert.equal(file.kind, 'both-modified')
   assert.equal(file.unsupported, null)
   assert.equal(file.operation, 'merge')

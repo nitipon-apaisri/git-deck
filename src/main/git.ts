@@ -925,11 +925,10 @@ async function findOperation(
 export async function getOperation(cwd: string): Promise<OperationState | null> {
   const found = await findOperation(cwd)
   if (!found) return null
-  const status = await getStatus(cwd)
-  return {
-    ...found,
-    conflicted: status.entries.filter((e) => e.conflicted).map((e) => e.path)
-  }
+  const conflicts = (await getStatus(cwd)).entries.filter((e) => e.conflicted)
+  const conflictKinds: Record<string, ConflictKind> = {}
+  for (const e of conflicts) if (e.conflict) conflictKinds[e.path] = e.conflict
+  return { ...found, conflicted: conflicts.map((e) => e.path), conflictKinds }
 }
 
 async function assertNoOperation(cwd: string): Promise<void> {

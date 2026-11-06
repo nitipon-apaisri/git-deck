@@ -16,7 +16,7 @@ export function operationHint(state: OperationState): string {
   }
   if (n === 0) return 'Every conflict is resolved. Continue to finish it, or abort to undo it.'
   const files = `${n} file${n === 1 ? ' has' : 's have'} conflicts`
-  return `${files}. Fix ${n === 1 ? 'it' : 'them'} in your editor, then continue. Aborting undoes everything.`
+  return `${files}. Resolve ${n === 1 ? 'it' : 'each one'} here or in your editor, then continue. Aborting undoes everything.`
 }
 
 /** Paths for the banner, capped so a huge merge does not fill the screen. */
