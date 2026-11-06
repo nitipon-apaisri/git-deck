@@ -24,6 +24,7 @@ const entry = (over: Partial<StatusEntry> & { path: string }): StatusEntry => ({
   worktree: null,
   untracked: false,
   conflicted: false,
+  conflict: null,
   ...over
 })
 

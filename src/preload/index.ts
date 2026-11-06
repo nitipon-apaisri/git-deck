@@ -72,6 +72,10 @@ const api: Api = {
     skipOperation: (path) => call(IPC.localSkipOperation, path),
     stageHunk: (path, hunk) => call(IPC.localStageHunk, path, hunk),
     unstageHunk: (path, hunk) => call(IPC.localUnstageHunk, path, hunk),
+    conflictFile: (path, file) => call(IPC.localConflictFile, path, file),
+    resolveConflict: (path, request) => call(IPC.localResolveConflict, path, request),
+    resolveConflictFile: (path, file, action) =>
+      call(IPC.localResolveConflictFile, path, file, action),
     operation: (path) => call(IPC.localOperation, path),
     continueOperation: (path) => call(IPC.localContinueOperation, path),
     abortOperation: (path) => call(IPC.localAbortOperation, path),

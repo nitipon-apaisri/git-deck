@@ -1,8 +1,28 @@
 // Local git service. No electron import, so it runs under tsx tests.
 import { execFile, spawn } from 'node:child_process'
-import { existsSync, readFileSync, statSync } from 'node:fs'
-import { resolve, sep } from 'node:path'
+import { createHash, randomBytes } from 'node:crypto'
+import {
+  chmodSync,
+  existsSync,
+  lstatSync,
+  readFileSync,
+  realpathSync,
+  renameSync,
+  unlinkSync,
+  writeFileSync
+} from 'node:fs'
+import { dirname, resolve, sep } from 'node:path'
 import { Semaphore } from './semaphore'
+import {
+  applyResolutions,
+  ConflictParseError,
+  conflictActions,
+  conflictKindOf,
+  hasMarkers,
+  MAX_CONFLICT_BYTES,
+  parseConflicts,
+  sideLabels
+} from '../shared/conflict'
 import { hunkFingerprint, parseUnifiedDiff, splitPatch } from '../shared/diff'
 import type {
   BranchList,
@@ -10,6 +30,11 @@ import type {
   CheckoutTarget,
   CommitDetail,
   CommitFile,
+  ConflictAction,
+  ConflictKind,
+  ConflictFile,
+  ConflictRequest,
+  ConflictSaveResult,
   DiffRequest,
   FileDiff,
   GraphCommit,
@@ -605,7 +630,8 @@ export function parseStatus(raw: string): RepoStatus {
         index: kindOf(xy[0]),
         worktree: kindOf(xy[1]),
         untracked: false,
-        conflicted: false
+        conflicted: false,
+        conflict: null
       })
     } else if (field.startsWith('2 ')) {
       // 2 XY sub mH mI mW hH hI Xscore path, then the old path as the next field
@@ -617,7 +643,8 @@ export function parseStatus(raw: string): RepoStatus {
         index: kindOf(xy[0]),
         worktree: kindOf(xy[1]),
         untracked: false,
-        conflicted: false
+        conflicted: false,
+        conflict: null
       })
     } else if (field.startsWith('u ')) {
       // u XY sub m1 m2 m3 mW h1 h2 h3 path
@@ -628,7 +655,8 @@ export function parseStatus(raw: string): RepoStatus {
         index: null,
         worktree: null,
         untracked: false,
-        conflicted: true
+        conflicted: true,
+        conflict: conflictKindOf(parts[1])
       })
     } else if (field.startsWith('? ')) {
       entries.push({
@@ -637,7 +665,8 @@ export function parseStatus(raw: string): RepoStatus {
         index: null,
         worktree: null,
         untracked: true,
-        conflicted: false
+        conflicted: false,
+        conflict: null
       })
     }
   }
@@ -862,8 +891,10 @@ async function rebaseDir(cwd: string): Promise<string | null> {
   return null
 }
 
-/** The merge, cherry-pick, revert or rebase waiting for the user, or `null`. */
-export async function getOperation(cwd: string): Promise<OperationState | null> {
+/** The kind of the merge, cherry-pick, revert or rebase waiting for the user, and its target. */
+async function findOperation(
+  cwd: string
+): Promise<{ kind: OperationKind; target: string | null } | null> {
   let kind: OperationKind | null = null
   let file: string | null = null
   // A rebase replays commits one by one and may leave CHERRY_PICK_HEAD too: it wins.
@@ -887,10 +918,16 @@ export async function getOperation(cwd: string): Promise<OperationState | null> 
   } catch {
     target = null
   }
+  return { kind, target }
+}
+
+/** The merge, cherry-pick, revert or rebase waiting for the user, or `null`. */
+export async function getOperation(cwd: string): Promise<OperationState | null> {
+  const found = await findOperation(cwd)
+  if (!found) return null
   const status = await getStatus(cwd)
   return {
-    kind,
-    target,
+    ...found,
     conflicted: status.entries.filter((e) => e.conflicted).map((e) => e.path)
   }
 }
@@ -969,15 +1006,31 @@ export async function merge(
 const CONFLICT_MARKER = /^(<{7}|>{7})( |$)/m
 const MAX_SCAN_BYTES = 5 * 1024 * 1024
 
-/** Files that still carry conflict markers. Missing, huge and binary files are skipped. */
+/**
+ * The absolute path of a regular file inside the repository, or `null`. A symlink, or a path that
+ * goes through one out of the repository, is not followed: nothing outside is read or written.
+ */
+function workFile(cwd: string, path: string): string | null {
+  try {
+    const root = realpathSync(cwd)
+    const full = resolve(root, path)
+    if (full === root || !full.startsWith(root + sep)) return null
+    if (!lstatSync(full).isFile()) return null
+    const parent = realpathSync(dirname(full))
+    return parent === root || parent.startsWith(root + sep) ? full : null
+  } catch {
+    return null
+  }
+}
+
+/** Files that still carry conflict markers. Missing, huge, binary and symlinked files are skipped. */
 function stillMarked(cwd: string, paths: string[]): string[] {
   const marked: string[] = []
   for (const path of paths) {
-    const full = resolve(cwd, path)
-    if (full !== cwd && !full.startsWith(cwd + sep)) continue
+    const full = workFile(cwd, path)
+    if (!full) continue
     try {
-      const info = statSync(full)
-      if (!info.isFile() || info.size > MAX_SCAN_BYTES) continue
+      if (lstatSync(full).size > MAX_SCAN_BYTES) continue
       if (CONFLICT_MARKER.test(readFileSync(full, 'utf8'))) marked.push(path)
     } catch {
       // Deleted by the user: that is a resolution.
@@ -1011,6 +1064,205 @@ export async function abortOperation(cwd: string): Promise<void> {
   const state = await getOperation(cwd)
   if (!state) throw new Error(NO_OPERATION)
   await run(cwd, [state.kind, '--abort'])
+}
+
+// Merge conflicts: read a file's regions, resolve them, or resolve the whole file
+
+const NOT_FILE = 'This path is not a plain file inside the repository'
+
+/** The status entry of a path that is in conflict right now. Nothing else is accepted. */
+async function conflictedEntry(
+  cwd: string,
+  path: unknown
+): Promise<StatusEntry & { conflict: ConflictKind }> {
+  if (typeof path !== 'string' || !path || path.includes('\0')) throw new Error('Invalid file path')
+  const entry = (await getStatus(cwd)).entries.find((e) => e.path === path)
+  if (!entry || !entry.conflicted || !entry.conflict) throw new Error(`${path} is not in conflict`)
+  return { ...entry, conflict: entry.conflict }
+}
+
+/** A submodule conflict names a commit, not text. Git lists mode 160000 for its stages. */
+async function isSubmodule(cwd: string, path: string): Promise<boolean> {
+  const out = await run(cwd, ['ls-files', '-u', '-z', '--', path])
+  return out.split('\0').some((entry) => entry.startsWith('160000 '))
+}
+
+const fingerprintOf = (data: Buffer): string => createHash('sha1').update(data).digest('hex')
+
+type ConflictText =
+  | { ok: true; text: string; fingerprint: string; full: string }
+  | { ok: false; reason: 'binary' | 'too-large' | 'symlink' }
+
+/** Reads the work-tree file as text, unless it is not a plain, small, UTF-8 file. */
+function readConflictText(cwd: string, path: string): ConflictText {
+  const full = workFile(cwd, path)
+  if (!full) return { ok: false, reason: 'symlink' }
+  if (lstatSync(full).size > MAX_CONFLICT_BYTES) return { ok: false, reason: 'too-large' }
+  const data = readFileSync(full)
+  if (data.subarray(0, 8000).includes(0)) return { ok: false, reason: 'binary' }
+  const text = data.toString('utf8')
+  // Text that does not survive a round trip is not UTF-8: writing it back would corrupt it.
+  if (!Buffer.from(text, 'utf8').equals(data)) return { ok: false, reason: 'binary' }
+  return { ok: true, text, fingerprint: fingerprintOf(data), full }
+}
+
+/**
+ * One conflicted file as regions the user can pick from. A file without markers to edit (binary,
+ * too large, a symlink, a submodule, or a delete-versus-modify) comes back without `segments`,
+ * and only the whole-file `actions` apply.
+ */
+export async function getConflictFile(cwd: string, path: string): Promise<ConflictFile> {
+  const entry = await conflictedEntry(cwd, path)
+  const kind = entry.conflict
+  const operation = (await findOperation(cwd))?.kind ?? null
+  const file: ConflictFile = {
+    path,
+    kind,
+    unsupported: null,
+    detail: null,
+    eol: null,
+    finalNewline: false,
+    segments: null,
+    fingerprint: null,
+    actions: conflictActions(kind),
+    operation,
+    labels: sideLabels(operation)
+  }
+  if (!hasMarkers(kind)) return { ...file, unsupported: 'whole-file' }
+  if (await isSubmodule(cwd, path)) return { ...file, unsupported: 'submodule' }
+  const read = readConflictText(cwd, path)
+  if (!read.ok) return { ...file, unsupported: read.reason }
+  try {
+    const parsed = parseConflicts(read.text)
+    return {
+      ...file,
+      eol: parsed.eol,
+      finalNewline: parsed.finalNewline,
+      segments: parsed.segments,
+      fingerprint: read.fingerprint
+    }
+  } catch (err) {
+    if (!(err instanceof ConflictParseError)) throw err
+    return { ...file, unsupported: 'unparseable', detail: err.message }
+  }
+}
+
+/** Writes through a temporary file in the same folder, so a crash never leaves half a file. */
+function writeAtomic(full: string, data: string): void {
+  const mode = lstatSync(full).mode & 0o7777
+  const tmp = `${full}.gitdeck-${randomBytes(6).toString('hex')}.tmp`
+  try {
+    writeFileSync(tmp, data, { mode, flag: 'wx' })
+    chmodSync(tmp, mode)
+    renameSync(tmp, full)
+  } catch (err) {
+    try {
+      unlinkSync(tmp)
+    } catch {
+      // Never created.
+    }
+    throw err
+  }
+}
+
+const MAX_CHOICES = 10_000
+const MAX_RESULT_BYTES = 8 * 1024 * 1024
+const CHOICES = new Set(['ours', 'theirs', 'both', 'base'])
+
+/**
+ * Applies a choice to each region of a file and writes it. The renderer sends choices and a
+ * fingerprint, never the file: main re-reads it, refuses one that changed, and builds the result
+ * itself. The file is staged once no region is left open.
+ */
+export async function resolveConflictRegions(
+  cwd: string,
+  request: ConflictRequest
+): Promise<ConflictSaveResult> {
+  const { path, fingerprint, choices } = request ?? {}
+  if (typeof fingerprint !== 'string' || !/^[0-9a-f]{40}$/.test(fingerprint)) {
+    throw new Error('The conflict request is not valid')
+  }
+  if (!Array.isArray(choices) || choices.length > MAX_CHOICES) {
+    throw new Error('The conflict request is not valid')
+  }
+  for (const choice of choices) {
+    const ok =
+      choice === null ||
+      (typeof choice === 'string' && CHOICES.has(choice)) ||
+      (typeof choice === 'object' && typeof (choice as { text?: unknown }).text === 'string')
+    if (!ok) throw new Error('The conflict request is not valid')
+  }
+  const entry = await conflictedEntry(cwd, path)
+  if (!hasMarkers(entry.conflict)) {
+    throw new Error(
+      'This file has no conflict regions. Use Keep, Delete, Use current or Use incoming.'
+    )
+  }
+  if (await isSubmodule(cwd, entry.path)) {
+    throw new Error('Resolve a submodule conflict outside the app')
+  }
+  const read = readConflictText(cwd, entry.path)
+  if (!read.ok) {
+    throw new Error(
+      read.reason === 'symlink'
+        ? NOT_FILE
+        : read.reason === 'too-large'
+          ? 'This file is too large to resolve here'
+          : 'This file is binary, not text. Use Use current or Use incoming.'
+    )
+  }
+  if (read.fingerprint !== fingerprint) {
+    throw new Error('The file changed since it was read. Reload the file and try again.')
+  }
+  let result: string
+  try {
+    result = applyResolutions(parseConflicts(read.text), choices)
+  } catch (err) {
+    if (err instanceof ConflictParseError) throw new Error(err.message, { cause: err })
+    throw err
+  }
+  if (result.length > MAX_RESULT_BYTES) throw new Error('The result is too large')
+  writeAtomic(read.full, result)
+  const open = choices.filter((c) => c === null).length
+  let staged = false
+  if (open === 0 && stillMarked(cwd, [entry.path]).length === 0) {
+    await run(cwd, ['add', '--', entry.path])
+    staged = true
+  }
+  return { staged, open, fingerprint: fingerprintOf(Buffer.from(result, 'utf8')) }
+}
+
+/**
+ * Resolves a whole file. `ours` and `theirs` are git's sides (see `sideLabels`), `keep` stages the
+ * file as it is on disk (delete-versus-modify), `delete` removes it, and `mark-resolved` stages
+ * a file that was fixed elsewhere, refused while a marker line is left in it. The caller asks the
+ * user before `delete`.
+ */
+export async function resolveConflictFile(
+  cwd: string,
+  path: string,
+  action: ConflictAction
+): Promise<void> {
+  const entry = await conflictedEntry(cwd, path)
+  if (!conflictActions(entry.conflict).includes(action)) {
+    throw new Error(`"${String(action).slice(0, 40)}" is not possible for this file`)
+  }
+  if (action !== 'delete' && (await isSubmodule(cwd, entry.path))) {
+    throw new Error('Resolve a submodule conflict outside the app')
+  }
+  if (action === 'ours' || action === 'theirs') {
+    await run(cwd, ['checkout', `--${action}`, '--', entry.path])
+    await run(cwd, ['add', '--', entry.path])
+  } else if (action === 'keep') {
+    await run(cwd, ['add', '--', entry.path])
+  } else if (action === 'delete') {
+    await run(cwd, ['rm', '-f', '-q', '--', entry.path])
+  } else {
+    const marked = stillMarked(cwd, [entry.path])
+    if (marked.length > 0) throw new Error('The file still contains conflict markers')
+    // `-A` also stages a deletion, for a file that was removed by hand.
+    await run(cwd, ['add', '-A', '--', entry.path])
+  }
 }
 
 // Tags, revert, reset and remotes

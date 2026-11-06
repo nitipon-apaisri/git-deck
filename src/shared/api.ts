@@ -13,6 +13,10 @@ import type {
   HunkRequest,
   LocalInfo,
   LocalRemote,
+  ConflictAction,
+  ConflictFile,
+  ConflictRequest,
+  ConflictSaveResult,
   OperationResult,
   OperationState,
   Project,
@@ -146,6 +150,18 @@ export interface Api {
     /** Stage one hunk of a tracked file. Main rebuilds the patch, so a stale diff is refused. */
     stageHunk(path: string, hunk: HunkRequest): Promise<void>
     unstageHunk(path: string, hunk: HunkRequest): Promise<void>
+    /**
+     * One conflicted file: its regions, or why it has none, and the whole-file actions that apply.
+     * `file` must be a path `status` lists as conflicted.
+     */
+    conflictFile(path: string, file: string): Promise<ConflictFile>
+    /**
+     * Writes the chosen text for each region. Main re-reads the file, refuses a changed one and
+     * builds the result itself. Stages the file once no region is left open.
+     */
+    resolveConflict(path: string, request: ConflictRequest): Promise<ConflictSaveResult>
+    /** Resolves a whole file. `delete` asks first, so `false` means the user declined. */
+    resolveConflictFile(path: string, file: string, action: ConflictAction): Promise<boolean>
     /** The merge, cherry-pick, revert or rebase waiting for the user, or `null`. */
     operation(path: string): Promise<OperationState | null>
     /** Stages the fixed files and finishes the operation. */
@@ -233,6 +249,9 @@ export const IPC = {
   localSkipOperation: 'local:skipOperation',
   localStageHunk: 'local:stageHunk',
   localUnstageHunk: 'local:unstageHunk',
+  localConflictFile: 'local:conflictFile',
+  localResolveConflict: 'local:resolveConflict',
+  localResolveConflictFile: 'local:resolveConflictFile',
   localOperation: 'local:operation',
   localContinueOperation: 'local:continueOperation',
   localAbortOperation: 'local:abortOperation',
