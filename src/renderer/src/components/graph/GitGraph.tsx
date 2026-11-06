@@ -11,10 +11,10 @@ import {
   visibleRange,
   widestLane
 } from '../../lib/graphView'
+import { cn } from '@/lib/cn'
 import { Button, Icon, IconButton, Spinner } from '../ui'
 import { CommitDetailPanel } from './CommitDetailPanel'
 import { GraphRowView } from './GraphRowView'
-import styles from './GitGraph.module.css'
 
 interface GitGraphProps {
   /** The linked folder, `null` when the repository is not cloned or linked. */
@@ -36,6 +36,9 @@ interface GitGraphProps {
  * The commit graph of one repository. Its layout, pages, scroll position and selected
  * commit all live here, so two panes show two independent graphs.
  */
+const EMPTY =
+  'col-span-full flex min-h-40 flex-col items-center justify-center gap-2 text-center text-muted-foreground [&_p]:m-0 [&_p]:max-w-[48ch] [&_p]:[overflow-wrap:anywhere]'
+
 export function GitGraph({
   path,
   defaultBranch,
@@ -135,7 +138,7 @@ export function GitGraph({
 
   if (path === null) {
     return (
-      <div className={styles.empty}>
+      <div className={EMPTY}>
         <Icon name="git-branch" />
         <p>Not cloned on this computer. Use Clone or Link existing folder above.</p>
       </div>
@@ -148,46 +151,61 @@ export function GitGraph({
 
   return (
     <div
-      className={styles.graph}
+      className="flex min-h-0 min-w-0 flex-1 flex-col gap-2"
       data-detail={selected ? 'open' : 'closed'}
       data-narrow={narrow ? 'true' : undefined}
     >
-      <div className={styles.toolbar}>
+      <div className="flex flex-none items-center gap-2">
         <IconButton label="Reload graph" icon="refresh" disabled={loading} onClick={reload} />
         <Button icon="download" disabled={fetching} onClick={onFetch}>
           {fetching ? 'Fetching…' : 'Fetch'}
         </Button>
         {loading || fetching ? <Spinner label={fetching ? 'Fetching' : 'Loading commits'} /> : null}
-        <span className={styles.count} aria-live="polite">
+        <span
+          className="ml-auto text-[12px] whitespace-nowrap text-muted-foreground"
+          aria-live="polite"
+        >
           {loadedText(rows.length, done || error !== null)}
         </span>
       </div>
 
-      <div className={styles.body}>
+      <div
+        className={cn(
+          'relative grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,1fr)] gap-3',
+          selected && !narrow && 'grid-cols-[minmax(0,1fr)_minmax(280px,360px)]',
+          // A narrow pane: the detail covers the list as a drawer instead of squeezing it.
+          selected &&
+            narrow &&
+            '[&>aside]:absolute [&>aside]:inset-[0_0_0_auto] [&>aside]:z-[1] [&>aside]:w-[min(360px,100%)] [&>aside]:shadow-[var(--shadow-menu)]'
+        )}
+      >
         {firstLoad ? (
-          <div className={styles.empty}>
+          <div className={EMPTY}>
             <Spinner label="Loading commits" />
             <p>Reading the history…</p>
           </div>
         ) : null}
         {emptyRepo ? (
-          <div className={styles.empty}>
+          <div className={EMPTY}>
             <Icon name="git-branch" />
             <p>This repository has no commits yet.</p>
           </div>
         ) : null}
         {failedFirst ? (
-          <div className={styles.empty} role="alert">
+          <div className={EMPTY} role="alert">
             <Icon name="alert" />
             <p>Could not read the history: {error}</p>
             <Button onClick={reload}>Try again</Button>
           </div>
         ) : null}
 
-        <div className={styles.listColumn} hidden={rows.length === 0}>
+        <div
+          className="flex min-h-0 min-w-0 flex-col gap-2 [&[hidden]]:hidden"
+          hidden={rows.length === 0}
+        >
           <div
             ref={viewport}
-            className={styles.viewport}
+            className="min-h-0 flex-1 overflow-auto rounded-md -outline-offset-2 focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
             role="listbox"
             aria-label="Commits"
             aria-activedescendant={selected ? `${idPrefix}-${selected.hash}` : undefined}
@@ -195,7 +213,7 @@ export function GitGraph({
             onScroll={onScroll}
             onKeyDown={onKeyDown}
           >
-            <div className={styles.spacer} style={{ height: rows.length * ROW_HEIGHT }}>
+            <div className="relative" style={{ height: rows.length * ROW_HEIGHT }}>
               {drawn.map((row, i) => (
                 <GraphRowView
                   key={row.commit.hash}
@@ -214,7 +232,10 @@ export function GitGraph({
             </div>
           </div>
           {error !== null && rows.length > 0 ? (
-            <p className={styles.notice} role="alert">
+            <p
+              className="m-0 flex flex-none items-center gap-2 rounded-md bg-[var(--warning-bg)] px-3 py-2 text-[var(--warning-text)] [&_span]:min-w-0 [&_span]:flex-1 [&_span]:[overflow-wrap:anywhere]"
+              role="alert"
+            >
               <Icon name="alert" size="sm" />
               <span>Could not load more commits: {error}</span>
               <Button onClick={loadMore}>Try again</Button>
