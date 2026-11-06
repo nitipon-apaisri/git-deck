@@ -12,7 +12,7 @@ import {
   stagePaths,
   unstagePaths
 } from '../src/main/git'
-import { parseUnifiedDiff } from '../src/shared/diff'
+import { parseUnifiedDiff, hunkFingerprint, splitPatch } from '../src/shared/diff'
 import { commit, emptyRepo, git } from './helpers'
 
 // The product code inherits the environment, so give it an identity and no user config.
@@ -236,4 +236,40 @@ test('createCommit refuses an empty message and an empty index', async () => {
   commit(dir, 'a.txt', 'first')
   await assert.rejects(createCommit(dir, '   ', false), /Write a commit message/)
   await assert.rejects(createCommit(dir, 'nothing staged', false), /nothing|no changes/i)
+})
+
+test('hunkFingerprint follows the lines, and splitPatch cuts a patch into its hunks', () => {
+  const patch = [
+    'diff --git a/f.txt b/f.txt',
+    'index 1..2 100644',
+    '--- a/f.txt',
+    '+++ b/f.txt',
+    '@@ -1,2 +1,2 @@',
+    ' keep',
+    '-old',
+    '+new',
+    '@@ -20,2 +20,2 @@',
+    ' keep',
+    '-old2',
+    '+new2',
+    ''
+  ].join('\n')
+  const parsed = parseUnifiedDiff('f.txt', patch)
+  const parts = splitPatch(patch)
+  assert.equal(
+    parts.header,
+    'diff --git a/f.txt b/f.txt\nindex 1..2 100644\n--- a/f.txt\n+++ b/f.txt\n'
+  )
+  assert.deepEqual(parts.hunks, [
+    '@@ -1,2 +1,2 @@\n keep\n-old\n+new\n',
+    '@@ -20,2 +20,2 @@\n keep\n-old2\n+new2\n'
+  ])
+  assert.equal(parts.hunks.length, parsed.hunks.length)
+  const [a, b] = parsed.hunks.map((h) => hunkFingerprint(h.lines))
+  assert.match(a, /^[0-9a-f]{8}$/)
+  assert.notEqual(a, b)
+  assert.equal(a, hunkFingerprint(parsed.hunks[0].lines))
+  const changed = parseUnifiedDiff('f.txt', patch.replace('+new\n', '+newer\n'))
+  assert.notEqual(hunkFingerprint(changed.hunks[0].lines), a)
+  assert.deepEqual(splitPatch('no hunks here\n'), { header: 'no hunks here\n', hunks: [] })
 })

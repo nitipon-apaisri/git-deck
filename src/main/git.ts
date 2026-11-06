@@ -3,7 +3,7 @@ import { execFile, spawn } from 'node:child_process'
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { resolve, sep } from 'node:path'
 import { Semaphore } from './semaphore'
-import { parseUnifiedDiff } from '../shared/diff'
+import { hunkFingerprint, parseUnifiedDiff, splitPatch } from '../shared/diff'
 import type {
   BranchList,
   ChangeKind,
@@ -14,6 +14,7 @@ import type {
   FileDiff,
   GraphCommit,
   GraphRef,
+  HunkRequest,
   LocalBranch,
   LocalInfo,
   LocalRemote,
@@ -689,7 +690,7 @@ function pathsOf(entries: StatusEntry[]): string[] {
 export async function getDiff(cwd: string, request: DiffRequest): Promise<FileDiff> {
   const { source, path } = request
   const base = ['-c', 'core.quotepath=false']
-  const flags = ['--no-color', '--no-ext-diff', '--no-textconv']
+  const flags = ['--no-color', '--no-ext-diff', '--no-textconv', '--unified=3']
   let patch: string
   if (source === 'commit') {
     if (!request.hash || !HASH_RE.test(request.hash)) throw new Error('Invalid commit hash')
@@ -848,13 +849,30 @@ const OPERATION_FILES: [string, OperationKind][] = [
   ['REVERT_HEAD', 'revert']
 ]
 
-export const NO_OPERATION = 'There is no merge, cherry-pick or revert in progress'
+export const NO_OPERATION = 'There is no merge, cherry-pick, revert or rebase in progress'
 
-/** The merge, cherry-pick or revert waiting for the user, or `null`. */
+const REBASE_DIRS = ['rebase-merge', 'rebase-apply']
+
+/** The rebase directory of a running rebase. `git am` also uses rebase-apply: not ours. */
+async function rebaseDir(cwd: string): Promise<string | null> {
+  for (const name of REBASE_DIRS) {
+    const dir = await gitPathExists(cwd, name)
+    if (dir && !existsSync(resolve(dir, 'applying'))) return dir
+  }
+  return null
+}
+
+/** The merge, cherry-pick, revert or rebase waiting for the user, or `null`. */
 export async function getOperation(cwd: string): Promise<OperationState | null> {
   let kind: OperationKind | null = null
   let file: string | null = null
-  for (const [name, candidate] of OPERATION_FILES) {
+  // A rebase replays commits one by one and may leave CHERRY_PICK_HEAD too: it wins.
+  const dir = await rebaseDir(cwd)
+  if (dir) {
+    kind = 'rebase'
+    file = resolve(dir, 'onto')
+  }
+  for (const [name, candidate] of kind ? [] : OPERATION_FILES) {
     file = await gitPathExists(cwd, name)
     if (file) {
       kind = candidate
@@ -983,8 +1001,9 @@ export async function continueOperation(cwd: string): Promise<void> {
   }
   if (state.conflicted.length > 0) await run(cwd, ['add', '-A', '--', ...state.conflicted])
   // `true` as the editor accepts the message git prepared.
-  const env = { GIT_EDITOR: 'true' }
+  const env = { GIT_EDITOR: 'true', GIT_SEQUENCE_EDITOR: 'true' }
   if (state.kind === 'merge') await run(cwd, ['commit', '--no-edit'], env)
+  else if (state.kind === 'rebase') await rebaseStep(cwd, 'continue', env)
   else await run(cwd, [state.kind, '--continue'], env)
 }
 
@@ -1220,4 +1239,124 @@ export async function removeRemote(cwd: string, name: string): Promise<void> {
   await assertRemoteName(cwd, name)
   if (!(await remoteExists(cwd, name))) throw new Error(`There is no remote "${name}"`)
   await run(cwd, ['remote', 'remove', '--', name])
+}
+
+// Rebase and hunk staging
+
+/**
+ * `rebase --continue` or `--skip`. The next commit may conflict in turn: that is not a failure,
+ * the banner shows the new files.
+ */
+async function rebaseStep(
+  cwd: string,
+  step: 'continue' | 'skip',
+  env: Record<string, string>
+): Promise<void> {
+  try {
+    await run(cwd, ['rebase', `--${step}`], env)
+  } catch (err) {
+    const next = await getOperation(cwd)
+    if (next?.kind === 'rebase' && next.conflicted.length > 0) return
+    throw err
+  }
+}
+
+/** Drops the commit the rebase stopped on. Only a rebase can skip. */
+export async function skipOperation(cwd: string): Promise<void> {
+  const state = await getOperation(cwd)
+  if (!state) throw new Error(NO_OPERATION)
+  if (state.kind !== 'rebase') throw new Error('Only a rebase can skip a commit')
+  await rebaseStep(cwd, 'skip', { GIT_EDITOR: 'true', GIT_SEQUENCE_EDITOR: 'true' })
+}
+
+/**
+ * Replays the current branch on top of `onto`: a local branch, a remote branch (`origin/x`) or a
+ * commit hash. Non-interactive only. Stops on conflicts, like a merge.
+ */
+export async function rebase(cwd: string, onto: string): Promise<OperationResult> {
+  if (typeof onto !== 'string' || !onto || onto.length > 255 || onto.startsWith('-')) {
+    throw new Error('Invalid branch or commit')
+  }
+  // First: during a rebase HEAD is detached, and "already in progress" is the useful answer.
+  await assertNoOperation(cwd)
+  const branch = await currentBranch(cwd)
+  if (!branch) throw new Error('Check out a branch first. HEAD is detached.')
+  let ref: string
+  if (await refExists(cwd, `refs/heads/${onto}`)) ref = `refs/heads/${onto}`
+  else if (await refExists(cwd, `refs/remotes/${onto}`)) ref = `refs/remotes/${onto}`
+  else if (
+    HASH_RE.test(onto) &&
+    (await tryRun(cwd, ['cat-file', '-e', `${onto}^{commit}`])) !== null
+  )
+    ref = onto
+  else throw new Error(`There is no branch or commit named "${onto}"`)
+  if (ref === `refs/heads/${branch}`) throw new Error('A branch cannot be rebased onto itself')
+  const status = await getStatus(cwd)
+  if (status.entries.some((e) => !e.untracked)) {
+    throw new Error('Commit or stash your changes before rebasing.')
+  }
+  const env = { GIT_EDITOR: 'true', GIT_SEQUENCE_EDITOR: 'true' }
+  try {
+    // Config that would stash, reorder or open an editor is switched off for this run.
+    await exec(cwd, ['-c', 'rebase.autoStash=false', 'rebase', '--no-autosquash', ref], { env })
+    return { conflicted: false }
+  } catch (err) {
+    return settle(cwd, ['rebase', '--abort'], err)
+  }
+}
+
+/** Checks the request, re-reads the file's diff and returns the one hunk as a patch. */
+async function hunkPatch(cwd: string, request: HunkRequest): Promise<string> {
+  const { source, path, index, fingerprint } = request
+  if (source !== 'worktree' && source !== 'staged') throw new Error('Invalid hunk')
+  if (!Number.isInteger(index) || index < 0 || index > 100_000) throw new Error('Invalid hunk')
+  if (typeof fingerprint !== 'string' || !/^[0-9a-f]{8}$/.test(fingerprint)) {
+    throw new Error('Invalid hunk')
+  }
+  const [entry] = await knownPaths(cwd, [path])
+  if (entry.conflicted) throw new Error('Resolve the conflict before staging parts of this file')
+  if (entry.origPath) throw new Error('A renamed file is staged as a whole, not hunk by hunk')
+  if (source === 'worktree' && (entry.untracked || !entry.worktree)) {
+    throw new Error(
+      'Only changes to a tracked file can be staged hunk by hunk. Stage the whole file.'
+    )
+  }
+  if (source === 'staged' && !entry.index) throw new Error(`${path} has nothing staged`)
+  const patch = await run(cwd, [
+    '-c',
+    'core.quotepath=false',
+    'diff',
+    ...(source === 'staged' ? ['--cached'] : []),
+    '--no-color',
+    '--no-ext-diff',
+    '--no-textconv',
+    '--unified=3',
+    '--',
+    path
+  ])
+  const parsed = parseUnifiedDiff(path, patch)
+  if (parsed.binary || parsed.tooLarge) throw new Error('This file cannot be staged hunk by hunk')
+  const parts = splitPatch(patch)
+  const hunk = parsed.hunks[index]
+  if (
+    parts.hunks.length !== parsed.hunks.length ||
+    !hunk ||
+    hunkFingerprint(hunk.lines) !== fingerprint
+  ) {
+    throw new Error('The file changed since this diff was read. Reload the diff and try again.')
+  }
+  // The patch is rebuilt here from the file itself. Nothing from the renderer is applied.
+  return parts.header + parts.hunks[index]
+}
+
+export async function stageHunk(cwd: string, request: HunkRequest): Promise<void> {
+  if (request.source !== 'worktree') throw new Error('Only an unstaged hunk can be staged')
+  const patch = await hunkPatch(cwd, request)
+  await exec(cwd, ['apply', '--cached', '--whitespace=nowarn', '-'], { stdin: patch })
+}
+
+export async function unstageHunk(cwd: string, request: HunkRequest): Promise<void> {
+  if (request.source !== 'staged') throw new Error('Only a staged hunk can be unstaged')
+  const patch = await hunkPatch(cwd, request)
+  await exec(cwd, ['apply', '--cached', '--reverse', '--whitespace=nowarn', '-'], { stdin: patch })
 }
