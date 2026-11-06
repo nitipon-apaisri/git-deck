@@ -2,7 +2,7 @@
 
 A desktop Git client for GitHub, GitLab.com and self-hosted GitLab. Browse every repository you can reach, read its commit graph, group repositories from different hosts into Projects, and put two repositories side by side.
 
-Beyond reading, GitDeck stages, commits, switches branches, pushes and pulls, stashes, cherry-picks and merges. Tags, revert, reset, remotes, non-interactive rebase and hunk staging are in. Merge conflicts can be resolved inside the app, region by region (see [Known limits](#known-limits-and-roadmap)).
+Beyond reading, GitDeck stages, commits, switches branches, pushes and pulls, stashes, cherry-picks and merges. Tags, revert, reset, remotes, non-interactive rebase and hunk staging are in. Staging single lines is planned as Phase 16. Merge conflicts can be resolved inside the app, region by region (see [Known limits](#known-limits-and-roadmap)).
 
 Built with Electron, React and TypeScript.
 
@@ -126,7 +126,7 @@ Known limits:
 - Split View has two panes at most.
 - The graph shows the history that `git log` reports for the linked folder. Detached HEAD and graphs with more than about ten lanes at once were not checked.
 
-Not planned for this version: interactive rebase, line-level staging, a full-file three-way editor, creating pull or merge requests, OAuth sign-in (tokens only), a SQLite cache, auto-update and installers, more than two panes, drag-and-drop between projects, and cloning every repository of a project at once.
+Not planned for this version: interactive rebase, line-level discard, a full-file three-way editor, creating pull or merge requests, OAuth sign-in (tokens only), a SQLite cache, auto-update and installers, more than two panes, drag-and-drop between projects, and cloning every repository of a project at once.
 
 ### Packaging later
 
@@ -153,3 +153,4 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 14b: Rebase and hunk staging
 - [x] Phase 15a: Conflict data and whole-file resolution
 - [x] Phase 15b: Conflict editor screen
+- [ ] Phase 16: Line-level staging
