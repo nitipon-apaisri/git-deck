@@ -163,6 +163,7 @@ async function rig(opts: { seed?: boolean } = { seed: true }): Promise<Rig> {
     store,
     ui,
     emitProgress: (p) => r.progress.push(p),
+    emitRepoChanged: () => {},
     createProvider: () => r.provider,
     git: gitOps
   })
@@ -246,6 +247,7 @@ test('accounts.add refuses when secure storage is unavailable', async () => {
     store,
     ui: {} as Ui,
     emitProgress: () => {},
+    emitRepoChanged: () => {},
     createProvider: () => ({
       verify: async () => ({ username: 'octo' }),
       listRepos: async () => [],
@@ -677,7 +679,7 @@ test('git errors reach the caller without a token', async () => {
 test('every request channel has a handler, and each dispatches to the service', async () => {
   const r = await rig()
   const handlers = buildHandlers(r.api)
-  const requests = Object.keys(IPC).filter((k) => k !== 'gitProgress')
+  const requests = Object.keys(IPC).filter((k) => k !== 'gitProgress' && k !== 'repoChanged')
   assert.deepEqual(Object.keys(handlers).sort(), requests.sort())
   assert.equal(
     new Set(Object.values(IPC)).size,

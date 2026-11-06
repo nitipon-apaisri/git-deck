@@ -7,7 +7,7 @@ import type { MainApi } from './service'
 
 export type Handler = (args: unknown[]) => Promise<unknown>
 
-export type RequestChannel = Exclude<keyof typeof IPC, 'gitProgress'>
+export type RequestChannel = Exclude<keyof typeof IPC, 'gitProgress' | 'repoChanged'>
 
 // The casts mark the trust boundary: the service validates every argument at runtime.
 export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
@@ -30,6 +30,8 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
       api.local.graph(path as string, skip as number, limit as number),
     localCommit: ([path, hash]) => api.local.commit(path as string, hash as string),
     localFetch: ([path]) => api.local.fetch(path as string),
+    localWatch: ([path]) => api.local.watch(path as string),
+    localUnwatch: ([path]) => api.local.unwatch(path as string),
     localReveal: ([path]) => api.local.reveal(path as string),
     localStatus: ([path]) => api.local.status(path as string),
     localDiff: ([path, request]) => api.local.diff(path as string, request as DiffRequest),

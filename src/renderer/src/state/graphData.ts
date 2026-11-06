@@ -27,7 +27,9 @@ export function useGraph(
   path: string | null,
   reloadToken: number,
   /** Hash of HEAD while there are uncommitted changes: a "// WIP" row goes on top. */
-  wipHead: string | null = null
+  wipHead: string | null = null,
+  /** Hash of HEAD now. A commit or checkout made elsewhere changes it and reloads the graph. */
+  head: string | null = null
 ): GraphState {
   const [paging, dispatch] = useReducer(pagingReducer, undefined, emptyPaging)
   const [nonce, setNonce] = useState(0)
@@ -68,7 +70,7 @@ export function useGraph(
     inflight.current = false
     dispatch({ type: 'reset', gen, path })
     if (path !== null) void loadPage(path, gen, wipHead)
-  }, [path, reloadToken, nonce, wipHead, loadPage])
+  }, [path, reloadToken, nonce, wipHead, head, loadPage])
 
   const loadMore = useCallback(() => {
     if (path !== null) void loadPage(path, generation.current, null)

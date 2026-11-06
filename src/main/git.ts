@@ -36,7 +36,15 @@ const MAX_GIT_PROCESSES = 4
 const slots = new Semaphore(MAX_GIT_PROCESSES)
 
 function gitEnv(extra: Record<string, string> = {}): NodeJS.ProcessEnv {
-  return { ...process.env, ...extra, GIT_TERMINAL_PROMPT: '0', LC_ALL: 'C' }
+  // Optional locks off: a background `git status` must not rewrite the index, or the file
+  // watcher would see our own read as a change.
+  return {
+    ...process.env,
+    ...extra,
+    GIT_TERMINAL_PROMPT: '0',
+    GIT_OPTIONAL_LOCKS: '0',
+    LC_ALL: 'C'
+  }
 }
 
 interface RunOptions {
@@ -100,6 +108,15 @@ const toInt = (v: string | null): number | null =>
 
 export async function repoRoot(dir: string): Promise<string | null> {
   return tryRun(dir, ['rev-parse', '--show-toplevel'])
+}
+
+/** The git directory and the common one (they differ in a linked worktree), absolute. */
+export async function gitDirs(dir: string): Promise<{ gitDir: string; commonDir: string } | null> {
+  const out = await tryRun(dir, ['rev-parse', '--absolute-git-dir', '--git-common-dir'])
+  if (out === null) return null
+  const [gitDir, common] = out.split('\n')
+  if (!gitDir || !common) return null
+  return { gitDir, commonDir: resolve(dir, common) }
 }
 
 export function parseDecorations(raw: string): GraphRef[] {

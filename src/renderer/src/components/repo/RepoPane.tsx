@@ -98,13 +98,16 @@ export function RepoPane({
 
   const { summary, fetchedAt, loading, error, reload } = useRepoSummary(isLocal ? null : repo.key)
   const actions = useLocalActions(repo.key, linkedPath, onLinksChanged)
-  const { branches } = useBranches(linkedPath ?? null, actions.reloadToken)
-  const { stashes } = useStashes(linkedPath ?? null, actions.reloadToken)
-  const { operation } = useOperation(linkedPath ?? null, actions.reloadToken)
+  const { branches } = useBranches(linkedPath ?? null, actions.reloadToken + actions.watchToken)
+  const { stashes } = useStashes(linkedPath ?? null, actions.reloadToken + actions.watchToken)
+  const { operation } = useOperation(linkedPath ?? null, actions.reloadToken + actions.watchToken)
   const [stashOpen, setStashOpen] = useState(false)
   const [nameRequest, setNameRequest] = useState<BranchNameRequest | null>(null)
   // Only read the folder while the Info tab is showing it.
-  const local = useLocalInfo(tab === 'info' ? (linkedPath ?? null) : null, actions.reloadToken)
+  const local = useLocalInfo(
+    tab === 'info' ? (linkedPath ?? null) : null,
+    actions.reloadToken + actions.watchToken
+  )
 
   async function openWeb(): Promise<void> {
     setWebError(null)
@@ -240,6 +243,7 @@ export function RepoPane({
               defaultBranch={repo.defaultBranch}
               visible={tab === 'graph'}
               reloadToken={actions.reloadToken}
+              watchToken={actions.watchToken}
               onChanged={actions.refresh}
               narrow={narrow}
               place={paneNumber}

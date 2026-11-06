@@ -127,6 +127,11 @@ export interface Api {
     remove(repoKey: string): Promise<void>
     /** Returns the function that stops listening. */
     onGitProgress(cb: (progress: GitProgress) => void): () => void
+    /** Start telling the page when files or refs of this linked folder change on disk. */
+    watch(path: string): Promise<void>
+    unwatch(path: string): Promise<void>
+    /** Fires with the folder path after its files or refs changed. Returns the unsubscribe. */
+    onRepoChanged(cb: (path: string) => void): () => void
   }
   openExternal(url: string): Promise<void>
   projects: {
@@ -186,6 +191,8 @@ export const IPC = {
   localRepos: 'local:repos',
   localOpen: 'local:open',
   localRemove: 'local:remove',
+  localWatch: 'local:watch',
+  localUnwatch: 'local:unwatch',
   openExternal: 'openExternal',
   projectsList: 'projects:list',
   projectsCreate: 'projects:create',
@@ -194,7 +201,9 @@ export const IPC = {
   projectsAddRepos: 'projects:addRepos',
   projectsRemoveRepos: 'projects:removeRepos',
   /** Main to renderer event, not a request. */
-  gitProgress: 'git:progress'
+  gitProgress: 'git:progress',
+  /** Main to renderer event, not a request. */
+  repoChanged: 'repo:changed'
 } as const
 
 /**
