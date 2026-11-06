@@ -140,18 +140,19 @@ export function RepoPane({
           compact={narrow}
           onOpenWeb={() => void openWeb()}
           onClose={split ? onClose : undefined}
-        />
-        <LocalActions
-          repo={repo}
-          linkedPath={linkedPath}
-          actions={actions}
-          branches={branches}
-          compact={narrow}
-          onNewBranch={() =>
-            setNameRequest({ kind: 'create', startPoint: null, startLabel: 'the current commit' })
-          }
-          onRenameBranch={(from) => setNameRequest({ kind: 'rename', from })}
-        />
+        >
+          <LocalActions
+            repo={repo}
+            linkedPath={linkedPath}
+            actions={actions}
+            branches={branches}
+            compact={narrow}
+            onNewBranch={() =>
+              setNameRequest({ kind: 'create', startPoint: null, startLabel: 'the current commit' })
+            }
+            onRenameBranch={(from) => setNameRequest({ kind: 'rename', from })}
+          />
+        </RepoHeader>
         {problem ? (
           <p
             className="m-0 flex items-start gap-2 rounded-md bg-[var(--warning-bg)] px-3 py-2 text-[var(--warning-text)] [overflow-wrap:anywhere] [&_svg]:mt-0.5 [&_svg]:flex-none"
@@ -221,8 +222,6 @@ export function RepoPane({
               defaultBranch={repo.defaultBranch}
               visible={tab === 'graph'}
               reloadToken={actions.reloadToken}
-              fetching={actions.busy === 'fetch'}
-              onFetch={actions.fetch}
               narrow={narrow}
               place={paneNumber}
               menuOps={
