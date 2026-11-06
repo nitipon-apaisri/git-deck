@@ -3,6 +3,7 @@ import { ACCENTS, type Accent } from '../../lib/accent'
 import { FONTS, type FontId } from '../../lib/font'
 import type { ThemeSetting } from '../../lib/theme'
 import { useAccent, useFont } from '../../state/appearance'
+import { Icon } from '../ui'
 import { ThemePreview } from './ThemePreview'
 import styles from './Option.module.css'
 import section from './Section.module.css'
@@ -96,16 +97,20 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
               ref={accentKeys.ref(index)}
               type="button"
               role="radio"
+              aria-label={a.label}
+              title={a.label}
               aria-checked={a.id === accent}
               tabIndex={accentKeys.tab(a.id)}
-              className={`${styles.swatch} ${a.id === accent ? styles.checked : ''}`}
+              className={styles.swatch}
               onClick={() => setAccent(a.id)}
               onKeyDown={(e) => accentKeys.onKeyDown(e, index)}
             >
-              <AccentDot id={a.id} />
-              {a.label}
+              <AccentDot id={a.id} checked={a.id === accent} />
             </button>
           ))}
+          <span className={styles.swatchName} aria-hidden="true">
+            {ACCENTS.find((a) => a.id === accent)?.label}
+          </span>
         </div>
       </section>
 
@@ -146,6 +151,10 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
 }
 
 /** Shows that accent in the current theme: `appearance.css` also matches `data-accent-dot`. */
-function AccentDot({ id }: { id: Accent }) {
-  return <span className={styles.dot} data-accent-dot={id} aria-hidden="true" />
+function AccentDot({ id, checked }: { id: Accent; checked: boolean }) {
+  return (
+    <span className={styles.dot} data-accent-dot={id} aria-hidden="true">
+      {checked ? <Icon name="check" size="sm" /> : null}
+    </span>
+  )
 }
