@@ -151,5 +151,5 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 13: Stash, cherry-pick, merge
 - [x] Phase 14a: Tags, revert, reset, remotes
 - [x] Phase 14b: Rebase and hunk staging
-- [ ] Phase 15a: Conflict data and whole-file resolution
+- [x] Phase 15a: Conflict data and whole-file resolution
 - [ ] Phase 15b: Conflict editor screen
