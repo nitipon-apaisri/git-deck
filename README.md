@@ -2,7 +2,7 @@
 
 A desktop Git client for GitHub, GitLab.com and self-hosted GitLab. Browse every repository you can reach, read its commit graph, group repositories from different hosts into Projects, and put two repositories side by side.
 
-Beyond reading, GitDeck stages, commits, switches branches, pushes and pulls, stashes, cherry-picks and merges. Tags, revert, reset and remotes are planned as Phase 14a, and non-interactive rebase and hunk staging as Phase 14b. It will not resolve merge conflicts itself (see [Known limits](#known-limits-and-roadmap)).
+Beyond reading, GitDeck stages, commits, switches branches, pushes and pulls, stashes, cherry-picks and merges. Tags, revert, reset and remotes are in; non-interactive rebase and hunk staging are planned as Phase 14b. It will not resolve merge conflicts itself (see [Known limits](#known-limits-and-roadmap)).
 
 Built with Electron, React and TypeScript.
 
@@ -13,6 +13,7 @@ Built with Electron, React and TypeScript.
 - **Open a folder.** Open any local Git repository without an account. It appears under Local with its graph and folder info.
 - **Local clones.** Clone over HTTPS or SSH, or link an existing folder. Fetch, open the folder, and read local branch, ahead/behind and working tree state.
 - **Commit graph.** A lane graph of the whole history, loaded 500 commits at a time and virtualised, so a repository with thousands of commits stays smooth. Select a commit to see its message and changed files.
+- **History operations.** Tags (create, annotate, push, delete here or on the remote), revert, reset (soft, mixed or hard, with a confirm for hard) and remotes (add, rename, remove). Revert reuses the conflict banner. URLs never carry a token.
 - **Projects.** A named group of repositories from any host or account, with its own icon and colour. A project has an overview page with totals, a sortable table of its repositories, and "Fetch all linked".
 - **Split View.** Two repositories at once, side by side or stacked, each with its own tab, graph and scroll position, and a draggable divider.
 - **Appearance.** Light, dark or system theme, five accent colours and a choice of font, in Settings. Accounts are connected there too.
@@ -148,5 +149,5 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 11: Changes, diff, stage, commit
 - [x] Phase 12: Branches, checkout, push and pull
 - [x] Phase 13: Stash, cherry-pick, merge
-- [ ] Phase 14a: Tags, revert, reset, remotes
+- [x] Phase 14a: Tags, revert, reset, remotes
 - [ ] Phase 14b: Rebase and hunk staging

@@ -281,3 +281,16 @@ Newest first. Template:
   - Still out: interactive rebase, a merge-conflict editor, line-level staging, pull or merge request creation, OAuth sign-in, a SQLite cache, auto-update and installers, more than two panes, drag-and-drop between projects, cloning every repository of a project at once.
   - Revert, reset and rebase reuse the Phase 13 operation banner (state from `.git` files, Continue, Abort) and Phase 12's confirm and `--force-with-lease` rules. A hard reset is confirmed in main.
 - **Not verified:** this entry records a plan. Nothing in Phase 14 is built yet.
+
+## 2026-11-06: Phase 14a as built
+
+- **Question:** where Remotes live, how a tag finds its remote, what a reset may do, and how revert fits the operation banner.
+- **Decision and why:**
+  - Remotes are a dialog opened from the repo header, next to Tags and Stash. `PLAN.md` said "repo settings", but the app has no settings page for a repository and one dialog is enough.
+  - A tag goes to `origin`, else the only remote (`getTagRemote`). Unlike pull and push it needs no checked-out branch, since a tag belongs to no branch, so it works with a detached HEAD. Several remotes and none named `origin` is refused, never guessed. The auth header is scoped to that remote's host through the same `remoteAuthEnv`.
+  - Deleting a tag removes the local tag only. Deleting it on the remote is a separate, confirmed button. Tag messages go in on stdin. A tag created with a message is annotated.
+  - Revert reuses the Phase 13 banner: `REVERT_HEAD` is found by `getOperation`, and Continue and Abort run `revert --continue` and `revert --abort`. A merge commit and a detached HEAD are refused. A revert that stops with nothing to resolve is aborted and reported as already undone.
+  - Reset is offered on every commit, merge commits included (a reset needs no mainline), and is refused while a merge, cherry-pick or revert is in progress. Only `hard` asks first, and the confirm says how many commits leave the branch and how many tracked files are overwritten (`getResetImpact`). Untracked files are never touched by a reset.
+  - Remote names are checked with `check-ref-format` and may not start with `-`. URLs may be `https`, `http`, `ssh`, `git`, scp-style `user@host:path` or a path. A URL with a username, password or token is refused so no secret reaches `.git/config`, and `::` is refused so no remote helper (`ext::`) can run a program. Removing a remote asks first, because it deletes the remote-tracking branches.
+  - The "no operation" error is now one shared text, "There is no merge, cherry-pick or revert in progress".
+- **Not verified:** none of the new screens (Tags and Remotes dialogs, the graph menu entries, the revert banner) was run in a live Electron window, and no dark and light boards exist for them. The git, service and pure-logic layers are covered by temp-repo and unit tests.
