@@ -176,6 +176,35 @@ export interface LocalRemote {
   url: string
 }
 
+export interface LocalBranch {
+  name: string
+  /** `origin/main`, or `null` when the branch tracks nothing. */
+  upstream: string | null
+  /** The upstream branch was deleted on the remote. */
+  gone: boolean
+  ahead: number
+  behind: number
+  current: boolean
+}
+
+export interface BranchList {
+  /** `null` while HEAD is detached. */
+  current: string | null
+  detached: boolean
+  local: LocalBranch[]
+  /** `origin/feature`, without the symbolic `origin/HEAD`. */
+  remote: string[]
+  remotes: string[]
+}
+
+export type CheckoutTarget =
+  | { kind: 'branch'; name: string }
+  /** `origin/feature`: checked out as a local branch that tracks it. */
+  | { kind: 'remote'; name: string }
+  | { kind: 'commit'; hash: string }
+
+export type PullMode = 'ff-only' | 'merge'
+
 export interface LocalInfo {
   path: string
   currentBranch: string | null

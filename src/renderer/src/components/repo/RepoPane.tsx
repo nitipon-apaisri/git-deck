@@ -6,7 +6,7 @@ import { timeAgo } from '../../lib/format'
 import { isLocalRepo } from '../../lib/localRepos'
 import { isNarrow } from '../../lib/splitLayout'
 import type { TabName } from '../../lib/splitState'
-import { useLocalInfo, useRepoSummary } from '../../state/repoData'
+import { useBranches, useLocalInfo, useRepoSummary } from '../../state/repoData'
 import { useElementSize } from '../../state/useElementSize'
 import { useLocalActions } from '../../state/useLocalActions'
 import { useNow } from '../../state/useNow'
@@ -14,6 +14,7 @@ import { ErrorBanner, Icon, IconButton, Island, Spinner, Tabs, panelId, tabId } 
 import { GitGraph } from '../graph/GitGraph'
 import { ChangesTab } from './ChangesTab'
 import { InfoTab } from './InfoTab'
+import { BranchNameDialog, type BranchNameRequest } from './BranchNameDialog'
 import { LocalActions } from './LocalActions'
 import { OverviewTab } from './OverviewTab'
 import { RepoHeader } from './RepoHeader'
@@ -93,6 +94,8 @@ export function RepoPane({
 
   const { summary, fetchedAt, loading, error, reload } = useRepoSummary(isLocal ? null : repo.key)
   const actions = useLocalActions(repo.key, linkedPath, onLinksChanged)
+  const { branches } = useBranches(linkedPath ?? null, actions.reloadToken)
+  const [nameRequest, setNameRequest] = useState<BranchNameRequest | null>(null)
   // Only read the folder while the Info tab is showing it.
   const local = useLocalInfo(tab === 'info' ? (linkedPath ?? null) : null, actions.reloadToken)
 
@@ -138,7 +141,17 @@ export function RepoPane({
           onOpenWeb={() => void openWeb()}
           onClose={split ? onClose : undefined}
         />
-        <LocalActions repo={repo} linkedPath={linkedPath} actions={actions} compact={narrow} />
+        <LocalActions
+          repo={repo}
+          linkedPath={linkedPath}
+          actions={actions}
+          branches={branches}
+          compact={narrow}
+          onNewBranch={() =>
+            setNameRequest({ kind: 'create', startPoint: null, startLabel: 'the current commit' })
+          }
+          onRenameBranch={(from) => setNameRequest({ kind: 'rename', from })}
+        />
         {problem ? (
           <p
             className="m-0 flex items-start gap-2 rounded-md bg-[var(--warning-bg)] px-3 py-2 text-[var(--warning-text)] [overflow-wrap:anywhere] [&_svg]:mt-0.5 [&_svg]:flex-none"
@@ -212,6 +225,18 @@ export function RepoPane({
               onFetch={actions.fetch}
               narrow={narrow}
               place={paneNumber}
+              menuOps={
+                linkedPath
+                  ? {
+                      busy: actions.busy !== null,
+                      checkout: actions.checkout,
+                      deleteBranch: actions.deleteBranch,
+                      createBranch: (startPoint, startLabel) =>
+                        setNameRequest({ kind: 'create', startPoint, startLabel }),
+                      renameBranch: (from) => setNameRequest({ kind: 'rename', from })
+                    }
+                  : undefined
+              }
             />
           </div>
         ) : null}
@@ -244,6 +269,14 @@ export function RepoPane({
           />
         ) : null}
       </div>
+      {nameRequest ? (
+        <BranchNameDialog
+          request={nameRequest}
+          onCreate={actions.createBranch}
+          onRename={actions.renameBranch}
+          onClose={() => setNameRequest(null)}
+        />
+      ) : null}
     </Island>
   )
 }

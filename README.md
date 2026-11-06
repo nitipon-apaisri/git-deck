@@ -41,10 +41,10 @@ pnpm lint       # ESLint
 
 Open **Accounts**, pick a host, paste a token, press **Test connection**, then **Add account**. GitDeck only ever sends the token to that host.
 
-| Host   | Token                                                                                                             |
-| ------ | ----------------------------------------------------------------------------------------------------------------- |
-| GitHub | A classic token with the `repo` scope, or a fine-grained token with read access to **Metadata** and **Contents**. |
-| GitLab | A personal access token with the `read_api` and `read_repository` scopes.                                         |
+| Host   | Token                                                                                                                                                   |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GitHub | A classic token with the `repo` scope, or a fine-grained token with read access to **Metadata** and **Contents** (read and write **Contents** to push). |
+| GitLab | A personal access token with the `read_api` and `read_repository` scopes (add `write_repository` to push).                                              |
 
 Cloning a private repository over HTTPS uses the same token. For SSH, GitDeck uses whatever your own `ssh` setup already does.
 
@@ -145,6 +145,6 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 8: Split View (two repos at once)
 - [x] Phase 9: Projects
 - [x] Phase 10: Polish and docs
-- [ ] Phase 11: Changes, diff, stage, commit
-- [ ] Phase 12: Branches, checkout, push and pull
+- [x] Phase 11: Changes, diff, stage, commit
+- [x] Phase 12: Branches, checkout, push and pull
 - [ ] Phase 13: Stash, cherry-pick, merge

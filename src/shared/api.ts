@@ -3,13 +3,16 @@
 import type {
   AccountInput,
   Account,
+  BranchList,
   Cached,
+  CheckoutTarget,
   CommitDetail,
   DiffRequest,
   FileDiff,
   GraphCommit,
   LocalInfo,
   Project,
+  PullMode,
   Repo,
   RepoStatus,
   RepoSummary,
@@ -18,8 +21,11 @@ import type {
 
 export type CloneProtocol = 'https' | 'ssh'
 
-export interface CloneProgress {
+export type GitProgressOp = 'clone' | 'pull' | 'push'
+
+export interface GitProgress {
   repoKey: string
+  op: GitProgressOp
   /** Last line git printed, for example `Receiving objects: 42% (21/50)`. */
   line: string
   /** 0 to 100 when the line carries a percentage, else `null`. */
@@ -77,6 +83,22 @@ export interface Api {
     /** Asks first. Resolves `false` when the user declines. */
     discard(path: string, files: string[]): Promise<boolean>
     createCommit(path: string, message: string, amend: boolean): Promise<void>
+    /** Local and remote branches, with ahead and behind for each tracking branch. */
+    branches(path: string): Promise<BranchList>
+    checkout(path: string, target: CheckoutTarget): Promise<void>
+    /** `startPoint` is a branch or commit; `null` branches from HEAD. */
+    createBranch(
+      path: string,
+      name: string,
+      startPoint: string | null,
+      checkout: boolean
+    ): Promise<void>
+    renameBranch(path: string, from: string, to: string): Promise<void>
+    /** Asks first. Resolves `false` when the user declines. Never the current branch. */
+    deleteBranch(path: string, name: string): Promise<boolean>
+    pull(path: string, mode: PullMode): Promise<void>
+    /** Sets the upstream when there is none. A forced push asks first: `false` when declined. */
+    push(path: string, force: boolean): Promise<boolean>
     /** Repositories opened from a folder, without an account. */
     repos(): Promise<Repo[]>
     /** Folder picker. `null` when cancelled. Opening the same folder twice gives one entry. */
@@ -84,7 +106,7 @@ export interface Api {
     /** Forgets a local repository. The folder is not touched. */
     remove(repoKey: string): Promise<void>
     /** Returns the function that stops listening. */
-    onCloneProgress(cb: (progress: CloneProgress) => void): () => void
+    onGitProgress(cb: (progress: GitProgress) => void): () => void
   }
   openExternal(url: string): Promise<void>
   projects: {
@@ -124,6 +146,13 @@ export const IPC = {
   localStageAll: 'local:stageAll',
   localDiscard: 'local:discard',
   localCreateCommit: 'local:createCommit',
+  localBranches: 'local:branches',
+  localCheckout: 'local:checkout',
+  localCreateBranch: 'local:createBranch',
+  localRenameBranch: 'local:renameBranch',
+  localDeleteBranch: 'local:deleteBranch',
+  localPull: 'local:pull',
+  localPush: 'local:push',
   localRepos: 'local:repos',
   localOpen: 'local:open',
   localRemove: 'local:remove',
@@ -135,7 +164,7 @@ export const IPC = {
   projectsAddRepos: 'projects:addRepos',
   projectsRemoveRepos: 'projects:removeRepos',
   /** Main to renderer event, not a request. */
-  cloneProgress: 'clone:progress'
+  gitProgress: 'git:progress'
 } as const
 
 /**

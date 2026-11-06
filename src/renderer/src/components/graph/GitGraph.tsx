@@ -12,7 +12,10 @@ import {
   widestLane
 } from '../../lib/graphView'
 import { cn } from '@/lib/cn'
-import { Button, Dialog, Icon, IconButton, Spinner } from '../ui'
+import type { CheckoutTarget, GraphCommit } from '@shared/types'
+import { refActions, type RefAction } from '../../lib/branchView'
+import type { BadgeView } from '../../lib/graphView'
+import { Button, Dialog, Icon, IconButton, Menu, Spinner, type MenuEntry } from '../ui'
 import { useDiff } from '../../state/changesData'
 import { DiffView } from '../repo/DiffView'
 import { CommitDetailPanel } from './CommitDetailPanel'
@@ -32,6 +35,17 @@ interface GitGraphProps {
   narrow: boolean
   /** Which pane this is. A swap changes it, and the scroll position is put back. */
   place: 1 | 2
+  /** What a right-click may do. Absent: no menu (nothing is writable). */
+  menuOps?: GraphMenuOps
+}
+
+export interface GraphMenuOps {
+  /** A write is already running, so the entries are off. */
+  busy: boolean
+  checkout: (target: CheckoutTarget) => void
+  deleteBranch: (name: string) => void
+  createBranch: (startPoint: string, startLabel: string) => void
+  renameBranch: (name: string) => void
 }
 
 /**
@@ -49,7 +63,8 @@ export function GitGraph({
   fetching,
   onFetch,
   narrow,
-  place
+  place,
+  menuOps
 }: GitGraphProps) {
   const idPrefix = useId()
   const now = useNow()
@@ -117,6 +132,58 @@ export function GitGraph({
   const lanes = widestLane(drawn.map((r) => r.width))
 
   const select = useCallback((hash: string) => setSelectedHash(hash), [])
+
+  const [menu, setMenu] = useState<{
+    x: number
+    y: number
+    commit: GraphCommit
+    ref: BadgeView | null
+  } | null>(null)
+  const openMenu = (commit: GraphCommit, at: { x: number; y: number }, ref: BadgeView | null) =>
+    setMenu({ ...at, commit, ref })
+
+  function runAction(action: RefAction, commit: GraphCommit): void {
+    if (!menuOps) return
+    switch (action.type) {
+      case 'checkout-branch':
+        return menuOps.checkout({ kind: 'branch', name: action.name })
+      case 'checkout-remote':
+        return menuOps.checkout({ kind: 'remote', name: action.name })
+      case 'checkout-commit':
+        return menuOps.checkout({ kind: 'commit', hash: action.hash })
+      case 'create-branch':
+        return menuOps.createBranch(action.startPoint, commit.hash.slice(0, 7))
+      case 'rename-branch':
+        return menuOps.renameBranch(action.name)
+      case 'delete-branch':
+        return menuOps.deleteBranch(action.name)
+      case 'copy':
+        void navigator.clipboard?.writeText(action.text).catch(() => {})
+    }
+  }
+
+  function menuEntries(commit: GraphCommit, ref: BadgeView | null): MenuEntry[] {
+    const items = refActions(
+      ref ? { kind: ref.refKind, name: ref.name, current: ref.current } : null,
+      commit.hash
+    )
+    const entries: MenuEntry[] = []
+    items.forEach((item, i) => {
+      if (i > 0 && items[i - 1].group !== item.group) {
+        entries.push({ kind: 'separator', id: `sep-${item.id}` })
+      }
+      entries.push({
+        kind: 'item',
+        id: item.id,
+        label: item.label,
+        danger: item.danger,
+        // Copying works while a write runs; everything else waits for it.
+        disabled: !!menuOps?.busy && item.action.type !== 'copy',
+        onSelect: () => runAction(item.action, commit)
+      })
+    })
+    return entries
+  }
 
   function onScroll(): void {
     const el = viewport.current
@@ -236,6 +303,7 @@ export function GitGraph({
                   compact={narrow}
                   selected={row.commit.hash === selectedHash}
                   onSelect={select}
+                  onMenu={menuOps ? openMenu : undefined}
                 />
               ))}
             </div>
@@ -260,6 +328,14 @@ export function GitGraph({
             defaultBranch={defaultBranch}
             onClose={() => setSelectedHash(null)}
             onOpenFile={(file) => setDiffFile({ hash: selected.hash, path: file })}
+          />
+        ) : null}
+        {menu && menuOps ? (
+          <Menu
+            label="Commit actions"
+            at={{ x: menu.x, y: menu.y }}
+            entries={menuEntries(menu.commit, menu.ref)}
+            onClose={() => setMenu(null)}
           />
         ) : null}
         {openDiff ? (

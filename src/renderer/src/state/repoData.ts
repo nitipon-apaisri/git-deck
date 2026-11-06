@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useReducer, useState } from 'react'
 import { emptyResource, resourceReducer, type Resource } from '../lib/resource'
 import { errorMessage } from '../lib/errors'
-import type { LocalInfo, RepoSummary } from '@shared/types'
+import type { BranchList, LocalInfo, RepoSummary } from '@shared/types'
 
 // Both hooks take their key as an argument and keep their state inside the calling
 // component, so two panes showing two repositories never share anything.
@@ -113,4 +113,37 @@ export function useLocalInfo(path: string | null, reloadToken: number): LocalInf
     return { info: null, loading: path !== null, error: null, reload }
   }
   return { info: state.data, loading: state.loading, error: state.error, reload }
+}
+
+export interface BranchesState {
+  branches: BranchList | null
+  error: string | null
+}
+
+/**
+ * Branches and tracking counts for a linked folder: what the branch menu and the Push and
+ * Pull buttons read. Cheap (a few `for-each-ref` calls), so every linked pane keeps it.
+ */
+export function useBranches(path: string | null, reloadToken: number): BranchesState {
+  const [state, dispatch] = useReducer(resourceReducer<BranchList>, emptyResource<BranchList>())
+
+  useEffect(() => {
+    if (path === null) return
+    let cancelled = false
+    void (async () => {
+      dispatch({ type: 'start', key: path })
+      try {
+        const data = await window.api.local.branches(path)
+        if (!cancelled) dispatch({ type: 'data', key: path, data, fetchedAt: null, done: true })
+      } catch (err) {
+        if (!cancelled) dispatch({ type: 'failed', key: path, error: errorMessage(err) })
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [path, reloadToken])
+
+  if (path === null || state.key !== path) return { branches: null, error: null }
+  return { branches: state.data, error: state.error }
 }

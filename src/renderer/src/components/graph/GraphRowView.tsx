@@ -1,10 +1,12 @@
 import { memo } from 'react'
 import type { GraphRow } from '@shared/graph-layout'
+import type { GraphCommit } from '@shared/types'
 import {
   NODE_RADIUS,
   ROW_HEIGHT,
   authorLabel,
   badgeViews,
+  type BadgeView,
   commitDateText,
   commitDateTitle,
   edgePath,
@@ -51,6 +53,8 @@ interface GraphRowViewProps {
   selected: boolean
   id: string
   onSelect: (hash: string) => void
+  /** Right-click on the row (`ref` null) or on one of its badges. Absent when nothing is offered. */
+  onMenu?: (commit: GraphCommit, at: { x: number; y: number }, ref: BadgeView | null) => void
 }
 
 /** Lane drawing for one row: lines first, then the node on top. */
@@ -100,7 +104,8 @@ function GraphRowViewBase({
   compact,
   selected,
   id,
-  onSelect
+  onSelect,
+  onMenu
 }: GraphRowViewProps) {
   const { commit } = row
   const author = authorLabel(commit.author, commit.email)
@@ -119,12 +124,36 @@ function GraphRowViewBase({
       data-selected={selected ? 'true' : undefined}
       style={{ top: index * ROW_HEIGHT, height: ROW_HEIGHT }}
       onClick={() => onSelect(commit.hash)}
+      onContextMenu={
+        onMenu
+          ? (event) => {
+              event.preventDefault()
+              onSelect(commit.hash)
+              onMenu(commit, { x: event.clientX, y: event.clientY }, null)
+            }
+          : undefined
+      }
     >
       <Lanes row={row} lanes={lanes} />
       {shown.length > 0 ? (
         <span className="flex min-w-0 flex-[0_1_auto] items-center gap-1 overflow-hidden">
           {shown.map((b) => (
-            <RefBadge key={`${b.kind}:${b.name}`} kind={b.kind} name={b.name} current={b.current} />
+            <span
+              key={`${b.kind}:${b.name}`}
+              className="inline-flex"
+              onContextMenu={
+                onMenu
+                  ? (event) => {
+                      event.preventDefault()
+                      event.stopPropagation()
+                      onSelect(commit.hash)
+                      onMenu(commit, { x: event.clientX, y: event.clientY }, b)
+                    }
+                  : undefined
+              }
+            >
+              <RefBadge kind={b.kind} name={b.name} current={b.current} />
+            </span>
           ))}
           {more > 0 ? (
             <span className="text-[12px] text-muted-foreground" title={hidden.join('\n')}>
