@@ -140,7 +140,7 @@ export function TagsDialog({ path, startHash, onChanged, onClose }: TagsDialogPr
         ) : null}
 
         <section className="flex flex-col gap-1" aria-label="Tags">
-          <h4 className="m-0 text-[12px] leading-[18px] font-semibold text-muted-foreground">
+          <h4 className="m-0 text-[12px] leading-4.5 font-semibold text-muted-foreground">
             Tags · {(tags?.length ?? 0).toLocaleString('en-GB')}
           </h4>
           {tags === null ? (
@@ -148,7 +148,7 @@ export function TagsDialog({ path, startHash, onChanged, onClose }: TagsDialogPr
           ) : tags.length === 0 ? (
             <p className="m-0 text-muted-foreground">This repository has no tags.</p>
           ) : (
-            <ul className="m-0 flex max-h-[320px] list-none flex-col gap-1 overflow-auto p-0">
+            <ul className="m-0 flex max-h-80 list-none flex-col gap-1 overflow-auto p-0">
               {tags.map((tag) => (
                 <li
                   key={tag.name}

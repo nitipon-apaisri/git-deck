@@ -37,10 +37,10 @@ export function FetchAllDialog({ state, onClose }: FetchAllDialogProps) {
             key={item.key}
             className="flex items-start gap-2.5 border-t border-border px-3 py-2.5 first:border-t-0"
           >
-            <span className="grid min-h-[18px] w-16 flex-none place-items-center">
+            <span className="grid min-h-4.5 w-16 flex-none place-items-center">
               {item.status === 'running' ? <Spinner label={`Fetching ${item.name}`} /> : null}
               {item.status === 'done' ? (
-                <span className="inline-grid text-[var(--success-text)]">
+                <span className="inline-grid text-(--success-text)">
                   <Icon name="check" size="sm" label="Fetched" />
                 </span>
               ) : null}

@@ -26,11 +26,11 @@ interface InfoTabProps {
   }
 }
 
-const HEADING = 'm-0 flex items-center gap-2 text-[15px] leading-[22px] font-semibold'
+const HEADING = 'm-0 flex items-center gap-2 text-[15px] leading-5.5 font-semibold'
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="grid min-h-[34px] grid-cols-[minmax(110px,160px)_minmax(0,1fr)] items-center gap-3 border-b border-border last:border-b-0">
+    <div className="grid min-h-8.5 grid-cols-[minmax(110px,160px)_minmax(0,1fr)] items-center gap-3 border-b border-border last:border-b-0">
       <dt className="text-[12px] text-muted-foreground">{label}</dt>
       <dd className="m-0 flex min-w-0 flex-wrap items-center gap-2 [overflow-wrap:anywhere]">
         {children}

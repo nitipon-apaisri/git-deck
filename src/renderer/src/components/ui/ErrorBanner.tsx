@@ -27,7 +27,7 @@ export function ErrorBanner({
     <div
       role="alert"
       className={cn(
-        'flex items-center gap-2 rounded-md bg-[var(--warning-bg)] px-3 py-2 text-[var(--warning-text)] [&>svg]:flex-none',
+        'flex items-center gap-2 rounded-md bg-(--warning-bg) px-3 py-2 text-(--warning-text) [&>svg]:flex-none',
         className
       )}
     >

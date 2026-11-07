@@ -298,11 +298,7 @@ export function Icon({ name, size = 'md', label }: IconProps) {
     <svg
       className={cn(
         'flex-none fill-none stroke-current [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:1.8]',
-        size === 'md'
-          ? 'size-[var(--icon-size)]'
-          : size === 'sm'
-            ? 'size-[var(--icon-size-sm)]'
-            : 'size-3'
+        size === 'md' ? 'size-(--icon-size)' : size === 'sm' ? 'size-(--icon-size-sm)' : 'size-3'
       )}
       viewBox="0 0 24 24"
       role={label ? 'img' : undefined}

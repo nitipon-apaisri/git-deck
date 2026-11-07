@@ -128,7 +128,7 @@ function GraphRowViewBase({
     return (
       <div
         id={id}
-        className="absolute inset-x-0 flex cursor-default items-center gap-2 rounded-md pr-3 whitespace-nowrap hover:bg-accent data-[selected=true]:bg-[var(--selection)]"
+        className="absolute inset-x-0 flex cursor-default items-center gap-2 rounded-md pr-3 whitespace-nowrap hover:bg-accent data-[selected=true]:bg-(--selection)"
         role="option"
         aria-selected={selected}
         aria-posinset={index + 1}
@@ -142,7 +142,7 @@ function GraphRowViewBase({
           // WIP
         </span>
         <span
-          className="inline-flex items-center gap-1 text-[12px] text-[var(--warning-text)]"
+          className="inline-flex items-center gap-1 text-[12px] text-(--warning-text)"
           title={`${wipCount} changed ${wipCount === 1 ? 'file' : 'files'}`}
         >
           <Icon name="edit" size="xs" />
@@ -160,7 +160,7 @@ function GraphRowViewBase({
   return (
     <div
       id={id}
-      className="absolute inset-x-0 flex cursor-default items-center gap-2 rounded-md pr-3 whitespace-nowrap hover:bg-accent data-[selected=true]:bg-[var(--selection)]"
+      className="absolute inset-x-0 flex cursor-default items-center gap-2 rounded-md pr-3 whitespace-nowrap hover:bg-accent data-[selected=true]:bg-(--selection)"
       role="option"
       aria-selected={selected}
       aria-posinset={index + 1}
@@ -180,7 +180,7 @@ function GraphRowViewBase({
     >
       <Lanes row={row} lanes={lanes} />
       {shown.length > 0 ? (
-        <span className="flex min-w-0 flex-[0_1_auto] items-center gap-1 overflow-hidden">
+        <span className="flex min-w-0 flex-initial items-center gap-1 overflow-hidden">
           {shown.map((b) => (
             <span
               key={`${b.kind}:${b.name}`}
@@ -219,7 +219,7 @@ function GraphRowViewBase({
             <span className="min-w-0 truncate">{author}</span>
           </span>
           <span
-            className="w-[76px] flex-none text-[12px] text-muted-foreground"
+            className="w-19 flex-none text-[12px] text-muted-foreground"
             title={commitDateTitle(commit.date)}
           >
             {commitDateText(commit.date, now)}

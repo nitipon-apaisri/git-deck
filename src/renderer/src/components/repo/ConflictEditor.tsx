@@ -41,7 +41,7 @@ interface ConflictEditorProps {
 }
 
 const CODE =
-  'm-0 overflow-auto bg-background font-mono text-[12px] leading-[18px] whitespace-pre focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--focus-ring)]'
+  'm-0 overflow-auto bg-background font-mono text-[12px] leading-4.5 whitespace-pre focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--focus-ring)'
 
 interface LinesProps {
   lines: string[]
@@ -94,7 +94,7 @@ function Side({ title, lines, from, chosen }: SideProps) {
           {title}
         </span>
         {chosen ? (
-          <span className="inline-flex flex-none items-center gap-1 text-[var(--accent-text)]">
+          <span className="inline-flex flex-none items-center gap-1 text-(--accent-text)">
             <Icon name="check" size="sm" />
             Chosen
           </span>
@@ -142,7 +142,7 @@ function RegionCard({
       aria-label={`Conflict ${index + 1} of ${total}`}
     >
       <div className="flex items-center gap-2">
-        <h4 className="m-0 min-w-0 flex-1 text-[13px] leading-[18px] font-semibold">
+        <h4 className="m-0 min-w-0 flex-1 text-[13px] leading-4.5 font-semibold">
           Conflict {index + 1} of {total}
         </h4>
         <Badge tone={resolved ? 'neutral' : 'warning'}>
@@ -174,7 +174,7 @@ function RegionCard({
         <div className="flex flex-col gap-2">
           <Textarea
             aria-label={`Edited result for conflict ${index + 1}`}
-            className="font-mono text-[12px] leading-[18px]"
+            className="font-mono text-[12px] leading-4.5"
             rows={Math.min(14, Math.max(4, draft.split('\n').length + 1))}
             value={draft}
             spellCheck={false}

@@ -21,7 +21,7 @@ export function Island({
     <Tag
       ref={ref as Ref<HTMLDivElement>}
       className={cn(
-        'flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl bg-card shadow-[var(--shadow-island)]',
+        'flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl bg-card shadow-(--shadow-island)',
         padded && 'p-4',
         className
       )}

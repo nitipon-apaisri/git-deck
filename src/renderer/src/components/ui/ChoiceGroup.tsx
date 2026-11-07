@@ -36,7 +36,7 @@ export function ChoiceGroup<T extends string>({
         <RadioGroup.Item
           key={option.value}
           value={option.value}
-          className="flex min-h-[54px] min-w-0 cursor-pointer items-center gap-2.5 rounded-lg border border-border bg-transparent px-3 text-left text-[13px] text-foreground transition-[background-color,border-color] duration-[var(--motion-fast)] ease-[var(--ease-out)] hover:bg-accent data-[state=checked]:border-[var(--accent)] data-[state=checked]:bg-[var(--selection)]"
+          className="flex min-h-13.5 min-w-0 cursor-pointer items-center gap-2.5 rounded-lg border border-border bg-transparent px-3 text-left text-[13px] text-foreground transition-[background-color,border-color] duration-(--motion-fast) ease-(--ease-out) hover:bg-accent data-[state=checked]:border-(--accent) data-[state=checked]:bg-(--selection)"
         >
           {option.leading}
           <span className="flex min-w-0 flex-col">

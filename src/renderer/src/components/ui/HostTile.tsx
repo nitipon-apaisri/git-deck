@@ -25,10 +25,10 @@ export function HostTile({ tile, host, size = 20, label, brand }: HostTileProps)
         brand
           ? 'bg-secondary'
           : host === 'github'
-            ? 'bg-[var(--host-github)]'
+            ? 'bg-(--host-github)'
             : host === 'gitlab'
-              ? 'bg-[var(--host-gitlab)]'
-              : 'bg-[var(--host-selfhosted)]'
+              ? 'bg-(--host-gitlab)'
+              : 'bg-(--host-selfhosted)'
       )}
       data-host={host}
       role={label ? 'img' : undefined}

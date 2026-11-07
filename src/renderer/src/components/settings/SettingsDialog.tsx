@@ -61,9 +61,7 @@ export function SettingsDialog({
       className="h-[calc(100vh-80px)] max-h-none w-[calc(100vw-80px)] max-w-none flex-row"
     >
       <aside className="flex w-52 flex-none flex-col gap-3 bg-background px-3 py-4">
-        <ModalTitle className="m-0 px-2 text-[15px] leading-[22px] font-semibold">
-          Settings
-        </ModalTitle>
+        <ModalTitle className="m-0 px-2 text-[15px] leading-5.5 font-semibold">Settings</ModalTitle>
         <div role="tablist" aria-orientation="vertical" aria-label="Settings sections">
           {SETTINGS_SECTIONS.map(({ id, label }) => (
             <button
@@ -77,7 +75,7 @@ export function SettingsDialog({
               aria-selected={id === section}
               aria-controls={`settings-panel-${id}`}
               tabIndex={id === section ? 0 : -1}
-              className="flex h-[34px] w-full cursor-pointer items-center gap-2.5 rounded-md border-0 bg-transparent px-2 text-left text-muted-foreground transition-[background-color,color] duration-[var(--motion-fast)] ease-[var(--ease-out)] hover:bg-accent hover:text-foreground aria-selected:bg-card aria-selected:font-medium aria-selected:text-foreground aria-selected:hover:bg-card"
+              className="flex h-8.5 w-full cursor-pointer items-center gap-2.5 rounded-md border-0 bg-transparent px-2 text-left text-muted-foreground transition-[background-color,color] duration-(--motion-fast) ease-(--ease-out) hover:bg-accent hover:text-foreground aria-selected:bg-card aria-selected:font-medium aria-selected:text-foreground aria-selected:hover:bg-card"
               onClick={() => onSection(id)}
               onKeyDown={onKeyDown}
             >
@@ -88,7 +86,7 @@ export function SettingsDialog({
         </div>
       </aside>
       <div className="relative flex min-w-0 flex-1">
-        <div className="absolute top-3 right-3 z-[1]">
+        <div className="absolute top-3 right-3 z-1">
           <IconButton label="Close settings" icon="x" onClick={onClose} />
         </div>
         <div className="min-w-0 flex-1 overflow-y-auto px-10 py-6">
@@ -99,9 +97,9 @@ export function SettingsDialog({
               id={`settings-panel-${id}`}
               aria-labelledby={`settings-tab-${id}`}
               hidden={id !== section}
-              className="animate-in fade-in-0 max-w-[640px] duration-[var(--motion-base)] ease-[var(--ease-out)]"
+              className="animate-in fade-in-0 max-w-160 duration-(--motion-base) ease-(--ease-out)"
             >
-              <h2 className="m-0 mb-4 text-[20px] leading-[26px] font-semibold">{label}</h2>
+              <h2 className="m-0 mb-4 text-[20px] leading-6.5 font-semibold">{label}</h2>
               {id === 'appearance' ? (
                 <AppearanceSection theme={theme} onThemeChange={onThemeChange} />
               ) : id === 'ai' ? (

@@ -144,7 +144,7 @@ export function ProjectFormDialog({
           error={problem}
           hint={
             <span className="flex justify-between gap-3">
-              <span className="inline-flex items-center gap-1 text-[var(--success-text)]">
+              <span className="inline-flex items-center gap-1 text-(--success-text)">
                 {nameOk ? (
                   <>
                     <Icon name="check" size="xs" />
@@ -173,7 +173,7 @@ export function ProjectFormDialog({
         <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
           <legend className="mb-2 p-0 font-medium">Icon</legend>
           <div className="flex items-center gap-2">
-            <label className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border border-[var(--border-strong)] px-2.5 text-muted-foreground focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[var(--focus-ring)]">
+            <label className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border border-(--border-strong) px-2.5 text-muted-foreground focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-(--focus-ring)">
               <Icon name="search" size="sm" />
               <input
                 type="search"
@@ -185,7 +185,7 @@ export function ProjectFormDialog({
               />
             </label>
             <TextInput
-              className="h-8 w-[150px]"
+              className="h-8 w-37.5"
               aria-label="Or paste an emoji"
               aria-invalid={emojiBad ? true : undefined}
               placeholder="Or paste an emoji"
@@ -207,7 +207,7 @@ export function ProjectFormDialog({
               <button
                 key={id}
                 type="button"
-                className="grid h-11 cursor-pointer place-items-center rounded-lg border border-border bg-transparent text-foreground hover:bg-accent aria-pressed:border-[var(--accent)] aria-pressed:bg-[var(--selection)] aria-pressed:text-[var(--accent-text)]"
+                className="grid h-11 cursor-pointer place-items-center rounded-lg border border-border bg-transparent text-foreground hover:bg-accent aria-pressed:border-(--accent) aria-pressed:bg-(--selection) aria-pressed:text-(--accent-text)"
                 aria-label={iconLabel(id)}
                 aria-pressed={icon === id}
                 title={iconLabel(id)}
@@ -232,7 +232,7 @@ export function ProjectFormDialog({
                 key={id}
                 type="button"
                 className={cn(
-                  'grid size-7 cursor-pointer place-items-center rounded-full border-2 border-transparent bg-[var(--swatch)] p-0 text-[var(--island)] shadow-[inset_0_0_0_2px_var(--island)] aria-pressed:border-foreground',
+                  'grid size-7 cursor-pointer place-items-center rounded-full border-2 border-transparent bg-(--swatch) p-0 text-(--island) shadow-[inset_0_0_0_2px_var(--island)] aria-pressed:border-foreground',
                   SWATCHES[id]
                 )}
                 aria-label={COLOR_LABELS[id]}
@@ -247,7 +247,7 @@ export function ProjectFormDialog({
         </fieldset>
 
         <div
-          className="flex items-center gap-3 rounded-xl bg-secondary px-[14px] py-3"
+          className="flex items-center gap-3 rounded-xl bg-secondary px-3.5 py-3"
           aria-label="Preview"
         >
           <ProjectIcon icon={icon} color={color} size="lg" />
@@ -266,7 +266,7 @@ export function ProjectFormDialog({
             Repositories <span className="font-normal text-muted-foreground">(optional)</span>
           </legend>
           <div className="flex items-center gap-2">
-            <label className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border border-[var(--border-strong)] px-2.5 text-muted-foreground focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[var(--focus-ring)]">
+            <label className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border border-(--border-strong) px-2.5 text-muted-foreground focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-(--focus-ring)">
               <Icon name="search" size="sm" />
               <input
                 type="search"
@@ -304,11 +304,11 @@ export function ProjectFormDialog({
                   {repos.map((r) => (
                     <label
                       key={r.key}
-                      className="flex h-[34px] cursor-pointer items-center gap-2.5 border-t border-border px-3 hover:bg-accent"
+                      className="flex h-8.5 cursor-pointer items-center gap-2.5 border-t border-border px-3 hover:bg-accent"
                     >
                       <input
                         type="checkbox"
-                        className="m-0 size-4 accent-[var(--accent)]"
+                        className="m-0 size-4 accent-(--accent)"
                         aria-label={`Add ${r.fullName}`}
                         checked={chosen.has(r.key)}
                         onChange={(e) => toggle(r.key, e.target.checked)}
@@ -331,11 +331,11 @@ export function ProjectFormDialog({
                 {missing.map((key) => (
                   <label
                     key={key}
-                    className="flex h-[34px] cursor-pointer items-center gap-2.5 border-t border-border px-3 hover:bg-accent"
+                    className="flex h-8.5 cursor-pointer items-center gap-2.5 border-t border-border px-3 hover:bg-accent"
                   >
                     <input
                       type="checkbox"
-                      className="m-0 size-4 accent-[var(--accent)]"
+                      className="m-0 size-4 accent-(--accent)"
                       aria-label={`Keep ${remoteIdOf(key)}`}
                       checked={chosen.has(key)}
                       onChange={(e) => toggle(key, e.target.checked)}

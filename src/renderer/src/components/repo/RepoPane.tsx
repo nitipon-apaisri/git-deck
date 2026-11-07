@@ -189,7 +189,7 @@ export function RepoPane({
         ) : null}
         {problem ? (
           <p
-            className="m-0 flex items-start gap-2 rounded-md bg-[var(--warning-bg)] px-3 py-2 text-[var(--warning-text)] [overflow-wrap:anywhere] [&_svg]:mt-0.5 [&_svg]:flex-none"
+            className="m-0 flex items-start gap-2 rounded-md bg-(--warning-bg) px-3 py-2 text-(--warning-text) [overflow-wrap:anywhere] [&_svg]:mt-0.5 [&_svg]:flex-none"
             role="alert"
           >
             <Icon name="alert" size="sm" />

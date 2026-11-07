@@ -20,20 +20,20 @@ interface OverviewTabProps {
   narrow?: boolean
 }
 
-const HEADING = 'm-0 text-[15px] leading-[22px] font-semibold'
+const HEADING = 'm-0 text-[15px] leading-5.5 font-semibold'
 const MUTED = 'm-0 text-[12px] leading-4 text-muted-foreground'
 const CONTRIBUTOR =
-  'grid min-h-[30px] grid-cols-[24px_minmax(80px,200px)_minmax(40px,1fr)_auto] items-center gap-2'
+  'grid min-h-7.5 grid-cols-[24px_minmax(80px,200px)_minmax(40px,1fr)_auto] items-center gap-2'
 // Palette colour per language tone (1 to 8), shared by the bar segments and the legend dots.
 const TONES: Record<number, string> = {
-  1: 'bg-[var(--proj-blue)]',
-  2: 'bg-[var(--proj-teal)]',
-  3: 'bg-[var(--proj-violet)]',
-  4: 'bg-[var(--proj-amber)]',
-  5: 'bg-[var(--proj-rose)]',
-  6: 'bg-[var(--proj-green)]',
-  7: 'bg-[var(--proj-pink)]',
-  8: 'bg-[var(--proj-gray)]'
+  1: 'bg-(--proj-blue)',
+  2: 'bg-(--proj-teal)',
+  3: 'bg-(--proj-violet)',
+  4: 'bg-(--proj-amber)',
+  5: 'bg-(--proj-rose)',
+  6: 'bg-(--proj-green)',
+  7: 'bg-(--proj-pink)',
+  8: 'bg-(--proj-gray)'
 }
 
 export function OverviewTab({
@@ -86,11 +86,11 @@ export function OverviewTab({
                     {c.name}
                   </span>
                   <span
-                    className="h-1.5 overflow-hidden rounded-[var(--radius-xs)] bg-[var(--neutral)]"
+                    className="h-1.5 overflow-hidden rounded-(--radius-xs) bg-(--neutral)"
                     aria-hidden="true"
                   >
                     <span
-                      className="block h-full rounded-[inherit] bg-[var(--accent)]"
+                      className="block h-full rounded-[inherit] bg-(--accent)"
                       style={{ width: `${c.share * 100}%` }}
                     />
                   </span>
@@ -145,7 +145,7 @@ export function OverviewTab({
         {segments.length > 0 ? (
           <>
             <div
-              className="flex h-2.5 gap-0.5 overflow-hidden rounded-[var(--radius-xs)]"
+              className="flex h-2.5 gap-0.5 overflow-hidden rounded-(--radius-xs)"
               role="img"
               aria-label={`Languages: ${segments.map((s) => `${s.name} ${s.label}`).join(', ')}`}
             >
@@ -190,7 +190,7 @@ export function OverviewTab({
             {summary.topics.map((topic) => (
               <li
                 key={topic}
-                className="rounded-lg bg-[var(--selection)] px-2 text-[12px] leading-[22px] text-[var(--accent-text)]"
+                className="rounded-lg bg-(--selection) px-2 text-[12px] leading-5.5 text-(--accent-text)"
               >
                 {topic}
               </li>

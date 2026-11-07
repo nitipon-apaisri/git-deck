@@ -335,7 +335,7 @@ export function GitGraph({
         >
           <div
             ref={viewport}
-            className="min-h-0 flex-1 overflow-auto rounded-md -outline-offset-2 focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+            className="min-h-0 flex-1 overflow-auto rounded-md -outline-offset-2 focus-visible:outline-2 focus-visible:outline-(--focus-ring)"
             role="listbox"
             aria-label="Commits"
             aria-activedescendant={selected ? `${idPrefix}-${selected.hash}` : undefined}
@@ -365,7 +365,7 @@ export function GitGraph({
           </div>
           {error !== null && rows.length > 0 ? (
             <p
-              className="m-0 flex flex-none items-center gap-2 rounded-md bg-[var(--warning-bg)] px-3 py-2 text-[var(--warning-text)] [&_span]:min-w-0 [&_span]:flex-1 [&_span]:[overflow-wrap:anywhere]"
+              className="m-0 flex flex-none items-center gap-2 rounded-md bg-(--warning-bg) px-3 py-2 text-(--warning-text) [&_span]:min-w-0 [&_span]:flex-1 [&_span]:[overflow-wrap:anywhere]"
               role="alert"
             >
               <Icon name="alert" size="sm" />

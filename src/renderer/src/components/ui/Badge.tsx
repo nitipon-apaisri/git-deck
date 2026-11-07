@@ -12,9 +12,9 @@ export function Badge({ tone = 'neutral', children }: BadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-[var(--radius-xs)] border px-2 text-[11.5px] leading-[18px] font-medium whitespace-nowrap',
+        'inline-flex items-center gap-1 rounded-(--radius-xs) border px-2 text-[11.5px] leading-4.5 font-medium whitespace-nowrap',
         tone === 'warning'
-          ? 'border-transparent bg-[var(--warning-bg)] text-[var(--warning-text)]'
+          ? 'border-transparent bg-(--warning-bg) text-(--warning-text)'
           : 'border-border text-muted-foreground'
       )}
     >

@@ -33,7 +33,7 @@ export function OperationBanner({
   const { shown, more } = conflictPreview(state.conflicted, all ? state.conflicted.length : 5)
   return (
     <section
-      className="flex flex-col gap-2 rounded-md bg-[var(--warning-bg)] px-3 py-2 text-[var(--warning-text)]"
+      className="flex flex-col gap-2 rounded-md bg-(--warning-bg) px-3 py-2 text-(--warning-text)"
       aria-label={operationTitle(state)}
       role="alert"
     >
@@ -54,7 +54,7 @@ export function OperationBanner({
               <li key={path} className="flex min-w-0 items-center gap-2">
                 <button
                   type="button"
-                  className="min-w-0 cursor-pointer border-0 bg-transparent p-0 text-left font-mono text-[12px] text-inherit underline decoration-dotted underline-offset-2 [overflow-wrap:anywhere] hover:decoration-solid focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+                  className="min-w-0 cursor-pointer border-0 bg-transparent p-0 text-left font-mono text-[12px] text-inherit underline decoration-dotted underline-offset-2 [overflow-wrap:anywhere] hover:decoration-solid focus-visible:outline-2 focus-visible:outline-(--focus-ring)"
                   disabled={busy}
                   onClick={() => onResolveFile(path)}
                   aria-label={`Resolve ${path}`}
@@ -69,7 +69,7 @@ export function OperationBanner({
             <li>
               <button
                 type="button"
-                className="cursor-pointer border-0 bg-transparent p-0 text-[12px] text-inherit underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+                className="cursor-pointer border-0 bg-transparent p-0 text-[12px] text-inherit underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-(--focus-ring)"
                 onClick={() => setAll(true)}
               >
                 Show {more} more

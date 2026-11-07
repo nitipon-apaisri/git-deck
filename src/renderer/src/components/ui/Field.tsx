@@ -29,7 +29,7 @@ export function Field({ label, hint, error, action, children }: FieldProps) {
     [error ? errorId : null, hint ? hintId : null].filter(Boolean).join(' ') || undefined
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex min-h-[18px] items-center justify-between">
+      <div className="flex min-h-4.5 items-center justify-between">
         <label htmlFor={id} className="font-medium">
           {label}
         </label>
@@ -62,7 +62,7 @@ export function TextInput({ className, ...rest }: InputHTMLAttributes<HTMLInputE
   return (
     <input
       className={cn(
-        'h-9 min-w-0 rounded-md border border-[var(--border-strong)] bg-secondary px-3 text-[13px] text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60',
+        'h-9 min-w-0 rounded-md border border-(--border-strong) bg-secondary px-3 text-[13px] text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60',
         className
       )}
       {...rest}
@@ -88,7 +88,7 @@ export function CheckOption({ label, checked, onChange, warning }: CheckOptionPr
           id={id}
           checked={checked}
           onCheckedChange={(next) => onChange(next === true)}
-          className="grid size-4 flex-none cursor-pointer place-items-center rounded-[4px] border border-[var(--border-strong)] bg-transparent text-primary-foreground data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+          className="grid size-4 flex-none cursor-pointer place-items-center rounded-[4px] border border-(--border-strong) bg-transparent text-primary-foreground data-[state=checked]:border-primary data-[state=checked]:bg-primary"
         >
           <Checkbox.Indicator>
             <Icon name="check" size="sm" />
@@ -97,7 +97,7 @@ export function CheckOption({ label, checked, onChange, warning }: CheckOptionPr
         {label}
       </label>
       {warning ? (
-        <span className="flex gap-2 text-xs leading-4 text-[var(--warning-text)]">
+        <span className="flex gap-2 text-xs leading-4 text-(--warning-text)">
           <span className="mt-px">
             <Icon name="alert" size="sm" />
           </span>

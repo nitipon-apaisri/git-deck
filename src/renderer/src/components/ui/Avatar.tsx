@@ -14,12 +14,7 @@ const SIZES = {
   28: 'size-7 text-[11px]',
   32: 'size-8 text-[12px]'
 } as const
-const TONES = [
-  'bg-[var(--avatar-1)]',
-  'bg-[var(--avatar-2)]',
-  'bg-[var(--avatar-3)]',
-  'bg-[var(--avatar-4)]'
-] as const
+const TONES = ['bg-(--avatar-1)', 'bg-(--avatar-2)', 'bg-(--avatar-3)', 'bg-(--avatar-4)'] as const
 
 /** shadcn's avatar on Radix: the image, or coloured initials until it loads or when it fails. */
 export function Avatar({ src, name, size = 28 }: AvatarProps) {
@@ -27,7 +22,7 @@ export function Avatar({ src, name, size = 28 }: AvatarProps) {
   return (
     <AvatarPrimitive.Root
       className={cn(
-        'inline-grid flex-none place-items-center overflow-hidden rounded-full font-semibold text-[var(--avatar-ink)]',
+        'inline-grid flex-none place-items-center overflow-hidden rounded-full font-semibold text-(--avatar-ink)',
         SIZES[size],
         tone
       )}
