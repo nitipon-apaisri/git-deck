@@ -197,7 +197,7 @@ export function LocalActions({
     const pushCount = state.ahead > 0 ? ` ↑${state.ahead}` : ''
 
     return (
-      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+      <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [&>*]:shrink-0">
         <Button
           icon="git-branch"
           disabled={working || !branches}
@@ -269,21 +269,11 @@ export function LocalActions({
             { id: 'tags', label: 'Tags', icon: 'tag', onClick: onTags },
             { id: 'remotes', label: 'Remotes', icon: 'globe', onClick: onRemotes }
           ] as const
-        ).map((b) =>
-          compact ? (
-            <IconButton
-              key={b.id}
-              label={b.label}
-              icon={b.icon}
-              className="size-9"
-              onClick={b.onClick}
-            />
-          ) : (
-            <Button key={b.id} icon={b.icon} onClick={b.onClick}>
-              {b.label}
-            </Button>
-          )
-        )}
+        ).map((b) => (
+          <Button key={b.id} icon={b.icon} onClick={b.onClick}>
+            {b.label}
+          </Button>
+        ))}
         {busy === 'fetch' || busy === 'branch' ? (
           <Spinner label={busy === 'fetch' ? 'Fetching' : 'Switching branches'} />
         ) : null}
