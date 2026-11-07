@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/cn'
 import type { Account, Repo } from '@shared/types'
 import { errorMessage } from '../../lib/errors'
@@ -28,6 +28,7 @@ import { RepoHeader } from './RepoHeader'
 import { RemotesDialog } from './RemotesDialog'
 import { StashDialog } from './StashDialog'
 import { TagsDialog } from './TagsDialog'
+import { TerminalPanel } from './TerminalPanel'
 
 const TABS: { id: TabName; label: string }[] = [
   { id: 'overview', label: 'Overview' },
@@ -98,6 +99,24 @@ export function RepoPane({
   const [graphSeen, setGraphSeen] = useState(tab === 'graph')
   if (tab === 'graph' && !graphSeen) setGraphSeen(true)
   const [webError, setWebError] = useState<string | null>(null)
+  // The shell starts on the first open and then stays, hidden or not, until the pane goes.
+  const [terminalOpen, setTerminalOpen] = useState(false)
+  const [terminalSeen, setTerminalSeen] = useState(false)
+  function toggleTerminal(): void {
+    setTerminalOpen((open) => !open)
+    setTerminalSeen(true)
+  }
+  useEffect(() => {
+    if (!active || !linkedPath) return
+    function onKeyDown(event: KeyboardEvent): void {
+      if (!event.ctrlKey || event.metaKey || event.altKey || event.code !== 'Backquote') return
+      event.preventDefault()
+      setTerminalOpen((open) => !open)
+      setTerminalSeen(true)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [active, linkedPath])
 
   const { summary, fetchedAt, loading, error, reload } = useRepoSummary(isLocal ? null : repo.key)
   const actions = useLocalActions(repo.key, linkedPath, onLinksChanged)
@@ -174,6 +193,8 @@ export function RepoPane({
             onStash={() => setStashOpen(true)}
             onTags={() => setTagsRequest({ hash: null })}
             onRemotes={() => setRemotesOpen(true)}
+            terminalOpen={terminalOpen}
+            onToggleTerminal={toggleTerminal}
           />
         </RepoHeader>
         {operation ? (
@@ -304,6 +325,13 @@ export function RepoPane({
           />
         ) : null}
       </div>
+      {terminalSeen && linkedPath ? (
+        <TerminalPanel
+          path={linkedPath}
+          visible={terminalOpen}
+          onClose={() => setTerminalOpen(false)}
+        />
+      ) : null}
       {stashOpen && linkedPath ? (
         <StashDialog
           path={linkedPath}

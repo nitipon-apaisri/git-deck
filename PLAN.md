@@ -561,6 +561,17 @@ Scope decision and reasons: `docs/DECISIONS.md` (2026-11-07, Phase 18 scope). Ru
 
 ---
 
+## Phase 19 — Integrated terminal
+
+Scope decision and reasons: `docs/DECISIONS.md` (2026-11-07, Phase 19). Runs on `phase/19-terminal`. This overturns the Phase 18 "no terminal" call and allows one native module, `node-pty`.
+
+- [x] `src/main/terminal.ts` (no electron import): `TerminalManager` with `create(cwd, cols, rows)`, `write`, `resize`, `kill`, `killAll`; the pty is injected (`SpawnPty`) and `node-pty` is imported only on a real spawn. `defaultShell`, `shellEnv` (adds `TERM`, drops `ELECTRON_RUN_AS_NODE`) and `ensureHelperExecutable` (pnpm unpacks `spawn-helper` without the execute bit).
+- [x] Service and IPC: `terminal.create` (linked folders only), `write`, `resize`, `kill`; events `terminal:data` and `terminal:exit` to the renderer; `shutdown` ends every shell when the app quits.
+- [x] Renderer: `TerminalPanel` (xterm.js and the fit addon, colours from tokens via `lib/terminalTheme.ts`). Each `RepoPane` owns its shell: a Terminal button in the repo actions and Ctrl+\` (active pane) open a panel under the tabs, closing hides it and keeps the shell, and it ends with the pane.
+- [x] `pnpm-workspace.yaml` allows the `node-pty` install script; `package.json` `dependencies` gains `node-pty`; `@xterm/xterm` and `@xterm/addon-fit` are devDependencies.
+
+**Verify:** `tests/terminal.test.ts` (fake pty: input, output, exit, resize, kill, bad arguments, failing spawn, shell and env defaults, token colours, service refuses an unlinked folder and forwards events). Typecheck, lint, build pass. A real `node-pty` shell ran under Electron 45. Try the panel in the window.
+
 ---
 
 ---

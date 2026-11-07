@@ -58,6 +58,15 @@ export interface ProjectPatchInput {
 
 export interface Api {
   secureStorageAvailable(): Promise<boolean>
+  terminal: {
+    /** Starts a shell in a linked folder and returns its session id. */
+    create(path: string, cols: number, rows: number): Promise<string>
+    write(id: string, data: string): Promise<void>
+    resize(id: string, cols: number, rows: number): Promise<void>
+    kill(id: string): Promise<void>
+    onData(cb: (id: string, data: string) => void): () => void
+    onExit(cb: (id: string, exitCode: number) => void): () => void
+  }
   accounts: {
     list(): Promise<Account[]>
     test(input: AccountInput): Promise<VerifiedUser>
@@ -276,7 +285,15 @@ export const IPC = {
   /** Main to renderer event, not a request. */
   gitProgress: 'git:progress',
   /** Main to renderer event, not a request. */
-  repoChanged: 'repo:changed'
+  repoChanged: 'repo:changed',
+  terminalCreate: 'terminal:create',
+  terminalWrite: 'terminal:write',
+  terminalResize: 'terminal:resize',
+  terminalKill: 'terminal:kill',
+  /** Main to renderer event, not a request. */
+  terminalData: 'terminal:data',
+  /** Main to renderer event, not a request. */
+  terminalExit: 'terminal:exit'
 } as const
 
 /**

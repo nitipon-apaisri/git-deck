@@ -11,6 +11,26 @@ async function call<T>(channel: string, ...args: unknown[]): Promise<T> {
 
 const api: Api = {
   secureStorageAvailable: () => call(IPC.secureStorageAvailable),
+  terminal: {
+    create: (path, cols, rows) => call(IPC.terminalCreate, path, cols, rows),
+    write: (id, data) => call(IPC.terminalWrite, id, data),
+    resize: (id, cols, rows) => call(IPC.terminalResize, id, cols, rows),
+    kill: (id) => call(IPC.terminalKill, id),
+    onData: (cb) => {
+      const listener = (_event: unknown, id: string, data: string): void => cb(id, data)
+      ipcRenderer.on(IPC.terminalData, listener)
+      return () => {
+        ipcRenderer.removeListener(IPC.terminalData, listener)
+      }
+    },
+    onExit: (cb) => {
+      const listener = (_event: unknown, id: string, code: number): void => cb(id, code)
+      ipcRenderer.on(IPC.terminalExit, listener)
+      return () => {
+        ipcRenderer.removeListener(IPC.terminalExit, listener)
+      }
+    }
+  },
   accounts: {
     list: () => call(IPC.accountsList),
     test: (input) => call(IPC.accountsTest, input),

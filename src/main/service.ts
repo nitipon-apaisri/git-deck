@@ -32,6 +32,7 @@ import * as realGit from './git'
 import { NO_OPERATION } from './git'
 import { MAX_REGION_TEXT } from '../shared/conflict'
 import { gitAuthEnv } from './gitAuth'
+import { TerminalManager, type SpawnPty } from './terminal'
 import { watchRepo as realWatchRepo } from './watcher'
 import { createProvider as realCreateProvider, normalizeBaseUrl } from './providers'
 import type { GitProvider } from './providers/types'
@@ -116,6 +117,10 @@ export interface ServiceDeps {
   ui: Ui
   emitProgress(progress: GitProgress): void
   emitRepoChanged(path: string): void
+  emitTerminalData?(id: string, data: string): void
+  emitTerminalExit?(id: string, exitCode: number): void
+  /** Replaceable in tests: starts a pty. */
+  spawnPty?: SpawnPty
   /** Replaceable in tests. */
   watchRepo?: typeof realWatchRepo
   createProvider?: (account: Pick<Account, 'id' | 'type' | 'baseUrl'>, token: string) => GitProvider
@@ -339,7 +344,12 @@ function checkDiffRequest(request: unknown): DiffRequest {
   return { source: r.source, path, hash: r.source === 'commit' ? r.hash : undefined }
 }
 
-export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHosts(): void } {
+export function createService(deps: ServiceDeps): {
+  api: MainApi
+  syncInsecureHosts(): void
+  /** Ends every terminal session. Called when the app quits. */
+  shutdown(): void
+} {
   const { store, ui } = deps
   const git: GitOps = deps.git ?? realGit
   const makeProvider = deps.createProvider ?? realCreateProvider
@@ -351,6 +361,13 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
   /** Folders with a pull or push running: one network write at a time per folder. */
   const remoteBusy = new Set<string>()
   const watchRepo = deps.watchRepo ?? realWatchRepo
+  const terminals = new TerminalManager(
+    {
+      data: (id, data) => deps.emitTerminalData?.(id, data),
+      exit: (id, code) => deps.emitTerminalExit?.(id, code)
+    },
+    deps.spawnPty
+  )
   /** One watcher per folder, shared by every pane that shows it. */
   const watched = new Map<string, { count: number; stop: Promise<() => void> }>()
 
@@ -715,6 +732,18 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
 
   const api: MainApi = {
     secureStorageAvailable: guard(async () => store.secureStorageAvailable()),
+    terminal: {
+      create: guard(async (path, cols, rows) => {
+        linkedRepoKey(path)
+        return terminals.create(path, cols, rows)
+      }),
+      write: guard(async (id, data) => terminals.write(id, data)),
+      resize: guard(async (id, cols, rows) => terminals.resize(id, cols, rows)),
+      kill: guard(async (id) => terminals.kill(id)),
+      // Events flow main to renderer; preload implements these, the service never does.
+      onData: () => () => {},
+      onExit: () => () => {}
+    },
     accounts: {
       list: guard(async () => store.listAccounts()),
       test: guard(async (input) => verify(normaliseInput(input)), tokenOfInput),
@@ -1249,5 +1278,5 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
     }
   }
 
-  return { api, syncInsecureHosts }
+  return { api, syncInsecureHosts, shutdown: () => terminals.killAll() }
 }

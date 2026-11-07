@@ -16,12 +16,21 @@ import type { MainApi } from './service'
 
 export type Handler = (args: unknown[]) => Promise<unknown>
 
-export type RequestChannel = Exclude<keyof typeof IPC, 'gitProgress' | 'repoChanged'>
+export type RequestChannel = Exclude<
+  keyof typeof IPC,
+  'gitProgress' | 'repoChanged' | 'terminalData' | 'terminalExit'
+>
 
 // The casts mark the trust boundary: the service validates every argument at runtime.
 export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
   return {
     secureStorageAvailable: () => api.secureStorageAvailable(),
+    terminalCreate: ([path, cols, rows]) =>
+      api.terminal.create(path as string, cols as number, rows as number),
+    terminalWrite: ([id, data]) => api.terminal.write(id as string, data as string),
+    terminalResize: ([id, cols, rows]) =>
+      api.terminal.resize(id as string, cols as number, rows as number),
+    terminalKill: ([id]) => api.terminal.kill(id as string),
     accountsList: () => api.accounts.list(),
     accountsTest: ([input]) => api.accounts.test(input as AccountInput),
     accountsAdd: ([input]) => api.accounts.add(input as AccountInput),
