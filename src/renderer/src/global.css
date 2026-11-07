@@ -66,3 +66,19 @@ body {
 .hash {
   font-variant-ligatures: none;
 }
+
+/* Minimal scrollbar, like macOS: a thin rounded thumb on a clear track. */
+.scroll-minimal::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+.scroll-minimal::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-minimal::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 9999px;
+}
+.scroll-minimal:hover::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+}

@@ -197,7 +197,7 @@ export function LocalActions({
     const pushCount = state.ahead > 0 ? ` ↑${state.ahead}` : ''
 
     return (
-      <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [&>*]:shrink-0">
+      <div className="flex min-w-0 flex-1 items-center gap-2 scroll-minimal overflow-x-auto [&>*]:shrink-0">
         <Button
           icon="git-branch"
           disabled={working || !branches}
