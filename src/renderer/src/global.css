@@ -74,3 +74,22 @@ body {
 .scroll-hidden::-webkit-scrollbar {
   display: none;
 }
+
+/* Fades the edge that has more content scrolled out of view. */
+.scroll-fade {
+  --fade-start: 0px;
+  --fade-end: 0px;
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    var(--text) var(--fade-start),
+    var(--text) calc(100% - var(--fade-end)),
+    transparent 100%
+  );
+}
+.scroll-fade[data-fade-start] {
+  --fade-start: 28px;
+}
+.scroll-fade[data-fade-end] {
+  --fade-end: 28px;
+}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { cn } from '@/lib/cn'
 import type { BranchList, Repo } from '@shared/types'
 import {
@@ -42,6 +42,29 @@ const SEGMENT_CARET = 'h-full w-7 rounded-none'
 
 const PROGRESS_LABEL = { clone: 'Cloning…', pull: 'Pulling…', push: 'Pushing…' } as const
 
+/** Which edges of a sideways-scrolling element have more content hidden past them. */
+function useScrollFade(el: HTMLElement | null): { start: boolean; end: boolean } {
+  const [fade, setFade] = useState({ start: false, end: false })
+  useEffect(() => {
+    if (!el) return
+    const update = (): void => {
+      const start = el.scrollLeft > 1
+      const end = el.scrollLeft + el.clientWidth < el.scrollWidth - 1
+      setFade((f) => (f.start === start && f.end === end ? f : { start, end }))
+    }
+    update()
+    el.addEventListener('scroll', update, { passive: true })
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    for (const child of el.children) observer.observe(child)
+    return () => {
+      el.removeEventListener('scroll', update)
+      observer.disconnect()
+    }
+  }, [el])
+  return fade
+}
+
 /** Clone, link, open, fetch, branch, pull, push and unlink for one repository. */
 export function LocalActions({
   repo,
@@ -60,6 +83,8 @@ export function LocalActions({
   const { busy } = actions
   const working = busy !== null
   const [menu, setMenu] = useState<OpenMenu | null>(null)
+  const [row, setRow] = useState<HTMLDivElement | null>(null)
+  const fade = useScrollFade(row)
 
   if (busy === 'clone' || busy === 'pull' || busy === 'push') {
     const label = `${busy[0].toUpperCase()}${busy.slice(1)} progress`
@@ -197,7 +222,12 @@ export function LocalActions({
     const pushCount = state.ahead > 0 ? ` ↑${state.ahead}` : ''
 
     return (
-      <div className="flex min-w-0 flex-1 items-center gap-2 scroll-hidden overflow-x-auto [&>*]:shrink-0">
+      <div
+        ref={setRow}
+        className="scroll-hidden scroll-fade flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [&>*]:shrink-0"
+        data-fade-start={fade.start || undefined}
+        data-fade-end={fade.end || undefined}
+      >
         <Button
           icon="git-branch"
           disabled={working || !branches}
