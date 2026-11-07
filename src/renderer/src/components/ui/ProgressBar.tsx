@@ -13,10 +13,10 @@ export function ProgressBar({ percent, label }: ProgressBarProps) {
     <Progress.Root
       value={value}
       aria-label={label}
-      className="h-1.5 overflow-hidden rounded-[var(--radius-xs)] bg-[var(--neutral)]"
+      className="h-1.5 overflow-hidden rounded-(--radius-xs) bg-(--neutral)"
     >
       <Progress.Indicator
-        className="h-full rounded-[inherit] bg-[var(--accent)] transition-[width] duration-150 ease-out data-[state=indeterminate]:w-[35%] data-[state=indeterminate]:animate-progress-slide motion-reduce:transition-none motion-reduce:data-[state=indeterminate]:w-full motion-reduce:data-[state=indeterminate]:animate-none motion-reduce:data-[state=indeterminate]:opacity-50"
+        className="h-full rounded-[inherit] bg-(--accent) transition-[width] duration-150 ease-out data-[state=indeterminate]:w-[35%] data-[state=indeterminate]:animate-progress-slide motion-reduce:transition-none motion-reduce:data-[state=indeterminate]:w-full motion-reduce:data-[state=indeterminate]:animate-none motion-reduce:data-[state=indeterminate]:opacity-50"
         style={value === null ? undefined : { width: `${value}%` }}
       />
     </Progress.Root>

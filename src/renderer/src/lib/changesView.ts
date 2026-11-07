@@ -75,8 +75,8 @@ export function commitBlocker(options: {
   if (conflicts > 0) return 'Resolve the conflicts first'
   const hasMessage = message.trim().length > 0
   if (amend) return staged === 0 && !hasMessage ? 'Change the message or stage a file' : null
-  if (staged === 0) return 'Stage at least one file'
-  if (!hasMessage) return 'Write a commit message'
+  // if (staged === 0) return 'Stage at least one file'
+  // if (!hasMessage) return 'Write a commit message'
   return null
 }
 

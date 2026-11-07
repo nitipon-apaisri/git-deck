@@ -38,7 +38,7 @@ export function Tabs({ tabs, value, onChange, label, idPrefix, trailing }: TabsP
             value={tab.id}
             id={tabId(idPrefix, tab.id)}
             aria-controls={panelId(idPrefix, tab.id)}
-            className="relative h-9 cursor-pointer rounded-t-sm border-0 bg-transparent px-3 text-[13px] font-medium text-muted-foreground transition-[background-color,color] duration-[var(--motion-fast)] ease-[var(--ease-out)] hover:bg-accent hover:text-foreground data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:inset-x-2 data-[state=active]:after:-bottom-px data-[state=active]:after:h-0.5 data-[state=active]:after:rounded-[1px] data-[state=active]:after:bg-[var(--accent)] data-[state=active]:after:content-['']"
+            className="relative h-9 cursor-pointer rounded-t-sm border-0 bg-transparent px-3 text-[13px] font-medium text-muted-foreground transition-[background-color,color] duration-(--motion-fast) ease-(--ease-out) hover:bg-accent hover:text-foreground data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:inset-x-2 data-[state=active]:after:-bottom-px data-[state=active]:after:h-0.5 data-[state=active]:after:rounded-[1px] data-[state=active]:after:bg-(--accent) data-[state=active]:after:content-['']"
           >
             {tab.label}
           </TabsPrimitive.Trigger>

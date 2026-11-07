@@ -66,6 +66,7 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
       api.local.deleteRemoteBranch(path as string, name as string),
     localPull: ([path, mode]) => api.local.pull(path as string, mode as PullMode),
     localPush: ([path, force]) => api.local.push(path as string, force as boolean),
+    localSuggestCommitMessage: ([path]) => api.local.suggestCommitMessage(path as string),
     localStashes: ([path]) => api.local.stashes(path as string),
     localStashPush: ([path, message, untracked]) =>
       api.local.stashPush(path as string, message as string, untracked as boolean),

@@ -27,6 +27,7 @@ import type {
   Repo,
   RepoSummary
 } from '../shared/types'
+import { buildPrompt, runClaude } from './ai'
 import * as realGit from './git'
 import { NO_OPERATION } from './git'
 import { MAX_REGION_TEXT } from '../shared/conflict'
@@ -67,6 +68,7 @@ export type GitOps = Pick<
   | 'unstagePaths'
   | 'discardPaths'
   | 'createCommit'
+  | 'getStagedDiff'
   | 'listBranches'
   | 'checkout'
   | 'createBranch'
@@ -118,6 +120,8 @@ export interface ServiceDeps {
   watchRepo?: typeof realWatchRepo
   createProvider?: (account: Pick<Account, 'id' | 'type' | 'baseUrl'>, token: string) => GitProvider
   git?: GitOps
+  /** Replaceable in tests: asks Claude Code for a commit message. */
+  suggestMessage?: (prompt: string) => Promise<string>
 }
 
 const MAX_GRAPH_PAGE = 2000
@@ -339,6 +343,7 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
   const { store, ui } = deps
   const git: GitOps = deps.git ?? realGit
   const makeProvider = deps.createProvider ?? realCreateProvider
+  const suggest = deps.suggestMessage ?? ((prompt: string) => runClaude(prompt))
 
   const inflight = new Map<string, Promise<unknown>>()
   const writeQueues = new Map<string, Promise<unknown>>()
@@ -919,6 +924,12 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
           git.push(path, { forceWithLease: force }, env, onLine)
         )
         return true
+      }),
+      suggestCommitMessage: guard(async (path) => {
+        linkedRepoKey(path)
+        const { stat, diff } = await git.getStagedDiff(path)
+        if (!diff.trim()) throw new Error('Stage some changes first')
+        return suggest(buildPrompt(stat, diff))
       }),
       stashes: guard(async (path) => {
         linkedRepoKey(path)

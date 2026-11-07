@@ -23,7 +23,7 @@ export function Modal({ onClose, className, label, children }: ModalProps) {
   return (
     <DialogPrimitive.Root open onOpenChange={(open) => !open && onClose()}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="animate-in fade-in-0 fixed inset-0 z-50 bg-[color-mix(in_srgb,var(--window)_60%,transparent)] duration-[var(--motion-base)]" />
+        <DialogPrimitive.Overlay className="animate-in fade-in-0 fixed inset-0 z-50 bg-[color-mix(in_srgb,var(--window)_60%,transparent)] duration-(--motion-base)" />
         <DialogPrimitive.Content
           ref={content}
           aria-label={label}
@@ -42,7 +42,7 @@ export function Modal({ onClose, className, label, children }: ModalProps) {
             if (target && document.activeElement === target) event.preventDefault()
           }}
           className={cn(
-            'animate-in fade-in-0 slide-in-from-bottom-2 fixed inset-0 z-50 m-auto flex h-fit max-h-[calc(100vh-48px)] w-[520px] max-w-[calc(100vw-32px)] flex-col overflow-hidden rounded-[var(--radius-dialog)] bg-card text-foreground shadow-[var(--shadow-dialog)] duration-[var(--motion-base)] ease-[var(--ease-out)]',
+            'animate-in fade-in-0 slide-in-from-bottom-2 fixed inset-0 z-50 m-auto flex h-fit max-h-[calc(100vh-48px)] w-130 max-w-[calc(100vw-32px)] flex-col overflow-hidden rounded-(--radius-dialog) bg-card text-foreground shadow-(--shadow-dialog) duration-(--motion-base) ease-(--ease-out)',
             className
           )}
         >
@@ -81,7 +81,7 @@ export function Dialog({
   return (
     <Modal
       onClose={onClose}
-      className={width === 560 ? 'w-[560px]' : width === 960 ? 'w-[960px]' : undefined}
+      className={width === 560 ? 'w-140' : width === 960 ? 'w-240' : undefined}
     >
       <header className="flex items-start gap-3 px-6 pt-5 pb-3">
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">

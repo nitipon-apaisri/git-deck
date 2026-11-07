@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useAiEnabled } from '../../state/ai'
 import { cn } from '@/lib/cn'
 import type { RepoStatus, StatusEntry } from '@shared/types'
 import {
@@ -16,7 +17,7 @@ import { quickAction } from '../../lib/conflictView'
 import { errorMessage } from '../../lib/errors'
 import {
   Button,
-  CheckOption,
+  // CheckOption,
   ErrorBanner,
   IconButton,
   Skeleton,
@@ -75,7 +76,7 @@ function FileRow({ entry, kind, selected, disabled, onSelect, actions }: FileRow
   return (
     <li
       className={cn(
-        'flex min-h-[30px] items-center gap-1 rounded-md pr-1 pl-2',
+        'flex min-h-7.5 items-center gap-1 rounded-md pr-1 pl-2',
         selected ? 'bg-accent' : 'hover:bg-accent/60'
       )}
     >
@@ -123,7 +124,7 @@ function Section({ title, count, action, children }: SectionProps) {
   return (
     <section className="flex flex-col gap-1" aria-label={title}>
       <div className="flex min-h-8 items-center gap-2">
-        <h4 className="m-0 flex-1 text-[12px] leading-[18px] font-semibold text-muted-foreground">
+        <h4 className="m-0 flex-1 text-[12px] leading-4.5 font-semibold text-muted-foreground">
           {title} · {count.toLocaleString('en-GB')}
         </h4>
         {action ? (
@@ -158,6 +159,8 @@ export function ChangesPanel({
   const [amend, setAmend] = useState(false)
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
+  const [generating, setGenerating] = useState(false)
+  const aiEnabled = useAiEnabled()
 
   const groups = groupStatus(status?.entries ?? [])
 
@@ -183,6 +186,19 @@ export function ChangesPanel({
     amend
   })
 
+  // Only fills the message field. It does not go through `act`: nothing on disk changes.
+  async function generate(): Promise<void> {
+    setGenerating(true)
+    setProblem(null)
+    try {
+      setMessage(await window.api.local.suggestCommitMessage(path))
+    } catch (err) {
+      setProblem(errorMessage(err))
+    } finally {
+      setGenerating(false)
+    }
+  }
+
   async function commit(): Promise<void> {
     await act(async () => {
       await window.api.local.createCommit(path, message, amend)
@@ -194,16 +210,34 @@ export function ChangesPanel({
   const body = (
     <div className="flex min-w-0 flex-col gap-3">
       <div className="flex flex-col gap-2">
-        <Textarea
-          aria-label="Commit message"
-          placeholder={amend ? 'Leave empty to keep the current message' : 'Commit message'}
-          value={message}
-          disabled={busy}
-          onChange={(e) => setMessage(e.target.value)}
-        />
-        <CheckOption label="Amend the last commit" checked={amend} onChange={setAmend} />
+        <div className="relative flex flex-col">
+          <Textarea
+            aria-label="Commit message"
+            placeholder={amend ? 'Leave empty to keep the current message' : 'Commit message'}
+            value={message}
+            disabled={busy}
+            className={aiEnabled ? 'pr-10' : undefined}
+            onChange={(e) => setMessage(e.target.value)}
+          />
+          {aiEnabled ? (
+            <span className="absolute top-1 right-1 grid size-8 place-items-center">
+              {generating ? (
+                <Spinner label="Writing a message" />
+              ) : (
+                <IconButton
+                  label="Generate a message from the staged changes"
+                  icon="sparkles"
+                  disabled={busy || groups.staged.length === 0 || groups.conflicted.length > 0}
+                  onClick={() => void generate()}
+                />
+              )}
+            </span>
+          ) : null}
+        </div>
+        {/* <CheckOption label="Amend the last commit" checked={amend} onChange={setAmend} /> */}
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <Button
+            className="w-full"
             variant="primary"
             icon="check"
             disabled={busy || blocker !== null}
@@ -329,12 +363,12 @@ export function ChangesPanel({
 
   return (
     <aside
-      className="flex min-h-0 min-w-0 flex-col rounded-lg bg-secondary [&[hidden]]:hidden"
+      className="flex min-h-0 min-w-0 flex-col rounded-lg bg-secondary [[hidden]]:hidden"
       aria-label="Uncommitted changes"
       hidden={hidden}
     >
       <div className="flex items-start gap-2 px-3 pt-3 pb-2">
-        <h3 className="m-0 min-w-0 flex-1 text-[15px] leading-[22px] font-semibold [overflow-wrap:anywhere]">
+        <h3 className="m-0 min-w-0 flex-1 text-[15px] leading-5.5 font-semibold wrap-anywhere">
           {status
             ? `${countText(status.entries.length, 'changed file')}${status.branch ? ` on ${status.branch}` : ' (detached HEAD)'}`
             : 'Changes'}

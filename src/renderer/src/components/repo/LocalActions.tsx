@@ -89,9 +89,9 @@ export function LocalActions({
   if (busy === 'clone' || busy === 'pull' || busy === 'push') {
     const label = `${busy[0].toUpperCase()}${busy.slice(1)} progress`
     return (
-      <div className="flex max-w-[480px] flex-col gap-1.5" role="group" aria-label={label}>
+      <div className="flex max-w-120 flex-col gap-1.5" role="group" aria-label={label}>
         <ProgressBar percent={actions.progress?.percent ?? null} label={label} />
-        <p className="m-0 text-[12px] leading-4 text-muted-foreground [overflow-wrap:anywhere]">
+        <p className="m-0 text-[12px] leading-4 text-muted-foreground wrap-anywhere">
           {actions.progress?.line ?? PROGRESS_LABEL[busy]}
         </p>
       </div>
@@ -151,7 +151,7 @@ export function LocalActions({
           label: b.name,
           leading: (
             <span
-              className="grid w-3.5 flex-none place-items-center text-[var(--accent-text)]"
+              className="grid w-3.5 flex-none place-items-center text-(--accent-text)"
               aria-hidden="true"
             >
               {b.current ? <Icon name="check" size="sm" /> : null}
@@ -224,14 +224,14 @@ export function LocalActions({
     return (
       <div
         ref={setRow}
-        className="scroll-hidden scroll-fade flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [&>*]:shrink-0"
+        className="scroll-hidden scroll-fade flex min-w-0 flex-1 items-center gap-2 overflow-x-auto *:shrink-0"
         data-fade-start={fade.start || undefined}
         data-fade-end={fade.end || undefined}
       >
         <Button
           icon="git-branch"
           disabled={working || !branches}
-          className="max-w-[220px] min-w-0"
+          className="max-w-55 min-w-0"
           title={
             branches?.detached ? 'HEAD is detached. Choose a branch to switch to it.' : 'Branches'
           }

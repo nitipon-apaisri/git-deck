@@ -150,7 +150,7 @@ export function Sidebar({
   const isEmpty = accounts.length === 0 && !hasLocal && !scope
 
   return (
-    <Island as="aside" aria-label="Repositories" className="w-[var(--sidebar-width)] flex-none">
+    <Island as="aside" aria-label="Repositories" className="w-(--sidebar-width) flex-none">
       {loading ? (
         <SidebarSkeleton />
       ) : loadError ? (
@@ -159,7 +159,7 @@ export function Sidebar({
         </div>
       ) : isEmpty ? (
         <div className="flex flex-1 flex-col items-stretch gap-2 p-4">
-          <h2 className="m-0 text-[15px] leading-[22px] font-semibold">No repositories</h2>
+          <h2 className="m-0 text-[15px] leading-5.5 font-semibold">No repositories</h2>
           <p className="m-0 mb-2 text-muted-foreground">
             Open a local repository, or add an account in Settings.
           </p>
@@ -195,7 +195,7 @@ export function Sidebar({
             {scope ? (
               <button
                 type="button"
-                className="flex h-7.5 cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-2.5 text-left text-foreground transition-[background-color,color] duration-[var(--motion-fast)] ease-[var(--ease-out)] hover:bg-accent aria-pressed:bg-[var(--selection)] aria-pressed:font-medium"
+                className="flex h-7.5 cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-2.5 text-left text-foreground transition-[background-color,color] duration-(--motion-fast) ease-out hover:bg-accent aria-pressed:bg-(--selection) aria-pressed:font-medium"
                 aria-pressed={proj.overviewActive}
                 onClick={proj.onOverview}
               >
@@ -227,7 +227,7 @@ export function Sidebar({
             ))}
             {unavailable.length > 0 ? (
               <>
-                <div className="mt-2.5 flex h-[30px] items-center gap-2 px-3 text-[12px] font-medium text-[var(--warning-text)]">
+                <div className="mt-2.5 flex h-7.5 items-center gap-2 px-3 text-[12px] font-medium text-warning">
                   <Icon name="alert" size="sm" />
                   Unavailable ({unavailable.length})
                 </div>
@@ -412,7 +412,7 @@ function SidebarRow({
         <>
           {mark ? (
             <span
-              className="grid size-4 place-items-center rounded-[var(--radius-xs)] bg-primary text-[11px] leading-none font-semibold text-primary-foreground"
+              className="grid size-4 place-items-center rounded-xs bg-primary text-[11px] leading-none font-semibold text-primary-foreground"
               role="img"
               aria-label={`Shown in pane ${mark}`}
               title={`Shown in pane ${mark}`}
@@ -421,12 +421,12 @@ function SidebarRow({
             </span>
           ) : null}
           {repo.archived ? (
-            <span className="rounded-[var(--radius-xs)] border border-border px-1.5 text-[11px] leading-4 text-muted-foreground">
+            <span className="rounded-xs border border-border px-1.5 text-[11px] leading-4 text-muted-foreground">
               archived
             </span>
           ) : null}
           {repo.fork ? (
-            <span className="rounded-[var(--radius-xs)] border border-border px-1.5 text-[11px] leading-4 text-muted-foreground">
+            <span className="rounded-xs border border-border px-1.5 text-[11px] leading-4 text-muted-foreground">
               fork
             </span>
           ) : null}
@@ -435,7 +435,7 @@ function SidebarRow({
           ) : null}
           {!local && links[repo.key] ? (
             <span
-              className="size-[7px] rounded-full bg-[var(--success)]"
+              className="size-1.75 rounded-full bg-success"
               role="img"
               aria-label="Cloned locally"
               title="Cloned locally"
@@ -500,7 +500,7 @@ function HostRow({ node, expanded, searching, state, onToggle, onRefresh }: Host
             <IconButton
               label={`Could not load repositories: ${state.error} Retry`}
               icon="alert"
-              className="size-6 text-[color:var(--warning-text)]"
+              className="size-6 text-warning"
               onClick={onRefresh}
             />
           ) : null}

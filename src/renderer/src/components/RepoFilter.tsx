@@ -10,7 +10,7 @@ interface RepoFilterProps {
 /** The repository filter in the toolbar. Escape clears it, and a second Escape leaves the field. */
 export function RepoFilter({ value, onChange, scoped }: RepoFilterProps) {
   return (
-    <label className="flex h-8 w-full min-w-0 flex-none items-center gap-2.5 rounded-md border border-[var(--border-strong)] px-3 text-[14px] text-muted-foreground">
+    <label className="flex h-8 w-full min-w-0 flex-none items-center gap-2.5 rounded-md border border-(--border-strong) px-3 text-[14px] text-muted-foreground">
       <Icon name="search" />
       <input
         type="search"

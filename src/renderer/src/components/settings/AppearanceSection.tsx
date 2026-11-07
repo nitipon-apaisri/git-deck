@@ -10,11 +10,11 @@ import { cn } from '@/lib/cn'
 // Shared by the pickers: a section, its title and hint, and a selectable card.
 const STACK = 'flex flex-col gap-6'
 const BLOCK = 'flex flex-col gap-1.5'
-const LABEL = 'm-0 text-[13px] leading-[18px] font-semibold'
+const LABEL = 'm-0 text-[13px] leading-4.5 font-semibold'
 const HINT = 'mt-0 mb-2 text-[12px] leading-4 text-muted-foreground'
 const GROUP = 'grid gap-2'
 const CARD =
-  'flex cursor-pointer flex-col gap-2 rounded-lg border border-border bg-transparent p-2 text-left text-foreground transition-[background-color,border-color] duration-[var(--motion-fast)] ease-[var(--ease-out)] hover:bg-accent aria-checked:border-[var(--accent)] aria-checked:bg-[var(--selection)] aria-checked:hover:bg-[var(--selection)]'
+  'flex cursor-pointer flex-col gap-2 rounded-lg border border-border bg-transparent p-2 text-left text-foreground transition-[background-color,border-color] duration-(--motion-fast) ease-(--ease-out) hover:bg-accent aria-checked:border-(--accent) aria-checked:bg-(--selection) aria-checked:hover:bg-(--selection)'
 
 const THEME_LABELS: Record<ThemeSetting, { title: string; sub: string }> = {
   system: { title: 'System', sub: 'Follows your OS' },
@@ -105,7 +105,7 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
               title={a.label}
               aria-checked={a.id === accent}
               tabIndex={accentKeys.tab(a.id)}
-              className="group grid size-8 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-primary-foreground transition-shadow duration-[var(--motion-fast)] ease-[var(--ease-out)] aria-checked:shadow-[0_0_0_2px_var(--island),0_0_0_4px_var(--primary)]"
+              className="group grid size-8 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-primary-foreground transition-shadow duration-(--motion-fast) ease-(--ease-out) aria-checked:shadow-[0_0_0_2px_var(--island),0_0_0_4px_var(--primary)]"
               onClick={() => setAccent(a.id)}
               onKeyDown={(e) => accentKeys.onKeyDown(e, index)}
             >
@@ -154,7 +154,7 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
 function AccentDot({ id, checked }: { id: Accent; checked: boolean }) {
   return (
     <span
-      className="grid size-7 place-items-center rounded-full bg-[var(--primary)] transition-transform duration-[var(--motion-fast)] ease-[var(--ease-out)] group-hover:scale-[1.08]"
+      className="grid size-7 place-items-center rounded-full bg-(--primary) transition-transform duration-(--motion-fast) ease-(--ease-out) group-hover:scale-[1.08]"
       data-accent-dot={id}
       aria-hidden="true"
     >

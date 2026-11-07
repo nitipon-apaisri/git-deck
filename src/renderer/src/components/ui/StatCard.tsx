@@ -30,17 +30,17 @@ export function StatCard({
 }: StatCardProps) {
   return (
     <div
-      className="flex flex-col items-start gap-0.5 rounded-xl bg-secondary px-[14px] py-3"
+      className="flex flex-col items-start gap-0.5 rounded-xl bg-secondary px-3.5 py-3"
       title={explain}
     >
       {loading ? (
-        <span className="flex h-[30px] items-center">
+        <span className="flex h-7.5 items-center">
           <Skeleton width={64} height={24} label={`Loading ${label}`} />
         </span>
       ) : value === null ? (
-        <span className="text-[15px] leading-[30px] text-muted-foreground">Unavailable</span>
+        <span className="text-[15px] leading-7.5 text-muted-foreground">Unavailable</span>
       ) : (
-        <span className="text-[24px] leading-[30px] font-semibold text-foreground">
+        <span className="text-[24px] leading-7.5 font-semibold text-foreground">
           {approximate ? '~' : ''}
           {value}
         </span>
@@ -48,7 +48,7 @@ export function StatCard({
       <span className={LABEL}>{label}</span>
       {note ? <span className={LABEL}>{note}</span> : null}
       {partial ? (
-        <span className="mt-1 inline-flex items-center gap-1 rounded-[var(--radius-xs)] bg-[var(--warning-bg)] px-2 text-[11.5px] leading-[18px] font-medium text-[var(--warning-text)]">
+        <span className="mt-1 inline-flex items-center gap-1 rounded-(--radius-xs) bg-(--warning-bg) px-2 text-[11.5px] leading-4.5 font-medium text-(--warning-text)">
           <Icon name="alert" size="xs" />
           Partial
         </span>

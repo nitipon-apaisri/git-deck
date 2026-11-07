@@ -37,7 +37,7 @@ interface DiffViewProps {
 
 // Each line starts with + or −, so a change is never shown by colour alone.
 const LINE: Record<DiffLine['type'], { mark: string; row: string; text: string }> = {
-  add: { mark: '+', row: 'bg-[var(--success-bg)]', text: 'text-[var(--success-text)]' },
+  add: { mark: '+', row: 'bg-(--success-bg)', text: 'text-(--success-text)' },
   del: {
     mark: '−',
     row: 'bg-[color-mix(in_srgb,var(--danger)_14%,transparent)]',
@@ -108,7 +108,7 @@ export function DiffView({ path, state, onClose, hunkAction }: DiffViewProps) {
 
       {diff && diff.hunks.length > 0 ? (
         <div
-          className="min-h-0 overflow-auto rounded-md border border-border bg-background font-mono text-[12px] leading-[18px]"
+          className="min-h-0 overflow-auto rounded-md border border-border bg-background font-mono text-[12px] leading-4.5"
           role="region"
           aria-label="Diff lines"
           tabIndex={0}
@@ -185,7 +185,7 @@ export function DiffView({ path, state, onClose, hunkAction }: DiffViewProps) {
                             {changed ? (
                               <input
                                 type="checkbox"
-                                className="m-0 cursor-pointer accent-[var(--accent)]"
+                                className="m-0 cursor-pointer accent-(--accent)"
                                 checked={mine.includes(i)}
                                 disabled={hunkAction.busy}
                                 aria-label={

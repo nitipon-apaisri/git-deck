@@ -155,3 +155,4 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 15b: Conflict editor screen
 - [x] Phase 16: Line-level staging
 - [x] Phase 17: Leaner menus and Delete branch
+- [x] Phase 18: AI commit messages (Claude Code CLI)

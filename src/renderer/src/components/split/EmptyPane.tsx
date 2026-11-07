@@ -47,7 +47,7 @@ export function EmptyPane({ pane, kind, active, onActivate, onClose }: EmptyPane
         </>
       ) : (
         <>
-          <h1 className="m-0 text-[15px] leading-[22px] font-semibold">{COPY[kind].title}</h1>
+          <h1 className="m-0 text-[15px] leading-5.5 font-semibold">{COPY[kind].title}</h1>
           <p className="m-0 text-muted-foreground">{COPY[kind].text}</p>
         </>
       )}

@@ -47,7 +47,7 @@ export function CommitDetailPanel({
       aria-label="Commit details"
     >
       <div className="flex items-start gap-2 px-3 pt-3 pb-2">
-        <h3 className="m-0 min-w-0 flex-1 text-[15px] leading-[22px] font-semibold [overflow-wrap:anywhere]">
+        <h3 className="m-0 min-w-0 flex-1 text-[15px] leading-5.5 font-semibold [overflow-wrap:anywhere]">
           {commit.subject || '(no message)'}
         </h3>
         <IconButton label="Close details" icon="x" onClick={onClose} />
@@ -118,14 +118,14 @@ export function CommitDetailPanel({
 
         {detail ? (
           <section className="flex flex-col gap-2" aria-label="Changed files">
-            <h4 className="m-0 text-[12px] leading-[18px] font-semibold text-muted-foreground">
+            <h4 className="m-0 text-[12px] leading-4.5 font-semibold text-muted-foreground">
               {fileTotalsText(fileTotals(files))}
             </h4>
             <ul className="m-0 flex list-none flex-col p-0">
               {shownFiles.map((f) => (
                 <li
                   key={f.path}
-                  className="flex min-h-[26px] items-center gap-2 border-b border-border text-[12px] last:border-b-0"
+                  className="flex min-h-6.5 items-center gap-2 border-b border-border text-[12px] last:border-b-0"
                 >
                   {onOpenFile ? (
                     <button
@@ -144,9 +144,7 @@ export function CommitDetailPanel({
                   <span className="flex flex-none gap-1.5 font-mono">
                     <span
                       className={
-                        f.additions === null
-                          ? 'text-muted-foreground'
-                          : 'text-[var(--success-text)]'
+                        f.additions === null ? 'text-muted-foreground' : 'text-(--success-text)'
                       }
                     >
                       {additionsText(f.additions)}

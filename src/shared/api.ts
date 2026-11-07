@@ -112,6 +112,8 @@ export interface Api {
     pull(path: string, mode: PullMode): Promise<void>
     /** Sets the upstream when there is none. A forced push asks first: `false` when declined. */
     push(path: string, force: boolean): Promise<boolean>
+    /** Asks the local Claude Code CLI for a message for the staged changes. Never commits. */
+    suggestCommitMessage(path: string): Promise<string>
     stashes(path: string): Promise<StashEntry[]>
     stashPush(path: string, message: string, includeUntracked: boolean): Promise<void>
     /** `hash` is the entry's hash, so a list that changed since it was read is refused. */
@@ -230,6 +232,7 @@ export const IPC = {
   localDeleteRemoteBranch: 'local:deleteRemoteBranch',
   localPull: 'local:pull',
   localPush: 'local:push',
+  localSuggestCommitMessage: 'local:suggestCommitMessage',
   localStashes: 'local:stashes',
   localStashPush: 'local:stashPush',
   localStashApply: 'local:stashApply',

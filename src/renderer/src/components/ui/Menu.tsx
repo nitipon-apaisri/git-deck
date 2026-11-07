@@ -48,10 +48,10 @@ interface MenuProps {
 }
 
 const itemClass =
-  'flex min-h-[30px] cursor-pointer items-center gap-2.5 rounded-md border-0 bg-transparent px-2.5 text-left transition-[background-color,color] duration-[var(--motion-fast)] ease-[var(--ease-out)] data-[highlighted]:bg-accent data-[disabled]:cursor-default data-[disabled]:text-muted-foreground data-[disabled]:data-[highlighted]:bg-transparent'
+  'flex min-h-7.5 cursor-pointer items-center gap-2.5 rounded-md border-0 bg-transparent px-2.5 text-left transition-[background-color,color] duration-(--motion-fast) ease-(--ease-out) data-[highlighted]:bg-accent data-[disabled]:cursor-default data-[disabled]:text-muted-foreground data-[disabled]:data-[highlighted]:bg-transparent'
 
 const subContentClass =
-  'animate-in fade-in-0 z-50 flex max-h-[var(--radix-dropdown-menu-content-available-height)] min-w-[200px] max-w-[380px] origin-[var(--radix-dropdown-menu-content-transform-origin)] flex-col overflow-y-auto rounded-lg bg-popover p-1.5 text-[13px] text-popover-foreground shadow-[var(--shadow-menu)] duration-[var(--motion-fast)] ease-[var(--ease-out)]'
+  'animate-in fade-in-0 z-50 flex max-h-(--radix-dropdown-menu-content-available-height) min-w-50 max-w-95 origin-(--radix-dropdown-menu-content-transform-origin) flex-col overflow-y-auto rounded-lg bg-popover p-1.5 text-[13px] text-popover-foreground shadow-(--shadow-menu) duration-(--motion-fast) ease-(--ease-out)'
 
 function renderEntries(entries: readonly MenuEntry[]): ReactNode {
   return entries.map((entry) => {
@@ -131,7 +131,7 @@ function renderEntries(entries: readonly MenuEntry[]): ReactNode {
         onSelect={onSelect}
       >
         <span
-          className="grid w-3.5 flex-none place-items-center text-[var(--accent-text)]"
+          className="grid w-3.5 flex-none place-items-center text-(--accent-text)"
           aria-hidden="true"
         >
           {entry.checked ? <Icon name="check" size="sm" /> : null}
@@ -198,7 +198,7 @@ export function Menu({ label, at, entries, minWidth, onClose }: MenuProps) {
           collisionPadding={8}
           loop
           style={minWidth ? { minWidth } : undefined}
-          className="animate-in fade-in-0 zoom-in-[0.97] z-50 flex max-h-[min(var(--radix-dropdown-menu-content-available-height),calc(100vh-16px))] min-w-[220px] max-w-[380px] origin-[var(--radix-dropdown-menu-content-transform-origin)] flex-col overflow-y-auto rounded-lg bg-popover p-1.5 text-[13px] text-popover-foreground shadow-[var(--shadow-menu)] duration-[var(--motion-fast)] ease-[var(--ease-out)]"
+          className="animate-in fade-in-0 zoom-in-[0.97] z-50 flex max-h-[min(var(--radix-dropdown-menu-content-available-height),calc(100vh-16px))] min-w-55 max-w-95 origin-(--radix-dropdown-menu-content-transform-origin) flex-col overflow-y-auto rounded-lg bg-popover p-1.5 text-[13px] text-popover-foreground shadow-(--shadow-menu) duration-(--motion-fast) ease-(--ease-out)"
           {...openAutoFocus}
           onCloseAutoFocus={(event) => {
             event.preventDefault()

@@ -126,7 +126,7 @@ export function ProjectOverview({
       className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto pb-4"
       aria-label={`${project.name} overview`}
     >
-      <header className="flex flex-wrap items-center gap-[14px] px-6 pt-5">
+      <header className="flex flex-wrap items-center gap-3.5 px-6 pt-5">
         <ProjectIcon icon={project.icon} color={project.color} size="lg" />
         <div className="flex min-w-0 flex-col gap-0.5">
           <h1 className="m-0 truncate text-[22px] leading-7 font-semibold">{project.name}</h1>
@@ -154,7 +154,7 @@ export function ProjectOverview({
 
       {empty ? (
         <div className="flex flex-col items-start gap-2 p-6">
-          <h2 className="m-0 text-[15px] leading-[22px] font-semibold">
+          <h2 className="m-0 text-[15px] leading-5.5 font-semibold">
             No repositories in this project yet
           </h2>
           <p className="m-0 mb-2 text-muted-foreground">
@@ -167,7 +167,7 @@ export function ProjectOverview({
       ) : (
         <>
           {failedCount > 0 && !loading ? (
-            <div className="px-6 pt-[18px]">
+            <div className="px-6 pt-4.5">
               <ErrorBanner onRetry={summaries.retryFailed}>
                 {failedCount === 1
                   ? 'The summary of 1 repository could not be loaded.'
@@ -176,7 +176,7 @@ export function ProjectOverview({
               </ErrorBanner>
             </div>
           ) : null}
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(130px,1fr))] gap-2.5 px-6 pt-[18px]">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(130px,1fr))] gap-2.5 px-6 pt-4.5">
             <StatCard
               value={project.repoKeys.length}
               label="Repositories"
@@ -217,14 +217,14 @@ export function ProjectOverview({
             />
           </div>
 
-          <div className="flex items-center gap-3 px-6 pt-[22px] pb-2">
+          <div className="flex items-center gap-3 px-6 pt-5.5 pb-2">
             <h2 className="m-0 text-[14px] leading-5 font-semibold">Repositories</h2>
             {loading && summaries.progress ? (
               <>
                 <span className="text-[12px] text-muted-foreground" aria-live="polite">
                   {progressText(summaries.progress)}
                 </span>
-                <span className="w-[120px]">
+                <span className="w-30">
                   <ProgressBar
                     label="Summaries loading"
                     percent={(summaries.progress.done / summaries.progress.total) * 100}
@@ -239,7 +239,7 @@ export function ProjectOverview({
           </div>
 
           <div className="overflow-x-auto px-6">
-            <table className="w-full min-w-[860px] border-collapse [&_td]:h-[52px] [&_td]:border-b [&_td]:border-border [&_td]:px-1.5 [&_td]:text-left [&_td]:align-middle [&_td]:font-normal [&_th]:h-[30px] [&_th]:border-b [&_th]:border-border [&_th]:px-1.5 [&_th]:text-left [&_th]:text-[12px] [&_th]:font-normal [&_th]:text-muted-foreground">
+            <table className="w-full min-w-215 border-collapse [&_td]:h-13 [&_td]:border-b [&_td]:border-border [&_td]:px-1.5 [&_td]:text-left [&_td]:align-middle [&_td]:font-normal [&_th]:h-7.5 [&_th]:border-b [&_th]:border-border [&_th]:px-1.5 [&_th]:text-left [&_th]:text-[12px] [&_th]:font-normal [&_th]:text-muted-foreground">
               <thead>
                 <tr>
                   {COLUMNS.map((col) => {
@@ -405,10 +405,10 @@ function Row({
       <td>
         {row.linkedPath ? (
           <span
-            className="inline-flex items-center gap-1.5 text-[var(--success-text)]"
+            className="inline-flex items-center gap-1.5 text-(--success-text)"
             title={row.linkedPath}
           >
-            <span className="size-[7px] rounded-full bg-[var(--success)]" aria-hidden="true" />
+            <span className="size-[7px] rounded-full bg-(--success)" aria-hidden="true" />
             Cloned
           </span>
         ) : (

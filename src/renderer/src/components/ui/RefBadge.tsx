@@ -15,20 +15,18 @@ interface RefBadgeProps {
 
 /** Labels a branch, remote or tag on a commit. A tag also carries the tag icon. */
 const KINDS: Record<RefBadgeKind, string> = {
-  head: 'bg-[var(--ref-head-bg)] text-[var(--ref-head-fg)]',
-  main: 'border-[var(--ref-main-edge)] bg-[var(--ref-main-bg)] text-[var(--ref-main-fg)]',
-  feature:
-    'border-[var(--ref-feature-edge)] bg-[var(--ref-feature-bg)] text-[var(--ref-feature-fg)]',
-  project:
-    'border-[var(--ref-project-edge)] bg-[var(--ref-project-bg)] text-[var(--ref-project-fg)]',
-  tag: 'border-[var(--ref-tag-edge)] bg-[var(--ref-tag-bg)] text-[var(--ref-tag-fg)]'
+  head: 'bg-(--ref-head-bg) text-(--ref-head-fg)',
+  main: 'border-(--ref-main-edge) bg-(--ref-main-bg) text-(--ref-main-fg)',
+  feature: 'border-(--ref-feature-edge) bg-(--ref-feature-bg) text-(--ref-feature-fg)',
+  project: 'border-(--ref-project-edge) bg-(--ref-project-bg) text-(--ref-project-fg)',
+  tag: 'border-(--ref-tag-edge) bg-(--ref-tag-bg) text-(--ref-tag-fg)'
 }
 
 export function RefBadge({ kind, name, maxLength = 28, current = false }: RefBadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex h-5 items-center gap-1 rounded-[var(--radius-xs)] border border-transparent px-2 text-[11.5px] leading-4 whitespace-nowrap',
+        'inline-flex h-5 items-center gap-1 rounded-(--radius-xs) border border-transparent px-2 text-[11.5px] leading-4 whitespace-nowrap',
         current ? 'font-bold' : 'font-medium',
         KINDS[kind]
       )}

@@ -546,6 +546,21 @@ Scope decision and reasons: `docs/DECISIONS.md` (2026-11-07, Phase 17 scope). Ru
 
 **Verify:** `tests/branch-view.test.ts`, `tests/git-remote.test.ts` and `tests/service-remote.test.ts` cover the layout, force and remote delete, declined confirms and the no-token rule. Typecheck, lint, build and the suite pass. Run the menus on a scratch repo in the window.
 
+## Phase 18 — AI commit messages (Claude Code CLI)
+
+Scope decision and reasons: `docs/DECISIONS.md` (2026-11-07, Phase 18 scope). Runs on `phase/18-ai-commit-message`.
+
+- [x] `src/main/ai.ts` (no electron import): `findClaude` (PATH, then the usual install folders), `runClaude` (`claude -p --tools "" --no-session-persistence`, prompt on stdin, 60 s timeout), `buildPrompt` (gitmoji table, summary, diff capped at 60 KB) and `cleanReply`.
+- [x] `git.ts` `getStagedDiff` (summary plus diff of the index only; works before the first commit).
+- [x] `suggestCommitMessage(path)` through `shared/api.ts`, preload, `ipcTable.ts` and `service.ts` (`guard`, linked folder, "Stage some changes first"). It never commits.
+- [x] Settings: an AI section with an opt-in toggle (`state/ai.ts`, off by default) and a note on what is sent.
+- [x] Changes tab: a sparkles icon button inside the message field (top right), shown only when enabled, disabled with no staged files or with conflicts. It only fills the message field.
+- [x] Dark and light boards: not drawn, gap logged in `DECISIONS.md`. Tokens only.
+
+**Verify:** `tests/ai.test.ts` covers the prompt, truncation, reply cleaning, a fake `claude` (success, failure, timeout, empty, missing), `getStagedDiff` and the service call (staged diff only, no commit). Typecheck, lint, build and the suite pass. Try Generate on a scratch repo in the window.
+
+---
+
 ---
 
 ---

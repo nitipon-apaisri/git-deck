@@ -85,7 +85,7 @@ export function StashDialog({ path, stashes, onChanged, onClose }: StashDialogPr
         {problem ? <ErrorBanner onDismiss={() => setProblem(null)}>{problem}</ErrorBanner> : null}
 
         <section className="flex flex-col gap-1" aria-label="Saved stashes">
-          <h4 className="m-0 text-[12px] leading-[18px] font-semibold text-muted-foreground">
+          <h4 className="m-0 text-[12px] leading-4.5 font-semibold text-muted-foreground">
             Saved stashes · {stashes.length.toLocaleString('en-GB')}
           </h4>
           {stashes.length === 0 ? (

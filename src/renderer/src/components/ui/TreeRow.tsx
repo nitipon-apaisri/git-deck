@@ -38,19 +38,17 @@ export function TreeRow({
   return (
     <div
       className={cn(
-        'group/row mx-1.5 flex min-h-[var(--tree-row-height)] items-center gap-2 rounded-md text-foreground transition-[background-color,color] duration-[var(--motion-fast)] ease-[var(--ease-out)]',
-        quiet && 'min-h-[26px] text-muted-foreground text-[12px]',
-        selected
-          ? 'bg-[var(--selection)] font-medium hover:bg-[var(--selection)]'
-          : 'hover:bg-accent'
+        'group/row mx-1.5 flex min-h-(--tree-row-height) items-center gap-2 rounded-md text-foreground transition-[background-color,color] duration-(--motion-fast) ease-(--ease-out)',
+        quiet && 'min-h-6.5 text-muted-foreground text-[12px]',
+        selected ? 'bg-(--selection) font-medium hover:bg-(--selection)' : 'hover:bg-accent'
       )}
       onContextMenu={onContextMenu}
     >
       <button
         type="button"
         className={cn(
-          'flex min-h-[var(--tree-row-height)] min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent py-0 pr-0 pl-2 text-left text-[13px] text-inherit',
-          quiet && 'min-h-[26px] pl-6 text-[12px]',
+          'flex min-h-(--tree-row-height) min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent py-0 pr-0 pl-2 text-left text-[13px] text-inherit',
+          quiet && 'min-h-6.5 pl-6 text-[12px]',
           level === 'repo' && 'pl-11',
           level === 'repo-flat' && 'pl-10'
         )}

@@ -162,7 +162,7 @@ export function IntegrationsSection({
 
       {secureStorage === false ? (
         <p
-          className="m-0 flex gap-2 rounded-lg bg-[var(--warning-bg)] px-4 py-2.5 text-[var(--warning-text)] [&_svg]:mt-0.5"
+          className="m-0 flex gap-2 rounded-lg bg-(--warning-bg) px-4 py-2.5 text-(--warning-text) [&_svg]:mt-0.5"
           role="alert"
         >
           <Icon name="alert" size="sm" />
@@ -175,7 +175,7 @@ export function IntegrationsSection({
 
       {accounts.length > 0 ? (
         <section className="flex flex-col gap-2" aria-label="Connected accounts">
-          <h3 className="m-0 text-[13px] leading-[18px] font-semibold">Connected accounts</h3>
+          <h3 className="m-0 text-[13px] leading-4.5 font-semibold">Connected accounts</h3>
           <ul className="m-0 flex list-none flex-col gap-2 p-0">
             {accounts.map((account) => {
               const { tile, host: kind } = hostTileOf(account.type, account.baseUrl)
@@ -222,7 +222,7 @@ export function IntegrationsSection({
               {removeError}
             </p>
           ) : null}
-          <h3 className="m-0 text-[13px] leading-[18px] font-semibold">Add another account</h3>
+          <h3 className="m-0 text-[13px] leading-4.5 font-semibold">Add another account</h3>
         </section>
       ) : null}
 
@@ -314,8 +314,8 @@ export function IntegrationsSection({
         <p
           className={cn(
             'm-0 flex items-center gap-2.5 rounded-lg px-4 py-2.5',
-            status.kind === 'ok' && 'bg-[var(--success-bg)] text-[var(--success-text)]',
-            status.kind === 'error' && 'bg-[var(--warning-bg)] text-destructive',
+            status.kind === 'ok' && 'bg-(--success-bg) text-(--success-text)',
+            status.kind === 'error' && 'bg-(--warning-bg) text-destructive',
             status.kind === 'busy' && 'bg-secondary text-muted-foreground'
           )}
           role={status.kind === 'error' ? 'alert' : 'status'}
