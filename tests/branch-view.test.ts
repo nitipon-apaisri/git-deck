@@ -130,7 +130,7 @@ test('refActions offers merge for other branches and remote branches, not the cu
   assert.ok(ids(other).includes('merge') && ids(other).includes('merge-no-ff'))
   const merge = other.find((i) => i.id === 'merge')
   assert.deepEqual(merge?.action, { type: 'merge', branch: 'feature', noFf: false })
-  assert.match(merge?.label ?? '', /Merge feature into main/)
+  assert.equal(merge?.label, 'Merge into main')
   assert.equal(other.find((i) => i.id === 'merge-no-ff')?.action.type, 'merge')
 
   const remote = refActions({ kind: 'remote', name: 'origin/dev' }, 'abc1234', ctx)
@@ -209,7 +209,7 @@ test('refActions offers rebase onto a branch, a remote branch and a commit when 
   const other = refActions({ kind: 'branch', name: 'feature' }, 'abc1234', ctx)
   const onBranch = other.find((i) => i.id === 'rebase')
   assert.deepEqual(onBranch?.action, { type: 'rebase', onto: 'feature' })
-  assert.match(onBranch?.label ?? '', /Rebase main onto feature/)
+  assert.equal(onBranch?.label, 'Rebase main onto this branch')
   const remote = refActions({ kind: 'remote', name: 'origin/dev' }, 'abc1234', ctx)
   assert.deepEqual(remote.find((i) => i.id === 'rebase')?.action, {
     type: 'rebase',

@@ -4,6 +4,7 @@ import { menuLayout, type RefActionItem, type RefAction } from './branchView'
 /** The part of the `Menu` entry type a ref menu uses, so this file needs no React types. */
 export type RefMenuEntry =
   | { kind: 'separator'; id: string }
+  | { kind: 'heading'; id: string; label: string }
   | {
       kind: 'item'
       id: string
@@ -22,7 +23,9 @@ export function refMenuEntries(
   items: RefActionItem[],
   currentBranch: string | null,
   busy: boolean,
-  run: (action: RefAction) => void
+  run: (action: RefAction) => void,
+  /** The ref's name, shown once above its actions. Left out when the menu hangs off its row. */
+  heading?: string
 ): RefMenuEntry[] {
   const toEntry = (item: RefActionItem): RefMenuEntry => ({
     kind: 'item',
@@ -32,7 +35,7 @@ export function refMenuEntries(
     disabled: busy && item.action.type !== 'copy',
     onSelect: () => run(item.action)
   })
-  return menuLayout(items, currentBranch).map((row): RefMenuEntry => {
+  const rows = menuLayout(items, currentBranch).map((row): RefMenuEntry => {
     if (row.kind === 'separator') return row
     if (row.kind === 'item') return toEntry(row.item)
     return {
@@ -44,4 +47,5 @@ export function refMenuEntries(
       entries: row.items.map(toEntry)
     }
   })
+  return heading ? [{ kind: 'heading', id: 'heading', label: heading }, ...rows] : rows
 }

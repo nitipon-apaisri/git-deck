@@ -51,7 +51,7 @@ const itemClass =
   'flex min-h-[30px] cursor-pointer items-center gap-2.5 rounded-md border-0 bg-transparent px-2.5 text-left transition-[background-color,color] duration-[var(--motion-fast)] ease-[var(--ease-out)] data-[highlighted]:bg-accent data-[disabled]:cursor-default data-[disabled]:text-muted-foreground data-[disabled]:data-[highlighted]:bg-transparent'
 
 const subContentClass =
-  'animate-in fade-in-0 z-50 flex max-h-[var(--radix-dropdown-menu-content-available-height)] min-w-[200px] max-w-[320px] origin-[var(--radix-dropdown-menu-content-transform-origin)] flex-col overflow-y-auto rounded-lg bg-popover p-1.5 text-[13px] text-popover-foreground shadow-[var(--shadow-menu)] duration-[var(--motion-fast)] ease-[var(--ease-out)]'
+  'animate-in fade-in-0 z-50 flex max-h-[var(--radix-dropdown-menu-content-available-height)] min-w-[200px] max-w-[380px] origin-[var(--radix-dropdown-menu-content-transform-origin)] flex-col overflow-y-auto rounded-lg bg-popover p-1.5 text-[13px] text-popover-foreground shadow-[var(--shadow-menu)] duration-[var(--motion-fast)] ease-[var(--ease-out)]'
 
 function renderEntries(entries: readonly MenuEntry[]): ReactNode {
   return entries.map((entry) => {
@@ -87,7 +87,8 @@ function renderEntries(entries: readonly MenuEntry[]): ReactNode {
       return (
         <DropdownMenu.Label
           key={entry.id}
-          className="px-2.5 pt-1.5 pb-1 text-[12px] text-muted-foreground"
+          title={entry.label}
+          className="truncate px-2.5 pt-1.5 pb-1 text-[12px] text-muted-foreground"
         >
           {entry.label}
         </DropdownMenu.Label>
@@ -112,6 +113,7 @@ function renderEntries(entries: readonly MenuEntry[]): ReactNode {
         <DropdownMenu.Item
           key={entry.id}
           disabled={entry.disabled}
+          title={entry.label}
           className={className}
           onSelect={onSelect}
         >
@@ -196,7 +198,7 @@ export function Menu({ label, at, entries, minWidth, onClose }: MenuProps) {
           collisionPadding={8}
           loop
           style={minWidth ? { minWidth } : undefined}
-          className="animate-in fade-in-0 zoom-in-[0.97] z-50 flex max-h-[min(var(--radix-dropdown-menu-content-available-height),calc(100vh-16px))] min-w-[220px] max-w-[320px] origin-[var(--radix-dropdown-menu-content-transform-origin)] flex-col overflow-y-auto rounded-lg bg-popover p-1.5 text-[13px] text-popover-foreground shadow-[var(--shadow-menu)] duration-[var(--motion-fast)] ease-[var(--ease-out)]"
+          className="animate-in fade-in-0 zoom-in-[0.97] z-50 flex max-h-[min(var(--radix-dropdown-menu-content-available-height),calc(100vh-16px))] min-w-[220px] max-w-[380px] origin-[var(--radix-dropdown-menu-content-transform-origin)] flex-col overflow-y-auto rounded-lg bg-popover p-1.5 text-[13px] text-popover-foreground shadow-[var(--shadow-menu)] duration-[var(--motion-fast)] ease-[var(--ease-out)]"
           {...openAutoFocus}
           onCloseAutoFocus={(event) => {
             event.preventDefault()
