@@ -263,14 +263,27 @@ export function LocalActions({
             onClick={(e) => open('push', e.currentTarget)}
           />
         </div>
-        <IconButton
-          label={stashButtonLabel(stashCount)}
-          icon="layers"
-          className="size-9"
-          onClick={onStash}
-        />
-        <IconButton label="Tags" icon="tag" className="size-9" onClick={onTags} />
-        <IconButton label="Remotes" icon="globe" className="size-9" onClick={onRemotes} />
+        {(
+          [
+            { id: 'stash', label: stashButtonLabel(stashCount), icon: 'layers', onClick: onStash },
+            { id: 'tags', label: 'Tags', icon: 'tag', onClick: onTags },
+            { id: 'remotes', label: 'Remotes', icon: 'globe', onClick: onRemotes }
+          ] as const
+        ).map((b) =>
+          compact ? (
+            <IconButton
+              key={b.id}
+              label={b.label}
+              icon={b.icon}
+              className="size-9"
+              onClick={b.onClick}
+            />
+          ) : (
+            <Button key={b.id} icon={b.icon} onClick={b.onClick}>
+              {b.label}
+            </Button>
+          )
+        )}
         {busy === 'fetch' || busy === 'branch' ? (
           <Spinner label={busy === 'fetch' ? 'Fetching' : 'Switching branches'} />
         ) : null}
