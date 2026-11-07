@@ -814,6 +814,16 @@ export async function discardPaths(cwd: string, paths: string[]): Promise<void> 
   if (untracked.length > 0) await run(cwd, ['clean', '-f', '-q', '--', ...untracked])
 }
 
+/** The staged change as a file summary plus a diff, for the commit message suggestion. */
+export async function getStagedDiff(cwd: string): Promise<{ stat: string; diff: string }> {
+  const base = ['-c', 'core.quotepath=false', 'diff', '--cached', '--no-color', '--no-ext-diff']
+  const [stat, diff] = await Promise.all([
+    run(cwd, [...base, '--stat']),
+    run(cwd, [...base, '--no-textconv', '--unified=3'])
+  ])
+  return { stat, diff }
+}
+
 export async function createCommit(cwd: string, message: string, amend: boolean): Promise<void> {
   const text = message.trim()
   if (!text && !amend) throw new Error('Write a commit message')

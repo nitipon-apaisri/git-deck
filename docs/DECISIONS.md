@@ -8,6 +8,18 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-07: Phase 18 as built
+
+- **Question:** what was built, what the checks showed, and what was not checked.
+- **Decision and why:** a Generate button in the commit box runs the local `claude -p` with no tools and fills the message field. `tests/ai.test.ts` passes, including a fake CLI. One real call to the installed CLI returned a gitmoji message.
+- **Not verified:** the button in the running window, light and dark, and a Finder-launched build finding `claude`. Dark and light boards are not drawn.
+
+## 2026-11-07: Phase 18 scope (AI commit messages)
+
+- **Question:** how to add AI help without a native module or a stored key.
+- **Options considered:** an embedded terminal (needs `node-pty`, a native module, against the rules); a direct API call (needs a stored key); the user's own `claude` CLI.
+- **Decision and why:** the CLI. GitDeck stores nothing, adds no dependency and `child_process` is built in. The staged diff (first 60 KB) leaves the machine through that CLI, so it is opt-in (off by default, Settings, AI), runs only on a click, and only suggests: it never commits or pushes. A terminal panel stays out of scope.
+
 ## 2026-11-07: Phase 17 as built
 
 - **Question:** what was built, what the checks showed, and what was not checked.

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useAiEnabled } from '../../state/ai'
 import { cn } from '@/lib/cn'
 import type { RepoStatus, StatusEntry } from '@shared/types'
 import {
@@ -158,6 +159,8 @@ export function ChangesPanel({
   const [amend, setAmend] = useState(false)
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
+  const [generating, setGenerating] = useState(false)
+  const aiEnabled = useAiEnabled()
 
   const groups = groupStatus(status?.entries ?? [])
 
@@ -182,6 +185,19 @@ export function ChangesPanel({
     conflicts: groups.conflicted.length,
     amend
   })
+
+  // Only fills the message field. It does not go through `act`: nothing on disk changes.
+  async function generate(): Promise<void> {
+    setGenerating(true)
+    setProblem(null)
+    try {
+      setMessage(await window.api.local.suggestCommitMessage(path))
+    } catch (err) {
+      setProblem(errorMessage(err))
+    } finally {
+      setGenerating(false)
+    }
+  }
 
   async function commit(): Promise<void> {
     await act(async () => {
@@ -211,7 +227,22 @@ export function ChangesPanel({
           >
             {amend ? 'Amend commit' : 'Commit'}
           </Button>
-          {busy ? <Spinner label="Working" /> : null}
+          {aiEnabled ? (
+            <Button
+              variant="ghost"
+              icon="sparkles"
+              disabled={
+                busy || generating || groups.staged.length === 0 || groups.conflicted.length > 0
+              }
+              title="Suggest a message for the staged changes"
+              onClick={() => void generate()}
+            >
+              Generate
+            </Button>
+          ) : null}
+          {busy || generating ? (
+            <Spinner label={generating ? 'Writing a message' : 'Working'} />
+          ) : null}
           <span className="min-w-0 flex-[1_1_8rem] text-[12px] text-muted-foreground">
             {blocker}
           </span>

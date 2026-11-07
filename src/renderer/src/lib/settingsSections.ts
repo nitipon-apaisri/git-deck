@@ -1,7 +1,8 @@
 // The Settings sections and the keyboard rule for moving between them.
 export const SETTINGS_SECTIONS = [
   { id: 'appearance', label: 'Appearance' },
-  { id: 'integrations', label: 'Integrations' }
+  { id: 'integrations', label: 'Integrations' },
+  { id: 'ai', label: 'AI' }
 ] as const
 
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number]['id']

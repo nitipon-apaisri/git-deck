@@ -258,6 +258,12 @@ const SHAPES = {
       <circle cx="14.5" cy="7.5" r=".9" />
     </>
   ),
+  sparkles: (
+    <>
+      <path d="M10 4l1.8 4.7L16.5 10.5l-4.7 1.8L10 17l-1.8-4.7L3.5 10.5l4.7-1.8z" />
+      <path d="M18 3v4M16 5h4M18 17v4M16 19h4" />
+    </>
+  ),
   plug: <path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4" />,
   activity: <path d="M3 12h4l3-8 4 16 3-8h4" />,
   'bar-chart': <path d="M5 20v-9M12 20V4M19 20v-6" />,

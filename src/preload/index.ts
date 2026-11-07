@@ -51,6 +51,7 @@ const api: Api = {
     deleteRemoteBranch: (path, name) => call(IPC.localDeleteRemoteBranch, path, name),
     pull: (path, mode) => call(IPC.localPull, path, mode),
     push: (path, force) => call(IPC.localPush, path, force),
+    suggestCommitMessage: (path) => call(IPC.localSuggestCommitMessage, path),
     stashes: (path) => call(IPC.localStashes, path),
     stashPush: (path, message, untracked) => call(IPC.localStashPush, path, message, untracked),
     stashApply: (path, index, hash) => call(IPC.localStashApply, path, index, hash),
