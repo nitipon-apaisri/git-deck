@@ -330,7 +330,7 @@ export function GitGraph({
         ) : null}
 
         <div
-          className="flex min-h-0 min-w-0 flex-col gap-2 [&[hidden]]:hidden"
+          className="flex min-h-0 min-w-0 flex-col gap-2 [[hidden]]:hidden"
           hidden={rows.length === 0}
         >
           <div
@@ -365,7 +365,7 @@ export function GitGraph({
           </div>
           {error !== null && rows.length > 0 ? (
             <p
-              className="m-0 flex flex-none items-center gap-2 rounded-md bg-(--warning-bg) px-3 py-2 text-(--warning-text) [&_span]:min-w-0 [&_span]:flex-1 [&_span]:[overflow-wrap:anywhere]"
+              className="m-0 flex flex-none items-center gap-2 rounded-md bg-(--warning-bg) px-3 py-2 text-warning [&_span]:min-w-0 [&_span]:flex-1 [&_span]:wrap-anywhere"
               role="alert"
             >
               <Icon name="alert" size="sm" />

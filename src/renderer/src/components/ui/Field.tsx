@@ -97,7 +97,7 @@ export function CheckOption({ label, checked, onChange, warning }: CheckOptionPr
         {label}
       </label>
       {warning ? (
-        <span className="flex gap-2 text-xs leading-4 text-(--warning-text)">
+        <span className="flex gap-2 text-xs leading-4 text-warning">
           <span className="mt-px">
             <Icon name="alert" size="sm" />
           </span>

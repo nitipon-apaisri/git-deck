@@ -189,7 +189,7 @@ export function RepoPane({
         ) : null}
         {problem ? (
           <p
-            className="m-0 flex items-start gap-2 rounded-md bg-(--warning-bg) px-3 py-2 text-(--warning-text) [overflow-wrap:anywhere] [&_svg]:mt-0.5 [&_svg]:flex-none"
+            className="m-0 flex items-start gap-2 rounded-md bg-(--warning-bg) px-3 py-2 text-warning wrap-anywhere [&_svg]:mt-0.5 [&_svg]:flex-none"
             role="alert"
           >
             <Icon name="alert" size="sm" />
@@ -250,7 +250,7 @@ export function RepoPane({
           </ErrorBanner>
         ) : null}
         {graphSeen ? (
-          <div className="flex min-h-0 flex-1 [&[hidden]]:hidden" hidden={tab !== 'graph'}>
+          <div className="flex min-h-0 flex-1 [[hidden]]:hidden" hidden={tab !== 'graph'}>
             <GitGraph
               path={linkedPath ?? null}
               defaultBranch={repo.defaultBranch}

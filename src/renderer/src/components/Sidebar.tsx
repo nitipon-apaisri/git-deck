@@ -195,7 +195,7 @@ export function Sidebar({
             {scope ? (
               <button
                 type="button"
-                className="flex h-7.5 cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-2.5 text-left text-foreground transition-[background-color,color] duration-(--motion-fast) ease-(--ease-out) hover:bg-accent aria-pressed:bg-(--selection) aria-pressed:font-medium"
+                className="flex h-7.5 cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-2.5 text-left text-foreground transition-[background-color,color] duration-(--motion-fast) ease-out hover:bg-accent aria-pressed:bg-(--selection) aria-pressed:font-medium"
                 aria-pressed={proj.overviewActive}
                 onClick={proj.onOverview}
               >
@@ -227,7 +227,7 @@ export function Sidebar({
             ))}
             {unavailable.length > 0 ? (
               <>
-                <div className="mt-2.5 flex h-7.5 items-center gap-2 px-3 text-[12px] font-medium text-(--warning-text)">
+                <div className="mt-2.5 flex h-7.5 items-center gap-2 px-3 text-[12px] font-medium text-warning">
                   <Icon name="alert" size="sm" />
                   Unavailable ({unavailable.length})
                 </div>
@@ -412,7 +412,7 @@ function SidebarRow({
         <>
           {mark ? (
             <span
-              className="grid size-4 place-items-center rounded-(--radius-xs) bg-primary text-[11px] leading-none font-semibold text-primary-foreground"
+              className="grid size-4 place-items-center rounded-xs bg-primary text-[11px] leading-none font-semibold text-primary-foreground"
               role="img"
               aria-label={`Shown in pane ${mark}`}
               title={`Shown in pane ${mark}`}
@@ -421,12 +421,12 @@ function SidebarRow({
             </span>
           ) : null}
           {repo.archived ? (
-            <span className="rounded-(--radius-xs) border border-border px-1.5 text-[11px] leading-4 text-muted-foreground">
+            <span className="rounded-xs border border-border px-1.5 text-[11px] leading-4 text-muted-foreground">
               archived
             </span>
           ) : null}
           {repo.fork ? (
-            <span className="rounded-(--radius-xs) border border-border px-1.5 text-[11px] leading-4 text-muted-foreground">
+            <span className="rounded-xs border border-border px-1.5 text-[11px] leading-4 text-muted-foreground">
               fork
             </span>
           ) : null}
@@ -435,7 +435,7 @@ function SidebarRow({
           ) : null}
           {!local && links[repo.key] ? (
             <span
-              className="size-[7px] rounded-full bg-(--success)"
+              className="size-1.75 rounded-full bg-success"
               role="img"
               aria-label="Cloned locally"
               title="Cloned locally"
@@ -500,7 +500,7 @@ function HostRow({ node, expanded, searching, state, onToggle, onRefresh }: Host
             <IconButton
               label={`Could not load repositories: ${state.error} Retry`}
               icon="alert"
-              className="size-6 text-[color:var(--warning-text)]"
+              className="size-6 text-warning"
               onClick={onRefresh}
             />
           ) : null}
