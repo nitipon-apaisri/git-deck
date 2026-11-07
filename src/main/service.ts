@@ -72,6 +72,8 @@ export type GitOps = Pick<
   | 'createBranch'
   | 'renameBranch'
   | 'deleteBranch'
+  | 'deleteRemoteBranch'
+  | 'getRemoteBranchTarget'
   | 'getRemoteTarget'
   | 'pull'
   | 'push'
@@ -859,7 +861,38 @@ export function createService(deps: ServiceDeps): { api: MainApi; syncInsecureHo
           confirmLabel: 'Delete'
         })
         if (!ok) return false
-        await serial(path, () => git.deleteBranch(path, branch))
+        try {
+          await serial(path, () => git.deleteBranch(path, branch))
+        } catch (err) {
+          // Git refuses a branch with work that is nowhere else. Ask again before losing it.
+          if (!/not fully merged/.test(err instanceof Error ? err.message : '')) throw err
+          const force = await ui.confirm({
+            message: `Force delete ${branch}?`,
+            detail:
+              'It has commits that are not merged into any other branch. They are lost if you continue.',
+            confirmLabel: 'Force delete'
+          })
+          if (!force) return false
+          await serial(path, () => git.deleteBranch(path, branch, true))
+        }
+        return true
+      }),
+      deleteRemoteBranch: guard(async (path, name) => {
+        linkedRepoKey(path)
+        const ref = checkBranchName(name)
+        const ok = await ui.confirm({
+          message: `Delete ${ref} on the remote?`,
+          detail:
+            'Anyone who already fetched it keeps their copy. A local branch with the same name is not touched.',
+          confirmLabel: 'Delete on remote'
+        })
+        if (!ok) return false
+        await withRemote(
+          path,
+          'push',
+          (env, onLine) => git.deleteRemoteBranch(path, ref, env, onLine),
+          (cwd) => git.getRemoteBranchTarget(cwd, ref)
+        )
         return true
       }),
       pull: guard(async (path, mode) => {

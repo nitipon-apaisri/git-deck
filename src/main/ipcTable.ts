@@ -62,6 +62,8 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     localRenameBranch: ([path, from, to]) =>
       api.local.renameBranch(path as string, from as string, to as string),
     localDeleteBranch: ([path, name]) => api.local.deleteBranch(path as string, name as string),
+    localDeleteRemoteBranch: ([path, name]) =>
+      api.local.deleteRemoteBranch(path as string, name as string),
     localPull: ([path, mode]) => api.local.pull(path as string, mode as PullMode),
     localPush: ([path, force]) => api.local.push(path as string, force as boolean),
     localStashes: ([path]) => api.local.stashes(path as string),

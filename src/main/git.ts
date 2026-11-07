@@ -496,8 +496,11 @@ export async function renameBranch(cwd: string, from: string, to: string): Promi
   await run(cwd, ['branch', '-m', '--', from, to])
 }
 
-/** Safe delete: git refuses a branch with commits that are not merged anywhere else. */
-export async function deleteBranch(cwd: string, name: string): Promise<void> {
+/**
+ * Safe delete: git refuses a branch with commits that are not merged anywhere else.
+ * `force` (`-D`) deletes it anyway, which loses those commits.
+ */
+export async function deleteBranch(cwd: string, name: string, force = false): Promise<void> {
   if (!(await refExists(cwd, `refs/heads/${name}`))) {
     throw new Error(`There is no branch named "${name}"`)
   }
@@ -506,7 +509,39 @@ export async function deleteBranch(cwd: string, name: string): Promise<void> {
       'You cannot delete the branch that is checked out. Switch to another one first.'
     )
   }
-  await run(cwd, ['branch', '-d', '--', name])
+  await run(cwd, ['branch', force ? '-D' : '-d', '--', name])
+}
+
+/**
+ * Splits `origin/topic` into its remote and branch by the repository's own remote names, the
+ * longest first, because both a remote and a branch name may hold a slash.
+ */
+export async function getRemoteBranchTarget(
+  cwd: string,
+  ref: string
+): Promise<{ remote: string; branch: string; url: string }> {
+  const remotes = (await getRemotes(cwd)).sort((a, b) => b.name.length - a.name.length)
+  const remote = remotes.find((r) => typeof ref === 'string' && ref.startsWith(`${r.name}/`))
+  if (!remote) throw new Error(`"${String(ref).slice(0, 60)}" is not a remote branch`)
+  const branch = ref.slice(remote.name.length + 1)
+  await assertBranchName(cwd, branch)
+  if (!(await refExists(cwd, `refs/remotes/${ref}`))) {
+    throw new Error(`There is no remote branch "${ref}"`)
+  }
+  return { remote: remote.name, branch, url: remote.url }
+}
+
+/** Removes a branch on its remote (`git push <remote> :refs/heads/<branch>`). */
+export async function deleteRemoteBranch(
+  cwd: string,
+  ref: string,
+  env: Record<string, string> = {},
+  onLine: (line: string) => void = () => {}
+): Promise<void> {
+  const { remote, branch } = await getRemoteBranchTarget(cwd, ref)
+  await slots.run(() =>
+    progressProcess(cwd, ['push', '--progress', '--', remote, `:refs/heads/${branch}`], env, onLine)
+  )
 }
 
 export interface RemoteTarget {
