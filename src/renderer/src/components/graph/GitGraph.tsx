@@ -22,6 +22,7 @@ import type {
 import { errorMessage } from '../../lib/errors'
 import { canStageHunks } from '../../lib/changesView'
 import { refActions, type RefAction } from '../../lib/branchView'
+import { refMenuEntries } from '../../lib/refMenu'
 import type { BadgeView } from '../../lib/graphView'
 import { detailPlacement } from '../../lib/splitLayout'
 import { Button, Dialog, ErrorBanner, Icon, Menu, Spinner, type MenuEntry } from '../ui'
@@ -60,6 +61,8 @@ export interface GraphMenuOps {
   busy: boolean
   checkout: (target: CheckoutTarget) => void
   deleteBranch: (name: string) => void
+  /** `origin/topic`: asks, then removes the branch on the remote. */
+  deleteRemoteBranch: (name: string) => void
   createBranch: (startPoint: string, startLabel: string) => void
   renameBranch: (name: string) => void
   cherryPick: (hash: string) => void
@@ -214,6 +217,8 @@ export function GitGraph({
         return menuOps.renameBranch(action.name)
       case 'delete-branch':
         return menuOps.deleteBranch(action.name)
+      case 'delete-remote-branch':
+        return menuOps.deleteRemoteBranch(action.name)
       case 'merge':
         return menuOps.merge(action.branch, action.noFf)
       case 'cherry-pick':
@@ -241,22 +246,9 @@ export function GitGraph({
         operationActive: menuOps.operationActive
       }
     )
-    const entries: MenuEntry[] = []
-    items.forEach((item, i) => {
-      if (i > 0 && items[i - 1].group !== item.group) {
-        entries.push({ kind: 'separator', id: `sep-${item.id}` })
-      }
-      entries.push({
-        kind: 'item',
-        id: item.id,
-        label: item.label,
-        danger: item.danger,
-        // Copying works while a write runs; everything else waits for it.
-        disabled: !!menuOps?.busy && item.action.type !== 'copy',
-        onSelect: () => runAction(item.action, commit)
-      })
-    })
-    return entries
+    return refMenuEntries(items, menuOps?.currentBranch ?? null, !!menuOps?.busy, (action) =>
+      runAction(action, commit)
+    )
   }
 
   function onScroll(): void {
@@ -406,6 +398,8 @@ export function GitGraph({
         />
         {menu && menuOps ? (
           <Menu
+            // A new menu for each place, so it opens at the pointer and not where the last one was.
+            key={`${menu.x}:${menu.y}`}
             label="Commit actions"
             at={{ x: menu.x, y: menu.y }}
             entries={menuEntries(menu.commit, menu.ref)}

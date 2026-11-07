@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
+  menuLayout,
   refActions,
+  remoteGroups,
   remoteOnly,
   remoteState,
   trackingText
 } from '../src/renderer/src/lib/branchView'
+import { refMenuEntries } from '../src/renderer/src/lib/refMenu'
 import type { BranchList, LocalBranch } from '../src/shared/types'
 
 const branch = (name: string, extra: Partial<LocalBranch> = {}): LocalBranch => ({
@@ -175,7 +178,8 @@ test('refActions offers revert, tag and reset on a commit, each only when it is 
   const hard = items.find((i) => i.id === 'reset-hard')
   assert.deepEqual(hard?.action, { type: 'reset', hash: 'abc1234', mode: 'hard' })
   assert.equal(hard?.danger, true)
-  assert.match(hard?.label ?? '', /Reset main to here \(hard\)…/)
+  assert.match(hard?.label ?? '', /^Hard/)
+  assert.equal(hard?.submenu, 'reset')
   assert.ok(!items.find((i) => i.id === 'reset-soft')?.danger)
 
   // A merge commit cannot be reverted without a mainline, but it can be tagged and reset to.
@@ -186,7 +190,10 @@ test('refActions offers revert, tag and reset on a commit, each only when it is 
   // Detached: no revert, reset says HEAD.
   const detached = refActions(null, 'abc1234', { ...ctx, currentBranch: null })
   assert.ok(!ids(detached).includes('revert'))
-  assert.match(detached.find((i) => i.id === 'reset-mixed')?.label ?? '', /Reset HEAD to here/)
+  assert.equal(
+    menuLayout(detached, null).find((r) => r.kind === 'submenu' && r.id === 'reset')?.kind,
+    'submenu'
+  )
   // While an operation waits only tagging stays.
   const busy = ids(refActions(null, 'abc1234', { ...ctx, operationActive: true }))
   assert.ok(busy.includes('create-tag'))
@@ -224,4 +231,82 @@ test('refActions offers rebase onto a branch, a remote branch and a commit when 
   assert.ok(!ids(refActions(null, 'abc1234')).includes('rebase-commit'))
   // A merge commit can be a rebase target.
   assert.ok(ids(refActions(null, 'abc1234', { ...ctx, isMerge: true })).includes('rebase-commit'))
+})
+
+test('refActions: a remote branch can be deleted on its remote, the selector has no commit actions', () => {
+  const remote = refActions({ kind: 'remote', name: 'origin/dev' }, null, ctx)
+  assert.deepEqual(remote.find((i) => i.id === 'delete-remote')?.action, {
+    type: 'delete-remote-branch',
+    name: 'origin/dev'
+  })
+  assert.equal(remote.find((i) => i.id === 'delete-remote')?.danger, true)
+  // Without a hash only ref actions remain: no commit, reset or hash copy.
+  assert.ok(remote.every((i) => i.group === 'ref'))
+  assert.ok(!ids(remote).includes('reset-hard') && !ids(remote).includes('copy-hash'))
+  const local = refActions({ kind: 'branch', name: 'topic' }, null, ctx)
+  assert.deepEqual(
+    ids(local).filter((id) => id === 'delete' || id === 'copy-name'),
+    ['delete', 'copy-name']
+  )
+  assert.ok(!ids(local).includes('delete-remote'))
+})
+
+test('menuLayout: ref and commit actions, then Reset and Copy submenus', () => {
+  const rows = menuLayout(refActions({ kind: 'branch', name: 'feature' }, 'abc1234', ctx), 'main')
+  const kinds = rows.map((r) => r.kind)
+  // A rule between the ref and commit groups, and another before the submenus.
+  assert.equal(kinds.filter((k) => k === 'separator').length, 2)
+  assert.deepEqual(kinds.slice(-2), ['submenu', 'submenu'])
+  const reset = rows.find((r) => r.kind === 'submenu' && r.id === 'reset')
+  assert.ok(reset?.kind === 'submenu')
+  assert.equal(reset.label, 'Reset main to here')
+  assert.deepEqual(
+    reset.items.map((i) => i.id),
+    ['reset-soft', 'reset-mixed', 'reset-hard']
+  )
+  const copy = rows.find((r) => r.kind === 'submenu' && r.id === 'copy')
+  assert.ok(copy?.kind === 'submenu')
+  assert.deepEqual(
+    copy.items.map((i) => i.id),
+    ['copy-name', 'copy-hash']
+  )
+  // No top-level item is a reset or a copy any more.
+  assert.ok(!rows.some((r) => r.kind === 'item' && /^(reset|copy)/.test(r.item.id)))
+  // A pane that cannot write has no Reset submenu, but still copies.
+  const readOnly = menuLayout(refActions(null, 'abc1234'), null)
+  assert.ok(!readOnly.some((r) => r.kind === 'submenu' && r.id === 'reset'))
+  assert.ok(readOnly.some((r) => r.kind === 'submenu' && r.id === 'copy'))
+})
+
+test('refMenuEntries: busy switches off everything but copying', () => {
+  const run: string[] = []
+  const items = refActions({ kind: 'branch', name: 'feature' }, 'abc1234', ctx)
+  const entries = refMenuEntries(items, 'main', true, (a) => run.push(a.type))
+  const find = (id: string) => entries.find((e) => e.id === id)
+  const reset = find('reset')
+  const copy = find('copy')
+  assert.ok(reset?.kind === 'submenu' && copy?.kind === 'submenu')
+  assert.equal(reset.disabled, true)
+  assert.equal(copy.disabled, false)
+  assert.ok(copy.entries.every((e) => e.kind === 'item' && !e.disabled))
+  const checkout = find('checkout')
+  assert.ok(checkout?.kind === 'item' && checkout.disabled)
+  // Choosing an enabled item runs its action.
+  const idle = refMenuEntries(items, 'main', false, (a) => run.push(a.type))
+  const del = idle.find((e) => e.id === 'delete')
+  assert.ok(del?.kind === 'item')
+  del.onSelect()
+  assert.deepEqual(run, ['delete-branch'])
+})
+
+test('remoteGroups lists every remote branch under its own remote, twins included', () => {
+  const l = list({
+    remotes: ['origin', 'fork', 'empty'],
+    remote: ['origin/main', 'origin/feature/deep', 'fork/dev', 'fork/origin/odd']
+  })
+  assert.deepEqual(remoteGroups(l), [
+    { remote: 'origin', names: ['origin/main', 'origin/feature/deep'] },
+    { remote: 'fork', names: ['fork/dev', 'fork/origin/odd'] }
+  ])
+  assert.deepEqual(remoteGroups(list({ remotes: [], remote: [] })), [])
 })

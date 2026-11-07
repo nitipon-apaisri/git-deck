@@ -27,6 +27,23 @@ export function remoteOnly(list: BranchList): string[] {
   })
 }
 
+/**
+ * Every remote branch, a group per remote in the order `git remote` lists them. A branch goes
+ * to the longest remote name that prefixes it, so `fork/dev/x` is `dev/x` on `fork`, and a
+ * remote with no branches is left out.
+ */
+export function remoteGroups(list: BranchList): { remote: string; names: string[] }[] {
+  const byLength = [...list.remotes].sort((a, b) => b.length - a.length)
+  const groups = new Map(list.remotes.map((r) => [r, [] as string[]] as const))
+  for (const name of list.remote) {
+    const owner = byLength.find((r) => name.startsWith(`${r}/`))
+    if (owner) groups.get(owner)?.push(name)
+  }
+  return [...groups]
+    .filter(([, names]) => names.length > 0)
+    .map(([remote, names]) => ({ remote, names }))
+}
+
 export interface ButtonState {
   enabled: boolean
   /** Why it is off, or what it does. Shown as the tooltip. */
@@ -88,6 +105,7 @@ export type RefAction =
   | { type: 'create-branch'; startPoint: string }
   | { type: 'rename-branch'; name: string }
   | { type: 'delete-branch'; name: string }
+  | { type: 'delete-remote-branch'; name: string }
   | { type: 'merge'; branch: string; noFf: boolean }
   | { type: 'cherry-pick'; hash: string }
   | { type: 'create-tag'; hash: string }
@@ -103,6 +121,8 @@ export interface RefActionItem {
   danger?: boolean
   /** A separator goes before this item. */
   group: 'ref' | 'commit'
+  /** Shown inside a submenu with this name instead of at the top level. */
+  submenu?: 'reset' | 'copy'
 }
 
 export interface RefActionContext {
@@ -116,12 +136,13 @@ export interface RefActionContext {
 
 /**
  * What a right-click offers. `ref` is the badge that was clicked, or `null` for the row.
- * Deleting the checked-out branch is not offered at all. Without `context` (a pane that
- * cannot write) neither merge nor cherry-pick appears.
+ * `hash` is the commit under the pointer; `null` (the branch selector, which has no commit)
+ * leaves out every commit action. Deleting the checked-out branch is not offered at all.
+ * Without `context` (a pane that cannot write) neither merge nor cherry-pick appears.
  */
 export function refActions(
   ref: (Pick<GraphRef, 'kind' | 'name'> & { current?: boolean }) | null,
-  hash: string,
+  hash: string | null,
   context?: RefActionContext
 ): RefActionItem[] {
   const items: RefActionItem[] = []
@@ -154,6 +175,13 @@ export function refActions(
       id: 'checkout',
       label: `Check out ${ref.name} as a tracking branch`,
       action: { type: 'checkout-remote', name: ref.name },
+      group: 'ref'
+    })
+    items.push({
+      id: 'delete-remote',
+      label: `Delete ${ref.name} on the remote…`,
+      action: { type: 'delete-remote-branch', name: ref.name },
+      danger: true,
       group: 'ref'
     })
   }
@@ -189,9 +217,11 @@ export function refActions(
       id: 'copy-name',
       label: `Copy ${ref.kind === 'tag' ? 'tag' : 'branch'} name`,
       action: { type: 'copy', text: ref.name, what: 'name' },
-      group: 'ref'
+      group: 'ref',
+      submenu: 'copy'
     })
   }
+  if (hash === null) return items
   items.push(
     {
       id: 'checkout-commit',
@@ -239,14 +269,14 @@ export function refActions(
     })
   }
   if (canStart) {
-    const target = context.currentBranch ?? 'HEAD'
     for (const mode of ['soft', 'mixed', 'hard'] as const) {
       items.push({
         id: `reset-${mode}`,
-        label: `Reset ${target} to here (${mode})${mode === 'hard' ? '…' : ''}`,
+        label: RESET_LABELS[mode],
         action: { type: 'reset', hash, mode },
         danger: mode === 'hard',
-        group: 'commit'
+        group: 'commit',
+        submenu: 'reset'
       })
     }
   }
@@ -254,7 +284,51 @@ export function refActions(
     id: 'copy-hash',
     label: 'Copy commit hash',
     action: { type: 'copy', text: hash, what: 'hash' },
-    group: 'commit'
+    group: 'commit',
+    submenu: 'copy'
   })
   return items
+}
+
+const RESET_LABELS: Record<ResetMode, string> = {
+  soft: 'Soft: keep changes staged',
+  mixed: 'Mixed: keep changes unstaged',
+  hard: 'Hard: discard changes…'
+}
+
+/** One row of a menu: an action, a rule, or a named group of actions. */
+export type MenuLayoutRow =
+  | { kind: 'item'; item: RefActionItem }
+  | { kind: 'separator'; id: string }
+  | { kind: 'submenu'; id: string; label: string; items: RefActionItem[] }
+
+/**
+ * Lays `refActions` out for a menu: the ref and commit actions first, split by a rule, then
+ * a Reset submenu and a Copy submenu (all the copy actions together). `currentBranch` names
+ * the branch Reset moves; it says HEAD while detached.
+ */
+export function menuLayout(items: RefActionItem[], currentBranch: string | null): MenuLayoutRow[] {
+  const top = items.filter((i) => !i.submenu)
+  const rows: MenuLayoutRow[] = []
+  top.forEach((item, i) => {
+    if (i > 0 && top[i - 1].group !== item.group) {
+      rows.push({ kind: 'separator', id: `sep-${item.id}` })
+    }
+    rows.push({ kind: 'item', item })
+  })
+  const reset = items.filter((i) => i.submenu === 'reset')
+  const copy = items.filter((i) => i.submenu === 'copy')
+  if ((reset.length > 0 || copy.length > 0) && rows.length > 0) {
+    rows.push({ kind: 'separator', id: 'sep-submenus' })
+  }
+  if (reset.length > 0) {
+    rows.push({
+      kind: 'submenu',
+      id: 'reset',
+      label: `Reset ${currentBranch ?? 'HEAD'} to here`,
+      items: reset
+    })
+  }
+  if (copy.length > 0) rows.push({ kind: 'submenu', id: 'copy', label: 'Copy', items: copy })
+  return rows
 }

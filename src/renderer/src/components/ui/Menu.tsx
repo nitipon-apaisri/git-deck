@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode
+} from 'react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { cn } from '@/lib/cn'
 import { Icon } from './Icon'
@@ -21,9 +28,20 @@ export type MenuEntry =
       danger?: boolean
       disabled?: boolean
       onSelect: () => void
+      /** A right-click on this item, with where it happened. Nothing happens without it. */
+      onContextMenu?: (at: { x: number; y: number }) => void
     }
   | { kind: 'separator'; id: string }
   | { kind: 'heading'; id: string; label: string }
+  | {
+      /** An item that opens a nested menu on hover, Right arrow or Enter. */
+      kind: 'submenu'
+      id: string
+      label: string
+      leading?: ReactNode
+      disabled?: boolean
+      entries: readonly MenuEntry[]
+    }
 
 interface MenuProps {
   /** Names the menu for screen readers. */
@@ -38,6 +56,102 @@ interface MenuProps {
 
 const itemClass =
   'flex min-h-[30px] cursor-pointer items-center gap-2.5 rounded-md border-0 bg-transparent px-2.5 text-left transition-[background-color,color] duration-[var(--motion-fast)] ease-[var(--ease-out)] data-[highlighted]:bg-accent data-[disabled]:cursor-default data-[disabled]:text-muted-foreground data-[disabled]:data-[highlighted]:bg-transparent'
+
+const subContentClass =
+  'animate-in fade-in-0 z-50 flex max-h-[var(--radix-dropdown-menu-content-available-height)] min-w-[200px] max-w-[320px] origin-[var(--radix-dropdown-menu-content-transform-origin)] flex-col overflow-y-auto rounded-lg bg-popover p-1.5 text-[13px] text-popover-foreground shadow-[var(--shadow-menu)] duration-[var(--motion-fast)] ease-[var(--ease-out)]'
+
+function renderEntries(entries: readonly MenuEntry[]): ReactNode {
+  return entries.map((entry) => {
+    if (entry.kind === 'separator') {
+      return <DropdownMenu.Separator key={entry.id} className="-mx-1.5 my-1.5 h-px bg-border" />
+    }
+    if (entry.kind === 'submenu') {
+      return (
+        <DropdownMenu.Sub key={entry.id}>
+          <DropdownMenu.SubTrigger disabled={entry.disabled} className={itemClass}>
+            {entry.leading}
+            <span className="min-w-0 flex-1 truncate">{entry.label}</span>
+            <Icon name="chevron-right" size="sm" />
+          </DropdownMenu.SubTrigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.SubContent
+              aria-label={entry.label}
+              sideOffset={4}
+              collisionPadding={8}
+              loop
+              className={subContentClass}
+            >
+              {renderEntries(entry.entries)}
+            </DropdownMenu.SubContent>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Sub>
+      )
+    }
+    if (entry.kind === 'heading') {
+      return (
+        <DropdownMenu.Label
+          key={entry.id}
+          className="px-2.5 pt-1.5 pb-1 text-[12px] text-muted-foreground"
+        >
+          {entry.label}
+        </DropdownMenu.Label>
+      )
+    }
+    const itemContent = (
+      <>
+        {entry.leading}
+        <span className="min-w-0 flex-1 truncate">{entry.label}</span>
+        {entry.trailing ? (
+          <span className="flex-none text-[12px] text-muted-foreground">{entry.trailing}</span>
+        ) : null}
+      </>
+    )
+    const onSelect = (event: Event): void => {
+      if (entry.keepOpen) event.preventDefault()
+      entry.onSelect()
+    }
+    const className = cn(itemClass, entry.danger && 'text-destructive')
+    const onContextMenu = entry.onContextMenu
+      ? (event: MouseEvent): void => {
+          if (entry.disabled) return
+          event.preventDefault()
+          entry.onContextMenu?.({ x: event.clientX, y: event.clientY })
+        }
+      : undefined
+    if (entry.checked === undefined) {
+      return (
+        <DropdownMenu.Item
+          key={entry.id}
+          disabled={entry.disabled}
+          className={className}
+          onSelect={onSelect}
+          onContextMenu={onContextMenu}
+        >
+          {itemContent}
+        </DropdownMenu.Item>
+      )
+    }
+    return (
+      <DropdownMenu.CheckboxItem
+        key={entry.id}
+        role={entry.radio ? 'menuitemradio' : 'menuitemcheckbox'}
+        checked={entry.checked}
+        disabled={entry.disabled}
+        className={className}
+        onSelect={onSelect}
+        onContextMenu={onContextMenu}
+      >
+        <span
+          className="grid w-3.5 flex-none place-items-center text-[var(--accent-text)]"
+          aria-hidden="true"
+        >
+          {entry.checked ? <Icon name="check" size="sm" /> : null}
+        </span>
+        {itemContent}
+      </DropdownMenu.CheckboxItem>
+    )
+  })
+}
 
 /**
  * shadcn's dropdown menu on Radix, opened at a point: arrow keys, Home and End move, Enter and
@@ -109,69 +223,7 @@ export function Menu({ label, at, entries, minWidth, onClose }: MenuProps) {
           }}
           onContextMenu={(event) => event.preventDefault()}
         >
-          {entries.map((entry) => {
-            if (entry.kind === 'separator') {
-              return (
-                <DropdownMenu.Separator key={entry.id} className="-mx-1.5 my-1.5 h-px bg-border" />
-              )
-            }
-            if (entry.kind === 'heading') {
-              return (
-                <DropdownMenu.Label
-                  key={entry.id}
-                  className="px-2.5 pt-1.5 pb-1 text-[12px] text-muted-foreground"
-                >
-                  {entry.label}
-                </DropdownMenu.Label>
-              )
-            }
-            const content = (
-              <>
-                {entry.leading}
-                <span className="min-w-0 flex-1 truncate">{entry.label}</span>
-                {entry.trailing ? (
-                  <span className="flex-none text-[12px] text-muted-foreground">
-                    {entry.trailing}
-                  </span>
-                ) : null}
-              </>
-            )
-            const onSelect = (event: Event): void => {
-              if (entry.keepOpen) event.preventDefault()
-              entry.onSelect()
-            }
-            const className = cn(itemClass, entry.danger && 'text-destructive')
-            if (entry.checked === undefined) {
-              return (
-                <DropdownMenu.Item
-                  key={entry.id}
-                  disabled={entry.disabled}
-                  className={className}
-                  onSelect={onSelect}
-                >
-                  {content}
-                </DropdownMenu.Item>
-              )
-            }
-            return (
-              <DropdownMenu.CheckboxItem
-                key={entry.id}
-                role={entry.radio ? 'menuitemradio' : 'menuitemcheckbox'}
-                checked={entry.checked}
-                disabled={entry.disabled}
-                className={className}
-                onSelect={onSelect}
-              >
-                <span
-                  className="grid w-3.5 flex-none place-items-center text-[var(--accent-text)]"
-                  aria-hidden="true"
-                >
-                  {entry.checked ? <Icon name="check" size="sm" /> : null}
-                </span>
-                {content}
-              </DropdownMenu.CheckboxItem>
-            )
-          })}
+          {renderEntries(entries)}
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>
