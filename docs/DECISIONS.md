@@ -441,5 +441,6 @@ Newest first. Template:
 - **Decision and why:**
   - Four boards were added: `Changes` and `Conflict`, each dark and light, 1440 x 900. They are plain static HTML with no `sc-for` and no `support.js` dependency in practice, so they open in a browser as they are. Sizes and positions are in `canvas.json`.
   - They were drawn from the current components (`ChangesPanel`, `DiffView`, `ConflictEditor`) and the values in `tokens.css`, not from the running app. Like the other boards they use literal hex values, because they are design documents and not app code. The "no hex in components" rule is unchanged.
+  - The diff is drawn as the "Unstaged changes" dialog over the window, as it opens in the running app (checked in a live window on 2026-11-07). The first draft showed it inline in the pane, which was wrong.
   - The Changes board also shows the per-line checkboxes and the "Stage 3 lines", "Select all", "Clear" and "Stage hunk" buttons (Phase 16), so that gap is closed too.
 - **Not verified:** the boards were checked as headless Chrome screenshots at 1440 x 900 only, not against screenshots of the running Electron window. Submenus, the terminal panel and the AI message button's loading state are still not drawn.
