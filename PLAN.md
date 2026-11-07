@@ -533,6 +533,21 @@ Scope decision and reasons: `docs/DECISIONS.md` (2026-11-06, Phase 16 scope). It
 - Typecheck, lint, build pass and the existing suite stays green. No token in argv, errors or `.git/config`.
 - Run the diff dialog on a scratch repo in the window, in both themes. If there is no display, say plainly that it was not run visually.
 
+## Phase 17 — Leaner menus and Delete branch
+
+Scope decision and reasons: `docs/DECISIONS.md` (2026-11-07, Phase 17 scope). Runs on `feat/menu-submenus-delete-branch`.
+
+- [x] `ui/Menu.tsx`: a `submenu` entry kind (Radix `Sub`), recursive rendering, and `onContextMenu` on an item. Other menus are unchanged.
+- [x] `lib/branchView.ts` (pure, tested): `RefActionItem.submenu`, `menuLayout` (ref actions, commit actions, a Reset submenu, a Copy submenu), `remoteGroups` (every remote branch under its remote) and `delete-remote-branch`. `lib/refMenu.ts` turns the layout into `Menu` entries.
+- [x] Delete branch: `deleteBranch` asks again before it force-deletes unmerged work (`branch -D`); new `deleteRemoteBranch` (`push <remote> :refs/heads/<branch>`, with confirm and the scoped auth of other pushes) through `git.ts`, `service.ts`, `shared/api.ts`, `ipcTable.ts`, preload and `useLocalActions`.
+- [x] Graph: a commit menu with Reset and Copy submenus; branch badges offer Delete (local) or Delete on the remote.
+- [x] Branch selector: every remote branch under its remote's heading, and each branch row has a chevron that opens the same ref menu as the graph on hover (no commit actions).
+- [x] Dark and light boards: not drawn, gap logged in `DECISIONS.md`. Tokens only.
+
+**Verify:** `tests/branch-view.test.ts`, `tests/git-remote.test.ts` and `tests/service-remote.test.ts` cover the layout, force and remote delete, declined confirms and the no-token rule. Typecheck, lint, build and the suite pass. Run the menus on a scratch repo in the window.
+
+---
+
 ---
 
 ## Graph algorithm (src/shared/graph-layout.ts)

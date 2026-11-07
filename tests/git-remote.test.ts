@@ -6,6 +6,8 @@ import {
   checkout,
   createBranch,
   deleteBranch,
+  deleteRemoteBranch,
+  getRemoteBranchTarget,
   getRemoteTarget,
   listBranches,
   pull,
@@ -189,6 +191,41 @@ test('deleteBranch refuses unmerged work instead of losing it', async () => {
   git(work, 'checkout', '-q', 'main')
   await assert.rejects(deleteBranch(work, 'wip'), /not fully merged/)
   assert.ok((await listBranches(work)).local.some((b) => b.name === 'wip'))
+})
+
+test('deleteBranch with force removes unmerged work, but still not the current branch', async () => {
+  const { work } = cloned()
+  await createBranch(work, 'wip', null, true)
+  commit(work, 'w.txt', 'unmerged')
+  git(work, 'checkout', '-q', 'main')
+  await deleteBranch(work, 'wip', true)
+  assert.ok(!(await listBranches(work)).local.some((b) => b.name === 'wip'))
+  await assert.rejects(deleteBranch(work, 'main', true), /checked out/)
+})
+
+test('deleteRemoteBranch removes a branch on the remote and leaves the local one', async () => {
+  const { work, remote } = cloned()
+  await createBranch(work, 'topic', null, true)
+  commit(work, 't.txt', 'topic work')
+  git(work, 'push', '-q', 'origin', 'topic')
+  git(work, 'checkout', '-q', 'main')
+  assert.match(git(remote, 'branch', '--list', 'topic'), /topic/)
+  assert.deepEqual(await getRemoteBranchTarget(work, 'origin/topic'), {
+    remote: 'origin',
+    branch: 'topic',
+    url: git(work, 'remote', 'get-url', 'origin')
+  })
+  await deleteRemoteBranch(work, 'origin/topic')
+  assert.equal(git(remote, 'branch', '--list', 'topic'), '')
+  assert.ok((await listBranches(work)).local.some((b) => b.name === 'topic'))
+})
+
+test('deleteRemoteBranch refuses names that are not a remote branch', async () => {
+  const { work } = cloned()
+  await assert.rejects(deleteRemoteBranch(work, 'main'), /not a remote branch/)
+  await assert.rejects(deleteRemoteBranch(work, 'origin/nope'), /no remote branch/)
+  await assert.rejects(deleteRemoteBranch(work, 'origin/--force'), /not a valid branch name/)
+  await assert.rejects(deleteRemoteBranch(work, 'origin/HEAD'), /./)
 })
 
 // Pull

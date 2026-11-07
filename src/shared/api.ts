@@ -107,6 +107,8 @@ export interface Api {
     renameBranch(path: string, from: string, to: string): Promise<void>
     /** Asks first. Resolves `false` when the user declines. Never the current branch. */
     deleteBranch(path: string, name: string): Promise<boolean>
+    /** `origin/topic`. Asks first; `false` when declined. */
+    deleteRemoteBranch(path: string, name: string): Promise<boolean>
     pull(path: string, mode: PullMode): Promise<void>
     /** Sets the upstream when there is none. A forced push asks first: `false` when declined. */
     push(path: string, force: boolean): Promise<boolean>
@@ -225,6 +227,7 @@ export const IPC = {
   localCreateBranch: 'local:createBranch',
   localRenameBranch: 'local:renameBranch',
   localDeleteBranch: 'local:deleteBranch',
+  localDeleteRemoteBranch: 'local:deleteRemoteBranch',
   localPull: 'local:pull',
   localPush: 'local:push',
   localStashes: 'local:stashes',

@@ -48,6 +48,7 @@ const api: Api = {
       call(IPC.localCreateBranch, path, name, startPoint, checkout),
     renameBranch: (path, from, to) => call(IPC.localRenameBranch, path, from, to),
     deleteBranch: (path, name) => call(IPC.localDeleteBranch, path, name),
+    deleteRemoteBranch: (path, name) => call(IPC.localDeleteRemoteBranch, path, name),
     pull: (path, mode) => call(IPC.localPull, path, mode),
     push: (path, force) => call(IPC.localPush, path, force),
     stashes: (path) => call(IPC.localStashes, path),

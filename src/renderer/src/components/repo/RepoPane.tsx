@@ -169,6 +169,7 @@ export function RepoPane({
               setNameRequest({ kind: 'create', startPoint: null, startLabel: 'the current commit' })
             }
             onRenameBranch={(from) => setNameRequest({ kind: 'rename', from })}
+            operationActive={operation !== null}
             stashCount={stashes.length}
             onStash={() => setStashOpen(true)}
             onTags={() => setTagsRequest({ hash: null })}
@@ -267,6 +268,7 @@ export function RepoPane({
                       busy: actions.busy !== null,
                       checkout: actions.checkout,
                       deleteBranch: actions.deleteBranch,
+                      deleteRemoteBranch: actions.deleteRemoteBranch,
                       createBranch: (startPoint, startLabel) =>
                         setNameRequest({ kind: 'create', startPoint, startLabel }),
                       renameBranch: (from) => setNameRequest({ kind: 'rename', from }),

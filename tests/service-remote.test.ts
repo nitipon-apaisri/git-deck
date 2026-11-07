@@ -234,3 +234,36 @@ test('pull and push work end to end against a bare remote, with no token in the 
   assert.equal(git(s.dir, 'rev-parse', 'HEAD'), git(other, 'rev-parse', 'HEAD'))
   assert.ok(!git(s.dir, 'config', '--list').includes(TOKEN))
 })
+
+test('deleteBranch asks again before it loses unmerged work', async () => {
+  const s = await setup({ stub: false, confirms: [true, false, true, true] })
+  await s.api.local.createBranch(s.dir, 'wip', null, true)
+  git(s.dir, 'commit', '-q', '--allow-empty', '-m', 'only here')
+  await s.api.local.checkout(s.dir, { kind: 'branch', name: 'main' })
+  // First confirm yes, the force confirm no: the branch stays.
+  assert.equal(await s.api.local.deleteBranch(s.dir, 'wip'), false)
+  assert.ok((await s.api.local.branches(s.dir)).local.some((b) => b.name === 'wip'))
+  // Both yes: it goes.
+  assert.equal(await s.api.local.deleteBranch(s.dir, 'wip'), true)
+  assert.ok(!(await s.api.local.branches(s.dir)).local.some((b) => b.name === 'wip'))
+  assert.equal(s.confirmed(), 4)
+})
+
+test('deleteRemoteBranch asks first and removes the branch on the remote only', async () => {
+  const s = await setup({ stub: false, confirms: [false, true, true, true] })
+  await s.api.local.createBranch(s.dir, 'topic', null, true)
+  git(s.dir, 'commit', '-q', '--allow-empty', '-m', 'topic work')
+  git(s.dir, 'push', '-q', 'origin', 'topic')
+  await s.api.local.checkout(s.dir, { kind: 'branch', name: 'main' })
+  assert.equal(await s.api.local.deleteRemoteBranch(s.dir, 'origin/topic'), false)
+  assert.match(git(s.remote, 'branch', '--list', 'topic'), /topic/, 'declined: still there')
+  assert.equal(await s.api.local.deleteRemoteBranch(s.dir, 'origin/topic'), true)
+  assert.equal(git(s.remote, 'branch', '--list', 'topic'), '')
+  assert.ok((await s.api.local.branches(s.dir)).local.some((b) => b.name === 'topic'))
+  await assert.rejects(s.api.local.deleteRemoteBranch(emptyRepo(), 'origin/topic'), /not linked/)
+  await assert.rejects(s.api.local.deleteRemoteBranch(s.dir, 'origin/nope'), (err: Error) => {
+    assert.match(err.message, /no remote branch/)
+    assert.ok(!err.message.includes(TOKEN))
+    return true
+  })
+})
