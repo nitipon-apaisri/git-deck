@@ -378,7 +378,7 @@ Scope decision and reasons: `docs/DECISIONS.md` (2026-11-06, git write features)
 - [x] New `Changes` tab (`TabName`, its sanitiser and `RepoPane` tab list): staged and unstaged lists, stage toggles, message box, one primary Commit button, amend option.
 - [x] `DiffView`: opens inside the pane from a Changes row or from a file row in the commit detail panel. Unified view only.
 - [x] `useStatus` and `useDiff` hooks keyed on `reloadToken`; `LocalInfo.dirtyFiles` linking to the tab was left out.
-- [ ] Add dark and light boards for Changes and the diff under `docs/ui-boards/`. Not done: the gap is logged in `DECISIONS.md`. The new `Textarea` and diff lines use tokens only.
+- [x] Add dark and light boards for Changes and the diff under `docs/ui-boards/` (`Changes.dc.html`, `ChangesLight.dc.html`). The new `Textarea` and diff lines use tokens only.
 
 **Verify:**
 
@@ -493,7 +493,7 @@ Typecheck, lint, build pass and the existing suite stays green. No token in argv
 - [x] Footer: "Save and mark resolved" (primary, enabled when every region has a choice), "Save for later" (writes without staging) and Close. It uses native buttons, `details` and the Dialog focus trap, and every icon button has an `aria-label`. The Tab order was not tried by hand.
 - [x] Whole-file actions for the kinds without regions: a small panel with Keep file, Delete file, Use current or Use incoming, each saying in words what it does.
 - [x] The operation banner lists its files as buttons that open the editor, and each file in the list shows its kind in words ("both modified", "deleted by them"). A file that was just resolved leaves the list. The banner's Continue is unchanged. "Open folder" stays.
-- [ ] Dark and light boards for the editor under `docs/ui-boards/`. Not done: the gap is logged in `DECISIONS.md`. The editor uses tokens only, no hex values.
+- [x] Dark and light boards for the editor under `docs/ui-boards/` (`Conflict.dc.html`, `ConflictLight.dc.html`). The editor uses tokens only, no hex values.
 
 **Verify (done: `tests/conflict-view.test.ts`, and a run of the built app in a scratch repo, see `DECISIONS.md`):** unit tests for `conflictView.ts`; a service test that drives the whole flow through `GitOps` (conflicting merge, then regions resolved, then Continue). Typecheck, lint, build pass and the existing suite stays green. If a display is available, resolve a real conflict in a scratch repo in the window and screenshot the editor in both themes. Otherwise say clearly that it was not run visually.
 

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GitDeck conflict editor (light)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#E9EBF0;--island:#FFFFFF;--island-2:#F3F4F7;--hover:#EBEDF2;--line:#DDE0E6;--text:#1F2329;--muted:#5F6672;--accent:#2E69DC;--accent-text:#2658C2;--primary:#2E69DC;--green:#2FA05A;--green-text:#1E7A3C;--green-bg:rgba(47,160,90,.12);--red:#C2373C;--red-bg:rgba(194,55,60,.12);--warn:#7A4E00;--warn-bg:rgba(196,130,20,.14);--sel:rgba(46,105,220,.12);--ring:#1F4FB0}
+body{margin:0;background:#E9EBF0}
+*{box-sizing:border-box}
+button,input,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer}
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic.s{width:14px;height:14px}
+.ib{width:28px;height:28px;border:0;border-radius:7px;background:transparent;color:var(--muted);display:grid;place-items:center;padding:0}
+.ib:hover{background:var(--hover);color:var(--text)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:36px;padding:0 16px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:13px;white-space:nowrap}
+.btn:hover{background:var(--hover)}
+.btn.p{border-color:var(--primary);background:var(--primary);color:#fff;font-weight:500}
+.btn.g{border-color:transparent;color:var(--accent-text);padding:0 12px}
+.btn.g:hover{background:var(--hover)}
+.btn.sm{height:24px;padding:0 8px;font-size:12px}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+
+</style>
+</helmet>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"></path></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"></path></symbol><symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17z"></path><path d="M14 7l3 3"></path></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4l9 16H3z"></path><path d="M12 10v4M12 17.5v.01"></path></symbol></svg>
+<div style="position:relative;width:100%;min-height:900px;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;font-size:13px;line-height:1.4;display:grid;place-items:center;padding:24px">
+  <div style="position:absolute;inset:0;background:rgba(233,235,240,.6)"></div>
+  <div role="dialog" aria-label="Resolve src/shared/diff.ts" style="position:relative;width:960px;max-height:852px;display:flex;flex-direction:column;overflow:hidden;border-radius:14px;background:var(--island);box-shadow:0 24px 64px rgba(31,35,41,.22),0 0 0 1px #DDE0E6">
+    <header style="display:flex;align-items:flex-start;gap:12px;padding:20px 24px 12px">
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+        <h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600">Resolve src/shared/diff.ts</h2>
+        <p style="margin:0;color:var(--muted)">Both branches changed this file.</p>
+      </div>
+      <button class="ib" aria-label="Close"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><use href="#i-x"></use></svg></button>
+    </header>
+    <div style="flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:16px;padding:4px 24px 16px">
+      <p style="margin:0;font-size:12px;color:var(--muted)">Current is the branch you are on (main). Incoming comes from feat/line-staging.</p>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">
+        <span style="font-size:12px;font-weight:600;color:var(--muted)">All conflicts:</span>
+        <button class="btn ">Accept main</button><button class="btn ">Accept feat/line-staging</button><button class="btn g">Undo all</button>
+      </div>
+      <section style="display:flex;flex-direction:column;gap:8px;border-radius:10px;background:var(--island-2);padding:12px" aria-label="Conflict 1 of 2"><div style="display:flex;align-items:center;gap:8px"><h4 style="margin:0;flex:1;font-size:13px;line-height:18px;font-weight:600">Conflict 1 of 2</h4><span style="display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:6px;font-size:12px;background:var(--island);color:var(--muted);border:1px solid var(--line)"><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Accepted feat/line-staging</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div style="min-width:0;display:flex;flex-direction:column;overflow:hidden;border-radius:6px;border:1px solid var(--line)"><div style="display:flex;align-items:center;gap:8px;background:var(--island);padding:6px 12px;font-size:12px"><span style="flex:1;font-weight:600">main (current)</span><span style="color:var(--muted)">1 line</span></div><pre class="mono" style="margin:0;overflow:auto;background:var(--bg);font-size:12px;line-height:18px;white-space:pre"><span style="display:flex"><span style="width:40px;flex:none;padding:0 4px;text-align:right;color:var(--muted)">12</span><span style="padding:0 12px 0 8px">export const HUNK_LIMIT = 200</span></span></pre></div><div style="min-width:0;display:flex;flex-direction:column;overflow:hidden;border-radius:6px;border:1px solid var(--primary)"><div style="display:flex;align-items:center;gap:8px;background:var(--island);padding:6px 12px;font-size:12px"><span style="flex:1;font-weight:600">feat/line-staging (incoming)</span><span style="display:inline-flex;align-items:center;gap:4px;color:var(--accent-text)"><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Chosen</span><span style="color:var(--muted)">1 line</span></div><pre class="mono" style="margin:0;overflow:auto;background:var(--bg);font-size:12px;line-height:18px;white-space:pre"><span style="display:flex"><span style="width:40px;flex:none;padding:0 4px;text-align:right;color:var(--muted)">12</span><span style="padding:0 12px 0 8px">export const HUNK_LIMIT = 500</span></span></pre></div></div><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><button class="btn ">Accept main</button><button class="btn ">Accept feat/line-staging</button><button class="btn ">Accept both</button><button class="btn g"><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-edit"></use></svg>Edit result</button><button class="btn g">Undo</button></div></section>
+      <section style="display:flex;flex-direction:column;gap:8px;border-radius:10px;background:var(--island-2);padding:12px" aria-label="Conflict 2 of 2"><div style="display:flex;align-items:center;gap:8px"><h4 style="margin:0;flex:1;font-size:13px;line-height:18px;font-weight:600">Conflict 2 of 2</h4><span style="display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:6px;font-size:12px;background:var(--warn-bg);color:var(--warn);border:1px solid transparent"><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-alert"></use></svg>Not resolved yet</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div style="min-width:0;display:flex;flex-direction:column;overflow:hidden;border-radius:6px;border:1px solid var(--line)"><div style="display:flex;align-items:center;gap:8px;background:var(--island);padding:6px 12px;font-size:12px"><span style="flex:1;font-weight:600">main (current)</span><span style="color:var(--muted)">1 line</span></div><pre class="mono" style="margin:0;overflow:auto;background:var(--bg);font-size:12px;line-height:18px;white-space:pre"><span style="display:flex"><span style="width:40px;flex:none;padding:0 4px;text-align:right;color:var(--muted)">58</span><span style="padding:0 12px 0 8px">  return lines.filter(isChanged)</span></span></pre></div><div style="min-width:0;display:flex;flex-direction:column;overflow:hidden;border-radius:6px;border:1px solid var(--line)"><div style="display:flex;align-items:center;gap:8px;background:var(--island);padding:6px 12px;font-size:12px"><span style="flex:1;font-weight:600">feat/line-staging (incoming)</span><span style="color:var(--muted)">2 lines</span></div><pre class="mono" style="margin:0;overflow:auto;background:var(--bg);font-size:12px;line-height:18px;white-space:pre"><span style="display:flex"><span style="width:40px;flex:none;padding:0 4px;text-align:right;color:var(--muted)">58</span><span style="padding:0 12px 0 8px">  return lines.filter(isChanged).sort(byIndex)</span></span><span style="display:flex"><span style="width:40px;flex:none;padding:0 4px;text-align:right;color:var(--muted)">59</span><span style="padding:0 12px 0 8px">    .map(toRange)</span></span></pre></div></div><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><button class="btn ">Accept main</button><button class="btn ">Accept feat/line-staging</button><button class="btn ">Accept both</button><button class="btn g"><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-edit"></use></svg>Edit result</button></div></section>
+      <details style="border:1px solid var(--line);border-radius:10px"><summary style="cursor:pointer;padding:8px 12px;font-size:13px;font-weight:600">Result preview</summary></details>
+    </div>
+    <footer style="display:flex;align-items:center;gap:10px;padding:14px 24px;border-top:1px solid var(--line)">
+      <span role="status" style="font-size:12px;color:var(--muted)">1 of 2 conflicts resolved</span>
+      <span style="flex:1"></span>
+      <button class="btn">Close</button>
+      <button class="btn">Save for later</button>
+      <button class="btn p" disabled style="opacity:.45;cursor:default"><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Save and mark resolved</button>
+    </footer>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

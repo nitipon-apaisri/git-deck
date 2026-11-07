@@ -9,5 +9,7 @@ Full-screen designs for GitDeck, in dark and light. They are `.dc.html` template
 | Project overview | `Project.dc.html` / `ProjectLight.dc.html` |
 | New or edit project dialog | `ProjectDialog.dc.html` / `ProjectDialogLight.dc.html` |
 | Connect account dialog | `AccountDialog.dc.html` / `AccountDialogLight.dc.html` |
+| Changes panel and diff, with per-line staging | `Changes.dc.html` / `ChangesLight.dc.html` |
+| Conflict editor dialog | `Conflict.dc.html` / `ConflictLight.dc.html` |
 
-`canvas.json` records the board sizes: windows are 1440 x 900, dialogs 560 x 740 and 520 x 680.
+`canvas.json` records the board sizes: windows are 1440 x 900, dialogs 560 x 740 and 520 x 680. The Changes and Conflict boards are static (no `sc-for`) and 1440 x 900, so they open in a browser as they are.
