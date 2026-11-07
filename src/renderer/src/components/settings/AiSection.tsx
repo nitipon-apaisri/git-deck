@@ -7,8 +7,8 @@ export function AiSection() {
   return (
     <div className="flex flex-col gap-4">
       <p className="m-0 text-[13px] leading-5 text-muted-foreground">
-        Adds a Generate button to the commit box. It suggests a message for the staged changes and
-        fills the field. You edit it and commit as usual: nothing is committed for you.
+        Adds a sparkles button inside the commit message field. It suggests a message for the staged
+        changes and fills the field. You edit it and commit as usual: nothing is committed for you.
       </p>
       <CheckOption
         label="Suggest commit messages with Claude Code"
@@ -22,7 +22,7 @@ export function AiSection() {
       />
       <p className="m-0 text-[12px] leading-4 text-muted-foreground">
         Needs the <code>claude</code> command installed and signed in. It only runs when you press
-        Generate.
+        the sparkles button.
       </p>
     </div>
   )

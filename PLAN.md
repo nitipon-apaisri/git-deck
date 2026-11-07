@@ -554,7 +554,7 @@ Scope decision and reasons: `docs/DECISIONS.md` (2026-11-07, Phase 18 scope). Ru
 - [x] `git.ts` `getStagedDiff` (summary plus diff of the index only; works before the first commit).
 - [x] `suggestCommitMessage(path)` through `shared/api.ts`, preload, `ipcTable.ts` and `service.ts` (`guard`, linked folder, "Stage some changes first"). It never commits.
 - [x] Settings: an AI section with an opt-in toggle (`state/ai.ts`, off by default) and a note on what is sent.
-- [x] Changes tab: a Generate button next to Commit, shown only when enabled, disabled with no staged files or with conflicts. It only fills the message field.
+- [x] Changes tab: a sparkles icon button inside the message field (top right), shown only when enabled, disabled with no staged files or with conflicts. It only fills the message field.
 - [x] Dark and light boards: not drawn, gap logged in `DECISIONS.md`. Tokens only.
 
 **Verify:** `tests/ai.test.ts` covers the prompt, truncation, reply cleaning, a fake `claude` (success, failure, timeout, empty, missing), `getStagedDiff` and the service call (staged diff only, no commit). Typecheck, lint, build and the suite pass. Try Generate on a scratch repo in the window.

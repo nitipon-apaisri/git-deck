@@ -210,13 +210,30 @@ export function ChangesPanel({
   const body = (
     <div className="flex min-w-0 flex-col gap-3">
       <div className="flex flex-col gap-2">
-        <Textarea
-          aria-label="Commit message"
-          placeholder={amend ? 'Leave empty to keep the current message' : 'Commit message'}
-          value={message}
-          disabled={busy}
-          onChange={(e) => setMessage(e.target.value)}
-        />
+        <div className="relative flex flex-col">
+          <Textarea
+            aria-label="Commit message"
+            placeholder={amend ? 'Leave empty to keep the current message' : 'Commit message'}
+            value={message}
+            disabled={busy}
+            className={aiEnabled ? 'pr-10' : undefined}
+            onChange={(e) => setMessage(e.target.value)}
+          />
+          {aiEnabled ? (
+            <span className="absolute top-1 right-1 grid size-8 place-items-center">
+              {generating ? (
+                <Spinner label="Writing a message" />
+              ) : (
+                <IconButton
+                  label="Generate a message from the staged changes"
+                  icon="sparkles"
+                  disabled={busy || groups.staged.length === 0 || groups.conflicted.length > 0}
+                  onClick={() => void generate()}
+                />
+              )}
+            </span>
+          ) : null}
+        </div>
         <CheckOption label="Amend the last commit" checked={amend} onChange={setAmend} />
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <Button
@@ -227,22 +244,7 @@ export function ChangesPanel({
           >
             {amend ? 'Amend commit' : 'Commit'}
           </Button>
-          {aiEnabled ? (
-            <Button
-              variant="ghost"
-              icon="sparkles"
-              disabled={
-                busy || generating || groups.staged.length === 0 || groups.conflicted.length > 0
-              }
-              title="Suggest a message for the staged changes"
-              onClick={() => void generate()}
-            >
-              Generate
-            </Button>
-          ) : null}
-          {busy || generating ? (
-            <Spinner label={generating ? 'Writing a message' : 'Working'} />
-          ) : null}
+          {busy ? <Spinner label="Working" /> : null}
           <span className="min-w-0 flex-[1_1_8rem] text-[12px] text-muted-foreground">
             {blocker}
           </span>
