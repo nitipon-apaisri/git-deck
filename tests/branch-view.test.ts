@@ -275,7 +275,12 @@ test('menuLayout: ref and commit actions, then Reset and Copy submenus', () => {
   // A pane that cannot write has no Reset submenu, but still copies.
   const readOnly = menuLayout(refActions(null, 'abc1234'), null)
   assert.ok(!readOnly.some((r) => r.kind === 'submenu' && r.id === 'reset'))
-  assert.ok(readOnly.some((r) => r.kind === 'submenu' && r.id === 'copy'))
+  // A lone copy action is an item, not a submenu of one.
+  assert.ok(!readOnly.some((r) => r.kind === 'submenu'))
+  assert.ok(readOnly.some((r) => r.kind === 'item' && r.item.id === 'copy-hash'))
+  const selector = menuLayout(refActions({ kind: 'branch', name: 'topic' }, null, ctx), 'main')
+  assert.ok(!selector.some((r) => r.kind === 'submenu'))
+  assert.ok(selector.some((r) => r.kind === 'item' && r.item.id === 'copy-name'))
 })
 
 test('refMenuEntries: busy switches off everything but copying', () => {

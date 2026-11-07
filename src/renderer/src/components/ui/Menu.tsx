@@ -1,11 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type MouseEvent,
-  type ReactNode
-} from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { cn } from '@/lib/cn'
 import { Icon } from './Icon'
@@ -28,8 +21,6 @@ export type MenuEntry =
       danger?: boolean
       disabled?: boolean
       onSelect: () => void
-      /** A right-click on this item, with where it happened. Nothing happens without it. */
-      onContextMenu?: (at: { x: number; y: number }) => void
     }
   | { kind: 'separator'; id: string }
   | { kind: 'heading'; id: string; label: string }
@@ -39,6 +30,8 @@ export type MenuEntry =
       id: string
       label: string
       leading?: ReactNode
+      /** A count or hint before the chevron. */
+      trailing?: ReactNode
       disabled?: boolean
       entries: readonly MenuEntry[]
     }
@@ -71,6 +64,9 @@ function renderEntries(entries: readonly MenuEntry[]): ReactNode {
           <DropdownMenu.SubTrigger disabled={entry.disabled} className={itemClass}>
             {entry.leading}
             <span className="min-w-0 flex-1 truncate">{entry.label}</span>
+            {entry.trailing ? (
+              <span className="flex-none text-[12px] text-muted-foreground">{entry.trailing}</span>
+            ) : null}
             <Icon name="chevron-right" size="sm" />
           </DropdownMenu.SubTrigger>
           <DropdownMenu.Portal>
@@ -111,13 +107,6 @@ function renderEntries(entries: readonly MenuEntry[]): ReactNode {
       entry.onSelect()
     }
     const className = cn(itemClass, entry.danger && 'text-destructive')
-    const onContextMenu = entry.onContextMenu
-      ? (event: MouseEvent): void => {
-          if (entry.disabled) return
-          event.preventDefault()
-          entry.onContextMenu?.({ x: event.clientX, y: event.clientY })
-        }
-      : undefined
     if (entry.checked === undefined) {
       return (
         <DropdownMenu.Item
@@ -125,7 +114,6 @@ function renderEntries(entries: readonly MenuEntry[]): ReactNode {
           disabled={entry.disabled}
           className={className}
           onSelect={onSelect}
-          onContextMenu={onContextMenu}
         >
           {itemContent}
         </DropdownMenu.Item>
@@ -139,7 +127,6 @@ function renderEntries(entries: readonly MenuEntry[]): ReactNode {
         disabled={entry.disabled}
         className={className}
         onSelect={onSelect}
-        onContextMenu={onContextMenu}
       >
         <span
           className="grid w-3.5 flex-none place-items-center text-[var(--accent-text)]"

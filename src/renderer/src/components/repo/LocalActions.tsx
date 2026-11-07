@@ -31,10 +31,8 @@ interface LocalActionsProps {
   compact?: boolean
 }
 
+type OpenMenu = { id: 'branch' | 'pull' | 'push'; x: number; y: number }
 type BranchRef = { kind: 'branch' | 'remote'; name: string; current: boolean }
-type OpenMenu =
-  | { id: 'branch' | 'pull' | 'push'; x: number; y: number }
-  | { id: 'ref'; x: number; y: number; ref: BranchRef }
 
 /** Buttons inside the joined Fetch / Pull / Push strip: the strip draws the border. */
 const SEGMENT = 'h-full rounded-none border-0 pr-1.5 pl-3'
@@ -82,12 +80,12 @@ export function LocalActions({
       ? (branches.current ?? (branches.detached ? 'Detached HEAD' : 'No commits'))
       : 'Branches'
 
-    function open(id: 'branch' | 'pull' | 'push', el: HTMLElement): void {
+    function open(id: OpenMenu['id'], el: HTMLElement): void {
       const rect = el.getBoundingClientRect()
       setMenu({ id, x: rect.left, y: rect.bottom + 4 })
     }
 
-    function entriesFor(id: 'branch' | 'pull' | 'push'): MenuEntry[] {
+    function entriesFor(id: OpenMenu['id']): MenuEntry[] {
       if (id === 'pull') {
         return [
           {
@@ -121,18 +119,21 @@ export function LocalActions({
       }
       const list: MenuEntry[] = [{ kind: 'heading', id: 'h-local', label: 'Local branches' }]
       for (const b of branches?.local ?? []) {
+        // A row opens its actions on hover or the Right arrow: check out, merge, delete, copy.
         list.push({
-          kind: 'item',
+          kind: 'submenu',
           id: `l:${b.name}`,
           label: b.name,
-          checked: b.current,
-          radio: true,
+          leading: (
+            <span
+              className="grid w-3.5 flex-none place-items-center text-[var(--accent-text)]"
+              aria-hidden="true"
+            >
+              {b.current ? <Icon name="check" size="sm" /> : null}
+            </span>
+          ),
           trailing: trackingText(b) || undefined,
-          onSelect: () => {
-            if (!b.current) actions.checkout({ kind: 'branch', name: b.name })
-          },
-          onContextMenu: (at) =>
-            setMenu({ id: 'ref', ...at, ref: { kind: 'branch', name: b.name, current: b.current } })
+          entries: refEntries({ kind: 'branch', name: b.name, current: b.current })
         })
       }
       // Every remote branch, a heading per remote (`origin`), even one that has a local twin.
@@ -141,12 +142,10 @@ export function LocalActions({
         list.push({ kind: 'heading', id: `h-remote:${group.remote}`, label: group.remote })
         for (const name of group.names) {
           list.push({
-            kind: 'item',
+            kind: 'submenu',
             id: `r:${name}`,
             label: name.slice(group.remote.length + 1),
-            onSelect: () => actions.checkout({ kind: 'remote', name }),
-            onContextMenu: (at) =>
-              setMenu({ id: 'ref', ...at, ref: { kind: 'remote', name, current: false } })
+            entries: refEntries({ kind: 'remote', name, current: false })
           })
         }
       }
@@ -294,19 +293,9 @@ export function LocalActions({
         />
         {menu ? (
           <Menu
-            // A new menu for each place, so it opens at the pointer and not where the last one was.
-            key={`${menu.id}:${menu.x}:${menu.y}`}
-            label={
-              menu.id === 'ref'
-                ? menu.ref.name
-                : menu.id === 'branch'
-                  ? 'Branches'
-                  : menu.id === 'pull'
-                    ? 'Pull'
-                    : 'Push'
-            }
+            label={menu.id === 'branch' ? 'Branches' : menu.id === 'pull' ? 'Pull' : 'Push'}
             at={{ x: menu.x, y: menu.y }}
-            entries={menu.id === 'ref' ? refEntries(menu.ref) : entriesFor(menu.id)}
+            entries={entriesFor(menu.id)}
             minWidth={menu.id === 'branch' ? 240 : undefined}
             onClose={() => setMenu(null)}
           />

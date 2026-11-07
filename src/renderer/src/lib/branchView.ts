@@ -304,7 +304,7 @@ export type MenuLayoutRow =
 
 /**
  * Lays `refActions` out for a menu: the ref and commit actions first, split by a rule, then
- * a Reset submenu and a Copy submenu (all the copy actions together). `currentBranch` names
+ * a Reset submenu and a Copy submenu (all the copy actions together; one alone stays an item). `currentBranch` names
  * the branch Reset moves; it says HEAD while detached.
  */
 export function menuLayout(items: RefActionItem[], currentBranch: string | null): MenuLayoutRow[] {
@@ -329,6 +329,8 @@ export function menuLayout(items: RefActionItem[], currentBranch: string | null)
       items: reset
     })
   }
-  if (copy.length > 0) rows.push({ kind: 'submenu', id: 'copy', label: 'Copy', items: copy })
+  // A lone copy action (a branch menu with no commit) needs no submenu around it.
+  if (copy.length === 1) rows.push({ kind: 'item', item: copy[0] })
+  else if (copy.length > 1) rows.push({ kind: 'submenu', id: 'copy', label: 'Copy', items: copy })
   return rows
 }
