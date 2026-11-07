@@ -8,6 +8,27 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-07: Phase 17 as built
+
+- **Question:** what was built, what the checks showed, and what was not checked.
+- **Decision and why:**
+  - As planned. `Menu` gained a `submenu` kind and an `onContextMenu` on items; `branchView.menuLayout` lays out the ref and commit actions with Reset and Copy as submenus; `refMenu.ts` converts that to `Menu` entries, so the graph and the branch selector share one builder. The selector's ref menu passes no commit hash, so it has no commit actions and no Reset.
+  - Force delete is not a menu item: `deleteBranch` asks once, runs `branch -d`, and if git says the branch is not fully merged it asks a second time before `branch -D`. Declining either leaves the branch. Remote delete (`deleteRemoteBranch`) splits `origin/topic` by the repository's own remote names (longest first) and pushes `:refs/heads/<branch>` with the same scoped auth as other pushes.
+  - Bug found in the window and fixed: `LocalActions` and `GitGraph` reused one `Menu` instance when a second menu opened at a new point (a right-click on a selector row), and Radix kept the old anchor. The new menu then opened under the old position, so releasing the button over an item ran it (a merge in the scratch repo). Both now set `key` from the menu kind and position.
+  - Tests: 476 passing; typecheck, lint, format and build pass.
+  - No board in `docs/ui-boards/` shows submenus or the per-remote branch list. Tokens and existing components only. Gap logged.
+- **Live check (2026-11-07):** driven over a DevTools port on a scratch repo with a bare remote. The commit menu shows four actions, a rule, then **Reset main to here ▸** (Soft, Mixed, Hard in red) and **Copy ▸**. A local badge shows Check out, Delete, Merge, Rebase, then the commit actions, Reset and Copy. A remote badge shows "Delete origin/topic on the remote…". The branch selector lists local branches, then `origin` with `main` and `topic` (twins included). A right-click on a selector row opens the ref menu at the pointer and releasing the button runs nothing.
+- **Not verified:** the native confirm dialogs (force delete, delete on the remote) were not clicked in the window: they are covered by the service tests only. Keyboard use of submenus (Right and Left arrow), a narrow window, and a real remote host.
+
+## 2026-11-07: Phase 17 scope (leaner menus, Delete branch)
+
+- **Question:** how to shorten the commit menu, add Delete branch to the graph and the branch selector, and show remote branches.
+- **Options considered:** submenus vs more separators; delete local only vs also force and remote; the selector's own action menu vs a submenu arrow on each row; show only remote branches with no local twin vs every remote branch.
+- **Decision and why:**
+  - Submenus for Reset (soft, mixed, hard) and Copy (name, hash), because Reset has three near-identical entries and the copy items sat in two groups.
+  - Delete covers local, force and remote, with a confirm each time. Force asks after git refuses, so the common safe path stays one confirm.
+  - The selector keeps left-click for checkout and uses right-click for the same ref menu as the graph, so one builder serves both. Every remote branch is listed under its remote, including ones with a local twin, so a branch can be deleted on the remote from the selector.
+
 ## 2026-11-07: Scope selector and filter moved to the toolbar
 
 - **Question:** where the project selector and the repository filter live, and what happens when the sidebar is collapsed.
