@@ -27,6 +27,8 @@ interface LocalActionsProps {
   onStash: () => void
   onTags: () => void
   onRemotes: () => void
+  terminalOpen: boolean
+  onToggleTerminal: () => void
   /** A narrow pane: Open folder, Fetch, Pull and Push show only their icon. */
   compact?: boolean
 }
@@ -78,6 +80,8 @@ export function LocalActions({
   onStash,
   onTags,
   onRemotes,
+  terminalOpen,
+  onToggleTerminal,
   compact = false
 }: LocalActionsProps) {
   const { busy } = actions
@@ -318,9 +322,17 @@ export function LocalActions({
           </Button>
         )}
         <IconButton
+          label="Terminal (Ctrl+`)"
+          icon="terminal"
+          className="ml-auto size-9"
+          active={terminalOpen}
+          aria-pressed={terminalOpen}
+          onClick={onToggleTerminal}
+        />
+        <IconButton
           label="Open folder"
           icon="folder"
-          className="ml-auto size-9"
+          className="size-9"
           disabled={working}
           onClick={actions.openFolder}
         />

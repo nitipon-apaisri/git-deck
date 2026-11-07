@@ -8,6 +8,17 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-07: Phase 19 (integrated terminal)
+
+- **Question:** the user asked for a terminal inside the app. Phase 18 had ruled one out because it needs `node-pty`, a native module.
+- **Options considered:** a pty through `script(1)` with no native module (limited resize, Unix only); `node-pty`; a one-command runner (nothing interactive).
+- **Decision and why:** `node-pty`, chosen by the user. It is N-API with prebuilt binaries for macOS and Windows, so there is no compile step and no `electron-rebuild`. The rules now allow this one native module in `dependencies`; xterm.js stays a devDependency because Vite bundles it.
+  - A shell starts only in a folder that is linked to a repository, the same check every other path argument gets. One shell per pane, started on the first open, hidden (not killed) on close, killed when the pane goes or the app quits.
+  - The shell is a login shell (`$SHELL -l`) with `TERM=xterm-256color`. It inherits the app's environment, which holds no tokens (tokens live only in `safeStorage` and are injected per git call).
+  - pnpm unpacks `node-pty`'s `spawn-helper` without the execute bit, which makes every spawn fail with `posix_spawnp failed`. Main sets the bit before the first spawn. `pnpm-workspace.yaml` allows the package's install script.
+  - Ctrl+\` toggles the active pane's terminal; the key is passed through xterm so it also closes it while focused.
+- **Not verified:** the panel in the running window (light and dark, resize, two panes in Split View). No boards are drawn. A real `node-pty` shell was run under Electron 45 (output and input worked), and the rest is covered by tests with a fake pty. Packaged builds (asar unpacking of `node-pty`) are untested because the repo has no packager yet. The existing `commitBlocker` test in `changes-view.test.ts` fails on `main` too and is unrelated.
+
 ## 2026-11-07: Phase 18 as built
 
 - **Question:** what was built, what the checks showed, and what was not checked.

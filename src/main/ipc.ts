@@ -48,6 +48,16 @@ export function registerIpc(store: Store): () => void {
         win.webContents.send(IPC.gitProgress, progress)
       }
     },
+    emitTerminalData: (id, data) => {
+      for (const win of BrowserWindow.getAllWindows()) {
+        win.webContents.send(IPC.terminalData, id, data)
+      }
+    },
+    emitTerminalExit: (id, code) => {
+      for (const win of BrowserWindow.getAllWindows()) {
+        win.webContents.send(IPC.terminalExit, id, code)
+      }
+    },
     emitRepoChanged: (path) => {
       for (const win of BrowserWindow.getAllWindows()) {
         win.webContents.send(IPC.repoChanged, path)
