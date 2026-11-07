@@ -135,7 +135,8 @@ export interface RefActionContext {
 }
 
 /**
- * What a right-click offers. `ref` is the badge that was clicked, or `null` for the row.
+ * What a right-click offers. `ref` is the badge that was clicked, or `null` for the row. Ref
+ * labels do not repeat the ref's name, which can be long: the menu shows it once as a heading.
  * `hash` is the commit under the pointer; `null` (the branch selector, which has no commit)
  * leaves out every commit action. Deleting the checked-out branch is not offered at all.
  * Without `context` (a pane that cannot write) neither merge nor cherry-pick appears.
@@ -151,20 +152,20 @@ export function refActions(
     if (ref.current) {
       items.push({
         id: 'rename',
-        label: `Rename ${ref.name}…`,
+        label: 'Rename…',
         action: { type: 'rename-branch', name: ref.name },
         group: 'ref'
       })
     } else {
       items.push({
         id: 'checkout',
-        label: `Check out ${ref.name}`,
+        label: 'Check out',
         action: { type: 'checkout-branch', name: ref.name },
         group: 'ref'
       })
       items.push({
         id: 'delete',
-        label: `Delete ${ref.name}…`,
+        label: 'Delete…',
         action: { type: 'delete-branch', name: ref.name },
         danger: true,
         group: 'ref'
@@ -173,13 +174,13 @@ export function refActions(
   } else if (ref?.kind === 'remote') {
     items.push({
       id: 'checkout',
-      label: `Check out ${ref.name} as a tracking branch`,
+      label: 'Check out as a tracking branch',
       action: { type: 'checkout-remote', name: ref.name },
       group: 'ref'
     })
     items.push({
       id: 'delete-remote',
-      label: `Delete ${ref.name} on the remote…`,
+      label: 'Delete on the remote…',
       action: { type: 'delete-remote-branch', name: ref.name },
       danger: true,
       group: 'ref'
@@ -194,19 +195,19 @@ export function refActions(
     items.push(
       {
         id: 'merge',
-        label: `Merge ${ref.name} into ${context.currentBranch}`,
+        label: `Merge into ${context.currentBranch}`,
         action: { type: 'merge', branch: ref.name, noFf: false },
         group: 'ref'
       },
       {
         id: 'merge-no-ff',
-        label: `Merge ${ref.name} into ${context.currentBranch} (always a merge commit)`,
+        label: `Merge into ${context.currentBranch} (no fast-forward)`,
         action: { type: 'merge', branch: ref.name, noFf: true },
         group: 'ref'
       },
       {
         id: 'rebase',
-        label: `Rebase ${context.currentBranch} onto ${ref.name}`,
+        label: `Rebase ${context.currentBranch} onto this branch`,
         action: { type: 'rebase', onto: ref.name },
         group: 'ref'
       }

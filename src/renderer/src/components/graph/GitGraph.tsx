@@ -246,8 +246,12 @@ export function GitGraph({
         operationActive: menuOps.operationActive
       }
     )
-    return refMenuEntries(items, menuOps?.currentBranch ?? null, !!menuOps?.busy, (action) =>
-      runAction(action, commit)
+    return refMenuEntries(
+      items,
+      menuOps?.currentBranch ?? null,
+      !!menuOps?.busy,
+      (action) => runAction(action, commit),
+      ref?.name
     )
   }
 
