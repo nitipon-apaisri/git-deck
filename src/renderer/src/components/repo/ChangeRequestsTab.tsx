@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { AccountType, ChangeRequest } from '@shared/types'
-import { createUrl } from '../../lib/changeView'
+import { CHECK_LABEL, createUrl } from '../../lib/changeView'
 import { errorMessage } from '../../lib/errors'
 import { timeAgo } from '../../lib/format'
 import { useNow } from '../../state/useNow'
@@ -36,7 +36,7 @@ export function ChangeRequestsTab({ repoKey, host, webUrl, active }: Props) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-2">
-        <h2 className="m-0 text-[13px] font-semibold">
+        <h2 className="m-0 text-[15px] leading-5.5 font-semibold">
           {host === 'github' ? 'Pull requests' : 'Merge requests'}
         </h2>
         {loading ? <Spinner label={`Loading ${noun}s`} /> : null}
@@ -87,9 +87,7 @@ function Row({
           <span className="min-w-0 truncate text-[13px] font-medium">{cr.title}</span>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-muted-foreground">
-          <Badge tone={cr.state === 'open' ? 'neutral' : 'warning'}>
-            {cr.draft ? 'Draft' : STATE_LABEL[cr.state]}
-          </Badge>
+          <Badge>{cr.draft ? 'Draft' : STATE_LABEL[cr.state]}</Badge>
           <span>
             {short} #{cr.number} by {cr.author || 'unknown'} ·{' '}
             {timeAgo(Date.parse(cr.updatedAt), now)}
@@ -98,12 +96,18 @@ function Row({
             {cr.sourceBranch} → {cr.targetBranch}
           </span>
           {cr.reviewers.length > 0 ? <span>Reviewers: {cr.reviewers.join(', ')}</span> : null}
+          {checks && checks.state !== 'none' ? <span>{CHECK_LABEL[checks.state]}</span> : null}
           {cr.labels.map((l) => (
             <Badge key={l}>{l}</Badge>
           ))}
         </div>
       </div>
-      <Button onClick={() => void onOpen(cr.webUrl)}>Open in browser</Button>
+      <Button
+        aria-label={`Open ${short} #${cr.number} in browser`}
+        onClick={() => void onOpen(cr.webUrl)}
+      >
+        Open in browser
+      </Button>
     </li>
   )
 }

@@ -9,7 +9,7 @@ const TONE: Record<CheckState, string> = {
   none: 'bg-transparent border border-border'
 }
 
-/** CI state as a dot. The title and the hidden text name it, so colour is not the only cue. */
+/** CI state as a dot. The aria-label and title name it; callers show the words too where there is room. */
 export function CheckDot({ state, className }: { state: CheckState; className?: string }) {
   return (
     <span

@@ -354,12 +354,14 @@ export function RepoPane({
           </div>
         ) : null}
         {tab === 'pulls' && account ? (
-          <ChangeRequestsTab
-            repoKey={repo.key}
-            host={account.type}
-            webUrl={repo.webUrl}
-            active={tab === 'pulls'}
-          />
+          <div className="animate-rise motion-reduce:animate-none">
+            <ChangeRequestsTab
+              repoKey={repo.key}
+              host={account.type}
+              webUrl={repo.webUrl}
+              active={tab === 'pulls'}
+            />
+          </div>
         ) : null}
         {tab === 'overview' || tab === 'info' ? (
           // Keyed on the tab so each switch replays the arrival.
