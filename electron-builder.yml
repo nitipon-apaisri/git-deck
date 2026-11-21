@@ -9,7 +9,7 @@ files:
 # node-pty loads a native addon and spawn-helper: both must live outside app.asar.
 asarUnpack:
   - node_modules/node-pty/**
-# One runner per architecture (see release.yml): node-pty ships prebuilds, so no rebuild.
+# One runner builds both architectures: node-pty ships prebuilds, so no rebuild.
 npmRebuild: false
 mac:
   category: public.app-category.developer-tools

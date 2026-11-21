@@ -6,14 +6,7 @@ permissions:
   contents: write
 jobs:
   mac:
-    strategy:
-      matrix:
-        include:
-          - runner: macos-15
-            arch: arm64
-          - runner: macos-15-intel
-            arch: x64
-    runs-on: ${{ matrix.runner }}
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -22,7 +15,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm package --${{ matrix.arch }}
+      - run: pnpm package
       - uses: softprops/action-gh-release@v2
         with:
           files: |
