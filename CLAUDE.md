@@ -8,6 +8,7 @@ Desktop Git client (Electron + React + TypeScript) for GitHub, GitLab.com and se
 - `docs/design-system/` is the visual source of truth (tokens, component guidelines, previews). `docs/ui-boards/` has the full-screen designs.
 
 - `AGENTS.md` is the portable copy of these rules. Keep both consistent. `docs/DECISIONS.md` logs ambiguities.
+- Releases: follow `docs/RELEASING.md` (the `releaser` subagent does).
 
 ## Rules
 
