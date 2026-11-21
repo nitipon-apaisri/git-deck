@@ -101,7 +101,7 @@ docs           Design system, UI boards, DECISIONS.md.
 - **The graph** is laid out by a stateful lane-assignment class (`src/shared/graph-layout.ts`) that accepts pages as they load. Rows are SVG, drawn only for the visible range.
 - **Panes are independent.** There is no global "current repository". Each pane owns its tab, summary, graph and scroll, so two can sit side by side.
 - **Styling** is CSS Modules with design tokens (`docs/design-system/tokens.css`). Components use `var(--…)` only, never a hex value. The theme is a `data-theme` attribute on `<html>`.
-- The only runtime dependencies are `react` and `react-dom`. Fonts and build tools are dev dependencies, and there are no native modules.
+- The only runtime dependencies are `react`, `react-dom` and `node-pty` (the one native module, for the integrated terminal). Fonts, UI libraries and build tools are dev dependencies.
 
 `PLAN.md` is the full build brief and `docs/DECISIONS.md` records each call that the brief left open.
 
@@ -129,9 +129,9 @@ Not planned for this version: interactive rebase, line-level discard, a full-fil
 
 ### Install
 
-Download the dmg for your Mac (`arm64` for Apple silicon, the plain one for Intel) from the [Releases](https://github.com/nitipon-apaisri/git-deck/releases) page and drag GitDeck to Applications. The build is ad-hoc signed but not notarised (there is no Developer ID), so macOS warns on the first launch: right-click the app and choose Open, or run `xattr -dr com.apple.quarantine /Applications/GitDeck.app`. A build with no signature at all shows "GitDeck is damaged" on Apple silicon; the `xattr` command clears that too.
+Download the dmg for your Mac (`arm64` for Apple silicon, the plain one for Intel) from the [Releases](https://github.com/nitipon-apaisri/git-deck/releases) page and drag GitDeck to Applications. The build is ad-hoc signed but not notarised (there is no Developer ID), so macOS blocks the first launch with "Apple could not verify GitDeck is free of malware". Click Done (not Move to Trash), open System Settings, Privacy & Security, and click Open Anyway next to the GitDeck notice. This is needed once per downloaded build. Or run `xattr -dr com.apple.quarantine /Applications/GitDeck.app` and open the app again. On macOS 15 and later, right-click, Open no longer bypasses the prompt. A build with no signature at all shows "GitDeck is damaged" on Apple silicon; the `xattr` command clears that too.
 
-GitDeck does not update itself. Settings, About, Check for updates asks GitHub for the latest release and links to its page. Nothing is checked at launch.
+GitDeck does not update itself. Settings, About, Check for updates asks GitHub for the latest release and links to its page. Nothing is checked at launch. To update, download the new dmg and replace GitDeck in Applications; the Open Anyway step may be needed again. Silent auto-update needs a Developer ID signature and notarisation, which are not set up.
 
 Build it yourself with `pnpm package` (output in `dist/`). A `v*` tag pushed to GitHub runs `.github/workflows/release.yml`, which builds both architectures and attaches them to a Release.
 
