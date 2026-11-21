@@ -431,3 +431,12 @@ test('other chords are not shortcuts', () => {
   assert.equal(shortcutOf(key('Digit1', { ctrlKey: true, shiftKey: true })), null)
   assert.equal(shortcutOf(key('Digit1', { ctrlKey: true, metaKey: true })), null)
 })
+
+test('Ctrl/Cmd+Shift+P opens the palette, on either modifier', () => {
+  assert.equal(shortcutOf(key('KeyP', { ctrlKey: true, shiftKey: true })), 'palette')
+  assert.equal(shortcutOf(key('KeyP', { metaKey: true, shiftKey: true })), 'palette')
+  assert.equal(shortcutOf(key('KeyP', { ctrlKey: true })), null) // print, not ours
+  assert.equal(shortcutOf(key('KeyP', { shiftKey: true })), null) // typing a P
+  assert.equal(shortcutOf(key('KeyP', { ctrlKey: true, shiftKey: true, altKey: true })), null)
+  assert.equal(shortcutOf(key('KeyP', { ctrlKey: true, metaKey: true, shiftKey: true })), null)
+})

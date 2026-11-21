@@ -42,6 +42,8 @@ interface GitGraphProps {
   host?: AccountType | null
   /** False while another tab is showing. The graph stays mounted to keep its place. */
   visible: boolean
+  /** Select this commit and scroll to it, loading more history until it is found. */
+  reveal?: { hash: string; n: number } | null
   /** Changes after a fetch, a clone or a link: the history is read again. */
   reloadToken: number
   /** Changes when files or refs change on disk: status and diff reload, the graph only if HEAD moved. */
@@ -94,6 +96,7 @@ export function GitGraph({
   defaultBranch,
   host = null,
   visible,
+  reveal = null,
   reloadToken,
   watchToken,
   onChanged,
@@ -191,6 +194,28 @@ export function GitGraph({
       loadMore()
     }
   }, [scrollTop, viewportHeight, rows.length, done, loading, error, loadMore])
+
+  // A reveal request is handled once. While its commit is not loaded yet, more history loads.
+  const [handled, setHandled] = useState(0)
+  const pending = reveal !== null && visible && reveal.n !== handled
+  if (pending) {
+    if (rows.some((r) => r.commit.hash === reveal.hash)) {
+      setHandled(reveal.n)
+      setSelectedHash(reveal.hash)
+    } else if (done) {
+      setHandled(reveal.n) // not in this history: nothing to show
+    }
+  }
+  useEffect(() => {
+    if (pending) loadMore()
+  }, [pending, rows.length, loadMore])
+  useEffect(() => {
+    const el = viewport.current
+    if (handled === 0 || !el || selectedIndex < 0) return
+    el.scrollTop = savedTop.current = scrollToRow(selectedIndex, el.scrollTop, el.clientHeight)
+    // Only when a request lands, not on every later selection.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handled])
 
   const range = visibleRange(scrollTop, viewportHeight, rows.length)
   const drawn = rows.slice(range.start, range.end)

@@ -71,7 +71,7 @@ export const isNarrow = (width: number): boolean => width > 0 && width < NARROW_
 export const detailPlacement = (split: boolean, narrow: boolean): 'side' | 'below' =>
   split || narrow ? 'below' : 'side'
 
-export type ShortcutAction = 'toggle' | 'pane1' | 'pane2' | 'search'
+export type ShortcutAction = 'toggle' | 'pane1' | 'pane2' | 'search' | 'palette'
 
 export interface KeyLike {
   code: string
@@ -83,11 +83,12 @@ export interface KeyLike {
 
 /**
  * Ctrl/Cmd+Alt+S toggles split view. Ctrl/Cmd+1 and +2 focus a pane. Ctrl/Cmd+K focuses
- * the sidebar search. `code` is used because Alt changes `key` on macOS ("ß" for Alt+S).
+ * the sidebar search. Ctrl/Cmd+Shift+P opens the command palette. `code` is used because Alt changes `key` on macOS ("ß" for Alt+S).
  */
 export function shortcutOf(e: KeyLike): ShortcutAction | null {
   const mod = e.ctrlKey !== e.metaKey // exactly one of them
-  if (!mod || e.shiftKey) return null
+  if (!mod) return null
+  if (e.shiftKey) return e.code === 'KeyP' && !e.altKey ? 'palette' : null
   if (e.altKey) return e.code === 'KeyS' ? 'toggle' : null
   if (e.code === 'KeyK') return 'search'
   if (e.code === 'Digit1') return 'pane1'

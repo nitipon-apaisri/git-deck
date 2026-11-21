@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Repo } from '@shared/types'
+import { CommandPalette } from './components/CommandPalette'
 import { MainPane } from './components/MainPane'
 import { SettingsDialog } from './components/settings/SettingsDialog'
 import { ManageProjectsDialog } from './components/projects/ManageProjectsDialog'
@@ -8,6 +9,8 @@ import { ProjectOverview } from './components/projects/ProjectOverview'
 import { Sidebar } from './components/Sidebar'
 import { Toolbar } from './components/Toolbar'
 import { hasInsetTitleBar } from './lib/platform'
+import type { PaneCommands } from './lib/paletteItems'
+import { THEME_SETTINGS } from './lib/theme'
 import type { SettingsSection } from './lib/settingsSections'
 import { ALL_SCOPE, SCOPE_KEY, parseScope, projectView, resolveScope } from './lib/projectScope'
 import type { ShortcutAction } from './lib/splitLayout'
@@ -16,6 +19,7 @@ import { errorMessage } from './lib/errors'
 import { LOCAL_ACCOUNT_ID, LOCAL_GROUP } from './lib/localRepos'
 import { useProjectSummaries } from './state/projectSummaries'
 import { useProjects } from './state/projects'
+import { activePane } from './state/paneCommands'
 import { readStored, writeStored } from './state/storage'
 import { useShortcuts } from './state/useShortcuts'
 import { useSplit } from './state/useSplit'
@@ -52,6 +56,8 @@ export function App() {
     setSettingsSection(section)
     setDialog('settings')
   }
+  // The palette keeps the pane that had focus when it opened, so it acts on that one.
+  const [palette, setPalette] = useState<{ pane: PaneCommands | null } | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(() => readStored(SIDEBAR_KEY) !== 'closed')
 
   const repos = Object.values(state.byAccount).flatMap((a) => a.repos)
@@ -191,6 +197,11 @@ export function App() {
         })
         return
       }
+      if (action === 'palette') {
+        if (document.querySelector('dialog[open], [role="dialog"]')) return
+        setPalette({ pane: activePane() })
+        return
+      }
       if (action === 'toggle') {
         toggle()
         return
@@ -317,6 +328,21 @@ export function App() {
             if (form.editId === null) chooseScope(saved.id)
           }}
           onClose={() => setForm(null)}
+        />
+      ) : null}
+      {palette ? (
+        <CommandPalette
+          pane={palette.pane}
+          repos={repos}
+          openRepo={selectRepo}
+          openSettings={() => openSettings('appearance')}
+          switchTheme={() =>
+            setSetting(
+              THEME_SETTINGS[(THEME_SETTINGS.indexOf(setting) + 1) % THEME_SETTINGS.length]
+            )
+          }
+          themeLabel={setting[0].toUpperCase() + setting.slice(1)}
+          onClose={() => setPalette(null)}
         />
       ) : null}
       {dialog === 'settings' ? (
