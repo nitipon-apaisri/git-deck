@@ -13,6 +13,7 @@ import {
 } from '../../lib/graphView'
 import { cn } from '@/lib/cn'
 import type {
+  AccountType,
   CheckoutTarget,
   DiffRequest,
   GraphCommit,
@@ -37,6 +38,8 @@ interface GitGraphProps {
   /** The linked folder, `null` when the repository is not cloned or linked. */
   path: string | null
   defaultBranch: string
+  /** The repo's host, for the remote mark on a branch pill. */
+  host?: AccountType | null
   /** False while another tab is showing. The graph stays mounted to keep its place. */
   visible: boolean
   /** Changes after a fetch, a clone or a link: the history is read again. */
@@ -89,6 +92,7 @@ const EMPTY =
 export function GitGraph({
   path,
   defaultBranch,
+  host = null,
   visible,
   reloadToken,
   watchToken,
@@ -372,6 +376,7 @@ export function GitGraph({
                   lanes={lanes}
                   now={now}
                   defaultBranch={defaultBranch}
+                  host={host}
                   compact={narrow}
                   selected={row.commit.hash === selectedHash}
                   wipCount={status?.entries.length}

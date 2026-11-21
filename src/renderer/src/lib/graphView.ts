@@ -15,7 +15,6 @@ export const NODE_RADIUS = 5
 export const LANE_PAD = 14
 /** The lane colours `--lane-1` to `--lane-6` repeat. */
 export const LANE_COLORS = 6
-export const MAX_BADGES = 3
 /** Changed files drawn before "Show all". */
 export const FILE_LIMIT = 300
 
@@ -192,14 +191,58 @@ export function badgeViews(refs: readonly GraphRef[], defaultBranch: string): Ba
     })
 }
 
-export interface BadgeSplit {
-  shown: BadgeView[]
-  /** How many more refs sit on the commit, for "+n". */
-  more: number
+/** One pill in the branch / tag column: a local branch and its remote twin share one. */
+export interface RefPill {
+  key: string
+  kind: BadgeKind
+  name: string
+  /** Checked out: drawn with a tick. */
+  current: boolean
+  local: boolean
+  remote: boolean
+  tag: boolean
+  /** Every full ref name on it, for the tooltip. */
+  title: string
+  /** The ref the right-click menu acts on: the local branch when there is one. */
+  badge: BadgeView
 }
 
-export function splitBadges(badges: readonly BadgeView[], max = MAX_BADGES): BadgeSplit {
-  return { shown: badges.slice(0, max), more: Math.max(0, badges.length - max) }
+/**
+ * The pills for a commit: a detached HEAD, the checked-out branch, other local branches, remote-only
+ * branches, then tags. `origin/x` joins local `x`. HEAD is left out when a branch is checked out.
+ */
+export function refPills(refs: readonly GraphRef[], defaultBranch: string): RefPill[] {
+  const views = badgeViews(refs, defaultBranch)
+  const branches = views.filter((v) => v.refKind === 'branch')
+  const remotes = views.filter((v) => v.refKind === 'remote')
+  const twin = new Set<BadgeView>()
+  const pills: RefPill[] = []
+  const pill = (badge: BadgeView, extra: Partial<RefPill>, names: string[]): RefPill => ({
+    key: `${badge.refKind}:${badge.name}`,
+    kind: badge.kind,
+    name: badge.name,
+    current: badge.current,
+    local: false,
+    remote: false,
+    tag: false,
+    title: names.join('\n'),
+    badge,
+    ...extra
+  })
+  if (!branches.some((b) => b.current)) {
+    for (const v of views) if (v.refKind === 'head') pills.push(pill(v, {}, [v.name]))
+  }
+  const locals = [...branches].sort((a, b) => Number(b.current) - Number(a.current))
+  for (const b of locals) {
+    // A remote ref is `remote/branch`; the remote's own name has no slash.
+    const match = remotes.find((r) => r.name.slice(r.name.indexOf('/') + 1) === b.name)
+    if (match) twin.add(match)
+    const names = [b.current ? `${b.name} (checked out)` : b.name, ...(match ? [match.name] : [])]
+    pills.push(pill(b, { local: true, remote: match !== undefined }, names))
+  }
+  for (const r of remotes) if (!twin.has(r)) pills.push(pill(r, { remote: true }, [r.name]))
+  for (const t of views) if (t.refKind === 'tag') pills.push(pill(t, { tag: true }, [t.name]))
+  return pills
 }
 
 /** HEAD is drawn as a ring. A detached HEAD is a `head` ref with no branch beside it. */

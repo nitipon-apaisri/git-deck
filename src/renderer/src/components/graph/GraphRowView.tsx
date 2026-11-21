@@ -1,11 +1,10 @@
 import { memo } from 'react'
 import type { GraphRow } from '@shared/graph-layout'
-import type { GraphCommit } from '@shared/types'
+import type { AccountType, GraphCommit } from '@shared/types'
 import {
   NODE_RADIUS,
   ROW_HEIGHT,
   authorLabel,
-  badgeViews,
   type BadgeView,
   commitDateText,
   commitDateTitle,
@@ -15,10 +14,11 @@ import {
   isWipHash,
   laneTone,
   laneX,
-  splitBadges
+  refPills
 } from '../../lib/graphView'
 import { shortHash } from '../../lib/repoView'
-import { Avatar, Icon, RefBadge } from '../ui'
+import { Avatar, Icon } from '../ui'
+import { RefPills } from './RefPills'
 
 // One stroke or fill per lane colour: laneTone() gives 1 to 6.
 const LINES = [
@@ -49,6 +49,8 @@ interface GraphRowViewProps {
   lanes: number
   now: number
   defaultBranch: string
+  /** The repo's host, for the remote mark on a branch. */
+  host: AccountType | null
   /** No author or date column. */
   compact: boolean
   selected: boolean
@@ -116,6 +118,7 @@ function GraphRowViewBase({
   lanes,
   now,
   defaultBranch,
+  host,
   compact,
   selected,
   wipCount = 0,
@@ -157,10 +160,7 @@ function GraphRowViewBase({
     )
   }
   const author = authorLabel(commit.author, commit.email)
-  const { shown, more } = splitBadges(badgeViews(commit.refs, defaultBranch))
-  const hidden = badgeViews(commit.refs, defaultBranch)
-    .slice(shown.length)
-    .map((b) => b.name)
+  const pills = refPills(commit.refs, defaultBranch)
   return (
     <div
       id={id}
@@ -182,31 +182,20 @@ function GraphRowViewBase({
           : undefined
       }
     >
-      <span className="flex w-(--col-refs) flex-none items-center gap-1 overflow-hidden">
-        {shown.map((b) => (
-          <span
-            key={`${b.kind}:${b.name}`}
-            className="inline-flex"
-            onContextMenu={
-              onMenu
-                ? (event) => {
-                    event.preventDefault()
-                    event.stopPropagation()
-                    onSelect(commit.hash)
-                    onMenu(commit, { x: event.clientX, y: event.clientY }, b)
-                  }
-                : undefined
-            }
-          >
-            <RefBadge kind={b.kind} name={b.name} current={b.current} />
-          </span>
-        ))}
-        {more > 0 ? (
-          <span className="text-[12px] text-muted-foreground" title={hidden.join('\n')}>
-            +{more}
-          </span>
-        ) : null}
-      </span>
+      <RefPills
+        pills={pills}
+        host={host}
+        onMenu={
+          onMenu
+            ? (event, badge) => {
+                event.preventDefault()
+                event.stopPropagation()
+                onSelect(commit.hash)
+                onMenu(commit, { x: event.clientX, y: event.clientY }, badge)
+              }
+            : undefined
+        }
+      />
       <div className="w-(--col-graph) flex-none overflow-hidden">
         <Lanes row={row} lanes={lanes} />
       </div>
