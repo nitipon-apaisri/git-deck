@@ -2,6 +2,7 @@ import { join } from 'node:path'
 import { app, BrowserWindow, net, safeStorage, screen, session, shell } from 'electron'
 import { configureFetch } from './http'
 import { registerIpc } from './ipc'
+import { loadLoginPath } from './shellPath'
 import { Store, type TokenCrypto } from './store'
 import { installCertVerifyProc } from './tls'
 import { isAppUrl as isAppUrlFor, isHttp } from './urls'
@@ -101,6 +102,7 @@ if (!app.requestSingleInstanceLock()) {
 
   void app.whenReady().then(async () => {
     if (process.platform === 'darwin') app.dock?.setIcon(iconPath)
+    await loadLoginPath()
     // net.fetch uses the OS certificate store, so internal CAs work.
     configureFetch((input, init) => net.fetch(input, init))
     installCertVerifyProc(session.defaultSession)
