@@ -244,14 +244,14 @@ export function refActions(
   if (context?.bisectBad && context.bisectBad !== hash) {
     items.push({
       id: 'bisect-good',
-      label: 'Bisect: this commit is good',
+      label: 'Bisect: mark as good',
       action: { type: 'bisect-good', bad: context.bisectBad, good: hash },
       group: 'commit'
     })
   } else if (canStart && !context?.bisectBad) {
     items.push({
       id: 'bisect-bad',
-      label: 'Bisect from here as bad',
+      label: 'Bisect: mark as bad',
       action: { type: 'bisect-bad', hash },
       group: 'commit'
     })

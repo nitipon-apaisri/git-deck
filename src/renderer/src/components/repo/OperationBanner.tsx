@@ -120,7 +120,7 @@ export function BisectBanner({ state, busy, onMark, onReset, onOpenCommit }: Bis
     <section
       className="flex animate-banner-in flex-col gap-2 rounded-md bg-(--warning-bg) px-3 py-2 text-(--warning-text) motion-reduce:animate-none"
       aria-label={bisectTitle(state)}
-      role="alert"
+      role="status"
     >
       <div className="flex items-start gap-2">
         <span className="mt-0.5 flex-none">
@@ -137,7 +137,11 @@ export function BisectBanner({ state, busy, onMark, onReset, onOpenCommit }: Bis
             <Button variant="primary" icon="check" disabled={busy} onClick={onReset}>
               Finish
             </Button>
-            {shown ? <Button onClick={() => onOpenCommit(shown)}>Open commit</Button> : null}
+            {shown ? (
+              <Button variant="ghost" disabled={busy} onClick={() => onOpenCommit(shown)}>
+                Open commit
+              </Button>
+            ) : null}
           </>
         ) : (
           <>

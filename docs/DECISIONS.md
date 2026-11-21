@@ -500,6 +500,6 @@ The 2px focus ring looked heavy on text inputs (palette, filters, forms). Text i
 
 - **Separate state:** bisect is not an `OperationKind`. Continue, Abort and Skip on the operation banner mean merge-like things, so a running bisect has its own `BisectState` and `BisectBanner`. It still counts as "busy": merge, rebase, cherry-pick and revert refuse to start, and the graph menu hides them.
 - **State reader:** a bisect is running when `BISECT_START` exists in the git dir (`gitDirs()`, so linked worktrees work). Marks and the final "first bad commit" line come from `BISECT_LOG` via the pure `shared/bisect.ts`. The commit under test is HEAD.
-- **Start:** "Bisect from here as bad" on a graph row remembers the commit in the pane (not saved); the next row menu offers "Bisect: this commit is good" and starts. Git needs a clean-enough work tree; its own error is shown if not.
+- **Start:** "Bisect: mark as bad" on a graph row remembers the commit in the pane (not saved); the next row menu offers "Bisect: mark as good" and starts. Git needs a clean-enough work tree; its own error is shown if not.
 - **Limits:** no "steps remaining" estimate. If skips leave git unable to decide, git's error is shown and the bisect stays open: abort it.
 - **Not verified:** no display here, so the banner and menu were not checked visually; the verifier and design-qa agents were not run.
