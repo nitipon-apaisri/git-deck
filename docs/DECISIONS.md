@@ -457,3 +457,13 @@ Newest first. Template:
   - **Reverses** the earlier "auto-update and installers" non-goal for installers only. macOS Squirrel auto-update refuses unsigned apps, so there is no silent update: the app compares its version with the latest GitHub Release (the repo is public) and links to the download. Real auto-update waits for an Apple Developer ID and should replace only `updateCheck.ts`. Unsigned builds show a Gatekeeper warning; the README explains the workaround.
   - Packaging is macOS only for now (dmg and zip, arm64 and x64), built per architecture on native runners because of `node-pty`.
 - **Not verified:** the GitHub checks and GitLab pipeline endpoints and scopes were inferred, not read from the docs. Phase 22 starts by checking them.
+
+## 2026-11-21: Command palette (Phase 21)
+
+- **Question:** the palette is global, but fetch, pull, branches and the terminal live inside each `RepoPane` (no global current repo).
+- **Decision and why:**
+  - The focused pane registers its commands in `state/paneCommands.ts` (one slot, read when the palette opens, so no re-renders). The palette keeps that snapshot, so it acts on the pane that had focus even if focus moves.
+  - A branch runs checkout (as the branch menu does). A tag switches that pane to the graph and selects its commit, loading more history until found. Tags load when the palette opens, not per pane.
+  - Pull uses fast-forward only, the safe default. Theme cycles System, Dark, Light. At most 50 results.
+  - Not opened over another dialog, same rule as Mod+K.
+- **Not verified:** no display here, so the look, focus return and Split View behaviour were not checked by eye.

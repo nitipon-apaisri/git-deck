@@ -1,9 +1,10 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/cn'
 import type { Account, Repo } from '@shared/types'
 import { errorMessage } from '../../lib/errors'
 import { timeAgo } from '../../lib/format'
 import { isLocalRepo } from '../../lib/localRepos'
+import type { PaneCommands } from '../../lib/paletteItems'
 import { isNarrow } from '../../lib/splitLayout'
 import type { TabName } from '../../lib/splitState'
 import {
@@ -29,6 +30,7 @@ import { RemotesDialog } from './RemotesDialog'
 import { StashDialog } from './StashDialog'
 import { TagsDialog } from './TagsDialog'
 import { TerminalPanel } from './TerminalPanel'
+import { registerPane } from '../../state/paneCommands'
 
 const TABS: { id: TabName; label: string }[] = [
   { id: 'overview', label: 'Overview' },
@@ -121,6 +123,30 @@ export function RepoPane({
   const { summary, fetchedAt, loading, error, reload } = useRepoSummary(isLocal ? null : repo.key)
   const actions = useLocalActions(repo.key, linkedPath, onLinksChanged)
   const { branches } = useBranches(linkedPath ?? null, actions.reloadToken + actions.watchToken)
+  // A commit the command palette asked to show. `n` makes asking twice for one hash count.
+  const [reveal, setReveal] = useState<{ hash: string; n: number } | null>(null)
+  // What the command palette may do on this pane, offered while it has the focus.
+  const { fetch, pull, checkout } = actions
+  const commands = useMemo<PaneCommands>(
+    () => ({
+      linked: linkedPath !== undefined,
+      currentBranch: branches?.current ?? null,
+      branches: branches?.local.map((b) => b.name) ?? [],
+      fetch,
+      pull: () => pull('ff-only'),
+      checkout: (name) => checkout({ kind: 'branch', name }),
+      toggleTerminal,
+      reveal: (hash) => {
+        onTabChange('graph')
+        setReveal((r) => ({ hash, n: (r?.n ?? 0) + 1 }))
+      },
+      loadTags: async () => (linkedPath ? await window.api.local.tags(linkedPath) : [])
+    }),
+    // `toggleTerminal` and `onTabChange` only set state, so a stale copy still works.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [linkedPath, branches, fetch, pull, checkout]
+  )
+  useEffect(() => (active ? registerPane(commands) : undefined), [active, commands])
   const { stashes } = useStashes(linkedPath ?? null, actions.reloadToken + actions.watchToken)
   const { operation } = useOperation(linkedPath ?? null, actions.reloadToken + actions.watchToken)
   const [stashOpen, setStashOpen] = useState(false)
@@ -277,6 +303,7 @@ export function RepoPane({
               defaultBranch={repo.defaultBranch}
               host={account?.type ?? null}
               visible={tab === 'graph'}
+              reveal={reveal}
               reloadToken={actions.reloadToken}
               watchToken={actions.watchToken}
               onChanged={actions.refresh}

@@ -157,7 +157,7 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 18: AI commit messages (Claude Code CLI)
 - [x] Phase 19: Integrated terminal
 - [x] Phase 20: Sidebar virtualization
-- [ ] Phase 21: Command palette
+- [x] Phase 21: Command palette
 - [ ] Phase 22: Pull requests, merge requests and CI
 - [ ] Phase 23: File history and blame
 - [ ] Phase 24: Bisect

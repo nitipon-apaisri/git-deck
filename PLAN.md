@@ -595,9 +595,9 @@ Runs on `phase/20-sidebar-virtualization`. Fixes the known limit "the sidebar li
 
 Runs on `phase/21-command-palette`.
 
-- [ ] Shortcut Mod+Shift+P in `useShortcuts` and `shortcutOf` (Mod+K stays search).
-- [ ] `lib/paletteItems.ts` (pure): build items for repos, branches, tags and actions (fetch, pull, open Settings, switch theme, toggle terminal) from the active pane; filter with the existing deferred-query filter; tested.
-- [ ] Centred modal on `ui/Modal` with tokens only: type to filter, arrows and Enter run, Esc closes. No commit or file-content search in v1.
+- [x] Shortcut Mod+Shift+P in `useShortcuts` and `shortcutOf` (Mod+K stays search).
+- [x] `lib/paletteItems.ts` (pure): build items for repos, branches, tags and actions (fetch, pull, open Settings, switch theme, toggle terminal) from the active pane; filter with the existing deferred-query filter; tested.
+- [x] Centred modal on `ui/Modal` with tokens only: type to filter, arrows and Enter run, Esc closes. No commit or file-content search in v1.
 
 **Verify:** `paletteItems` tests (per-pane context, no active repo, ranking, empty query). Manual: opens from either pane in Split View and acts on the pane that had focus.
 
