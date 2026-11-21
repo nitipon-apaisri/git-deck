@@ -14,8 +14,16 @@ Built with Electron, React and TypeScript.
 - **Local clones.** Clone over HTTPS or SSH, or link an existing folder. Fetch, open the folder, and read local branch, ahead/behind and working tree state.
 - **Commit graph.** A lane graph of the whole history, loaded 500 commits at a time and virtualised, so a repository with thousands of commits stays smooth. Select a commit to see its message and changed files.
 - **History operations.** Tags (create, annotate, push, delete here or on the remote), revert, reset (soft, mixed or hard, with a confirm for hard) and remotes (add, rename, remove). Non-interactive rebase onto a branch or commit, and staging one hunk at a time from the diff. Revert and rebase reuse the conflict banner, and a rebase can skip the commit it stopped on. URLs never carry a token.
+- **Working tree.** Changes tab with diffs, staging by file, hunk or single line, commit, branches, checkout, push and pull, stash, cherry-pick and merge. Conflicts are resolved in an in-app editor.
+- **File history and blame.** A per-file tab with `git log --follow` history and a blame toggle. Click an entry to open that commit.
+- **Bisect.** Start from a graph row. A banner shows the commit under test with Good, Bad, Skip and Abort, then the result.
+- **Pull and merge requests, CI.** A read-only tab with state, author, reviewers, labels and checks, plus a status dot beside the branch in the graph. Opening "Create PR/MR" goes to the host's compare page.
+- **AI commit messages.** Optional, off by default. A sparkles button fills the message field from the staged diff using the Claude Code CLI. It never commits.
+- **Integrated terminal.** A shell per pane, opened with the Terminal button or Ctrl+\`, in the repository's folder.
+- **Command palette.** `Mod+Shift+P` jumps to repositories, branches and tags and runs actions such as fetch, pull and theme switch.
 - **Projects.** A named group of repositories from any host or account, with its own icon and colour. A project has an overview page with totals, a sortable table of its repositories, and "Fetch all linked".
 - **Split View.** Two repositories at once, side by side or stacked, each with its own tab, graph and scroll position, and a draggable divider.
+- **Update notice.** Settings, About, Check for updates asks GitHub for the latest release. There is no silent auto-update.
 - **Appearance.** Light, dark or system theme, five accent colours and a choice of font, in Settings. Accounts are connected there too.
 
 ## Requirements
