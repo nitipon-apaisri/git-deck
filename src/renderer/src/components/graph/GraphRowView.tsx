@@ -128,7 +128,7 @@ function GraphRowViewBase({
     return (
       <div
         id={id}
-        className="absolute inset-x-0 flex cursor-default items-center gap-2 rounded-md pr-3 whitespace-nowrap hover:bg-accent data-[selected=true]:bg-(--selection)"
+        className="absolute inset-x-0 flex cursor-default items-center gap-2 rounded-md pr-3 whitespace-nowrap transition-[background-color] duration-(--motion-fast) ease-(--ease-out) hover:bg-accent data-[selected=true]:bg-(--selection)"
         role="option"
         aria-selected={selected}
         aria-posinset={index + 1}
@@ -160,7 +160,7 @@ function GraphRowViewBase({
   return (
     <div
       id={id}
-      className="absolute inset-x-0 flex cursor-default items-center gap-2 rounded-md pr-3 whitespace-nowrap hover:bg-accent data-[selected=true]:bg-(--selection)"
+      className="absolute inset-x-0 flex cursor-default items-center gap-2 rounded-md pr-3 whitespace-nowrap transition-[background-color] duration-(--motion-fast) ease-(--ease-out) hover:bg-accent data-[selected=true]:bg-(--selection)"
       role="option"
       aria-selected={selected}
       aria-posinset={index + 1}

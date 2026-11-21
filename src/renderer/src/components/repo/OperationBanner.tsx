@@ -33,7 +33,7 @@ export function OperationBanner({
   const { shown, more } = conflictPreview(state.conflicted, all ? state.conflicted.length : 5)
   return (
     <section
-      className="flex flex-col gap-2 rounded-md bg-(--warning-bg) px-3 py-2 text-(--warning-text)"
+      className="flex animate-banner-in flex-col gap-2 rounded-md bg-(--warning-bg) px-3 py-2 text-(--warning-text) motion-reduce:animate-none"
       aria-label={operationTitle(state)}
       role="alert"
     >

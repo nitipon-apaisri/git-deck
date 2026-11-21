@@ -43,7 +43,7 @@ export function CommitDetailPanel({
 
   return (
     <aside
-      className="flex min-h-0 min-w-0 flex-col rounded-lg bg-secondary"
+      className="flex min-h-0 min-w-0 animate-pane-in flex-col rounded-lg bg-secondary motion-reduce:animate-none"
       aria-label="Commit details"
     >
       <div className="flex items-start gap-2 px-3 pt-3 pb-2">
