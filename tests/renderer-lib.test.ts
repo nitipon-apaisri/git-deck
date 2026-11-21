@@ -17,9 +17,11 @@ import { hasInsetTitleBar } from '../src/renderer/src/lib/platform'
 import { PRESETS, hostTileOf, tokenUrl, tryNormalize } from '../src/renderer/src/lib/presets'
 import {
   buildTree,
+  flattenRows,
   flattenTree,
   matchesQuery,
-  namespaceKey
+  namespaceKey,
+  rowHeight
 } from '../src/renderer/src/lib/sidebarTree'
 import {
   parseThemeSetting,
@@ -321,6 +323,26 @@ test('flattenTree honours collapse, and a search expands everything', () => {
   const searching = flattenTree(nodes, new Set(['a', namespaceKey('a', 'team')]), true)
   assert.deepEqual(kinds(searching), ['host', 'namespace', 'repo', 'namespace', 'repo'])
   assert.ok(searching.every((r) => r.kind === 'repo' || r.expanded))
+})
+
+test('flattenRows: appends the unavailable heading and rows, and sizes every row', () => {
+  const a = account('a', 'me')
+  const nodes = buildTree([a], { a: [repo('a', '1', 'me', 'x')] }, '')
+  assert.deepEqual(
+    flattenRows(nodes, new Set(), false, []).map((r) => r.kind),
+    ['host', 'namespace', 'repo']
+  )
+  const rows = flattenRows(nodes, new Set(['a']), false, ['a:gone', 'b:2'])
+  assert.deepEqual(
+    rows.map((r) => r.kind),
+    ['host', 'unavailable-header', 'unavailable', 'unavailable']
+  )
+  const header = rows[1]
+  assert.ok(header.kind === 'unavailable-header' && header.count === 2)
+  assert.equal(new Set(rows.map((r) => r.key)).size, rows.length)
+  assert.deepEqual(flattenRows([], new Set(), false, []), [])
+  assert.deepEqual(rows.map(rowHeight), [30, 40, 30, 30])
+  assert.equal(rowHeight(flattenRows(nodes, new Set(), false, [])[1]), 26)
 })
 
 // workspace reducer

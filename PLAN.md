@@ -584,10 +584,10 @@ Scope decisions and reasons: `docs/DECISIONS.md` (2026-11-21, Roadmap). One bran
 
 Runs on `phase/20-sidebar-virtualization`. Fixes the known limit "the sidebar list is not virtualised" in `docs/DECISIONS.md`.
 
-- [ ] `@tanstack/react-virtual` as a devDependency (Vite bundles it, so the "dependencies stay three" rule holds).
-- [ ] `lib/sidebarTree.ts`: a pure `flattenRows` that turns the tree and its collapsed groups into one array of 30px rows; tested.
-- [ ] `Sidebar.tsx` renders only the visible window. The active repo scrolls into view, keyboard focus and the menu search survive unmounted rows, and the sidebar shows no flash on launch.
-- [ ] The project form's repo list uses the same windowed list.
+- [x] `@tanstack/react-virtual` as a devDependency (Vite bundles it, so the "dependencies stay three" rule holds).
+- [x] `lib/sidebarTree.ts`: a pure `flattenRows` that turns the tree and its collapsed groups into one array of 30px rows; tested.
+- [x] `Sidebar.tsx` renders only the visible window. The active repo scrolls into view, keyboard focus and the menu search survive unmounted rows, and the sidebar shows no flash on launch.
+- [x] The project form's repo list uses the same windowed list.
 
 **Verify:** `flattenRows` tests (collapse, expand, filter, empty). Typecheck, lint, tests, build. Manual: 1000+ rows (fixture repos) scroll smoothly, the active row stays visible, search and arrow keys work.
 

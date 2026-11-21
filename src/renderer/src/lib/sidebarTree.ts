@@ -23,6 +23,12 @@ export type TreeRow =
   /** `flat` repositories sit straight under their host, with no group row between. */
   | { kind: 'repo'; key: string; repo: Repo; flat: boolean }
 
+/** Project keys no loaded list has: a heading, then one row each. */
+export type ListRow =
+  | TreeRow
+  | { kind: 'unavailable-header'; key: string; count: number }
+  | { kind: 'unavailable'; key: string; repoKey: string }
+
 const byName = (a: string, b: string): number =>
   a.localeCompare(b, undefined, { sensitivity: 'base' })
 
@@ -107,4 +113,26 @@ export function flattenTree(
     }
   }
   return rows
+}
+
+/** `flattenTree` plus the project's unavailable keys, so one windowed list covers everything. */
+export function flattenRows(
+  nodes: readonly AccountNode[],
+  collapsed: ReadonlySet<string>,
+  searching: boolean,
+  unavailable: readonly string[]
+): ListRow[] {
+  const rows: ListRow[] = flattenTree(nodes, collapsed, searching)
+  if (unavailable.length === 0) return rows
+  rows.push({ kind: 'unavailable-header', key: '\u0000unavailable', count: unavailable.length })
+  for (const key of unavailable)
+    rows.push({ kind: 'unavailable', key: `\u0000u${key}`, repoKey: key })
+  return rows
+}
+
+/** Row heights in px, matching `TreeRow` (30px rows, 26px group labels). */
+export function rowHeight(row: ListRow): number {
+  if (row.kind === 'namespace') return 26
+  // The header carries the 10px top margin the inline version had.
+  return row.kind === 'unavailable-header' ? 40 : 30
 }

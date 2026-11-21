@@ -1,11 +1,18 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import type { Account, Project, Repo } from '@shared/types'
 import { timeAgo } from '../lib/format'
 import { hostTileOf } from '../lib/presets'
 import { LOCAL_ACCOUNT_ID, LOCAL_GROUP, isLocalRepo } from '../lib/localRepos'
 import { remoteIdOf } from '../lib/projectForm'
 import type { ProjectView } from '../lib/projectScope'
-import { buildTree, flattenTree, type AccountNode, type TreeRow as Row } from '../lib/sidebarTree'
+import {
+  buildTree,
+  flattenRows,
+  rowHeight,
+  type AccountNode,
+  type ListRow as Row
+} from '../lib/sidebarTree'
 import type { AccountRepos } from '../lib/workspaceReducer'
 import { readStored, writeStored } from '../state/storage'
 import { useNow } from '../state/useNow'
@@ -118,13 +125,33 @@ export function Sidebar({
     return view ? tree.filter((node) => node.total > 0) : tree
   }, [accounts, byAccount, query, view])
   // Keys the lists cannot show. A search only keeps the ones whose id matches.
-  const unavailable = (view?.unavailable ?? []).filter(
-    (key) => !searching || key.toLowerCase().includes(query.trim().toLowerCase())
+  const unavailable = useMemo(
+    () =>
+      (view?.unavailable ?? []).filter(
+        (key) => !searching || key.toLowerCase().includes(query.trim().toLowerCase())
+      ),
+    [view, searching, query]
   )
   const rows = useMemo(
-    () => flattenTree(nodes, collapsed, searching),
-    [nodes, collapsed, searching]
+    () => flattenRows(nodes, collapsed, searching, unavailable),
+    [nodes, collapsed, searching, unavailable]
   )
+  const scrollRef = useRef<HTMLElement>(null)
+  const virtual = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: (i) => rowHeight(rows[i]),
+    getItemKey: (i) => rows[i].key,
+    overscan: 10
+  })
+  // Keep the selected repo visible. A collapsed group hides it: nothing to scroll to then.
+  useEffect(() => {
+    if (selectedKey === null) return
+    const index = rows.findIndex((r) => r.kind === 'repo' && r.key === selectedKey)
+    if (index >= 0) virtual.scrollToIndex(index, { align: 'auto' })
+    // Only a selection change scrolls: not every row change (a search or a collapse).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedKey])
 
   function toggle(key: string): void {
     setCollapsed((current) => {
@@ -205,53 +232,35 @@ export function Sidebar({
             ) : null}
           </div>
           <nav
+            ref={scrollRef}
             className="min-h-0 flex-1 overflow-y-auto pb-2"
             aria-label="Accounts and repositories"
           >
-            {rows.map((row) => (
-              <SidebarRow
-                key={row.key}
-                row={row}
-                searching={searching}
-                byAccount={byAccount}
-                links={links}
-                selectedKey={selectedKey}
-                paneMarks={paneMarks}
-                onSelect={onSelect}
-                onOpenInSplit={onOpenInSplit}
-                onToggle={toggle}
-                onRefresh={onRefresh}
-                onMenu={(repo, x, y) => setMenu({ repo, x, y })}
-                onRemoveLocal={onRemoveLocal}
-              />
-            ))}
-            {unavailable.length > 0 ? (
-              <>
-                <div className="mt-2.5 flex h-7.5 items-center gap-2 px-3 text-[12px] font-medium text-warning">
-                  <Icon name="alert" size="sm" />
-                  Unavailable ({unavailable.length})
+            <div className="relative w-full" style={{ height: virtual.getTotalSize() }}>
+              {virtual.getVirtualItems().map((item) => (
+                <div
+                  key={item.key}
+                  className="absolute top-0 left-0 w-full"
+                  style={{ height: item.size, transform: `translateY(${item.start}px)` }}
+                >
+                  <SidebarRow
+                    row={rows[item.index]}
+                    searching={searching}
+                    byAccount={byAccount}
+                    links={links}
+                    selectedKey={selectedKey}
+                    paneMarks={paneMarks}
+                    onSelect={onSelect}
+                    onOpenInSplit={onOpenInSplit}
+                    onToggle={toggle}
+                    onRefresh={onRefresh}
+                    onMenu={(repo, x, y) => setMenu({ repo, x, y })}
+                    onRemoveLocal={onRemoveLocal}
+                    onRemoveUnavailable={proj.onRemoveUnavailable}
+                  />
                 </div>
-                {unavailable.map((key) => (
-                  <TreeRow
-                    key={key}
-                    level="repo"
-                    onClick={() => undefined}
-                    title="No loaded repository list has this one: access lost or account removed"
-                    leading={<Icon name="repo" size="sm" />}
-                    trailing={
-                      <IconButton
-                        label={`Remove ${remoteIdOf(key)} from project`}
-                        icon="x"
-                        className="size-6"
-                        onClick={() => proj.onRemoveUnavailable(key)}
-                      />
-                    }
-                  >
-                    <span className="text-muted-foreground">{remoteIdOf(key)}</span>
-                  </TreeRow>
-                ))}
-              </>
-            ) : null}
+              ))}
+            </div>
             {scope && !searching && scope.repoKeys.length === 0 ? (
               <p className="m-0 px-4 py-3 text-muted-foreground">
                 This project has no repositories yet.
@@ -325,6 +334,7 @@ interface SidebarRowProps {
   onRefresh: (accountId: string) => void
   onMenu: (repo: Repo, x: number, y: number) => void
   onRemoveLocal: (repoKey: string) => void
+  onRemoveUnavailable: (repoKey: string) => void
 }
 
 function SidebarRow({
@@ -339,8 +349,37 @@ function SidebarRow({
   onToggle,
   onRefresh,
   onMenu,
-  onRemoveLocal
+  onRemoveLocal,
+  onRemoveUnavailable
 }: SidebarRowProps) {
+  if (row.kind === 'unavailable-header') {
+    return (
+      <div className="flex h-full items-center gap-2 px-3 pt-2.5 text-[12px] font-medium text-warning">
+        <Icon name="alert" size="sm" />
+        Unavailable ({row.count})
+      </div>
+    )
+  }
+  if (row.kind === 'unavailable') {
+    return (
+      <TreeRow
+        level="repo"
+        onClick={() => undefined}
+        title="No loaded repository list has this one: access lost or account removed"
+        leading={<Icon name="repo" size="sm" />}
+        trailing={
+          <IconButton
+            label={`Remove ${remoteIdOf(row.repoKey)} from project`}
+            icon="x"
+            className="size-6"
+            onClick={() => onRemoveUnavailable(row.repoKey)}
+          />
+        }
+      >
+        <span className="text-muted-foreground">{remoteIdOf(row.repoKey)}</span>
+      </TreeRow>
+    )
+  }
   if (row.kind === 'host') {
     const { account } = row.node
     return (

@@ -196,7 +196,7 @@ Newest first. Template:
   - Icon glyphs for all 30 ids were drawn in the existing style. A compile-time check in `ProjectIcon.tsx` fails the build if an id has no glyph.
   - The form shows an empty-name error only after the field is touched. The emoji field must hold exactly one emoji or be empty, and Save is blocked while it holds anything else.
   - Account removal: main already drops that account's repos from every project, so `App` re-reads the list after a removal.
-- **Known limits:** the form's repository list is not virtualised, so thousands of repos render thousands of rows (search narrows it). The sidebar list is not virtualised either. Dead dialog buttons in the sidebar: an Unavailable row's main button does nothing.
+- **Known limits:** both the form's repository list and the sidebar list are virtualised since Phase 20 (`@tanstack/react-virtual`, fixed row heights, so rows must not wrap). A focused row that scrolls out of the window unmounts and loses focus. Dead dialog buttons in the sidebar: an Unavailable row's main button does nothing.
 - **Not verified:** a real GitHub or GitLab host (two mock hosts, one GitHub Enterprise style and one self-hosted GitLab style, were used). Removing an account that a project uses (covered by `store.test.ts` and the pure helpers, not run in the window). A project with hundreds of repos. Touch input. Windows and Linux.
 - **Harness note:** the mock GitLab and GitHub servers and the CDP scripts live in the session scratchpad, not in the repo. Real-window checks ran in light and dark, at 1280 x 768.
 
@@ -266,7 +266,7 @@ Newest first. Template:
   - The theme is applied by `initTheme()` at the top of `main.tsx`. The CSP forbids an inline script, and a module that runs before `createRoot` was enough in the real window (no flash seen with the System setting on a light OS).
   - Fonts: Inter 400/500/600 and JetBrains Mono 400/500, Latin subset only. Non-Latin names fall back to the system font. Each weight ships as `woff2` and `woff`; the build keeps both.
   - Pure code (theme, tree, presets, errors, formatters, workspace reducer) lives in `renderer/src/lib/` with relative imports and no DOM types, so it runs under `tsx` and is also type-checked by `tsconfig.node.json`. `normalizeBaseUrl` moved to `shared/` so the dialog and main share it.
-  - Sidebar: account, then namespace, then repos. The namespace row is a quiet group label, not a third `TreeRow` level. Repos sort by name, not by recent activity. Search covers name, full name and description, hides hosts with no match, and expands every group. Collapsed groups and the sidebar's open state persist in localStorage. The list is not virtualised.
+  - Sidebar: account, then namespace, then repos. The namespace row is a quiet group label, not a third `TreeRow` level. Repos sort by name, not by recent activity. Search covers name, full name and description, hides hosts with no match, and expands every group. Collapsed groups and the sidebar's open state persist in localStorage. The list is virtualised (Phase 20).
   - `ProjectIcon` draws the glyph ids that exist in the icon set and falls back to `folder` for the other `PROJECT_ICONS` ids. Phase 9 draws the rest.
   - "Create token" opens GitHub `settings/tokens/new?scopes=repo,read:org` or GitLab `-/user_settings/personal_access_tokens?scopes=read_api,read_repository`. GitLab older than 16 uses another path and will not pre-fill.
   - The main island shows only the repository header (name, visibility, default branch, cloned state, description). Phase 6 replaces it.

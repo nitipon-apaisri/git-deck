@@ -131,6 +131,33 @@ export function pickerGroups(
   return { groups, missing }
 }
 
+export type PickerRow =
+  | { kind: 'header'; key: string; accountId: string }
+  | { kind: 'repo'; key: string; repo: Repo }
+  | { kind: 'missing-header'; key: string }
+  | { kind: 'missing'; key: string; repoKey: string }
+
+/** The picker's groups as one flat list, so it can be windowed. */
+export function flattenPicker(
+  groups: readonly RepoGroup[],
+  missing: readonly string[]
+): PickerRow[] {
+  const rows: PickerRow[] = []
+  for (const { accountId, repos } of groups) {
+    rows.push({ kind: 'header', key: `h\u0000${accountId}`, accountId })
+    for (const repo of repos) rows.push({ kind: 'repo', key: repo.key, repo })
+  }
+  if (missing.length > 0) {
+    rows.push({ kind: 'missing-header', key: 'm\u0000' })
+    for (const repoKey of missing) rows.push({ kind: 'missing', key: `m\u0000${repoKey}`, repoKey })
+  }
+  return rows
+}
+
+/** Picker row heights in px: 32px headings, 34px rows (33 plus the 1px top border). */
+export const pickerRowHeight = (row: PickerRow): number =>
+  row.kind === 'header' || row.kind === 'missing-header' ? 32 : 34
+
 /** The part of a key after the account: the remote id, shown when nothing better is known. */
 export const remoteIdOf = (repoKey: string): string =>
   repoKey.slice(accountIdOf(repoKey).length + 1)
