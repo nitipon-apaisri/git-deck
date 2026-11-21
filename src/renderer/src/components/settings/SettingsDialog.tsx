@@ -10,12 +10,14 @@ import { Icon, IconButton, type IconName } from '../ui'
 import { Modal, ModalTitle } from '../ui/Dialog'
 import { AppearanceSection } from './AppearanceSection'
 import { AiSection } from './AiSection'
+import { AboutSection } from './AboutSection'
 import { IntegrationsSection } from './IntegrationsSection'
 
 const ICONS: Record<SettingsSection, IconName> = {
   appearance: 'palette',
   integrations: 'plug',
-  ai: 'sparkles'
+  ai: 'sparkles',
+  about: 'book'
 }
 
 interface SettingsDialogProps {
@@ -104,6 +106,8 @@ export function SettingsDialog({
                 <AppearanceSection theme={theme} onThemeChange={onThemeChange} />
               ) : id === 'ai' ? (
                 <AiSection />
+              ) : id === 'about' ? (
+                <AboutSection />
               ) : (
                 <IntegrationsSection
                   accounts={accounts}

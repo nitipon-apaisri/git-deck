@@ -1,5 +1,5 @@
 // The Electron side of IPC: dialogs, shell, sender checks and handler registration.
-import { BrowserWindow, dialog, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import { IPC } from '../shared/api'
 import { buildHandlers, respond, type RequestChannel } from './ipcTable'
 import { createService, type Ui } from './service'
@@ -34,7 +34,8 @@ const electronUi: Ui = {
     return result.response === 0
   },
   reveal: (path) => shell.showItemInFolder(path),
-  openExternal: (url) => shell.openExternal(url)
+  openExternal: (url) => shell.openExternal(url),
+  version: app.getVersion()
 }
 
 /** Returns a function that re-syncs the insecure-TLS allowlist from stored accounts. */

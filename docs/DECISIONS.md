@@ -503,3 +503,9 @@ The 2px focus ring looked heavy on text inputs (palette, filters, forms). Text i
 - **Start:** "Bisect: mark as bad" on a graph row remembers the commit in the pane (not saved); the next row menu offers "Bisect: mark as good" and starts. Git needs a clean-enough work tree; its own error is shown if not.
 - **Limits:** no "steps remaining" estimate. If skips leave git unable to decide, git's error is shown and the bisect stays open: abort it.
 - **Not verified:** no display here, so the banner and menu were not checked visually; the verifier and design-qa agents were not run.
+
+## 2026-11-21: Phase 25 packaging and update notice
+
+- **Decision:** electron-builder (devDependency), unsigned dmg and zip for arm64 and x64, appId `com.gitdeck.app`. `node-pty` is in `asarUnpack` and `npmRebuild` is off: its prebuilds (`darwin-arm64`, `darwin-x64`) and `spawn-helper` land in `app.asar.unpacked` and the release workflow builds one architecture per runner. The update check is manual only (Settings, About) and reads the latest GitHub release without a token; a 404 means "no release yet".
+- **Verified:** `pnpm package` builds both architectures; `app.asar.unpacked` holds `pty.node` and an executable `spawn-helper`; 529 tests pass.
+- **Not verified:** launching the packaged app and its terminal, the About section in a window, signing and notarisation, the workflow (needs a pushed tag), the x64 app on Intel.

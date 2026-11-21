@@ -132,6 +132,7 @@ const api: Api = {
     }
   },
   openExternal: (url) => call(IPC.openExternal, url),
+  checkForUpdate: () => call(IPC.checkForUpdate),
   projects: {
     list: () => call(IPC.projectsList),
     create: (input) => call(IPC.projectsCreate, input),

@@ -1,0 +1,22 @@
+appId: com.gitdeck.app
+productName: GitDeck
+directories:
+  output: dist
+files:
+  - out/**
+  - package.json
+# node-pty loads a native addon and spawn-helper: both must live outside app.asar.
+asarUnpack:
+  - node_modules/node-pty/**
+# One runner per architecture (see release.yml): node-pty ships prebuilds, so no rebuild.
+npmRebuild: false
+mac:
+  category: public.app-category.developer-tools
+  icon: build/icon.icns
+  # Unsigned: there is no Developer ID. See README (Gatekeeper).
+  identity: null
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]

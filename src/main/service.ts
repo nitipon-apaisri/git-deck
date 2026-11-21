@@ -37,6 +37,7 @@ import { watchRepo as realWatchRepo } from './watcher'
 import { createProvider as realCreateProvider, normalizeBaseUrl } from './providers'
 import type { GitProvider } from './providers/types'
 import type { Store } from './store'
+import { checkForUpdate } from './updateCheck'
 import { allowHostTemporarily, setInsecureHosts } from './tls'
 import { isHttp } from './urls'
 
@@ -51,6 +52,8 @@ export interface Ui {
   confirm(options: { message: string; detail: string; confirmLabel: string }): Promise<boolean>
   reveal(path: string): void
   openExternal(url: string): Promise<void>
+  /** The installed app version, for the update check. */
+  version?: string
 }
 
 export type GitOps = Pick<
@@ -1276,6 +1279,7 @@ export function createService(deps: ServiceDeps): {
         await store.removeLocalRepo(repoKey as string)
       })
     },
+    checkForUpdate: guard(async () => checkForUpdate(ui.version ?? '0.0.0')),
     openExternal: guard(async (url) => {
       if (typeof url !== 'string' || !isHttp(url)) {
         throw new Error('Only http and https links can be opened')

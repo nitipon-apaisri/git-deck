@@ -1,6 +1,7 @@
 // The only surface the renderer can reach. It sends keys and ids, never URLs or
 // arbitrary paths: the main process looks the repo up in its own cache.
 import type {
+  UpdateCheck,
   AccountInput,
   Account,
   BranchList,
@@ -217,6 +218,8 @@ export interface Api {
     onRepoChanged(cb: (path: string) => void): () => void
   }
   openExternal(url: string): Promise<void>
+  /** The installed version and, when GitHub has a newer release, its version and page. */
+  checkForUpdate(): Promise<UpdateCheck>
   projects: {
     list(): Promise<Project[]>
     create(input: ProjectCreateInput): Promise<Project>
@@ -305,6 +308,7 @@ export const IPC = {
   localWatch: 'local:watch',
   localUnwatch: 'local:unwatch',
   openExternal: 'openExternal',
+  checkForUpdate: 'checkForUpdate',
   projectsList: 'projects:list',
   projectsCreate: 'projects:create',
   projectsUpdate: 'projects:update',

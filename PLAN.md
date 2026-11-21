@@ -635,10 +635,10 @@ Runs on `phase/24-bisect`.
 
 Runs on `phase/25-packaging`. Reverses the "installers" part of the old non-goal (see `docs/DECISIONS.md`). Silent auto-update stays out until there is an Apple Developer ID.
 
-- [ ] `electron-builder` (devDependency), macOS dmg and zip for arm64 and x64, with `node-pty` in `asarUnpack` and one native runner per architecture. `pnpm package` script.
-- [ ] `.github/workflows/release.yml`: on a `v*` tag, build both architectures and attach the files to a GitHub Release. The user pushes tags; nothing here pushes.
-- [ ] `src/main/updateCheck.ts` (no electron import): compare the app version with the latest release of this public repo; pure `isNewer`; tested. A "Check for updates" button in Settings and a banner with "Download" that opens the release page. No check at launch.
-- [ ] README: install steps and the Gatekeeper note (right-click Open, or `xattr -dr com.apple.quarantine`).
+- [x] `electron-builder` (devDependency), macOS dmg and zip for arm64 and x64, with `node-pty` in `asarUnpack` and one native runner per architecture. `pnpm package` script.
+- [x] `.github/workflows/release.yml`: on a `v*` tag, build both architectures and attach the files to a GitHub Release. The user pushes tags; nothing here pushes.
+- [x] `src/main/updateCheck.ts` (no electron import): compare the app version with the latest release of this public repo; pure `isNewer`; tested. A "Check for updates" button in Settings and a banner with "Download" that opens the release page. No check at launch.
+- [x] README: install steps and the Gatekeeper note (right-click Open, or `xattr -dr com.apple.quarantine`).
 
 **Verify:** `isNewer` and release-payload tests. `pnpm package` produces a dmg on the build machine and the app starts with a working terminal. Not verifiable here: signing and notarization (there is no Developer ID), and the workflow until a tag is pushed.
 
