@@ -8,6 +8,7 @@ import type { PaneCommands } from '../../lib/paletteItems'
 import { isNarrow } from '../../lib/splitLayout'
 import type { TabName } from '../../lib/splitState'
 import {
+  useBisect,
   useBranches,
   useLocalInfo,
   useOperation,
@@ -17,7 +18,7 @@ import {
 import { useElementSize } from '../../state/useElementSize'
 import { useLocalActions } from '../../state/useLocalActions'
 import { useNow } from '../../state/useNow'
-import { ErrorBanner, Icon, IconButton, Island, Spinner, Tabs, panelId, tabId } from '../ui'
+import { Button, ErrorBanner, Icon, IconButton, Island, Spinner, Tabs, panelId, tabId } from '../ui'
 import { GitGraph } from '../graph/GitGraph'
 import { InfoTab } from './InfoTab'
 import { BranchNameDialog, type BranchNameRequest } from './BranchNameDialog'
@@ -25,7 +26,7 @@ import { FileTab, type FileRequest } from './FileTab'
 import { ConflictEditor } from './ConflictEditor'
 import { LocalActions } from './LocalActions'
 import { OverviewTab } from './OverviewTab'
-import { OperationBanner } from './OperationBanner'
+import { BisectBanner, OperationBanner } from './OperationBanner'
 import { ChangeRequestsTab } from './ChangeRequestsTab'
 import { useChecks } from '../../state/changeData'
 import type { BranchCheck } from '../../lib/graphView'
@@ -178,6 +179,9 @@ export function RepoPane({
   )
   const { stashes } = useStashes(linkedPath ?? null, actions.reloadToken + actions.watchToken)
   const { operation } = useOperation(linkedPath ?? null, actions.reloadToken + actions.watchToken)
+  const bisect = useBisect(linkedPath ?? null, actions.reloadToken + actions.watchToken)
+  // The commit picked as bad, waiting for a good one. Per pane, like everything else here.
+  const [bisectBad, setBisectBad] = useState<string | null>(null)
   const [stashOpen, setStashOpen] = useState(false)
   // `hash` is the commit a new tag points at, `null` for the checked-out one.
   const [tagsRequest, setTagsRequest] = useState<{ hash: string | null } | null>(null)
@@ -262,6 +266,26 @@ export function RepoPane({
             onResolveFile={setConflictFile}
             onOpenFolder={actions.openFolder}
           />
+        ) : null}
+        {bisect ? (
+          <BisectBanner
+            state={bisect}
+            busy={actions.busy !== null}
+            onMark={actions.bisectMark}
+            onReset={actions.bisectReset}
+            onOpenCommit={(hash) => commands.reveal(hash)}
+          />
+        ) : bisectBad ? (
+          <p
+            className="m-0 flex flex-wrap items-center gap-2 rounded-md bg-(--warning-bg) px-3 py-2 text-(--warning-text)"
+            role="status"
+          >
+            Bisect: right-click a commit that was still good and choose "Bisect: this commit is
+            good".
+            <Button variant="ghost" onClick={() => setBisectBad(null)}>
+              Cancel
+            </Button>
+          </p>
         ) : null}
         {problem ? (
           <p
@@ -377,7 +401,13 @@ export function RepoPane({
                       reset: actions.reset,
                       createTag: (hash) => setTagsRequest({ hash }),
                       currentBranch: branches?.current ?? null,
-                      operationActive: operation !== null
+                      operationActive: operation !== null || bisect !== null,
+                      bisectBad,
+                      bisectPick: setBisectBad,
+                      bisectStart: (bad, good) => {
+                        setBisectBad(null)
+                        actions.bisectStart(bad, good)
+                      }
                     }
                   : undefined
               }

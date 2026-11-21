@@ -315,3 +315,18 @@ test('remoteGroups lists every remote branch under its own remote, twins include
   ])
   assert.deepEqual(remoteGroups(list({ remotes: [], remote: [] })), [])
 })
+
+test('bisect: start as bad, then pick good; none during an operation', () => {
+  assert.ok(ids(refActions(null, 'abc1234', ctx)).includes('bisect-bad'))
+  const pending = refActions(null, 'def5678', { ...ctx, bisectBad: 'abc1234' })
+  assert.deepEqual(
+    pending.filter((i) => i.id.startsWith('bisect')).map((i) => i.action),
+    [{ type: 'bisect-good', bad: 'abc1234', good: 'def5678' }]
+  )
+  assert.ok(
+    !ids(refActions(null, 'abc1234', { ...ctx, bisectBad: 'abc1234' })).includes('bisect-bad')
+  )
+  assert.ok(
+    !ids(refActions(null, 'abc1234', { ...ctx, operationActive: true })).includes('bisect-bad')
+  )
+})

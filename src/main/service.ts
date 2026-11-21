@@ -107,6 +107,10 @@ export type GitOps = Pick<
   | 'removeRemote'
   | 'rebase'
   | 'skipOperation'
+  | 'readBisect'
+  | 'bisectStart'
+  | 'bisectMark'
+  | 'bisectReset'
   | 'stageHunk'
   | 'unstageHunk'
   | 'getConflictFile'
@@ -1041,6 +1045,35 @@ export function createService(deps: ServiceDeps): {
       operation: guard(async (path) => {
         linkedRepoKey(path)
         return git.getOperation(path)
+      }),
+      bisect: guard(async (path) => {
+        linkedRepoKey(path)
+        return git.readBisect(path)
+      }),
+      bisectStart: guard(async (path, bad, good) => {
+        linkedRepoKey(path)
+        if (typeof bad !== 'string' || typeof good !== 'string')
+          throw new Error('Invalid commit hash')
+        return serial(path, () => git.bisectStart(path, bad, good))
+      }),
+      bisectMark: guard(async (path, mark) => {
+        linkedRepoKey(path)
+        return serial(path, () => git.bisectMark(path, mark))
+      }),
+      bisectReset: guard(async (path) => {
+        linkedRepoKey(path)
+        const state = await git.readBisect(path)
+        if (!state) throw new Error('There is no bisect in progress')
+        if (!state.result) {
+          const ok = await ui.confirm({
+            message: 'Abort the bisect?',
+            detail: 'You go back to the branch you started on. The marks are forgotten.',
+            confirmLabel: 'Abort'
+          })
+          if (!ok) return false
+        }
+        await serial(path, () => git.bisectReset(path))
+        return true
       }),
       continueOperation: guard(async (path) => {
         linkedRepoKey(path)

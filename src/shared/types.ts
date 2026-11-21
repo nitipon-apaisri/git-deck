@@ -463,3 +463,17 @@ export interface FileBlame {
   binary: boolean
   lines: BlameLine[]
 }
+
+/** A `git bisect` in progress, read from the git dir. */
+export interface BisectState {
+  /** The commit marked bad, `null` until one is. */
+  bad: string | null
+  good: string[]
+  skipped: string[]
+  /** The commit checked out for testing (HEAD). */
+  current: string | null
+  /** Set when git found the first bad commit. */
+  result: { hash: string; subject: string } | null
+}
+
+export type BisectMark = 'good' | 'bad' | 'skip'

@@ -1,5 +1,5 @@
 // Pure: words for the merge, cherry-pick, revert and rebase banner and the stash list.
-import type { OperationState, StashEntry } from '../../../shared/types'
+import type { BisectState, OperationState, StashEntry } from '../../../shared/types'
 
 /** "Merge in progress", with the commit when git recorded one. */
 export function operationTitle(state: OperationState): string {
@@ -31,4 +31,17 @@ export function stashTitle(entry: Pick<StashEntry, 'message'>): string {
 
 export function stashButtonLabel(count: number): string {
   return count > 0 ? `Stash · ${count}` : 'Stash'
+}
+
+/** "Bisect: testing a1b2c3d" or the result. */
+export function bisectTitle(state: BisectState): string {
+  if (state.result) return `Bisect found the first bad commit (${state.result.hash.slice(0, 7)})`
+  return state.current ? `Bisect: testing ${state.current.slice(0, 7)}` : 'Bisect in progress'
+}
+
+export function bisectHint(state: BisectState): string {
+  if (state.result)
+    return `${state.result.subject || '(no subject)'}. Finish to go back to your branch.`
+  const marks = `${state.good.length} good, ${state.skipped.length} skipped`
+  return `Test this commit, then mark it good or bad (${marks}). Skip it if it cannot be tested.`
 }

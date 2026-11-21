@@ -626,8 +626,8 @@ Runs on `phase/23-history-blame`.
 
 Runs on `phase/24-bisect`.
 
-- [ ] `git.ts`: `bisectStart`, `bisectMark` (good, bad, skip), `bisectReset`; a pure state reader from the git dir (`gitDirs()`); tested on temp repos.
-- [ ] Extend `lib/operationView.ts` and `OperationBanner` so a running bisect shows the commit under test with Good, Bad, Skip and Abort, and the result commit at the end. Start from a graph row's context menu ("Bisect from here as bad", then pick a good commit). Never during another operation.
+- [x] `git.ts`: `bisectStart`, `bisectMark` (good, bad, skip), `bisectReset`; a pure state reader from the git dir (`gitDirs()`); tested on temp repos.
+- [x] Extend `lib/operationView.ts` and `OperationBanner` so a running bisect shows the commit under test with Good, Bad, Skip and Abort, and the result commit at the end. Start from a graph row's context menu ("Bisect from here as bad", then pick a good commit). Never during another operation.
 
 **Verify:** temp-repo test that bisects a known history to the expected commit, plus skip and abort. Manual: the banner in the window.
 

@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useReducer, useState } from 'react'
 import { emptyResource, resourceReducer, type Resource } from '../lib/resource'
 import { errorMessage } from '../lib/errors'
-import type { BranchList, LocalInfo, OperationState, RepoSummary, StashEntry } from '@shared/types'
+import type {
+  BisectState,
+  BranchList,
+  LocalInfo,
+  OperationState,
+  RepoSummary,
+  StashEntry
+} from '@shared/types'
 
 // Both hooks take their key as an argument and keep their state inside the calling
 // component, so two panes showing two repositories never share anything.
@@ -209,4 +216,29 @@ export function useOperation(path: string | null, reloadToken: number): Operatio
 
   if (path === null || state.key !== path) return { operation: null, error: null }
   return { operation: state.data ?? null, error: state.error }
+}
+
+/** The running bisect of a repository, read again whenever the folder changes. */
+export function useBisect(path: string | null, reloadToken: number): BisectState | null {
+  const [state, dispatch] = useReducer(
+    resourceReducer<BisectState | null>,
+    emptyResource<BisectState | null>()
+  )
+  useEffect(() => {
+    if (path === null) return
+    let cancelled = false
+    void (async () => {
+      dispatch({ type: 'start', key: path })
+      try {
+        const data = await window.api.local.bisect(path)
+        if (!cancelled) dispatch({ type: 'data', key: path, data, fetchedAt: null, done: true })
+      } catch (err) {
+        if (!cancelled) dispatch({ type: 'failed', key: path, error: errorMessage(err) })
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [path, reloadToken])
+  return path === null || state.key !== path ? null : (state.data ?? null)
 }

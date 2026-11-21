@@ -1,7 +1,13 @@
 import { useState } from 'react'
-import type { OperationState } from '@shared/types'
+import type { BisectMark, BisectState, OperationState } from '@shared/types'
 import { conflictKindText } from '../../lib/conflictView'
-import { conflictPreview, operationHint, operationTitle } from '../../lib/operationView'
+import {
+  bisectHint,
+  bisectTitle,
+  conflictPreview,
+  operationHint,
+  operationTitle
+} from '../../lib/operationView'
 import { Button, Icon } from '../ui'
 
 interface OperationBannerProps {
@@ -93,6 +99,62 @@ export function OperationBanner({
         <Button variant="ghost" icon="folder" onClick={onOpenFolder}>
           Open folder
         </Button>
+      </div>
+    </section>
+  )
+}
+
+interface BisectBannerProps {
+  state: BisectState
+  busy: boolean
+  onMark: (mark: BisectMark) => void
+  /** Abort while testing (main asks first), Finish at the result. */
+  onReset: () => void
+  onOpenCommit: (hash: string) => void
+}
+
+/** A running bisect: the commit under test with Good, Bad, Skip and Abort, then the result. */
+export function BisectBanner({ state, busy, onMark, onReset, onOpenCommit }: BisectBannerProps) {
+  const shown = state.result?.hash ?? state.current
+  return (
+    <section
+      className="flex animate-banner-in flex-col gap-2 rounded-md bg-(--warning-bg) px-3 py-2 text-(--warning-text) motion-reduce:animate-none"
+      aria-label={bisectTitle(state)}
+      role="alert"
+    >
+      <div className="flex items-start gap-2">
+        <span className="mt-0.5 flex-none">
+          <Icon name="alert" size="sm" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="m-0 font-semibold">{bisectTitle(state)}</p>
+          <p className="m-0 [overflow-wrap:anywhere]">{bisectHint(state)}</p>
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-2 pl-6">
+        {state.result ? (
+          <>
+            <Button variant="primary" icon="check" disabled={busy} onClick={onReset}>
+              Finish
+            </Button>
+            {shown ? <Button onClick={() => onOpenCommit(shown)}>Open commit</Button> : null}
+          </>
+        ) : (
+          <>
+            <Button disabled={busy} onClick={() => onMark('good')}>
+              Good
+            </Button>
+            <Button disabled={busy} onClick={() => onMark('bad')}>
+              Bad
+            </Button>
+            <Button disabled={busy} onClick={() => onMark('skip')}>
+              Skip
+            </Button>
+            <Button disabled={busy} onClick={onReset}>
+              Abort bisect
+            </Button>
+          </>
+        )}
       </div>
     </section>
   )

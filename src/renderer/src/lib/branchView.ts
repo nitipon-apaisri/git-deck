@@ -109,6 +109,8 @@ export type RefAction =
   | { type: 'merge'; branch: string; noFf: boolean }
   | { type: 'cherry-pick'; hash: string }
   | { type: 'create-tag'; hash: string }
+  | { type: 'bisect-bad'; hash: string }
+  | { type: 'bisect-good'; bad: string; good: string }
   | { type: 'rebase'; onto: string }
   | { type: 'revert'; hash: string }
   | { type: 'reset'; hash: string; mode: ResetMode }
@@ -132,6 +134,8 @@ export interface RefActionContext {
   isMerge: boolean
   /** A merge, cherry-pick, revert or rebase is waiting: starting another is not offered. */
   operationActive: boolean
+  /** The commit picked as bad; the next pick is the good one. Absent or `null`: none yet. */
+  bisectBad?: string | null
 }
 
 /**
@@ -237,6 +241,21 @@ export function refActions(
       group: 'commit'
     }
   )
+  if (context?.bisectBad && context.bisectBad !== hash) {
+    items.push({
+      id: 'bisect-good',
+      label: 'Bisect: this commit is good',
+      action: { type: 'bisect-good', bad: context.bisectBad, good: hash },
+      group: 'commit'
+    })
+  } else if (canStart && !context?.bisectBad) {
+    items.push({
+      id: 'bisect-bad',
+      label: 'Bisect from here as bad',
+      action: { type: 'bisect-bad', hash },
+      group: 'commit'
+    })
+  }
   if (canStart && context.currentBranch && !context.isMerge) {
     items.push({
       id: 'cherry-pick',

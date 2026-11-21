@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { errorMessage } from '../lib/errors'
 import type { CloneProtocol, GitProgress } from '@shared/api'
-import type { CheckoutTarget, PullMode, ResetMode } from '@shared/types'
+import type { BisectMark, CheckoutTarget, PullMode, ResetMode } from '@shared/types'
 
 export type LocalBusy = 'clone' | 'link' | 'fetch' | 'pull' | 'push' | 'branch' | null
 
@@ -47,6 +47,10 @@ export interface LocalActions {
   abortOperation: () => void
   /** Rebase only: drop the commit it stopped on. Main asks first. */
   skipOperation: () => void
+  bisectStart: (bad: string, good: string) => void
+  bisectMark: (mark: BisectMark) => void
+  /** Main asks first while a commit is still under test. */
+  bisectReset: () => void
 }
 
 /**
@@ -277,6 +281,19 @@ export function useLocalActions(
     [operate]
   )
 
+  const bisectStart = useCallback(
+    (bad: string, good: string) => operate((path) => window.api.local.bisectStart(path, bad, good)),
+    [operate]
+  )
+  const bisectMark = useCallback(
+    (mark: BisectMark) => operate((path) => window.api.local.bisectMark(path, mark)),
+    [operate]
+  )
+  const bisectReset = useCallback(
+    () => operate((path) => window.api.local.bisectReset(path)),
+    [operate]
+  )
+
   const attempt = useCallback(
     async (work: (path: string) => Promise<void>): Promise<string | null> => {
       if (!linkedPath) return 'This repository is not on this computer'
@@ -332,6 +349,9 @@ export function useLocalActions(
     reset,
     continueOperation,
     abortOperation,
-    skipOperation
+    skipOperation,
+    bisectStart,
+    bisectMark,
+    bisectReset
   }
 }
