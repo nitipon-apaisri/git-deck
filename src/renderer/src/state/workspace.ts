@@ -63,17 +63,20 @@ export function useWorkspace(): Workspace {
         ])
         if (cancelled) return
         dispatch({ type: 'loaded', secureStorage, accounts, links })
-        try {
-          dispatch({
-            type: 'repos',
-            accountId: LOCAL_ACCOUNT_ID,
-            repos: await window.api.local.repos(),
-            fetchedAt: Date.now()
-          })
-        } catch {
-          // No local list is not fatal: the accounts below still load.
+        // Local and cached lists load together, not one after the other.
+        const loadLocal = async (): Promise<void> => {
+          try {
+            dispatch({
+              type: 'repos',
+              accountId: LOCAL_ACCOUNT_ID,
+              repos: await window.api.local.repos(),
+              fetchedAt: Date.now()
+            })
+          } catch {
+            // No local list is not fatal: the accounts below still load.
+          }
         }
-        await Promise.all(accounts.map((a) => loadCached(a.id)))
+        await Promise.all([loadLocal(), ...accounts.map((a) => loadCached(a.id))])
       } catch (err) {
         if (!cancelled) dispatch({ type: 'loadFailed', error: errorMessage(err) })
       }

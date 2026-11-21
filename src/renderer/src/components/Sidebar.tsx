@@ -150,11 +150,7 @@ export function Sidebar({
   const isEmpty = accounts.length === 0 && !hasLocal && !scope
 
   return (
-    <Island
-      as="aside"
-      aria-label="Repositories"
-      className="w-(--sidebar-width) flex-none animate-pane-in-left motion-reduce:animate-none"
-    >
+    <Island as="aside" aria-label="Repositories" className="w-(--sidebar-width) flex-none">
       {loading ? (
         <SidebarSkeleton />
       ) : loadError ? (
