@@ -178,16 +178,15 @@ export function LocalActions({
           })
         }
       }
-      list.push({ kind: 'separator', id: 's-new' })
-      list.push({ kind: 'item', id: 'new', label: 'New branch…', onSelect: onNewBranch })
-      if (current) {
-        list.push({
-          kind: 'item',
-          id: 'rename',
-          label: `Rename ${current.name}…`,
-          onSelect: () => onRenameBranch(current.name)
-        })
-      }
+      return list
+    }
+
+    // Kept at the bottom of the branch menu while its list scrolls.
+    function pinnedFor(id: OpenMenu['id']): MenuEntry[] {
+      if (id !== 'branch') return []
+      const list: MenuEntry[] = [
+        { kind: 'item', id: 'new', label: 'New branch…', onSelect: onNewBranch }
+      ]
       return list
     }
 
@@ -341,7 +340,9 @@ export function LocalActions({
             label={menu.id === 'branch' ? 'Branches' : menu.id === 'pull' ? 'Pull' : 'Push'}
             at={{ x: menu.x, y: menu.y }}
             entries={entriesFor(menu.id)}
+            pinned={pinnedFor(menu.id)}
             minWidth={menu.id === 'branch' ? 240 : undefined}
+            searchable={menu.id === 'branch'}
             onClose={() => setMenu(null)}
           />
         ) : null}
