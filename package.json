@@ -19,6 +19,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky",
+    "package": "electron-vite build && electron-builder --mac",
     "audit:secrets": "gitleaks detect --redact --verbose"
   },
   "devDependencies": {
@@ -45,6 +46,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "electron": "^45",
+    "electron-builder": "^26.18.0",
     "electron-vite": "^6",
     "eslint": "^10.14.0",
     "eslint-plugin-react-hooks": "^7.1.1",

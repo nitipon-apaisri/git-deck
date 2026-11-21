@@ -137,6 +137,7 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     localOpen: () => api.local.open(),
     localRemove: ([key]) => api.local.remove(key as string),
     openExternal: ([url]) => api.openExternal(url as string),
+    checkForUpdate: () => api.checkForUpdate(),
     projectsList: () => api.projects.list(),
     projectsCreate: ([input]) => api.projects.create(input as ProjectCreateInput),
     projectsUpdate: ([id, patch]) => api.projects.update(id as string, patch as ProjectPatchInput),

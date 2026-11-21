@@ -125,11 +125,15 @@ Known limits:
 - Split View has two panes at most.
 - The graph shows the history that `git log` reports for the linked folder. Detached HEAD and graphs with more than about ten lanes at once were not checked.
 
-Not planned for this version: interactive rebase, line-level discard, a full-file three-way editor, creating pull or merge requests, OAuth sign-in (tokens only), a SQLite cache, auto-update and installers, more than two panes, drag-and-drop between projects, and cloning every repository of a project at once.
+Not planned for this version: interactive rebase, line-level discard, a full-file three-way editor, creating pull or merge requests, OAuth sign-in (tokens only), a SQLite cache, silent auto-update, signing and notarisation, more than two panes, drag-and-drop between projects, and cloning every repository of a project at once.
 
-### Packaging later
+### Install
 
-There is no installer yet. The usual route is [electron-builder](https://www.electron.build): add it as a dev dependency, set `build` options (app id, icons, targets) in `package.json` or an `electron-builder.yml`, and run it after `pnpm build`. Signing and notarising need your own certificates. Because GitDeck has no native modules, no per-platform rebuild step is needed.
+Download the dmg for your Mac (`arm64` for Apple silicon, the plain one for Intel) from the [Releases](https://github.com/nitipon-apaisri/git-deck/releases) page and drag GitDeck to Applications. The build is not signed or notarised (there is no Developer ID), so macOS blocks the first launch: right-click the app and choose Open, or run `xattr -dr com.apple.quarantine /Applications/GitDeck.app`.
+
+GitDeck does not update itself. Settings, About, Check for updates asks GitHub for the latest release and links to its page. Nothing is checked at launch.
+
+Build it yourself with `pnpm package` (output in `dist/`). A `v*` tag pushed to GitHub runs `.github/workflows/release.yml`, which builds both architectures and attaches them to a Release.
 
 ## Progress
 
@@ -161,4 +165,4 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 22: Pull requests, merge requests and CI
 - [x] Phase 23: File history and blame
 - [x] Phase 24: Bisect
-- [ ] Phase 25: Packaging and update notice
+- [x] Phase 25: Packaging and update notice

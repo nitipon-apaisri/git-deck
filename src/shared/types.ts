@@ -477,3 +477,9 @@ export interface BisectState {
 }
 
 export type BisectMark = 'good' | 'bad' | 'skip'
+
+/** Result of the manual update check. `latest` is null when nothing newer exists. */
+export interface UpdateCheck {
+  current: string
+  latest: { version: string; url: string } | null
+}
