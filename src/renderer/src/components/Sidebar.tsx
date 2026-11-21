@@ -354,7 +354,7 @@ function SidebarRow({
 }: SidebarRowProps) {
   if (row.kind === 'unavailable-header') {
     return (
-      <div className="flex h-full items-end gap-2 px-3 pb-1 text-[12px] font-medium text-warning">
+      <div className="flex h-full items-center gap-2 px-3 pt-2.5 text-[12px] font-medium text-warning">
         <Icon name="alert" size="sm" />
         Unavailable ({row.count})
       </div>
