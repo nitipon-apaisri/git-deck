@@ -576,6 +576,74 @@ Scope decision and reasons: `docs/DECISIONS.md` (2026-11-07, Phase 19). Runs on 
 
 ---
 
+## Phases 20 to 25 — Roadmap
+
+Scope decisions and reasons: `docs/DECISIONS.md` (2026-11-21, Roadmap). One branch per phase, in this order: quick wins first, the biggest feature in the middle, packaging last so it ships everything before it. Every phase: pure logic gets `tsx` tests (no `electron` import), the UI gets a manual Verify list, say plainly what was not checked visually, run `design-qa` after UI phases, tick `PLAN.md` and `README.md`, commit locally, never push.
+
+## Phase 20 — Sidebar virtualization
+
+Runs on `phase/20-sidebar-virtualization`. Fixes the known limit "the sidebar list is not virtualised" in `docs/DECISIONS.md`.
+
+- [ ] `@tanstack/react-virtual` as a devDependency (Vite bundles it, so the "dependencies stay three" rule holds).
+- [ ] `lib/sidebarTree.ts`: a pure `flattenRows` that turns the tree and its collapsed groups into one array of 30px rows; tested.
+- [ ] `Sidebar.tsx` renders only the visible window. The active repo scrolls into view, keyboard focus and the menu search survive unmounted rows, and the sidebar shows no flash on launch.
+- [ ] The project form's repo list uses the same windowed list.
+
+**Verify:** `flattenRows` tests (collapse, expand, filter, empty). Typecheck, lint, tests, build. Manual: 1000+ rows (fixture repos) scroll smoothly, the active row stays visible, search and arrow keys work.
+
+## Phase 21 — Command palette
+
+Runs on `phase/21-command-palette`.
+
+- [ ] Shortcut Mod+Shift+P in `useShortcuts` and `shortcutOf` (Mod+K stays search).
+- [ ] `lib/paletteItems.ts` (pure): build items for repos, branches, tags and actions (fetch, pull, open Settings, switch theme, toggle terminal) from the active pane; filter with the existing deferred-query filter; tested.
+- [ ] Centred modal on `ui/Modal` with tokens only: type to filter, arrows and Enter run, Esc closes. No commit or file-content search in v1.
+
+**Verify:** `paletteItems` tests (per-pane context, no active repo, ranking, empty query). Manual: opens from either pane in Split View and acts on the pane that had focus.
+
+## Phase 22 — Pull requests, merge requests and CI (read-only)
+
+Runs on `phase/22-pr-mr-ci`. Read-only: no new token scopes (GitHub `repo`, GitLab `read_api`).
+
+- [ ] First, check the GitHub checks and statuses endpoints, the GitLab merge request and pipeline endpoints, and their scopes against the official docs. Log the result in `docs/DECISIONS.md`.
+- [ ] `GitProvider` gains `listChangeRequests(repo)` and `getChecks(repo, ref)`; GitHub and GitLab implement them with the existing pagination helpers (same-origin only). Normalised types live in `src/shared`. A host or version without the endpoint returns "no CI info", not an error.
+- [ ] IPC channels for both; no token in any error text.
+- [ ] Renderer: a PR/MR tab in `RepoPane` (hidden for local-only repos) with title, state, author, reviewers, labels and checks, "Open in browser", and "Create PR/MR" as a link to the host's compare page. A status dot beside the branch pill in the graph.
+- [ ] Per-pane cache. Fetch on tab open, manual refresh, and window focus when the data is older than 60s. No background polling.
+
+**Verify:** mock-server tests per provider (open, merged, closed, draft, pagination, missing endpoint, 401, cross-origin Link dropped) and normaliser tests on fixture JSON. Manual: a real GitHub repo and a GitLab repo.
+
+## Phase 23 — File history and blame
+
+Runs on `phase/23-history-blame`.
+
+- [ ] `git.ts`: `fileHistory(repo, path, page)` (`git log --follow`, paged) and `blame(repo, path, rev)` (`--porcelain` via `exec`); a pure `parseBlame`; tested.
+- [ ] Renderer: a per-file tab in `RepoPane` (works in Split View), opened from a file in the changes or commit-detail list. History is the default view and Blame is a toggle in the same tab. Click a line or entry to open that commit.
+
+**Verify:** temp-repo tests (rename, deleted file, binary file, boundary commit, uncommitted lines in blame) and `parseBlame` tests. Manual: tab behaviour in two panes.
+
+## Phase 24 — Bisect
+
+Runs on `phase/24-bisect`.
+
+- [ ] `git.ts`: `bisectStart`, `bisectMark` (good, bad, skip), `bisectReset`; a pure state reader from the git dir (`gitDirs()`); tested on temp repos.
+- [ ] Extend `lib/operationView.ts` and `OperationBanner` so a running bisect shows the commit under test with Good, Bad, Skip and Abort, and the result commit at the end. Start from a graph row's context menu ("Bisect from here as bad", then pick a good commit). Never during another operation.
+
+**Verify:** temp-repo test that bisects a known history to the expected commit, plus skip and abort. Manual: the banner in the window.
+
+## Phase 25 — Packaging and update notice
+
+Runs on `phase/25-packaging`. Reverses the "installers" part of the old non-goal (see `docs/DECISIONS.md`). Silent auto-update stays out until there is an Apple Developer ID.
+
+- [ ] `electron-builder` (devDependency), macOS dmg and zip for arm64 and x64, with `node-pty` in `asarUnpack` and one native runner per architecture. `pnpm package` script.
+- [ ] `.github/workflows/release.yml`: on a `v*` tag, build both architectures and attach the files to a GitHub Release. The user pushes tags; nothing here pushes.
+- [ ] `src/main/updateCheck.ts` (no electron import): compare the app version with the latest release of this public repo; pure `isNewer`; tested. A "Check for updates" button in Settings and a banner with "Download" that opens the release page. No check at launch.
+- [ ] README: install steps and the Gatekeeper note (right-click Open, or `xattr -dr com.apple.quarantine`).
+
+**Verify:** `isNewer` and release-payload tests. `pnpm package` produces a dmg on the build machine and the app starts with a working terminal. Not verifiable here: signing and notarization (there is no Developer ID), and the workflow until a tag is pushed.
+
+---
+
 ## Graph algorithm (src/shared/graph-layout.ts)
 
 Stateful class so pages can be appended. Keep:
@@ -605,4 +673,4 @@ Row shape: `{ commit, lane, color, edges: { part: 'top'|'bottom'|'through', from
 
 ## Non-goals for this version
 
-Interactive rebase, line-level discard, a full-file three-way editor, `rerere`, external merge tools, submodule conflicts, PR/MR creation, OAuth login (tokens only), SQLite cache, auto-update and installers, more than two split panes, drag-and-drop between projects, cloning all repos of a project at once.
+Interactive rebase, line-level discard, a full-file three-way editor, `rerere`, external merge tools, submodule conflicts, in-app PR/MR creation and review, OAuth login (tokens only), SQLite cache, silent auto-update (an update notice is Phase 25), more than two split panes, drag-and-drop between projects, cloning all repos of a project at once.
