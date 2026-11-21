@@ -307,22 +307,27 @@ export function RepoPane({
             />
           </div>
         ) : null}
-        {tab === 'overview' ? (
-          <OverviewTab
-            repo={repo}
-            accountType={account?.type ?? 'github'}
-            summary={summary}
-            loading={loading}
-            narrow={narrow}
-          />
-        ) : tab === 'info' ? (
-          <InfoTab
-            repo={repo}
-            account={account}
-            summary={summary}
-            linkedPath={linkedPath}
-            local={local}
-          />
+        {tab === 'overview' || tab === 'info' ? (
+          // Keyed on the tab so each switch replays the arrival.
+          <div key={tab} className="flex animate-rise flex-col gap-3 motion-reduce:animate-none">
+            {tab === 'overview' ? (
+              <OverviewTab
+                repo={repo}
+                accountType={account?.type ?? 'github'}
+                summary={summary}
+                loading={loading}
+                narrow={narrow}
+              />
+            ) : (
+              <InfoTab
+                repo={repo}
+                account={account}
+                summary={summary}
+                linkedPath={linkedPath}
+                local={local}
+              />
+            )}
+          </div>
         ) : null}
       </div>
       {terminalSeen && linkedPath ? (

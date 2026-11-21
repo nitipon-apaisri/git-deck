@@ -363,7 +363,7 @@ export function ChangesPanel({
 
   return (
     <aside
-      className="flex min-h-0 min-w-0 flex-col rounded-lg bg-secondary [[hidden]]:hidden"
+      className="flex min-h-0 min-w-0 animate-pane-in flex-col rounded-lg bg-secondary motion-reduce:animate-none [[hidden]]:hidden"
       aria-label="Uncommitted changes"
       hidden={hidden}
     >
