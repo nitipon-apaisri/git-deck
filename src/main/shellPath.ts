@@ -21,9 +21,10 @@ export async function loadLoginPath(
   const shell = env['SHELL'] && existsSync(env['SHELL']) ? env['SHELL'] : '/bin/zsh'
   const out = await new Promise<string>((resolve) => {
     // execFile, never a shell string. -i for ~/.zshrc, where nvm and pnpm usually set PATH.
+    // Braces matter: `$PATH__X__` would be read as one (empty) variable name.
     execFile(
       shell,
-      ['-ilc', `printf %s "${MARK}$PATH${MARK}"`],
+      ['-ilc', `printf %s "${MARK}\${PATH}${MARK}"`],
       { timeout: 5000, env: { ...env, TERM: 'dumb' } },
       (err, stdout) => resolve(err ? '' : stdout)
     )
