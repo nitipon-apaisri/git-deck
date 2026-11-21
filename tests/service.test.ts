@@ -136,7 +136,9 @@ async function rig(opts: { seed?: boolean } = { seed: true }): Promise<Rig> {
     getSummary: async () => {
       count('getSummary')
       return emptySummary
-    }
+    },
+    listChangeRequests: async () => [],
+    getChecks: async () => ({ state: 'none', items: [] })
   }
   const ui: Ui = {
     pickFolder: async () => r.picks.shift() ?? null,
@@ -251,7 +253,9 @@ test('accounts.add refuses when secure storage is unavailable', async () => {
     createProvider: () => ({
       verify: async () => ({ username: 'octo' }),
       listRepos: async () => [],
-      getSummary: async () => emptySummary
+      getSummary: async () => emptySummary,
+      listChangeRequests: async () => [],
+      getChecks: async () => ({ state: 'none', items: [] })
     })
   })
   await assert.rejects(api.accounts.add(input()), /Secure storage is unavailable/)

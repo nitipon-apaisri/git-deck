@@ -72,10 +72,14 @@ export function parseLink(header: string | null | undefined): LinkRels {
   return out
 }
 
-export async function paginate<T>(url: string, headers: Headers_ = {}): Promise<T[]> {
+export async function paginate<T>(
+  url: string,
+  headers: Headers_ = {},
+  maxPages = MAX_PAGES
+): Promise<T[]> {
   const items: T[] = []
   let next: string | null = url
-  for (let page = 0; next && page < MAX_PAGES; page++) {
+  for (let page = 0; next && page < maxPages; page++) {
     const res = await request(next, headers)
     const body = await readJson<T[]>(res)
     if (Array.isArray(body)) items.push(...body)

@@ -471,3 +471,19 @@ Newest first. Template:
 ## Focus ring on text fields
 
 The 2px focus ring looked heavy on text inputs (palette, filters, forms). Text inputs and textareas now drop the ring and tint their border to `accent-text`; every other focusable element keeps the ring.
+
+## 2026-11-21: Pull requests, merge requests and CI (Phase 22)
+
+- **Question:** which endpoints and scopes give read-only PR/MR and CI data, and what happens when a host lacks them.
+- **Checked against the official docs** (docs.github.com, docs.gitlab.com):
+  - GitHub: `GET /repos/{r}/pulls`, `GET /commits/{ref}/check-runs` and `GET /commits/{ref}/status` (the combined status). The classic `repo` scope covers them. Fine-grained tokens need the Checks and Commit statuses read permissions.
+  - GitLab: `GET /projects/:id/merge_requests` and `GET /projects/:id/pipelines?ref=`. `read_api` covers reads.
+  - Not confirmed from the docs: whether the MR list includes `head_pipeline`, so the app does not rely on it. It asks the pipelines endpoint for the latest pipeline of the source branch instead.
+- **Decision and why:**
+  - Lists are the 100 most recently updated requests (two pages of 50, any state), so a big repo costs two calls.
+  - CI is read per open request when its row shows, and once for the checked-out branch (the dot on its pill). Not per commit.
+  - A 403, 404 or other 4xx on a checks endpoint (CI off, old self-hosted version) is "no CI info". A 401 and a 5xx still fail, so a bad token is not hidden.
+  - GitHub checks merge check runs and legacy statuses; the worst item sets the state. GitLab pipelines `skipped` and `manual` count as no info.
+  - The PR/MR tab is hidden for local-only repos. "Create PR/MR" opens the host's compare page (`/compare`, `/-/merge_requests/new`).
+  - Reads happen when the tab opens, on Refresh, and on window focus when older than 60s. No polling.
+- **Not verified:** no real GitHub or GitLab host and no display here, so the live check and the look of the tab and dot were not done.

@@ -39,6 +39,8 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     reposFetch: ([id]) => api.repos.fetch(id as string),
     summaryCached: ([key]) => api.summary.cached(key as string),
     summaryFetch: ([key]) => api.summary.fetch(key as string),
+    changesList: ([key]) => api.changes.list(key as string),
+    changesChecks: ([key, ref]) => api.changes.checks(key as string, ref as string),
     localLinks: () => api.local.links(),
     localLink: ([key]) => api.local.link(key as string),
     localUnlink: ([key]) => api.local.unlink(key as string),
