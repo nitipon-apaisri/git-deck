@@ -27,6 +27,8 @@ before(async () => {
         return json(200, [1], { link: '</rel/two>; rel="next"' })
       case '/rel/two':
         return json(200, [2])
+      case '/offsite':
+        return json(200, [1], { link: '<http://other.invalid/x>; rel="next"' })
       case '/loop':
         return json(200, [1], { link: `<${base}/loop>; rel="next"` })
       case '/total':
@@ -91,6 +93,10 @@ test('getJson throws HttpError without leaking the token', async () => {
 
 test('paginate follows rel=next', async () => {
   assert.deepEqual(await paginate<number>(`${base}/pages`), [10, 11, 20, 21, 30, 31])
+})
+
+test('paginate ignores a next link on another origin', async () => {
+  assert.deepEqual(await paginate<number>(`${base}/offsite`), [1])
 })
 
 test('paginate stops at 100 pages', async () => {

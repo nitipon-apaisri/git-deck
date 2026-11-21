@@ -82,6 +82,8 @@ export async function paginate<T>(url: string, headers: Headers_ = {}): Promise<
     const link = parseLink(res.headers.get('link')).next
     // Resolve against the current page: relative links and path-prefixed installs.
     next = link ? new URL(link, next).toString() : null
+    // Never send the token to another origin, whatever the server's Link header says.
+    if (next && new URL(next).origin !== new URL(url).origin) next = null
   }
   return items
 }
