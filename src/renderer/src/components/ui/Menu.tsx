@@ -1,4 +1,12 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import {
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode
+} from 'react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { cn } from '@/lib/cn'
 import { Icon } from './Icon'
@@ -181,7 +189,12 @@ function renderEntries(entries: readonly MenuEntry[]): ReactNode {
  */
 export function Menu({ label, at, entries, minWidth, searchable, pinned, onClose }: MenuProps) {
   const [query, setQuery] = useState('')
-  const shown = searchable ? filterEntries(entries, query) : entries
+  // The input stays instant; the list catches up when React is idle.
+  const deferredQuery = useDeferredValue(query)
+  const shown = useMemo(
+    () => (searchable ? filterEntries(entries, deferredQuery) : entries),
+    [searchable, entries, deferredQuery]
+  )
   const closeRef = useRef(onClose)
   useEffect(() => {
     closeRef.current = onClose
