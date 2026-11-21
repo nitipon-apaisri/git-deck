@@ -605,11 +605,11 @@ Runs on `phase/21-command-palette`.
 
 Runs on `phase/22-pr-mr-ci`. Read-only: no new token scopes (GitHub `repo`, GitLab `read_api`).
 
-- [ ] First, check the GitHub checks and statuses endpoints, the GitLab merge request and pipeline endpoints, and their scopes against the official docs. Log the result in `docs/DECISIONS.md`.
-- [ ] `GitProvider` gains `listChangeRequests(repo)` and `getChecks(repo, ref)`; GitHub and GitLab implement them with the existing pagination helpers (same-origin only). Normalised types live in `src/shared`. A host or version without the endpoint returns "no CI info", not an error.
-- [ ] IPC channels for both; no token in any error text.
-- [ ] Renderer: a PR/MR tab in `RepoPane` (hidden for local-only repos) with title, state, author, reviewers, labels and checks, "Open in browser", and "Create PR/MR" as a link to the host's compare page. A status dot beside the branch pill in the graph.
-- [ ] Per-pane cache. Fetch on tab open, manual refresh, and window focus when the data is older than 60s. No background polling.
+- [x] First, check the GitHub checks and statuses endpoints, the GitLab merge request and pipeline endpoints, and their scopes against the official docs. Log the result in `docs/DECISIONS.md`.
+- [x] `GitProvider` gains `listChangeRequests(repo)` and `getChecks(repo, ref)`; GitHub and GitLab implement them with the existing pagination helpers (same-origin only). Normalised types live in `src/shared`. A host or version without the endpoint returns "no CI info", not an error.
+- [x] IPC channels for both; no token in any error text.
+- [x] Renderer: a PR/MR tab in `RepoPane` (hidden for local-only repos) with title, state, author, reviewers, labels and checks, "Open in browser", and "Create PR/MR" as a link to the host's compare page. A status dot beside the branch pill in the graph.
+- [x] Per-pane cache. Fetch on tab open, manual refresh, and window focus when the data is older than 60s. No background polling.
 
 **Verify:** mock-server tests per provider (open, merged, closed, draft, pagination, missing endpoint, 401, cross-origin Link dropped) and normaliser tests on fixture JSON. Manual: a real GitHub repo and a GitLab repo.
 

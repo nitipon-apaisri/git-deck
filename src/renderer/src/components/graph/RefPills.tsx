@@ -3,11 +3,15 @@ import type { AccountType } from '@shared/types'
 import type { BadgeView, RefPill } from '../../lib/graphView'
 import { Icon, REF_KINDS } from '../ui'
 import { BrandLogo } from '../ui/BrandLogo'
+import { CheckDot } from '../ui/CheckDot'
+import type { BranchCheck } from '../../lib/graphView'
 
 interface RefPillsProps {
   pills: readonly RefPill[]
   /** The repo's host, for the remote mark. Unknown: a cloud. */
   host: AccountType | null
+  /** CI of the checked-out branch: a dot beside its pill. */
+  ci?: BranchCheck
   onMenu?: (event: React.MouseEvent, badge: BadgeView) => void
 }
 
@@ -17,7 +21,7 @@ const PILL =
 const NAME = 'min-w-0 truncate @max-[140px]:hidden'
 
 /** The first pill (name cut with "…") and a "+n" for the rest. The column is a container. */
-export function RefPills({ pills, host, onMenu }: RefPillsProps) {
+export function RefPills({ pills, host, ci, onMenu }: RefPillsProps) {
   const [first, ...rest] = pills
   return (
     <span className="@container flex w-(--col-refs) flex-none items-center gap-1 overflow-hidden">
@@ -27,6 +31,7 @@ export function RefPills({ pills, host, onMenu }: RefPillsProps) {
           title={first.title}
           onContextMenu={onMenu ? (event) => onMenu(event, first.badge) : undefined}
         >
+          {first.current && ci && ci.branch === first.name ? <CheckDot state={ci.state} /> : null}
           {first.current ? <Icon name="check" size="xs" /> : null}
           {first.tag ? <Icon name="tag" size="xs" /> : null}
           <span className={NAME}>{first.name}</span>

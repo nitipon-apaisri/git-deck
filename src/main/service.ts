@@ -566,6 +566,18 @@ export function createService(deps: ServiceDeps): {
     })
   }
 
+  /** Host-side data for one repo. A local-only repo has no host, so it gets `empty`. */
+  async function withProvider<T>(
+    repoKey: string,
+    empty: T,
+    call: (p: GitProvider, r: Repo) => Promise<T>
+  ) {
+    if (parseRepoKey(repoKey).accountId === LOCAL_ACCOUNT) return empty
+    const repo = requireRepo(repoKey)
+    const account = requireAccount(repo.accountId)
+    return call(makeProvider(account, requireToken(account)), repo)
+  }
+
   // Local repositories
 
   async function linkRepo(repoKey: string): Promise<string | null> {
@@ -767,6 +779,12 @@ export function createService(deps: ServiceDeps): {
         return store.getCachedSummary(repoKey)
       }),
       fetch: guard(async (repoKey) => fetchSummary(repoKey))
+    },
+    changes: {
+      list: guard((repoKey) => withProvider(repoKey, [], (p, r) => p.listChangeRequests(r))),
+      checks: guard((repoKey, ref) =>
+        withProvider(repoKey, { state: 'none', items: [] }, (p, r) => p.getChecks(r, String(ref)))
+      )
     },
     local: {
       links: guard(async () => store.getLinks()),

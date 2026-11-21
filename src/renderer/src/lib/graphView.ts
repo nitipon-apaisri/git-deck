@@ -1,6 +1,6 @@
 // Pure view-model helpers for the commit graph. No DOM, so they run under tsx.
 import type { GraphEdge } from '../../../shared/graph-layout'
-import type { CommitDetail, GraphCommit, GraphRef } from '../../../shared/types'
+import type { CheckState, CommitDetail, GraphCommit, GraphRef } from '../../../shared/types'
 import { timeAgo } from './format'
 import { unixDateText } from './repoView'
 
@@ -192,6 +192,12 @@ export function badgeViews(refs: readonly GraphRef[], defaultBranch: string): Ba
 }
 
 /** One pill in the branch / tag column: a local branch and its remote twin share one. */
+/** CI state of one branch, drawn as a dot on its pill. */
+export interface BranchCheck {
+  branch: string
+  state: CheckState
+}
+
 export interface RefPill {
   key: string
   kind: BadgeKind

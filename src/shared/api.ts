@@ -24,6 +24,8 @@ import type {
   Repo,
   RepoStatus,
   RepoSummary,
+  ChangeRequest,
+  ChecksInfo,
   ResetMode,
   StashEntry,
   TagEntry,
@@ -81,6 +83,11 @@ export interface Api {
   summary: {
     cached(repoKey: string): Promise<Cached<RepoSummary> | null>
     fetch(repoKey: string): Promise<Cached<RepoSummary>>
+  }
+  /** Read-only pull/merge requests and CI. Empty for a local-only repository. */
+  changes: {
+    list(repoKey: string): Promise<ChangeRequest[]>
+    checks(repoKey: string, ref: string): Promise<ChecksInfo>
   }
   local: {
     links(): Promise<Record<string, string>>
@@ -217,6 +224,8 @@ export const IPC = {
   reposFetch: 'repos:fetch',
   summaryCached: 'summary:cached',
   summaryFetch: 'summary:fetch',
+  changesList: 'changes:list',
+  changesChecks: 'changes:checks',
   localLinks: 'local:links',
   localLink: 'local:link',
   localUnlink: 'local:unlink',

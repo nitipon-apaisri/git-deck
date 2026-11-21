@@ -6,6 +6,7 @@ import {
   ROW_HEIGHT,
   authorLabel,
   type BadgeView,
+  type BranchCheck,
   commitDateText,
   commitDateTitle,
   edgePath,
@@ -51,6 +52,7 @@ interface GraphRowViewProps {
   defaultBranch: string
   /** The repo's host, for the remote mark on a branch. */
   host: AccountType | null
+  ci?: BranchCheck
   /** No author or date column. */
   compact: boolean
   selected: boolean
@@ -119,6 +121,7 @@ function GraphRowViewBase({
   now,
   defaultBranch,
   host,
+  ci,
   compact,
   selected,
   wipCount = 0,
@@ -185,6 +188,7 @@ function GraphRowViewBase({
       <RefPills
         pills={pills}
         host={host}
+        ci={ci}
         onMenu={
           onMenu
             ? (event, badge) => {

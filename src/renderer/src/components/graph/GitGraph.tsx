@@ -24,7 +24,7 @@ import { errorMessage } from '../../lib/errors'
 import { canStageHunks } from '../../lib/changesView'
 import { refActions, type RefAction } from '../../lib/branchView'
 import { refMenuEntries } from '../../lib/refMenu'
-import { graphWidth as lanesWidth, type BadgeView } from '../../lib/graphView'
+import { graphWidth as lanesWidth, type BadgeView, type BranchCheck } from '../../lib/graphView'
 import { detailPlacement } from '../../lib/splitLayout'
 import { Button, Dialog, ErrorBanner, Icon, Menu, Spinner, type MenuEntry } from '../ui'
 import { useDiff, useStatus } from '../../state/changesData'
@@ -40,6 +40,8 @@ interface GitGraphProps {
   defaultBranch: string
   /** The repo's host, for the remote mark on a branch pill. */
   host?: AccountType | null
+  /** CI of the checked-out branch, for the dot on its pill. */
+  ci?: BranchCheck
   /** False while another tab is showing. The graph stays mounted to keep its place. */
   visible: boolean
   /** Select this commit and scroll to it, loading more history until it is found. */
@@ -95,6 +97,7 @@ export function GitGraph({
   path,
   defaultBranch,
   host = null,
+  ci,
   visible,
   reveal = null,
   reloadToken,
@@ -402,6 +405,7 @@ export function GitGraph({
                   now={now}
                   defaultBranch={defaultBranch}
                   host={host}
+                  ci={ci}
                   compact={narrow}
                   selected={row.commit.hash === selectedHash}
                   wipCount={status?.entries.length}

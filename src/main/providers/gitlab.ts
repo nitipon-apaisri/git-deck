@@ -1,5 +1,14 @@
-import { countItems, getJson, getPage, paginate } from '../http'
-import type { Contributor, LanguageShare, Repo, RepoSummary, Visibility } from '../../shared/types'
+import { countItems, getJson, getPage, HttpError, paginate } from '../http'
+import type {
+  ChangeRequest,
+  CheckState,
+  ChecksInfo,
+  Contributor,
+  LanguageShare,
+  Repo,
+  RepoSummary,
+  Visibility
+} from '../../shared/types'
 import { MAX_CONTRIBUTORS, MAX_LANGUAGES, type GitProvider, type VerifiedUser } from './types'
 import { ok, required, throwIfAllFailed } from './util'
 
@@ -36,6 +45,57 @@ interface GlContributor {
   name: string
   email: string
   commits: number
+}
+
+interface GlMr {
+  iid: number
+  title: string
+  state: string
+  draft?: boolean
+  work_in_progress?: boolean
+  author: { username: string } | null
+  reviewers?: { username: string }[]
+  labels?: string[]
+  source_branch: string
+  target_branch: string
+  web_url: string
+  updated_at: string
+}
+
+interface GlPipeline {
+  id: number
+  status: string
+  web_url: string
+}
+
+export function normalizeMr(m: GlMr): ChangeRequest {
+  return {
+    number: m.iid,
+    title: m.title,
+    state: m.state === 'merged' ? 'merged' : m.state === 'opened' ? 'open' : 'closed',
+    draft: m.draft ?? m.work_in_progress ?? false,
+    author: m.author?.username ?? '',
+    reviewers: (m.reviewers ?? []).map((u) => u.username),
+    labels: m.labels ?? [],
+    sourceBranch: m.source_branch,
+    targetBranch: m.target_branch,
+    webUrl: m.web_url,
+    updatedAt: m.updated_at,
+    checksRef: m.source_branch
+  }
+}
+
+export function pipelineState(status: string): CheckState {
+  if (status === 'success') return 'success'
+  if (['failed', 'canceled', 'canceling'].includes(status)) return 'failure'
+  // skipped and manual pipelines did not run, so they say nothing.
+  return ['skipped', 'manual'].includes(status) ? 'none' : 'pending'
+}
+
+export function normalizePipeline(p: GlPipeline | undefined): ChecksInfo {
+  if (!p) return { state: 'none', items: [] }
+  const state = pipelineState(p.status)
+  return { state, items: [{ name: `Pipeline #${p.id}`, state, url: p.web_url }] }
 }
 
 function visibilityOf(v: string): Visibility {
@@ -150,6 +210,25 @@ export class GitLabProvider implements GitProvider {
       lastActivityAt: meta?.last_activity_at ?? null,
       sizeKb: typeof repoSize === 'number' ? Math.round(repoSize / 1024) : null,
       topics: meta?.topics ?? meta?.tag_list ?? []
+    }
+  }
+
+  async listChangeRequests(repo: Repo): Promise<ChangeRequest[]> {
+    const url = `${this.root}/projects/${encodeURIComponent(repo.remoteId)}/merge_requests?state=all&order_by=updated_at&sort=desc&per_page=50`
+    return (await paginate<GlMr>(url, this.headers, 2)).map(normalizeMr)
+  }
+
+  async getChecks(repo: Repo, ref: string): Promise<ChecksInfo> {
+    const url = `${this.root}/projects/${encodeURIComponent(repo.remoteId)}/pipelines?ref=${encodeURIComponent(ref)}&order_by=id&sort=desc&per_page=1`
+    try {
+      const list = await getJson<GlPipeline[]>(url, this.headers)
+      return normalizePipeline(Array.isArray(list) ? list[0] : undefined)
+    } catch (err) {
+      // Pipelines disabled (403/404) or an old version: no CI info. A bad token still throws.
+      if (err instanceof HttpError && err.status !== 401 && err.status < 500) {
+        return { state: 'none', items: [] }
+      }
+      throw err
     }
   }
 }

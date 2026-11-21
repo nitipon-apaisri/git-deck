@@ -25,6 +25,9 @@ import { ConflictEditor } from './ConflictEditor'
 import { LocalActions } from './LocalActions'
 import { OverviewTab } from './OverviewTab'
 import { OperationBanner } from './OperationBanner'
+import { ChangeRequestsTab } from './ChangeRequestsTab'
+import { useChecks } from '../../state/changeData'
+import type { BranchCheck } from '../../lib/graphView'
 import { RepoHeader } from './RepoHeader'
 import { RemotesDialog } from './RemotesDialog'
 import { StashDialog } from './StashDialog'
@@ -35,10 +38,11 @@ import { registerPane } from '../../state/paneCommands'
 const TABS: { id: TabName; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'graph', label: 'Graph' },
+  { id: 'pulls', label: 'PR/MR' },
   { id: 'info', label: 'Info' }
 ]
 /** A local repository has no host summary, so no Overview. */
-const LOCAL_TABS = TABS.filter((t) => t.id !== 'overview')
+const LOCAL_TABS = TABS.filter((t) => t.id !== 'overview' && t.id !== 'pulls')
 
 interface RepoPaneProps {
   repo: Repo
@@ -85,7 +89,10 @@ export function RepoPane({
   const isLocal = isLocalRepo(repo)
   // A saved "overview" tab means nothing here: start on the graph. Changes moved into
   // the graph as its "// WIP" row, so a saved "changes" tab opens the graph too.
-  const tab = savedTab === 'changes' || (isLocal && savedTab === 'overview') ? 'graph' : savedTab
+  const tab =
+    savedTab === 'changes' || (isLocal && (savedTab === 'overview' || savedTab === 'pulls'))
+      ? 'graph'
+      : savedTab
   const idPrefix = useId()
   const now = useNow()
   const { ref, width } = useElementSize<HTMLElement>()
@@ -147,6 +154,16 @@ export function RepoPane({
     [linkedPath, branches, fetch, pull, checkout]
   )
   useEffect(() => (active ? registerPane(commands) : undefined), [active, commands])
+  // CI of the checked-out branch, for the dot on its pill. One read per branch change.
+  const currentBranch = branches?.current ?? null
+  const branchChecks = useChecks(isLocal || !linkedPath ? null : repo.key, currentBranch)
+  const ci = useMemo<BranchCheck | undefined>(
+    () =>
+      branchChecks && currentBranch
+        ? { branch: currentBranch, state: branchChecks.state }
+        : undefined,
+    [branchChecks, currentBranch]
+  )
   const { stashes } = useStashes(linkedPath ?? null, actions.reloadToken + actions.watchToken)
   const { operation } = useOperation(linkedPath ?? null, actions.reloadToken + actions.watchToken)
   const [stashOpen, setStashOpen] = useState(false)
@@ -302,6 +319,7 @@ export function RepoPane({
               path={linkedPath ?? null}
               defaultBranch={repo.defaultBranch}
               host={account?.type ?? null}
+              ci={ci}
               visible={tab === 'graph'}
               reveal={reveal}
               reloadToken={actions.reloadToken}
@@ -334,6 +352,14 @@ export function RepoPane({
               }
             />
           </div>
+        ) : null}
+        {tab === 'pulls' && account ? (
+          <ChangeRequestsTab
+            repoKey={repo.key}
+            host={account.type}
+            webUrl={repo.webUrl}
+            active={tab === 'pulls'}
+          />
         ) : null}
         {tab === 'overview' || tab === 'info' ? (
           // Keyed on the tab so each switch replays the arrival.

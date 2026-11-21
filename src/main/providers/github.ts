@@ -1,5 +1,14 @@
 import { countItems, getJson, HttpError, paginate } from '../http'
-import type { Contributor, LanguageShare, Repo, RepoSummary, Visibility } from '../../shared/types'
+import type {
+  ChangeRequest,
+  CheckState,
+  ChecksInfo,
+  Contributor,
+  LanguageShare,
+  Repo,
+  RepoSummary,
+  Visibility
+} from '../../shared/types'
 import { MAX_CONTRIBUTORS, MAX_LANGUAGES, type GitProvider, type VerifiedUser } from './types'
 import { encodePath, ok, percent, required, throwIfAllFailed } from './util'
 
@@ -37,6 +46,79 @@ interface GhContributor {
   login?: string
   avatar_url?: string
   contributions: number
+}
+
+interface GhPull {
+  number: number
+  title: string
+  state: string
+  draft?: boolean
+  merged_at: string | null
+  user: { login: string } | null
+  requested_reviewers?: { login: string }[]
+  labels?: { name: string }[]
+  head: { ref: string; sha: string }
+  base: { ref: string }
+  html_url: string
+  updated_at: string
+}
+
+interface GhCheckRun {
+  name: string
+  status: string
+  conclusion: string | null
+  html_url: string | null
+}
+
+interface GhStatus {
+  context: string
+  state: string
+  target_url: string | null
+}
+
+export function normalizePull(p: GhPull): ChangeRequest {
+  return {
+    number: p.number,
+    title: p.title,
+    state: p.merged_at ? 'merged' : p.state === 'open' ? 'open' : 'closed',
+    draft: p.draft ?? false,
+    author: p.user?.login ?? '',
+    reviewers: (p.requested_reviewers ?? []).map((u) => u.login),
+    labels: (p.labels ?? []).map((l) => l.name),
+    sourceBranch: p.head.ref,
+    targetBranch: p.base.ref,
+    webUrl: p.html_url,
+    updatedAt: p.updated_at,
+    checksRef: p.head.sha
+  }
+}
+
+function runState(r: GhCheckRun): CheckState {
+  if (r.status !== 'completed') return 'pending'
+  if (r.conclusion === 'success' || r.conclusion === 'neutral' || r.conclusion === 'skipped') {
+    return 'success'
+  }
+  return 'failure'
+}
+
+function statusState(state: string): CheckState {
+  if (state === 'success') return 'success'
+  return state === 'pending' ? 'pending' : 'failure'
+}
+
+/** Check runs and legacy commit statuses as one list; the worst item sets the state. */
+export function normalizeChecks(runs: GhCheckRun[], statuses: GhStatus[]): ChecksInfo {
+  const items = [
+    ...runs.map((r) => ({ name: r.name, state: runState(r), url: r.html_url })),
+    ...statuses.map((s) => ({ name: s.context, state: statusState(s.state), url: s.target_url }))
+  ]
+  return { state: worstState(items.map((i) => i.state)), items }
+}
+
+export function worstState(states: readonly CheckState[]): CheckState {
+  if (states.includes('failure')) return 'failure'
+  if (states.includes('pending')) return 'pending'
+  return states.includes('success') ? 'success' : 'none'
 }
 
 function visibilityOf(r: GhRepo): Visibility {
@@ -154,6 +236,29 @@ export class GitHubProvider implements GitProvider {
       sizeKb: typeof meta?.size === 'number' ? meta.size : null,
       topics: meta?.topics ?? []
     }
+  }
+
+  async listChangeRequests(repo: Repo): Promise<ChangeRequest[]> {
+    const url = `${this.root}/repos/${encodePath(repo.fullName)}/pulls?state=all&sort=updated&direction=desc&per_page=50`
+    return (await paginate<GhPull>(url, this.headers, 2)).map(normalizePull)
+  }
+
+  async getChecks(repo: Repo, ref: string): Promise<ChecksInfo> {
+    const base = `${this.root}/repos/${encodePath(repo.fullName)}/commits/${encodeURIComponent(ref)}`
+    const settled = await Promise.allSettled([
+      getJson<{ check_runs?: GhCheckRun[] }>(`${base}/check-runs?per_page=100`, this.headers),
+      getJson<{ statuses?: GhStatus[] }>(`${base}/status?per_page=100`, this.headers)
+    ])
+    // A bad token must surface; a missing endpoint or disabled CI is just "no CI info".
+    for (const r of settled) {
+      if (r.status === 'rejected' && r.reason instanceof HttpError && r.reason.status === 401) {
+        throw r.reason
+      }
+    }
+    return normalizeChecks(
+      ok(settled[0], null)?.check_runs ?? [],
+      ok(settled[1], null)?.statuses ?? []
+    )
   }
 }
 

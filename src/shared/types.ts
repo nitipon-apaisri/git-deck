@@ -403,3 +403,28 @@ export interface ProjectSummary {
   lastActivityAt: string | null
   partial: boolean
 }
+
+export type CheckState = 'success' | 'failure' | 'pending' | 'none'
+
+/** One pull request (GitHub) or merge request (GitLab), as the host reports it. */
+export interface ChangeRequest {
+  number: number
+  title: string
+  state: 'open' | 'merged' | 'closed'
+  draft: boolean
+  author: string
+  reviewers: string[]
+  labels: string[]
+  sourceBranch: string
+  targetBranch: string
+  webUrl: string
+  updatedAt: string
+  /** What `getChecks` takes: the head commit (GitHub) or the source branch (GitLab). */
+  checksRef: string
+}
+
+/** CI for one ref. `none` is "no CI info": no CI, or a host without the endpoint. */
+export interface ChecksInfo {
+  state: CheckState
+  items: { name: string; state: CheckState; url: string | null }[]
+}

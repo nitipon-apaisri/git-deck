@@ -45,6 +45,10 @@ const api: Api = {
     cached: (repoKey) => call(IPC.summaryCached, repoKey),
     fetch: (repoKey) => call(IPC.summaryFetch, repoKey)
   },
+  changes: {
+    list: (repoKey) => call(IPC.changesList, repoKey),
+    checks: (repoKey, ref) => call(IPC.changesChecks, repoKey, ref)
+  },
   local: {
     links: () => call(IPC.localLinks),
     link: (repoKey) => call(IPC.localLink, repoKey),
