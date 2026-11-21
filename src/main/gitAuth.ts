@@ -21,6 +21,11 @@ export function gitAuthEnv(input: GitAuthInput): Record<string, string> {
     GIT_CONFIG_KEY_0: `http.${origin}/.extraHeader`,
     GIT_CONFIG_VALUE_0: `Authorization: Basic ${basic}`
   }
-  if (input.allowInsecureTls) env['GIT_SSL_NO_VERIFY'] = 'true'
+  // Scoped to this origin, so a redirect or submodule on another host is still verified.
+  if (input.allowInsecureTls) {
+    env['GIT_CONFIG_COUNT'] = '2'
+    env['GIT_CONFIG_KEY_1'] = `http.${origin}/.sslVerify`
+    env['GIT_CONFIG_VALUE_1'] = 'false'
+  }
   return env
 }

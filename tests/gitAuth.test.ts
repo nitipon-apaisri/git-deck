@@ -31,10 +31,16 @@ test('gitlab uses oauth2 and keeps a custom port in the scope', () => {
   assert.equal(env['GIT_CONFIG_VALUE_0'], basic('oauth2', 'glpat'))
 })
 
-test('GIT_SSL_NO_VERIFY is set only when the account allows insecure TLS', () => {
+test('sslVerify is disabled for the account origin only when it allows insecure TLS', () => {
   const base = { type: 'gitlab', baseUrl: 'https://x.test', token: 't' } as const
-  assert.equal(gitAuthEnv({ ...base, allowInsecureTls: false })['GIT_SSL_NO_VERIFY'], undefined)
-  assert.equal(gitAuthEnv({ ...base, allowInsecureTls: true })['GIT_SSL_NO_VERIFY'], 'true')
+  const off = gitAuthEnv({ ...base, allowInsecureTls: false })
+  assert.equal(off['GIT_CONFIG_COUNT'], '1')
+  assert.equal(off['GIT_SSL_NO_VERIFY'], undefined)
+  const on = gitAuthEnv({ ...base, allowInsecureTls: true })
+  assert.equal(on['GIT_CONFIG_COUNT'], '2')
+  assert.equal(on['GIT_CONFIG_KEY_1'], 'http.https://x.test/.sslVerify')
+  assert.equal(on['GIT_CONFIG_VALUE_1'], 'false')
+  assert.equal(on['GIT_SSL_NO_VERIFY'], undefined)
 })
 
 test('tls allowlist accepts listed hosts case-insensitively, defers otherwise', () => {

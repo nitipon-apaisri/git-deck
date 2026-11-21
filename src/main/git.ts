@@ -56,6 +56,9 @@ import type {
 } from '../shared/types'
 
 const MAX_BUFFER = 64 * 1024 * 1024
+// A repo's own config can name a program for git to run (fsmonitor) on every status.
+const SAFE_CONFIG = ['-c', 'core.fsmonitor=false']
+
 const HASH_RE = /^[0-9a-f]{7,64}$/i
 const FS = '\x1f'
 const RS = '\x1e'
@@ -93,7 +96,7 @@ function exec(cwd: string, args: string[], options: RunOptions = {}): Promise<st
       new Promise((resolve, reject) => {
         const child = execFile(
           'git',
-          args,
+          [...SAFE_CONFIG, ...args],
           {
             cwd,
             env: gitEnv(options.env),
@@ -343,7 +346,7 @@ function progressProcess(
   onLine: (line: string) => void
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    const child = spawn('git', args, { cwd, env: gitEnv(env) })
+    const child = spawn('git', [...SAFE_CONFIG, ...args], { cwd, env: gitEnv(env) })
     let buffer = ''
     let last = ''
     const reasons: string[] = []
