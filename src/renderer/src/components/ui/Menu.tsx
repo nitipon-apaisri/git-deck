@@ -51,7 +51,7 @@ interface MenuProps {
   onClose: () => void
 }
 
-/** Keeps the entries whose label has `query`, with the heading of each group that still has any. */
+/** Keeps the entries whose label has `query` (looking inside submenus), with the heading of each group that still has any. */
 function filterEntries(entries: readonly MenuEntry[], query: string): readonly MenuEntry[] {
   const needle = query.trim().toLowerCase()
   if (!needle) return entries
@@ -63,10 +63,17 @@ function filterEntries(entries: readonly MenuEntry[], query: string): readonly M
       heading = entry
       continue
     }
-    if (!entry.label.toLowerCase().includes(needle)) continue
+    let kept: MenuEntry = entry
+    if (!entry.label.toLowerCase().includes(needle)) {
+      // A submenu whose own label misses stays if something inside matches, narrowed to that.
+      if (entry.kind !== 'submenu') continue
+      const inside = filterEntries(entry.entries, query)
+      if (inside.length === 0) continue
+      kept = { ...entry, entries: inside }
+    }
     if (heading) out.push(heading)
     heading = null
-    out.push(entry)
+    out.push(kept)
   }
   return out
 }
