@@ -76,7 +76,8 @@ export function CommandPalette({
         <TextInput
           data-autofocus
           role="combobox"
-          aria-expanded
+          aria-expanded={shown.length > 0}
+          aria-autocomplete="list"
           aria-controls={`${id}-list`}
           aria-activedescendant={shown.length > 0 ? `${id}-${active}` : undefined}
           aria-label="Type a command, repository, branch or tag"
@@ -109,7 +110,7 @@ export function CommandPalette({
             onClick={() => run(at)}
             className={cn(
               'flex min-h-7.5 cursor-pointer items-center justify-between gap-3 rounded-md px-2.5 text-[13px]',
-              'aria-selected:bg-accent'
+              'aria-selected:bg-(--selection) aria-selected:font-medium'
             )}
           >
             <span className="min-w-0 truncate">{item.label}</span>
@@ -118,10 +119,16 @@ export function CommandPalette({
             ) : null}
           </li>
         ))}
-        {shown.length === 0 ? (
-          <li className="px-2.5 py-3 text-[13px] text-muted-foreground">Nothing matches.</li>
-        ) : null}
       </ul>
+      <p
+        aria-live="polite"
+        className={cn(
+          'm-0 px-4 pb-3 text-[13px] text-muted-foreground',
+          shown.length > 0 && 'sr-only'
+        )}
+      >
+        {shown.length === 0 ? 'Nothing matches.' : ''}
+      </p>
     </Modal>
   )
 }
