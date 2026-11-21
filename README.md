@@ -122,7 +122,6 @@ Known limits:
 - GitDeck was developed and checked on macOS, against mock GitHub Enterprise and GitLab servers, and it has been used against a real self-hosted GitLab instance. It has not been run against github.com or gitlab.com, or on Windows or Linux.
 - A repository's summary can take a moment on a large repository: counts come from several API calls, and a host that rate-limits you may return partial counts. Partial totals are marked as such.
 - Only the first 25 contributors of each repository are read, so contributor totals are approximate.
-- The sidebar list and the project form's repository list are not virtualised. An account with many thousands of repositories will feel slow there. The filter helps.
 - Split View has two panes at most.
 - The graph shows the history that `git log` reports for the linked folder. Detached HEAD and graphs with more than about ten lanes at once were not checked.
 
@@ -157,7 +156,7 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 17: Leaner menus and Delete branch
 - [x] Phase 18: AI commit messages (Claude Code CLI)
 - [x] Phase 19: Integrated terminal
-- [ ] Phase 20: Sidebar virtualization
+- [x] Phase 20: Sidebar virtualization
 - [ ] Phase 21: Command palette
 - [ ] Phase 22: Pull requests, merge requests and CI
 - [ ] Phase 23: File history and blame

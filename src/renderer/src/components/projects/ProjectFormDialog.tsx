@@ -1,4 +1,5 @@
-import { useId, useMemo, useState, type FormEvent } from 'react'
+import { useId, useMemo, useRef, useState, type FormEvent } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import type { Account, Project, Repo } from '@shared/types'
 import { DEFAULT_ICON, PROJECT_COLORS } from '@shared/projects'
 import { cn } from '@/lib/cn'
@@ -8,12 +9,15 @@ import {
   COLOR_LABELS,
   NAME_LIMIT,
   filterIcons,
+  flattenPicker,
+  pickerRowHeight,
   iconLabel,
   isBuiltInIcon,
   nameProblem,
   pickerGroups,
   readEmojiField,
   remoteIdOf,
+  type PickerRow,
   type ProjectFormValue
 } from '../../lib/projectForm'
 import { Button, Dialog, Field, HostTile, Icon, ProjectIcon, TextInput, isIconName } from '../ui'
@@ -86,6 +90,66 @@ export function ProjectFormDialog({
       ),
     [accounts, reposByAccount, chosen, repoQuery]
   )
+
+  const pickerRows = useMemo(() => flattenPicker(groups, missing), [groups, missing])
+  const pickerRef = useRef<HTMLDivElement>(null)
+  const picker = useVirtualizer({
+    count: pickerRows.length,
+    getScrollElement: () => pickerRef.current,
+    estimateSize: (i) => pickerRowHeight(pickerRows[i]),
+    getItemKey: (i) => pickerRows[i].key,
+    overscan: 10
+  })
+
+  function renderPickerRow(row: PickerRow) {
+    if (row.kind === 'header') {
+      const account = accounts.find((a) => a.id === row.accountId)
+      const tile =
+        account && account.id !== LOCAL_ACCOUNT_ID
+          ? hostTileOf(account.type, account.baseUrl)
+          : null
+      return (
+        <div className="flex h-8 items-center gap-2.5 bg-secondary px-3 font-semibold text-foreground">
+          {tile ? <HostTile tile={tile.tile} host={tile.host} /> : <Icon name="folder" size="sm" />}
+          <span className="min-w-0 truncate">{account?.label ?? row.accountId}</span>
+          <span className="ml-auto flex-none text-[12px] font-normal text-muted-foreground">
+            {account?.host}
+          </span>
+        </div>
+      )
+    }
+    if (row.kind === 'missing-header') {
+      return (
+        <div className="flex h-8 items-center gap-2.5 bg-secondary px-3 font-semibold text-foreground">
+          <Icon name="alert" size="sm" />
+          <span className="min-w-0 truncate">Unavailable</span>
+        </div>
+      )
+    }
+    const missingRow = row.kind === 'missing'
+    const key = missingRow ? row.repoKey : row.repo.key
+    return (
+      <label className="flex h-8.5 cursor-pointer items-center gap-2.5 border-t border-border px-3 hover:bg-accent">
+        <input
+          type="checkbox"
+          className="m-0 size-4 accent-(--accent)"
+          aria-label={missingRow ? `Keep ${remoteIdOf(key)}` : `Add ${row.repo.fullName}`}
+          checked={chosen.has(key)}
+          onChange={(e) => toggle(key, e.target.checked)}
+        />
+        <span className="min-w-0 truncate font-medium">
+          {missingRow ? remoteIdOf(key) : row.repo.name}
+        </span>
+        <span className="ml-auto flex-none text-[12px] font-normal text-muted-foreground">
+          {missingRow
+            ? 'access lost or account removed'
+            : row.repo.accountId === LOCAL_ACCOUNT_ID
+              ? ''
+              : row.repo.namespace}
+        </span>
+      </label>
+    )
+  }
 
   function onEmoji(text: string): void {
     setEmojiText(text)
@@ -281,73 +345,24 @@ export function ProjectFormDialog({
               {chosen.size} selected
             </span>
           </div>
-          <div className="max-h-60 overflow-y-auto rounded-lg border border-border">
-            {groups.map(({ accountId, repos }) => {
-              const account = accounts.find((a) => a.id === accountId)
-              const tile =
-                account && account.id !== LOCAL_ACCOUNT_ID
-                  ? hostTileOf(account.type, account.baseUrl)
-                  : null
-              return (
-                <div key={accountId} role="group" aria-label={account?.label ?? accountId}>
-                  <div className="flex h-8 items-center gap-2.5 bg-secondary px-3 font-semibold text-foreground">
-                    {tile ? (
-                      <HostTile tile={tile.tile} host={tile.host} />
-                    ) : (
-                      <Icon name="folder" size="sm" />
-                    )}
-                    <span className="min-w-0 truncate">{account?.label ?? accountId}</span>
-                    <span className="ml-auto flex-none text-[12px] font-normal text-muted-foreground">
-                      {account?.host}
-                    </span>
-                  </div>
-                  {repos.map((r) => (
-                    <label
-                      key={r.key}
-                      className="flex h-8.5 cursor-pointer items-center gap-2.5 border-t border-border px-3 hover:bg-accent"
-                    >
-                      <input
-                        type="checkbox"
-                        className="m-0 size-4 accent-(--accent)"
-                        aria-label={`Add ${r.fullName}`}
-                        checked={chosen.has(r.key)}
-                        onChange={(e) => toggle(r.key, e.target.checked)}
-                      />
-                      <span className="min-w-0 truncate font-medium">{r.name}</span>
-                      <span className="ml-auto flex-none text-[12px] font-normal text-muted-foreground">
-                        {r.accountId === LOCAL_ACCOUNT_ID ? '' : r.namespace}
-                      </span>
-                    </label>
-                  ))}
+          <div ref={pickerRef} className="max-h-60 overflow-y-auto rounded-lg border border-border">
+            <div
+              role="list"
+              aria-label="Repositories"
+              className="relative w-full"
+              style={{ height: picker.getTotalSize() }}
+            >
+              {picker.getVirtualItems().map((item) => (
+                <div
+                  key={item.key}
+                  role="listitem"
+                  className="absolute top-0 left-0 w-full"
+                  style={{ height: item.size, transform: `translateY(${item.start}px)` }}
+                >
+                  {renderPickerRow(pickerRows[item.index])}
                 </div>
-              )
-            })}
-            {missing.length > 0 ? (
-              <div role="group" aria-label="Unavailable">
-                <div className="flex h-8 items-center gap-2.5 bg-secondary px-3 font-semibold text-foreground">
-                  <Icon name="alert" size="sm" />
-                  <span className="min-w-0 truncate">Unavailable</span>
-                </div>
-                {missing.map((key) => (
-                  <label
-                    key={key}
-                    className="flex h-8.5 cursor-pointer items-center gap-2.5 border-t border-border px-3 hover:bg-accent"
-                  >
-                    <input
-                      type="checkbox"
-                      className="m-0 size-4 accent-(--accent)"
-                      aria-label={`Keep ${remoteIdOf(key)}`}
-                      checked={chosen.has(key)}
-                      onChange={(e) => toggle(key, e.target.checked)}
-                    />
-                    <span className="min-w-0 truncate font-medium">{remoteIdOf(key)}</span>
-                    <span className="ml-auto flex-none text-[12px] font-normal text-muted-foreground">
-                      access lost or account removed
-                    </span>
-                  </label>
-                ))}
-              </div>
-            ) : null}
+              ))}
+            </div>
             {groups.length === 0 && missing.length === 0 ? (
               <p className="m-0 p-3 text-muted-foreground">
                 {repoQuery.trim() !== ''

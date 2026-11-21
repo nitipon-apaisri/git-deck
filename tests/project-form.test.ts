@@ -4,10 +4,12 @@ import { PROJECT_ICONS } from '../src/shared/projects'
 import {
   diffRepoKeys,
   filterIcons,
+  flattenPicker,
   iconLabel,
   isBuiltInIcon,
   nameProblem,
   pickerGroups,
+  pickerRowHeight,
   readEmojiField,
   remoteIdOf,
   replaceProject
@@ -199,4 +201,17 @@ test('fetchAllReducer ignores an unknown key', () => {
   const s = fetchAllReducer(emptyFetchAll(), { type: 'start', targets })
   const next = fetchAllReducer(s, { type: 'done', key: 'nope' })
   assert.deepEqual(next.items, s.items)
+})
+
+test('flattenPicker: a header per account, its repos, then the missing group', () => {
+  const lists = { a: [repo('a', '1', 'me/x'), repo('a', '2', 'me/y')], b: [repo('b', '3', 't/z')] }
+  const { groups, missing } = pickerGroups(['a', 'b'], lists, new Set(['a:gone']), '')
+  const rows = flattenPicker(groups, missing)
+  assert.deepEqual(
+    rows.map((r) => r.kind),
+    ['header', 'repo', 'repo', 'header', 'repo', 'missing-header', 'missing']
+  )
+  assert.equal(new Set(rows.map((r) => r.key)).size, rows.length)
+  assert.deepEqual(rows.map(pickerRowHeight), [32, 34, 34, 32, 34, 32, 34])
+  assert.deepEqual(flattenPicker([], []), [])
 })
