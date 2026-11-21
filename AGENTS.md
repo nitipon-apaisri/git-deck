@@ -12,6 +12,7 @@ Desktop Git client (Electron + React + TypeScript) for GitHub, GitLab.com and se
 - `docs/design-system/`: visual source of truth (tokens, component guidelines, previews).
 - `docs/ui-boards/`: full-screen designs.
 - `docs/DECISIONS.md`: log of ambiguities and the call made.
+- `docs/RELEASING.md`: how to release (flow, checking the run, gotchas).
 
 ## Workflow
 

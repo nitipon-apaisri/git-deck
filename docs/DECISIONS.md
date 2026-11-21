@@ -516,3 +516,10 @@ The 2px focus ring looked heavy on text inputs (palette, filters, forms). Text i
 - **Why:** v0.1.2 downloaded in a browser showed "GitDeck is damaged and can't be opened": Apple silicon will not launch an app that has no signature at all once it is quarantined. An ad-hoc signature turns that into the normal "unidentified developer" prompt. Hardened runtime is off because library validation rejects Electron's own frameworks under an ad-hoc signature (electron-builder 26 docs).
 - **Verified:** local `--mac --dir --arm64` build: `codesign -dv` shows `Signature=adhoc`, `codesign --verify --deep --strict` passes, and the app starts (main and helper processes, run with a separate `--user-data-dir` because of the single-instance lock).
 - **Not verified:** the quarantined download from a browser (needs the released build), notarisation (needs a Developer ID), the x64 build on Intel.
+
+## 2026-11-22: Release knowledge and a releaser subagent
+
+- **Decision:** `docs/RELEASING.md` holds the release flow, the run check and the gotchas; `.claude/agents/releaser.md` is a thin agent that follows it. `CLAUDE.md` and `AGENTS.md` point to it.
+- **Why:** v0.1.0 to v0.1.2 were tagged before a release built, for reasons nobody had written down (retired runners, implicit electron-builder publish, no signature, a login-PATH bug). The doc is the single source; the agent only applies it.
+- **Not built:** workflow-generated release body, notarisation, an Intel test runner (listed under Ideas in the doc). The `git push` deny rule stays: the user pushes.
+- **Not verified:** that a fresh agent follows the doc end to end (needs a real release).
