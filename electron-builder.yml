@@ -14,8 +14,11 @@ npmRebuild: false
 mac:
   category: public.app-category.developer-tools
   icon: build/icon.icns
-  # Unsigned: there is no Developer ID. See README (Gatekeeper).
-  identity: null
+  # Ad-hoc signed ('-'): there is no Developer ID, but Apple silicon will not launch an app with no
+  # signature at all ('is damaged'). Hardened runtime off: library validation rejects Electron's own
+  # frameworks under an ad-hoc signature. See README (Gatekeeper).
+  identity: '-'
+  hardenedRuntime: false
   target:
     - target: dmg
       arch: [arm64, x64]

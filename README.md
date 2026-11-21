@@ -129,7 +129,7 @@ Not planned for this version: interactive rebase, line-level discard, a full-fil
 
 ### Install
 
-Download the dmg for your Mac (`arm64` for Apple silicon, the plain one for Intel) from the [Releases](https://github.com/nitipon-apaisri/git-deck/releases) page and drag GitDeck to Applications. The build is not signed or notarised (there is no Developer ID), so macOS blocks the first launch: right-click the app and choose Open, or run `xattr -dr com.apple.quarantine /Applications/GitDeck.app`.
+Download the dmg for your Mac (`arm64` for Apple silicon, the plain one for Intel) from the [Releases](https://github.com/nitipon-apaisri/git-deck/releases) page and drag GitDeck to Applications. The build is ad-hoc signed but not notarised (there is no Developer ID), so macOS warns on the first launch: right-click the app and choose Open, or run `xattr -dr com.apple.quarantine /Applications/GitDeck.app`. A build with no signature at all shows "GitDeck is damaged" on Apple silicon; the `xattr` command clears that too.
 
 GitDeck does not update itself. Settings, About, Check for updates asks GitHub for the latest release and links to its page. Nothing is checked at launch.
 

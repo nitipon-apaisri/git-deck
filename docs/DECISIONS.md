@@ -509,3 +509,10 @@ The 2px focus ring looked heavy on text inputs (palette, filters, forms). Text i
 - **Decision:** electron-builder (devDependency), unsigned dmg and zip for arm64 and x64, appId `com.gitdeck.app`. `node-pty` is in `asarUnpack` and `npmRebuild` is off: its prebuilds (`darwin-arm64`, `darwin-x64`) and `spawn-helper` land in `app.asar.unpacked` and the release workflow builds one architecture per runner. The update check is manual only (Settings, About) and reads the latest GitHub release without a token; a 404 means "no release yet".
 - **Verified:** `pnpm package` builds both architectures; `app.asar.unpacked` holds `pty.node` and an executable `spawn-helper`; 529 tests pass.
 - **Not verified:** launching the packaged app and its terminal, the About section in a window, signing and notarisation, the workflow (needs a pushed tag), the x64 app on Intel.
+
+## 2026-11-22: Ad-hoc signing for the macOS release
+
+- **Decision:** `electron-builder.yml` sets `mac.identity: '-'` (ad-hoc) and `hardenedRuntime: false`, replacing `identity: null`. The release workflow is one `macos-15` job that builds both architectures with `--publish never`.
+- **Why:** v0.1.2 downloaded in a browser showed "GitDeck is damaged and can't be opened": Apple silicon will not launch an app that has no signature at all once it is quarantined. An ad-hoc signature turns that into the normal "unidentified developer" prompt. Hardened runtime is off because library validation rejects Electron's own frameworks under an ad-hoc signature (electron-builder 26 docs).
+- **Verified:** local `--mac --dir --arm64` build: `codesign -dv` shows `Signature=adhoc`, `codesign --verify --deep --strict` passes, and the app starts (main and helper processes, run with a separate `--user-data-dir` because of the single-instance lock).
+- **Not verified:** the quarantined download from a browser (needs the released build), notarisation (needs a Developer ID), the x64 build on Intel.
