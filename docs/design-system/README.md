@@ -35,7 +35,7 @@ Rules that came out of the migration:
 - Ground: `window` behind everything, `island` for panels, `island-raised` for inputs and stat cards placed on an island, `hover` for hover fills. Rows are never striped.
 - Text: `text` for primary copy, `text-muted` for counts, column headers and hints. Links and ghost buttons use `accent-text`. Do not set text in `accent`; it is for marks only (active tab underline, active rail icon, active pane outline, progress).
 - The one `primary` button on a screen is `primary` with `on-primary` text. Every other button is a ghost button with a `line` edge.
-- Selection is the `selection` fill under a `text` label. Hover is `hover`. Focus is a solid 2px `focus-ring` outline with a 2px offset on every focusable element; never remove it.
+- Selection is the `selection` fill under a `text` label. Hover is `hover`. Focus is a solid 2px `focus-ring` outline with a 2px offset on every focusable element except text fields, which tint their border to `accent-text` instead.
 - Edges: `line` for hairline dividers. A control's own edge (text input, checkbox, divider grip) uses `border-strong`, which holds 3:1.
 - Status always carries a word or icon: **Cloned** with a `success` dot, **Partial** and **Unavailable** with `warning-text` and the alert icon, deletions with `danger` and a minus sign. Never use red against green alone.
 - Hosts: GitHub `host-github` tile with "GH", GitLab `host-gitlab` with "GL", self-hosted GitLab and GitHub Enterprise `host-selfhosted` with "SH" or "GE". The label is `text`.

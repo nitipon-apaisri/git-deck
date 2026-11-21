@@ -237,7 +237,7 @@ export function ProjectFormDialog({
         <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
           <legend className="mb-2 p-0 font-medium">Icon</legend>
           <div className="flex items-center gap-2">
-            <label className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border border-(--border-strong) px-2.5 text-muted-foreground focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-(--focus-ring)">
+            <label className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border border-(--border-strong) px-2.5 text-muted-foreground focus-within:border-(--accent-text)">
               <Icon name="search" size="sm" />
               <input
                 type="search"
@@ -330,7 +330,7 @@ export function ProjectFormDialog({
             Repositories <span className="font-normal text-muted-foreground">(optional)</span>
           </legend>
           <div className="flex items-center gap-2">
-            <label className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border border-(--border-strong) px-2.5 text-muted-foreground focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-(--focus-ring)">
+            <label className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border border-(--border-strong) px-2.5 text-muted-foreground focus-within:border-(--accent-text)">
               <Icon name="search" size="sm" />
               <input
                 type="search"

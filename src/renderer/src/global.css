@@ -37,10 +37,17 @@ body {
 }
 
 @layer base {
-  /* Focus is a solid 2px ring with a 2px offset on everything focusable. Never removed. */
+  /* Focus is a solid 2px ring with a 2px offset on everything focusable, except text fields. */
   :focus-visible {
     outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
+  }
+
+  /* The caret already shows focus in a text field; a tinted border is the quiet cue. */
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+    border-color: var(--accent-text);
   }
 
   a {
