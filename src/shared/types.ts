@@ -428,3 +428,38 @@ export interface ChecksInfo {
   state: CheckState
   items: { name: string; state: CheckState; url: string | null }[]
 }
+
+/** One commit that touched a file. `path` is the file's name at that commit (renames). */
+export interface FileHistoryEntry {
+  hash: string
+  author: string
+  /** Unix seconds. */
+  date: number
+  subject: string
+  path: string
+}
+
+export interface FileHistoryPage {
+  entries: FileHistoryEntry[]
+  hasMore: boolean
+}
+
+export interface BlameLine {
+  /** 1-based line number in the blamed version. */
+  line: number
+  text: string
+  hash: string
+  author: string
+  /** Unix seconds. */
+  date: number
+  /** Not committed yet: the line is only in the work tree. */
+  uncommitted: boolean
+  /** The root commit of a shallow or ordinary history: the line is older than we can see. */
+  boundary: boolean
+}
+
+export interface FileBlame {
+  /** A binary file has no lines to blame. */
+  binary: boolean
+  lines: BlameLine[]
+}

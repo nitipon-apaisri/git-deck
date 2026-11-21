@@ -8,7 +8,9 @@ import type {
   CheckoutTarget,
   CommitDetail,
   DiffRequest,
+  FileBlame,
   FileDiff,
+  FileHistoryPage,
   GraphCommit,
   HunkRequest,
   LocalInfo,
@@ -99,6 +101,10 @@ export interface Api {
     info(path: string): Promise<LocalInfo>
     graph(path: string, skip: number, limit: number): Promise<GraphCommit[]>
     commit(path: string, hash: string): Promise<CommitDetail>
+    /** Commits that touched a file, following renames. `page` is 0-based. */
+    fileHistory(path: string, file: string, page: number): Promise<FileHistoryPage>
+    /** `rev` is a commit hash, or `null` for the work tree file. */
+    blame(path: string, file: string, rev: string | null): Promise<FileBlame>
     fetch(path: string): Promise<void>
     reveal(path: string): Promise<void>
     /** Staged, unstaged, untracked and conflicted files. */
@@ -233,6 +239,8 @@ export const IPC = {
   localInfo: 'local:info',
   localGraph: 'local:graph',
   localCommit: 'local:commit',
+  localFileHistory: 'local:fileHistory',
+  localBlame: 'local:blame',
   localFetch: 'local:fetch',
   localReveal: 'local:reveal',
   localStatus: 'local:status',

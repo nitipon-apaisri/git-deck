@@ -487,3 +487,11 @@ The 2px focus ring looked heavy on text inputs (palette, filters, forms). Text i
   - The PR/MR tab is hidden for local-only repos. "Create PR/MR" opens the host's compare page (`/compare`, `/-/merge_requests/new`).
   - Reads happen when the tab opens, on Refresh, and on window focus when older than 60s. No polling.
 - **Not verified:** no real GitHub or GitLab host and no display here, so the live check and the look of the tab and dot were not done.
+
+## 2026-11-21: File history and blame (Phase 23)
+
+- **History:** `git log --follow --name-only`, 50 per page (one extra row read to know if there is a next page). Each entry carries the file's name at that commit, so a rename shows the old path.
+- **Blame:** `git blame --porcelain`, parsed by the pure `shared/blame.ts`. Opened from a commit's diff it blames that commit; opened from the changes list it blames the work tree, so uncommitted lines show as "Not committed yet". A NUL byte in the output means a binary file: no lines.
+- **Where it opens:** a "History" button in the diff dialog (reached from the changes list and the commit detail) adds a file tab to the pane. The tab is pane-local state, not saved with the Split View layout; one file per pane, a new file replaces it. Clicking an entry or a blame line switches to the graph and selects that commit.
+- **Limit:** blame has no paging and renders every line, so a very large file is slow to draw (shortcut: virtualise if it shows).
+- **Not verified:** no display here, so the tab, the buttons and two-pane behaviour were not checked visually.

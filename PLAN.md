@@ -617,8 +617,8 @@ Runs on `phase/22-pr-mr-ci`. Read-only: no new token scopes (GitHub `repo`, GitL
 
 Runs on `phase/23-history-blame`.
 
-- [ ] `git.ts`: `fileHistory(repo, path, page)` (`git log --follow`, paged) and `blame(repo, path, rev)` (`--porcelain` via `exec`); a pure `parseBlame`; tested.
-- [ ] Renderer: a per-file tab in `RepoPane` (works in Split View), opened from a file in the changes or commit-detail list. History is the default view and Blame is a toggle in the same tab. Click a line or entry to open that commit.
+- [x] `git.ts`: `fileHistory(repo, path, page)` (`git log --follow`, paged) and `blame(repo, path, rev)` (`--porcelain` via `exec`); a pure `parseBlame`; tested.
+- [x] Renderer: a per-file tab in `RepoPane` (works in Split View), opened from a file in the changes or commit-detail list. History is the default view and Blame is a toggle in the same tab. Click a line or entry to open that commit.
 
 **Verify:** temp-repo tests (rename, deleted file, binary file, boundary commit, uncommitted lines in blame) and `parseBlame` tests. Manual: tab behaviour in two panes.
 
