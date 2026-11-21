@@ -44,7 +44,31 @@ interface MenuProps {
   entries: readonly MenuEntry[]
   /** At least this wide, for a menu that hangs under a button. */
   minWidth?: number
+  /** A filter box on top that narrows the items by label, for a long list. */
+  searchable?: boolean
+  /** Entries kept at the bottom while the list scrolls; the filter leaves them be. */
+  pinned?: readonly MenuEntry[]
   onClose: () => void
+}
+
+/** Keeps the entries whose label has `query`, with the heading of each group that still has any. */
+function filterEntries(entries: readonly MenuEntry[], query: string): readonly MenuEntry[] {
+  const needle = query.trim().toLowerCase()
+  if (!needle) return entries
+  const out: MenuEntry[] = []
+  let heading: MenuEntry | null = null
+  for (const entry of entries) {
+    if (entry.kind === 'separator') continue
+    if (entry.kind === 'heading') {
+      heading = entry
+      continue
+    }
+    if (!entry.label.toLowerCase().includes(needle)) continue
+    if (heading) out.push(heading)
+    heading = null
+    out.push(entry)
+  }
+  return out
 }
 
 const itemClass =
@@ -148,7 +172,9 @@ function renderEntries(entries: readonly MenuEntry[]): ReactNode {
  * it to close it. Focus goes back to the opener when it goes. It renders into `document.body`,
  * so the island it was opened from does not clip it.
  */
-export function Menu({ label, at, entries, minWidth, onClose }: MenuProps) {
+export function Menu({ label, at, entries, minWidth, searchable, pinned, onClose }: MenuProps) {
+  const [query, setQuery] = useState('')
+  const shown = searchable ? filterEntries(entries, query) : entries
   const closeRef = useRef(onClose)
   useEffect(() => {
     closeRef.current = onClose
@@ -160,7 +186,7 @@ export function Menu({ label, at, entries, minWidth, onClose }: MenuProps) {
   const openAutoFocus = {
     onOpenAutoFocus: (event: Event) => {
       const first = content.current?.querySelector<HTMLElement>(
-        '[role^="menuitem"]:not([data-disabled])'
+        searchable ? 'input' : '[role^="menuitem"]:not([data-disabled])'
       )
       if (!first) return
       event.preventDefault()
@@ -198,7 +224,7 @@ export function Menu({ label, at, entries, minWidth, onClose }: MenuProps) {
           collisionPadding={8}
           loop
           style={minWidth ? { minWidth } : undefined}
-          className="animate-in fade-in-0 zoom-in-[0.97] z-50 flex max-h-[min(var(--radix-dropdown-menu-content-available-height),calc(100vh-16px))] min-w-55 max-w-95 origin-(--radix-dropdown-menu-content-transform-origin) flex-col overflow-y-auto rounded-lg bg-popover p-1.5 text-[13px] text-popover-foreground shadow-(--shadow-menu) duration-(--motion-fast) ease-(--ease-out)"
+          className="animate-in fade-in-0 zoom-in-[0.97] z-50 flex max-h-[min(var(--radix-dropdown-menu-content-available-height),calc(100vh-16px),26rem)] min-w-55 max-w-95 origin-(--radix-dropdown-menu-content-transform-origin) flex-col overflow-y-auto rounded-lg bg-popover p-1.5 text-[13px] text-popover-foreground shadow-(--shadow-menu) duration-(--motion-fast) ease-(--ease-out)"
           {...openAutoFocus}
           onCloseAutoFocus={(event) => {
             event.preventDefault()
@@ -212,7 +238,37 @@ export function Menu({ label, at, entries, minWidth, onClose }: MenuProps) {
           }}
           onContextMenu={(event) => event.preventDefault()}
         >
-          {renderEntries(entries)}
+          {searchable ? (
+            <div className="sticky -top-1.5 z-10 -mx-1.5 -mt-1.5 mb-1 border-b border-border bg-popover px-1.5 pt-1.5 pb-1.5">
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search…"
+                aria-label={`Search ${label.toLowerCase()}`}
+                className="h-8 w-full rounded-md border border-transparent bg-muted px-2.5 text-[13px] text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-(--accent-text)"
+                onKeyDown={(event) => {
+                  // Typing must not reach Radix's typeahead; only Esc and Tab keep their meaning.
+                  if (event.key === 'Escape' || event.key === 'Tab') return
+                  event.stopPropagation()
+                  if (event.key !== 'ArrowDown') return
+                  event.preventDefault()
+                  content.current
+                    ?.querySelector<HTMLElement>('[role^="menuitem"]:not([data-disabled])')
+                    ?.focus()
+                }}
+              />
+            </div>
+          ) : null}
+          {renderEntries(shown)}
+          {searchable && shown.length === 0 ? (
+            <p className="px-2.5 py-1.5 text-[12px] text-muted-foreground">No match</p>
+          ) : null}
+          {pinned?.length ? (
+            <div className="sticky -bottom-1.5 z-10 -mx-1.5 -mb-1.5 mt-1 border-t border-border bg-popover p-1.5">
+              {renderEntries(pinned)}
+            </div>
+          ) : null}
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>
