@@ -101,6 +101,10 @@ export function RepoPane({
   const [file, setFile] = useState<FileRequest | null>(null)
   const [fileShown, setFileShown] = useState(false)
   const showFile = file !== null && fileShown && linkedPath !== undefined
+  const closeFile = (): void => {
+    setFile(null)
+    setFileShown(false)
+  }
   const idPrefix = useId()
   const now = useNow()
   const { ref, width } = useElementSize<HTMLElement>()
@@ -274,7 +278,9 @@ export function RepoPane({
         <Tabs
           tabs={[
             ...(isLocal ? LOCAL_TABS : TABS),
-            ...(file && linkedPath ? [{ id: 'file', label: fileLabel(file.path) }] : [])
+            ...(file && linkedPath
+              ? [{ id: 'file', label: fileLabel(file.path), title: file.path, onClose: closeFile }]
+              : [])
           ]}
           value={showFile ? 'file' : tab}
           onChange={(id) => {
@@ -388,10 +394,7 @@ export function RepoPane({
               setFileShown(false)
               commands.reveal(hash)
             }}
-            onClose={() => {
-              setFile(null)
-              setFileShown(false)
-            }}
+            onClose={closeFile}
           />
         ) : null}
         {tab === 'pulls' && !showFile && account ? (

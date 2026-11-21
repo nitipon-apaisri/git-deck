@@ -36,14 +36,14 @@ export function FileTab({ repoPath, file, onOpenCommit, onClose }: Props) {
           {file.path}
         </h3>
         <Button
-          variant={view === 'history' ? 'primary' : 'default'}
+          className="aria-pressed:bg-(--selection) aria-pressed:text-(--accent-text)"
           aria-pressed={view === 'history'}
           onClick={() => setView('history')}
         >
           History
         </Button>
         <Button
-          variant={view === 'blame' ? 'primary' : 'default'}
+          className="aria-pressed:bg-(--selection) aria-pressed:text-(--accent-text)"
           aria-pressed={view === 'blame'}
           onClick={() => setView('blame')}
         >
@@ -200,6 +200,9 @@ function Blame({
   if (result.binary)
     return <p className="m-0 text-muted-foreground">Binary file: no lines to blame.</p>
 
+  if (result.lines.length === 0)
+    return <p className="m-0 text-muted-foreground">This file is empty.</p>
+
   return (
     <div className="overflow-auto rounded-lg bg-secondary py-1 font-mono text-[12px]">
       {result.lines.map((l, i) => {
@@ -207,28 +210,26 @@ function Blame({
         const first = i === 0 || result.lines[i - 1].hash !== l.hash
         return (
           <div key={l.line} className="flex min-h-5 items-baseline gap-3 px-2">
-            <button
-              type="button"
-              disabled={l.uncommitted}
-              className="flex w-56 flex-none cursor-pointer items-baseline gap-2 border-0 bg-transparent p-0 text-left text-muted-foreground enabled:hover:text-foreground disabled:cursor-default"
-              title={l.uncommitted ? 'Not committed yet' : 'Show this commit in the graph'}
-              aria-label={`Line ${l.line}: ${l.uncommitted ? 'not committed yet' : `commit ${l.hash.slice(0, 7)} by ${l.author}`}`}
-              onClick={() => onOpenCommit(l.hash)}
-            >
-              {first ? (
-                <>
-                  <span className="flex-none">
-                    {l.uncommitted ? '·······' : l.hash.slice(0, 7)}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate">
-                    {l.uncommitted ? 'Not committed yet' : l.author}
-                  </span>
-                  <span className="flex-none">
-                    {l.uncommitted ? '' : timeAgo(l.date * 1000, now)}
-                  </span>
-                </>
-              ) : null}
-            </button>
+            {first ? (
+              <button
+                type="button"
+                disabled={l.uncommitted}
+                className="flex w-56 flex-none cursor-pointer items-baseline gap-2 border-0 bg-transparent p-0 text-left text-muted-foreground enabled:hover:text-foreground disabled:cursor-default"
+                title={l.uncommitted ? 'Not committed yet' : 'Show this commit in the graph'}
+                aria-label={`Line ${l.line}: ${l.uncommitted ? 'not committed yet' : `commit ${l.hash.slice(0, 7)} by ${l.author}`}`}
+                onClick={() => onOpenCommit(l.hash)}
+              >
+                <span className="flex-none">{l.uncommitted ? '·······' : l.hash.slice(0, 7)}</span>
+                <span className="min-w-0 flex-1 truncate">
+                  {l.uncommitted ? 'Not committed yet' : l.author}
+                </span>
+                <span className="flex-none">
+                  {l.uncommitted ? '' : timeAgo(l.date * 1000, now)}
+                </span>
+              </button>
+            ) : (
+              <span className="w-56 flex-none" aria-hidden="true" />
+            )}
             <span className="w-8 flex-none text-right text-muted-foreground">{l.line}</span>
             <span className="min-w-0 flex-1 whitespace-pre">{l.text}</span>
           </div>

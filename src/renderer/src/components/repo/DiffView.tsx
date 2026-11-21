@@ -82,7 +82,11 @@ export function DiffView({ path, state, onClose, onHistory, hunkAction }: DiffVi
             {diffTotalsText(diff.additions, diff.deletions)}
           </span>
         ) : null}
-        {onHistory ? <Button onClick={onHistory}>History</Button> : null}
+        {onHistory ? (
+          <Button variant="ghost" onClick={onHistory}>
+            History
+          </Button>
+        ) : null}
         {onClose ? <IconButton label="Close diff" icon="x" onClick={onClose} /> : null}
       </div>
 
