@@ -128,7 +128,7 @@ function GraphRowViewBase({
     return (
       <div
         id={id}
-        className="absolute inset-x-0 flex cursor-default items-center gap-2 rounded-md pr-3 whitespace-nowrap transition-[background-color] duration-(--motion-fast) ease-(--ease-out) hover:bg-accent data-[selected=true]:bg-(--selection)"
+        className="absolute inset-x-0 flex cursor-default items-center gap-2 rounded-md pr-3 pl-2 whitespace-nowrap transition-[background-color] duration-(--motion-fast) ease-(--ease-out) hover:bg-accent data-[selected=true]:bg-(--selection)"
         role="option"
         aria-selected={selected}
         aria-posinset={index + 1}
@@ -137,10 +137,14 @@ function GraphRowViewBase({
         style={{ top: index * ROW_HEIGHT, height: ROW_HEIGHT }}
         onClick={() => onSelect(commit.hash)}
       >
-        <Lanes row={row} lanes={lanes} />
-        <span className="hash rounded-md border border-dashed border-border px-2 text-[12px] leading-5 text-muted-foreground">
-          // WIP
+        <span className="w-(--col-refs) flex-none overflow-hidden">
+          <span className="hash rounded-md border border-dashed border-border px-2 text-[12px] leading-5 text-muted-foreground">
+            // WIP
+          </span>
         </span>
+        <div className="w-(--col-graph) flex-none overflow-hidden">
+          <Lanes row={row} lanes={lanes} />
+        </div>
         <span
           className="inline-flex items-center gap-1 text-[12px] text-(--warning-text)"
           title={`${wipCount} changed ${wipCount === 1 ? 'file' : 'files'}`}
@@ -160,7 +164,7 @@ function GraphRowViewBase({
   return (
     <div
       id={id}
-      className="absolute inset-x-0 flex cursor-default items-center gap-2 rounded-md pr-3 whitespace-nowrap transition-[background-color] duration-(--motion-fast) ease-(--ease-out) hover:bg-accent data-[selected=true]:bg-(--selection)"
+      className="absolute inset-x-0 flex cursor-default items-center gap-2 rounded-md pr-3 pl-2 whitespace-nowrap transition-[background-color] duration-(--motion-fast) ease-(--ease-out) hover:bg-accent data-[selected=true]:bg-(--selection)"
       role="option"
       aria-selected={selected}
       aria-posinset={index + 1}
@@ -178,34 +182,34 @@ function GraphRowViewBase({
           : undefined
       }
     >
-      <Lanes row={row} lanes={lanes} />
-      {shown.length > 0 ? (
-        <span className="flex min-w-0 flex-initial items-center gap-1 overflow-hidden">
-          {shown.map((b) => (
-            <span
-              key={`${b.kind}:${b.name}`}
-              className="inline-flex"
-              onContextMenu={
-                onMenu
-                  ? (event) => {
-                      event.preventDefault()
-                      event.stopPropagation()
-                      onSelect(commit.hash)
-                      onMenu(commit, { x: event.clientX, y: event.clientY }, b)
-                    }
-                  : undefined
-              }
-            >
-              <RefBadge kind={b.kind} name={b.name} current={b.current} />
-            </span>
-          ))}
-          {more > 0 ? (
-            <span className="text-[12px] text-muted-foreground" title={hidden.join('\n')}>
-              +{more}
-            </span>
-          ) : null}
-        </span>
-      ) : null}
+      <span className="flex w-(--col-refs) flex-none items-center gap-1 overflow-hidden">
+        {shown.map((b) => (
+          <span
+            key={`${b.kind}:${b.name}`}
+            className="inline-flex"
+            onContextMenu={
+              onMenu
+                ? (event) => {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    onSelect(commit.hash)
+                    onMenu(commit, { x: event.clientX, y: event.clientY }, b)
+                  }
+                : undefined
+            }
+          >
+            <RefBadge kind={b.kind} name={b.name} current={b.current} />
+          </span>
+        ))}
+        {more > 0 ? (
+          <span className="text-[12px] text-muted-foreground" title={hidden.join('\n')}>
+            +{more}
+          </span>
+        ) : null}
+      </span>
+      <div className="w-(--col-graph) flex-none overflow-hidden">
+        <Lanes row={row} lanes={lanes} />
+      </div>
       <span className="min-w-0 flex-[1_0_12ch] truncate" title={commit.subject}>
         {commit.subject || '(no message)'}
       </span>

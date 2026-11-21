@@ -23,13 +23,14 @@ import { errorMessage } from '../../lib/errors'
 import { canStageHunks } from '../../lib/changesView'
 import { refActions, type RefAction } from '../../lib/branchView'
 import { refMenuEntries } from '../../lib/refMenu'
-import type { BadgeView } from '../../lib/graphView'
+import { graphWidth as lanesWidth, type BadgeView } from '../../lib/graphView'
 import { detailPlacement } from '../../lib/splitLayout'
 import { Button, Dialog, ErrorBanner, Icon, Menu, Spinner, type MenuEntry } from '../ui'
 import { useDiff, useStatus } from '../../state/changesData'
 import { DiffView } from '../repo/DiffView'
 import { ChangesPanel } from './ChangesPanel'
 import { CommitDetailPanel } from './CommitDetailPanel'
+import { GraphHeader } from './GraphHeader'
 import { GraphRowView } from './GraphRowView'
 
 interface GitGraphProps {
@@ -190,6 +191,10 @@ export function GitGraph({
   const range = visibleRange(scrollTop, viewportHeight, rows.length)
   const drawn = rows.slice(range.start, range.end)
   const lanes = widestLane(drawn.map((r) => r.width))
+  // Column widths for this pane; the graph column follows its lane count until dragged.
+  const [refsCol, setRefsCol] = useState(180)
+  const [graphCol, setGraphCol] = useState<number | null>(null)
+  const graphColWidth = graphCol ?? lanesWidth(lanes)
 
   const select = useCallback((hash: string) => setSelectedHash(hash), [])
 
@@ -333,8 +338,21 @@ export function GitGraph({
           className="flex min-h-0 min-w-0 flex-col gap-2 [[hidden]]:hidden"
           hidden={rows.length === 0}
         >
+          <GraphHeader
+            refsWidth={refsCol}
+            graphWidth={graphColWidth}
+            compact={narrow}
+            onRefsWidth={setRefsCol}
+            onGraphWidth={setGraphCol}
+          />
           <div
             ref={viewport}
+            style={
+              {
+                '--col-refs': `${refsCol}px`,
+                '--col-graph': `${graphColWidth}px`
+              } as React.CSSProperties
+            }
             className="min-h-0 flex-1 overflow-auto rounded-md -outline-offset-2 focus-visible:outline-2 focus-visible:outline-(--focus-ring)"
             role="listbox"
             aria-label="Commits"
