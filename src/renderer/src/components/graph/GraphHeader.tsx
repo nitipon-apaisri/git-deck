@@ -23,7 +23,7 @@ function Handle({ label, width, onChange }: ResizeProps) {
       aria-valuemin={MIN_COL}
       aria-valuemax={MAX_COL}
       tabIndex={0}
-      className="absolute inset-y-0 -right-2 z-10 flex w-3 cursor-col-resize touch-none justify-center after:h-full after:w-px after:bg-border hover:after:bg-(--accent-text) focus-visible:after:bg-(--accent-text) focus-visible:outline-none"
+      className="group absolute inset-y-0 -right-2 z-10 flex w-3 cursor-col-resize touch-none items-center justify-center focus-visible:outline-none"
       onPointerDown={(event: PointerEvent<HTMLSpanElement>) => {
         event.currentTarget.setPointerCapture(event.pointerId)
         drag.current = { x: event.clientX, w: width }
@@ -38,11 +38,15 @@ function Handle({ label, width, onChange }: ResizeProps) {
         event.preventDefault()
         onChange(clamp(width + (event.key === 'ArrowRight' ? 16 : -16)))
       }}
-    />
+    >
+      {/* Always drawn, so the column edge reads as draggable. */}
+      <span className="h-4 w-0.5 rounded-full bg-muted-foreground/50 transition-[background-color] duration-(--motion-fast) group-hover:bg-(--accent-text) group-focus-visible:bg-(--accent-text)" />
+    </span>
   )
 }
 
-const cell = 'relative flex-none truncate'
+// No overflow clipping here: the divider sits half outside the cell, in the gap.
+const cell = 'relative flex-none'
 
 interface GraphHeaderProps {
   refsWidth: number
@@ -64,11 +68,11 @@ export function GraphHeader({
   return (
     <div className="flex h-7 flex-none items-center gap-2 rounded-md bg-muted pr-3 pl-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase select-none">
       <span className={cell} style={{ width: refsWidth }}>
-        Branch / tag
+        <span className="block truncate">Branch / tag</span>
         <Handle label="branch / tag" width={refsWidth} onChange={onRefsWidth} />
       </span>
       <span className={cell} style={{ width: graphWidth }}>
-        Graph
+        <span className="block truncate">Graph</span>
         <Handle label="graph" width={graphWidth} onChange={onGraphWidth} />
       </span>
       <span className="min-w-0 flex-[1_0_12ch] truncate">Commit message</span>
