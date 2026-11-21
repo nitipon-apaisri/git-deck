@@ -31,7 +31,7 @@ import {
   moveIndex,
   needsNextPage,
   scrollToRow,
-  splitBadges,
+  refPills,
   visibleRange,
   widestLane
 } from '../src/renderer/src/lib/graphView'
@@ -220,16 +220,36 @@ test('a remote that only ends like the default branch is not its twin', () => {
   assert.equal(badgeViews([ref('origin/main', 'remote')], '')[0].kind, 'project')
 })
 
-test('splitBadges shows three then counts the rest', () => {
-  const badges = badgeViews(
-    ['a', 'b', 'c', 'd', 'e'].map((n) => ref(n, 'branch')),
+test('refPills joins a branch with its remote twin and drops HEAD when a branch is checked out', () => {
+  const pills = refPills(
+    [
+      ref('HEAD', 'head'),
+      ref('other', 'branch'),
+      ref('feat/x', 'branch', true),
+      ref('origin/feat/x', 'remote'),
+      ref('origin/solo', 'remote'),
+      ref('v1', 'tag')
+    ],
     'main'
   )
-  const { shown, more } = splitBadges(badges)
-  assert.equal(shown.length, 3)
-  assert.equal(more, 2)
-  assert.deepEqual(splitBadges(badges.slice(0, 2)), { shown: badges.slice(0, 2), more: 0 })
-  assert.deepEqual(splitBadges([]), { shown: [], more: 0 })
+  assert.deepEqual(
+    pills.map((p) => [p.name, p.local, p.remote, p.current]),
+    [
+      ['feat/x', true, true, true],
+      ['other', true, false, false],
+      ['origin/solo', false, true, false],
+      ['v1', false, false, false]
+    ]
+  )
+  assert.equal(pills[0].title, 'feat/x (checked out)\norigin/feat/x')
+  assert.equal(pills[3].tag, true)
+})
+
+test('refPills keeps HEAD when detached and does not mistake a deeper remote path for a twin', () => {
+  const [head] = refPills([ref('HEAD', 'head')], 'main')
+  assert.equal(head.badge.refKind, 'head')
+  const pills = refPills([ref('main', 'branch'), ref('origin/other/main', 'remote')], 'main')
+  assert.equal(pills.length, 2)
 })
 
 test('isHeadCommit sees HEAD, also when detached', () => {

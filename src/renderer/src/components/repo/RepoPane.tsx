@@ -275,6 +275,7 @@ export function RepoPane({
             <GitGraph
               path={linkedPath ?? null}
               defaultBranch={repo.defaultBranch}
+              host={account?.type ?? null}
               visible={tab === 'graph'}
               reloadToken={actions.reloadToken}
               watchToken={actions.watchToken}

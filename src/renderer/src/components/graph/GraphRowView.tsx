@@ -1,11 +1,10 @@
 import { memo } from 'react'
 import type { GraphRow } from '@shared/graph-layout'
-import type { GraphCommit } from '@shared/types'
+import type { AccountType, GraphCommit } from '@shared/types'
 import {
   NODE_RADIUS,
   ROW_HEIGHT,
   authorLabel,
-  badgeViews,
   type BadgeView,
   commitDateText,
   commitDateTitle,
@@ -15,10 +14,11 @@ import {
   isWipHash,
   laneTone,
   laneX,
-  splitBadges
+  refPills
 } from '../../lib/graphView'
 import { shortHash } from '../../lib/repoView'
-import { Avatar, Icon, RefBadge } from '../ui'
+import { Avatar, Icon } from '../ui'
+import { RefPills } from './RefPills'
 
 // One stroke or fill per lane colour: laneTone() gives 1 to 6.
 const LINES = [
@@ -49,6 +49,8 @@ interface GraphRowViewProps {
   lanes: number
   now: number
   defaultBranch: string
+  /** The repo's host, for the remote mark on a branch. */
+  host: AccountType | null
   /** No author or date column. */
   compact: boolean
   selected: boolean
@@ -116,6 +118,7 @@ function GraphRowViewBase({
   lanes,
   now,
   defaultBranch,
+  host,
   compact,
   selected,
   wipCount = 0,
@@ -128,7 +131,7 @@ function GraphRowViewBase({
     return (
       <div
         id={id}
-        className="absolute inset-x-0 flex cursor-default items-center gap-2 rounded-md pr-3 whitespace-nowrap transition-[background-color] duration-(--motion-fast) ease-(--ease-out) hover:bg-accent data-[selected=true]:bg-(--selection)"
+        className="absolute inset-x-0 flex cursor-default items-center gap-2 rounded-md pr-3 pl-2 whitespace-nowrap transition-[background-color] duration-(--motion-fast) ease-(--ease-out) hover:bg-accent data-[selected=true]:bg-(--selection)"
         role="option"
         aria-selected={selected}
         aria-posinset={index + 1}
@@ -137,10 +140,14 @@ function GraphRowViewBase({
         style={{ top: index * ROW_HEIGHT, height: ROW_HEIGHT }}
         onClick={() => onSelect(commit.hash)}
       >
-        <Lanes row={row} lanes={lanes} />
-        <span className="hash rounded-md border border-dashed border-border px-2 text-[12px] leading-5 text-muted-foreground">
-          // WIP
+        <span className="w-(--col-refs) flex-none overflow-hidden">
+          <span className="hash rounded-md border border-dashed border-border px-2 text-[12px] leading-5 text-muted-foreground">
+            // WIP
+          </span>
         </span>
+        <div className="w-(--col-graph) flex-none overflow-hidden">
+          <Lanes row={row} lanes={lanes} />
+        </div>
         <span
           className="inline-flex items-center gap-1 text-[12px] text-(--warning-text)"
           title={`${wipCount} changed ${wipCount === 1 ? 'file' : 'files'}`}
@@ -153,14 +160,11 @@ function GraphRowViewBase({
     )
   }
   const author = authorLabel(commit.author, commit.email)
-  const { shown, more } = splitBadges(badgeViews(commit.refs, defaultBranch))
-  const hidden = badgeViews(commit.refs, defaultBranch)
-    .slice(shown.length)
-    .map((b) => b.name)
+  const pills = refPills(commit.refs, defaultBranch)
   return (
     <div
       id={id}
-      className="absolute inset-x-0 flex cursor-default items-center gap-2 rounded-md pr-3 whitespace-nowrap transition-[background-color] duration-(--motion-fast) ease-(--ease-out) hover:bg-accent data-[selected=true]:bg-(--selection)"
+      className="absolute inset-x-0 flex cursor-default items-center gap-2 rounded-md pr-3 pl-2 whitespace-nowrap transition-[background-color] duration-(--motion-fast) ease-(--ease-out) hover:bg-accent data-[selected=true]:bg-(--selection)"
       role="option"
       aria-selected={selected}
       aria-posinset={index + 1}
@@ -178,34 +182,23 @@ function GraphRowViewBase({
           : undefined
       }
     >
-      <Lanes row={row} lanes={lanes} />
-      {shown.length > 0 ? (
-        <span className="flex min-w-0 flex-initial items-center gap-1 overflow-hidden">
-          {shown.map((b) => (
-            <span
-              key={`${b.kind}:${b.name}`}
-              className="inline-flex"
-              onContextMenu={
-                onMenu
-                  ? (event) => {
-                      event.preventDefault()
-                      event.stopPropagation()
-                      onSelect(commit.hash)
-                      onMenu(commit, { x: event.clientX, y: event.clientY }, b)
-                    }
-                  : undefined
+      <RefPills
+        pills={pills}
+        host={host}
+        onMenu={
+          onMenu
+            ? (event, badge) => {
+                event.preventDefault()
+                event.stopPropagation()
+                onSelect(commit.hash)
+                onMenu(commit, { x: event.clientX, y: event.clientY }, badge)
               }
-            >
-              <RefBadge kind={b.kind} name={b.name} current={b.current} />
-            </span>
-          ))}
-          {more > 0 ? (
-            <span className="text-[12px] text-muted-foreground" title={hidden.join('\n')}>
-              +{more}
-            </span>
-          ) : null}
-        </span>
-      ) : null}
+            : undefined
+        }
+      />
+      <div className="w-(--col-graph) flex-none overflow-hidden">
+        <Lanes row={row} lanes={lanes} />
+      </div>
       <span className="min-w-0 flex-[1_0_12ch] truncate" title={commit.subject}>
         {commit.subject || '(no message)'}
       </span>

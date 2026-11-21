@@ -14,7 +14,7 @@ interface RefBadgeProps {
 }
 
 /** Labels a branch, remote or tag on a commit. A tag also carries the tag icon. */
-const KINDS: Record<RefBadgeKind, string> = {
+export const KINDS: Record<RefBadgeKind, string> = {
   head: 'bg-(--ref-head-bg) text-(--ref-head-fg)',
   main: 'border-(--ref-main-edge) bg-(--ref-main-bg) text-(--ref-main-fg)',
   feature: 'border-(--ref-feature-edge) bg-(--ref-feature-bg) text-(--ref-feature-fg)',
