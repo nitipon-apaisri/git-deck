@@ -467,3 +467,7 @@ Newest first. Template:
   - Pull uses fast-forward only, the safe default. Theme cycles System, Dark, Light. At most 50 results.
   - Not opened over another dialog, same rule as Mod+K.
 - **Not verified:** no display here, so the look, focus return and Split View behaviour were not checked by eye.
+
+## Focus ring on text fields
+
+The 2px focus ring looked heavy on text inputs (palette, filters, forms). Text inputs and textareas now drop the ring and tint their border to `accent-text`; every other focusable element keeps the ring.
