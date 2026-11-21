@@ -23,6 +23,7 @@ import {
   parseConflicts,
   sideLabels
 } from '../shared/conflict'
+import { parseBlame } from '../shared/blame'
 import { hunkFingerprint, linePatch, parseUnifiedDiff, splitPatch } from '../shared/diff'
 import type {
   BranchList,
@@ -35,6 +36,8 @@ import type {
   ConflictFile,
   ConflictRequest,
   ConflictSaveResult,
+  FileBlame,
+  FileHistoryPage,
   DiffRequest,
   FileDiff,
   GraphCommit,
@@ -314,6 +317,76 @@ export async function getCommitDetail(cwd: string, hash: string): Promise<Commit
     })
   }
   return { hash, body, files }
+}
+
+export const HISTORY_PAGE_SIZE = 50
+
+/** Commits that touched one file, following renames. `page` is 0-based. */
+export async function fileHistory(
+  cwd: string,
+  path: string,
+  page: number
+): Promise<FileHistoryPage> {
+  const skip = Math.max(0, Math.floor(page)) * HISTORY_PAGE_SIZE
+  // The record mark leads each commit, so the file name `--name-only` prints after it
+  // belongs to that record.
+  const format = `%x1e${['%H', '%an', '%at', '%s'].join('%x1f')}`
+  let out: string
+  try {
+    out = await run(cwd, [
+      '-c',
+      'core.quotepath=false',
+      'log',
+      '--follow',
+      '--name-only',
+      `--format=${format}`,
+      '--skip',
+      String(skip),
+      '-n',
+      String(HISTORY_PAGE_SIZE + 1),
+      '--',
+      path
+    ])
+  } catch (err) {
+    if (/does not have any commits|unknown revision|bad default revision/i.test(String(err)))
+      return { entries: [], hasMore: false }
+    throw err
+  }
+  const entries: FileHistoryPage['entries'] = []
+  for (const record of out.split(RS)) {
+    if (!record.trim()) continue
+    const [head, ...rest] = record.split('\n')
+    const [hash, author, date, ...subject] = head.split(FS)
+    const name = rest.map((l) => l.trim()).find(Boolean)
+    entries.push({
+      hash,
+      author,
+      date: Number(date),
+      subject: subject.join(FS),
+      path: name ?? path
+    })
+  }
+  return {
+    entries: entries.slice(0, HISTORY_PAGE_SIZE),
+    hasMore: entries.length > HISTORY_PAGE_SIZE
+  }
+}
+
+/** Who last changed each line. `rev` is a commit, or `null` for the work tree file. */
+export async function blame(cwd: string, path: string, rev: string | null): Promise<FileBlame> {
+  if (rev !== null && !HASH_RE.test(rev)) throw new Error('Invalid commit hash')
+  const out = await run(cwd, [
+    '-c',
+    'core.quotepath=false',
+    'blame',
+    '--porcelain',
+    ...(rev ? [rev] : []),
+    '--',
+    path
+  ])
+  // Git has no flag for this; a NUL byte is how it tells binary files apart too.
+  if (out.includes('\0')) return { binary: true, lines: [] }
+  return { binary: false, lines: parseBlame(out) }
 }
 
 export async function gitFetch(cwd: string, env: Record<string, string> = {}): Promise<void> {

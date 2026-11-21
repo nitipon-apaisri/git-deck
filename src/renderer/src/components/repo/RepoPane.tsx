@@ -21,6 +21,7 @@ import { ErrorBanner, Icon, IconButton, Island, Spinner, Tabs, panelId, tabId } 
 import { GitGraph } from '../graph/GitGraph'
 import { InfoTab } from './InfoTab'
 import { BranchNameDialog, type BranchNameRequest } from './BranchNameDialog'
+import { FileTab, type FileRequest } from './FileTab'
 import { ConflictEditor } from './ConflictEditor'
 import { LocalActions } from './LocalActions'
 import { OverviewTab } from './OverviewTab'
@@ -41,6 +42,9 @@ const TABS: { id: TabName; label: string }[] = [
   { id: 'pulls', label: 'PR/MR' },
   { id: 'info', label: 'Info' }
 ]
+/** The last path segment, so a long path does not fill the tab strip. */
+const fileLabel = (path: string): string => path.slice(path.lastIndexOf('/') + 1)
+
 /** A local repository has no host summary, so no Overview. */
 const LOCAL_TABS = TABS.filter((t) => t.id !== 'overview' && t.id !== 'pulls')
 
@@ -93,6 +97,10 @@ export function RepoPane({
     savedTab === 'changes' || (isLocal && (savedTab === 'overview' || savedTab === 'pulls'))
       ? 'graph'
       : savedTab
+  // The open file's tab is local to this pane: it is not saved with the layout.
+  const [file, setFile] = useState<FileRequest | null>(null)
+  const [fileShown, setFileShown] = useState(false)
+  const showFile = file !== null && fileShown && linkedPath !== undefined
   const idPrefix = useId()
   const now = useNow()
   const { ref, width } = useElementSize<HTMLElement>()
@@ -264,9 +272,15 @@ export function RepoPane({
 
       <div className="mx-6 mt-3">
         <Tabs
-          tabs={isLocal ? LOCAL_TABS : TABS}
-          value={tab}
-          onChange={(id) => onTabChange(id as TabName)}
+          tabs={[
+            ...(isLocal ? LOCAL_TABS : TABS),
+            ...(file && linkedPath ? [{ id: 'file', label: fileLabel(file.path) }] : [])
+          ]}
+          value={showFile ? 'file' : tab}
+          onChange={(id) => {
+            setFileShown(id === 'file')
+            if (id !== 'file') onTabChange(id as TabName)
+          }}
           label="Repository"
           idPrefix={idPrefix}
           trailing={
@@ -296,14 +310,14 @@ export function RepoPane({
         className={cn(
           'flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-6 pt-4 pb-6',
           // The graph scrolls inside itself, so the panel does not.
-          tab === 'graph' && 'overflow-hidden'
+          tab === 'graph' && !showFile && 'overflow-hidden'
         )}
         onScroll={(e) => {
           if (e.currentTarget.clientHeight > 0) panelTop.current = e.currentTarget.scrollTop
         }}
         role="tabpanel"
-        id={panelId(idPrefix, tab)}
-        aria-labelledby={tabId(idPrefix, tab)}
+        id={panelId(idPrefix, showFile ? 'file' : tab)}
+        aria-labelledby={tabId(idPrefix, showFile ? 'file' : tab)}
         tabIndex={0}
         data-tab={tab}
       >
@@ -314,13 +328,16 @@ export function RepoPane({
           </ErrorBanner>
         ) : null}
         {graphSeen ? (
-          <div className="flex min-h-0 flex-1 [[hidden]]:hidden" hidden={tab !== 'graph'}>
+          <div
+            className="flex min-h-0 flex-1 [[hidden]]:hidden"
+            hidden={tab !== 'graph' || showFile}
+          >
             <GitGraph
               path={linkedPath ?? null}
               defaultBranch={repo.defaultBranch}
               host={account?.type ?? null}
               ci={ci}
-              visible={tab === 'graph'}
+              visible={tab === 'graph' && !showFile}
               reveal={reveal}
               reloadToken={actions.reloadToken}
               watchToken={actions.watchToken}
@@ -329,6 +346,14 @@ export function RepoPane({
               split={split}
               place={paneNumber}
               onResolveConflict={linkedPath ? setConflictFile : undefined}
+              onOpenHistory={
+                linkedPath
+                  ? (path, rev) => {
+                      setFile({ path, rev })
+                      setFileShown(true)
+                    }
+                  : undefined
+              }
               menuOps={
                 linkedPath
                   ? {
@@ -353,7 +378,23 @@ export function RepoPane({
             />
           </div>
         ) : null}
-        {tab === 'pulls' && account ? (
+        {showFile && file && linkedPath ? (
+          <FileTab
+            // A new file starts on History again.
+            key={`${file.path}:${file.rev}`}
+            repoPath={linkedPath}
+            file={file}
+            onOpenCommit={(hash) => {
+              setFileShown(false)
+              commands.reveal(hash)
+            }}
+            onClose={() => {
+              setFile(null)
+              setFileShown(false)
+            }}
+          />
+        ) : null}
+        {tab === 'pulls' && !showFile && account ? (
           <div className="animate-rise motion-reduce:animate-none">
             <ChangeRequestsTab
               repoKey={repo.key}
@@ -363,7 +404,7 @@ export function RepoPane({
             />
           </div>
         ) : null}
-        {tab === 'overview' || tab === 'info' ? (
+        {!showFile && (tab === 'overview' || tab === 'info') ? (
           // Keyed on the tab so each switch replays the arrival.
           <div key={tab} className="flex animate-rise flex-col gap-3 motion-reduce:animate-none">
             {tab === 'overview' ? (

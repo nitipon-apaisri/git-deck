@@ -60,6 +60,8 @@ export type GitOps = Pick<
   | 'getLocalInfo'
   | 'getGraph'
   | 'getCommitDetail'
+  | 'fileHistory'
+  | 'blame'
   | 'gitFetch'
   | 'cloneRepo'
   | 'getStatus'
@@ -833,6 +835,17 @@ export function createService(deps: ServiceDeps): {
       commit: guard(async (path, hash) => {
         linkedRepoKey(path)
         return git.getCommitDetail(path, hash)
+      }),
+      fileHistory: guard(async (path, file, page) => {
+        linkedRepoKey(path)
+        const [name] = checkFileList([file])
+        if (!Number.isInteger(page) || (page as number) < 0) throw new Error('Invalid page')
+        return git.fileHistory(path, name, page as number)
+      }),
+      blame: guard(async (path, file, rev) => {
+        linkedRepoKey(path)
+        const [name] = checkFileList([file])
+        return git.blame(path, name, rev === null ? null : String(rev))
       }),
       fetch: guard(async (path) => fetchLocal(path)),
       status: guard(async (path) => {

@@ -54,6 +54,10 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     localUnwatch: ([path]) => api.local.unwatch(path as string),
     localReveal: ([path]) => api.local.reveal(path as string),
     localStatus: ([path]) => api.local.status(path as string),
+    localFileHistory: ([path, file, page]) =>
+      api.local.fileHistory(path as string, file as string, page as number),
+    localBlame: ([path, file, rev]) =>
+      api.local.blame(path as string, file as string, rev as string | null),
     localDiff: ([path, request]) => api.local.diff(path as string, request as DiffRequest),
     localStage: ([path, files]) => api.local.stage(path as string, files as string[]),
     localUnstage: ([path, files]) => api.local.unstage(path as string, files as string[]),

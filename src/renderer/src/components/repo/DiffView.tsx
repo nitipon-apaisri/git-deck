@@ -24,6 +24,8 @@ interface DiffViewProps {
   path: string
   state: DiffState
   onClose?: () => void
+  /** Opens the file's history tab. */
+  onHistory?: () => void
   /** Offered for a tracked file's staged or unstaged diff: one button per hunk. */
   hunkAction?: {
     label: string
@@ -48,7 +50,7 @@ const LINE: Record<DiffLine['type'], { mark: string; row: string; text: string }
 }
 
 /** One file's changes as a unified diff, with old and new line numbers. */
-export function DiffView({ path, state, onClose, hunkAction }: DiffViewProps) {
+export function DiffView({ path, state, onClose, onHistory, hunkAction }: DiffViewProps) {
   const { diff } = state
   const [expanded, setExpanded] = useState<string | null>(null)
   const total = diff ? diff.hunks.reduce((n, h) => n + h.lines.length, 0) : 0
@@ -80,6 +82,7 @@ export function DiffView({ path, state, onClose, hunkAction }: DiffViewProps) {
             {diffTotalsText(diff.additions, diff.deletions)}
           </span>
         ) : null}
+        {onHistory ? <Button onClick={onHistory}>History</Button> : null}
         {onClose ? <IconButton label="Close diff" icon="x" onClick={onClose} /> : null}
       </div>
 

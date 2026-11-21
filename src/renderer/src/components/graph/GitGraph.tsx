@@ -62,6 +62,8 @@ interface GitGraphProps {
   menuOps?: GraphMenuOps
   /** Opens the pane's conflict editor for a file in conflict. Absent: the rows only show it. */
   onResolveConflict?: (file: string) => void
+  /** Opens a file's history tab. `rev` is the commit the diff came from, `null` for the work tree. */
+  onOpenHistory?: (file: string, rev: string | null) => void
 }
 
 export interface GraphMenuOps {
@@ -107,7 +109,8 @@ export function GitGraph({
   split,
   place,
   menuOps,
-  onResolveConflict
+  onResolveConflict,
+  onOpenHistory
 }: GitGraphProps) {
   const idPrefix = useId()
   const now = useNow()
@@ -478,6 +481,17 @@ export function GitGraph({
             <DiffView
               path={openDiff.path}
               state={diff}
+              onHistory={
+                onOpenHistory
+                  ? () => {
+                      setDiffFile(null)
+                      onOpenHistory(
+                        openDiff.path,
+                        openDiff.source === 'commit' ? (openDiff.hash ?? null) : null
+                      )
+                    }
+                  : undefined
+              }
               hunkAction={
                 openDiff.source !== 'commit' &&
                 canStageHunks(
