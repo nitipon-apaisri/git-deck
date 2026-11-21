@@ -444,3 +444,16 @@ Newest first. Template:
   - The diff is drawn as the "Unstaged changes" dialog over the window, as it opens in the running app (checked in a live window on 2026-11-07). The first draft showed it inline in the pane, which was wrong.
   - The Changes board also shows the per-line checkboxes and the "Stage 3 lines", "Select all", "Clear" and "Stage hunk" buttons (Phase 16), so that gap is closed too.
 - **Not verified:** the boards were checked as headless Chrome screenshots at 1440 x 900 only, not against screenshots of the running Electron window. Submenus, the terminal panel and the AI message button's loading state are still not drawn.
+
+## 2026-11-21: Roadmap, Phases 20 to 25
+
+- **Question:** what to build after Phase 19, and how to ship it without an Apple Developer ID.
+- **Decision and why:**
+  - Six phases, one branch each: sidebar virtualization, command palette, read-only PR/MR and CI, file history and blame, bisect, packaging.
+  - PR/MR is read-only with "Create PR/MR" as a link to the host's compare page: it needs no new token scopes (GitLab writes would need `api`). CI status shows in the PR/MR tab and as a dot on branch pills, not on every commit row, to avoid many API calls. Data refreshes on open, on manual refresh and on focus after 60s, never in the background.
+  - The palette is Mod+Shift+P because Mod+K is already search.
+  - Virtualization uses `@tanstack/react-virtual` (a devDependency, bundled by Vite).
+  - Blame and history are a per-file tab, so they work in Split View. Bisect is a banner in the `OperationBanner` style.
+  - **Reverses** the earlier "auto-update and installers" non-goal for installers only. macOS Squirrel auto-update refuses unsigned apps, so there is no silent update: the app compares its version with the latest GitHub Release (the repo is public) and links to the download. Real auto-update waits for an Apple Developer ID and should replace only `updateCheck.ts`. Unsigned builds show a Gatekeeper warning; the README explains the workaround.
+  - Packaging is macOS only for now (dmg and zip, arm64 and x64), built per architecture on native runners because of `node-pty`.
+- **Not verified:** the GitHub checks and GitLab pipeline endpoints and scopes were inferred, not read from the docs. Phase 22 starts by checking them.
