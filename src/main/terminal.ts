@@ -67,8 +67,10 @@ export function shellEnv(env: NodeJS.ProcessEnv = process.env): Record<string, s
  * node-pty starts a shell through a small `spawn-helper` binary. A package manager may
  * unpack it without the execute bit, and then every spawn fails with `posix_spawnp failed`.
  */
-export function ensureHelperExecutable(ptyDir: string): void {
+export function ensureHelperExecutable(resolvedDir: string): void {
   if (process.platform === 'win32') return
+  // Packaged: require.resolve points inside app.asar, but the binaries live in app.asar.unpacked.
+  const ptyDir = resolvedDir.replace(/app\.asar(?=[\\/]|$)/, 'app.asar.unpacked')
   const roots = [join(ptyDir, 'prebuilds'), join(ptyDir, 'build', 'Release')]
   for (const root of roots) {
     if (!existsSync(root)) continue

@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict'
+import { mkdirSync, statSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { test } from 'node:test'
 import { createService, type Ui } from '../src/main/service'
 import { Store, type TokenCrypto } from '../src/main/store'
 import {
   defaultShell,
+  ensureHelperExecutable,
   shellEnv,
   TerminalManager,
   type PtyOptions,
@@ -176,4 +179,21 @@ test('the service starts a shell only in a linked folder and forwards its events
   assert.deepEqual(f.ptys[0].written, ['pwd\r'])
   shutdown()
   assert.equal(f.ptys[0].killed, true)
+})
+
+test('ensureHelperExecutable fixes the helper under app.asar.unpacked', (t) => {
+  if (process.platform === 'win32') return t.skip()
+  const root = tempDir()
+  const dir = join(
+    root,
+    'app.asar.unpacked',
+    'node_modules',
+    'node-pty',
+    'prebuilds',
+    'darwin-arm64'
+  )
+  mkdirSync(dir, { recursive: true })
+  writeFileSync(join(dir, 'spawn-helper'), '', { mode: 0o644 })
+  ensureHelperExecutable(join(root, 'app.asar', 'node_modules', 'node-pty'))
+  assert.equal(statSync(join(dir, 'spawn-helper')).mode & 0o111, 0o111)
 })
