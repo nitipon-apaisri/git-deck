@@ -495,3 +495,11 @@ The 2px focus ring looked heavy on text inputs (palette, filters, forms). Text i
 - **Where it opens:** a "History" button in the diff dialog (reached from the changes list and the commit detail) adds a file tab to the pane. The tab is pane-local state, not saved with the Split View layout; one file per pane, a new file replaces it. Clicking an entry or a blame line switches to the graph and selects that commit.
 - **Limit:** blame has no paging and renders every line, so a very large file is slow to draw (shortcut: virtualise if it shows).
 - **Not verified:** no display here, so the tab, the buttons and two-pane behaviour were not checked visually.
+
+## 2026-11-21: Bisect (Phase 24)
+
+- **Separate state:** bisect is not an `OperationKind`. Continue, Abort and Skip on the operation banner mean merge-like things, so a running bisect has its own `BisectState` and `BisectBanner`. It still counts as "busy": merge, rebase, cherry-pick and revert refuse to start, and the graph menu hides them.
+- **State reader:** a bisect is running when `BISECT_START` exists in the git dir (`gitDirs()`, so linked worktrees work). Marks and the final "first bad commit" line come from `BISECT_LOG` via the pure `shared/bisect.ts`. The commit under test is HEAD.
+- **Start:** "Bisect: mark as bad" on a graph row remembers the commit in the pane (not saved); the next row menu offers "Bisect: mark as good" and starts. Git needs a clean-enough work tree; its own error is shown if not.
+- **Limits:** no "steps remaining" estimate. If skips leave git unable to decide, git's error is shown and the bisect stays open: abort it.
+- **Not verified:** no display here, so the banner and menu were not checked visually; the verifier and design-qa agents were not run.

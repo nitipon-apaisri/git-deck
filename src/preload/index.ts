@@ -105,6 +105,10 @@ const api: Api = {
     resolveConflictFile: (path, file, action) =>
       call(IPC.localResolveConflictFile, path, file, action),
     operation: (path) => call(IPC.localOperation, path),
+    bisect: (path) => call(IPC.localBisect, path),
+    bisectStart: (path, bad, good) => call(IPC.localBisectStart, path, bad, good),
+    bisectMark: (path, mark) => call(IPC.localBisectMark, path, mark),
+    bisectReset: (path) => call(IPC.localBisectReset, path),
     continueOperation: (path) => call(IPC.localContinueOperation, path),
     abortOperation: (path) => call(IPC.localAbortOperation, path),
     repos: () => call(IPC.localRepos),

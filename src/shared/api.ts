@@ -20,6 +20,8 @@ import type {
   ConflictRequest,
   ConflictSaveResult,
   OperationResult,
+  BisectMark,
+  BisectState,
   OperationState,
   Project,
   PullMode,
@@ -190,6 +192,12 @@ export interface Api {
     resolveConflictFile(path: string, file: string, action: ConflictAction): Promise<boolean>
     /** The merge, cherry-pick, revert or rebase waiting for the user, or `null`. */
     operation(path: string): Promise<OperationState | null>
+    /** The running bisect, or `null`. */
+    bisect(path: string): Promise<BisectState | null>
+    bisectStart(path: string, bad: string, good: string): Promise<BisectState>
+    bisectMark(path: string, mark: BisectMark): Promise<BisectState>
+    /** Asks first unless the bisect has its result. `false` means the user declined. */
+    bisectReset(path: string): Promise<boolean>
     /** Stages the fixed files and finishes the operation. */
     continueOperation(path: string): Promise<void>
     /** Asks first. Resolves `false` when the user declines. */
@@ -285,6 +293,10 @@ export const IPC = {
   localResolveConflict: 'local:resolveConflict',
   localResolveConflictFile: 'local:resolveConflictFile',
   localOperation: 'local:operation',
+  localBisect: 'local:bisect',
+  localBisectStart: 'local:bisectStart',
+  localBisectMark: 'local:bisectMark',
+  localBisectReset: 'local:bisectReset',
   localContinueOperation: 'local:continueOperation',
   localAbortOperation: 'local:abortOperation',
   localRepos: 'local:repos',

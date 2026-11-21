@@ -4,6 +4,7 @@ import { IPC, type IpcResult } from '../shared/api'
 import type { CloneProtocol, ProjectCreateInput, ProjectPatchInput } from '../shared/api'
 import type {
   AccountInput,
+  BisectMark,
   CheckoutTarget,
   DiffRequest,
   ConflictAction,
@@ -125,6 +126,11 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     localResolveConflictFile: ([path, file, action]) =>
       api.local.resolveConflictFile(path as string, file as string, action as ConflictAction),
     localOperation: ([path]) => api.local.operation(path as string),
+    localBisect: ([path]) => api.local.bisect(path as string),
+    localBisectStart: ([path, bad, good]) =>
+      api.local.bisectStart(path as string, bad as string, good as string),
+    localBisectMark: ([path, mark]) => api.local.bisectMark(path as string, mark as BisectMark),
+    localBisectReset: ([path]) => api.local.bisectReset(path as string),
     localContinueOperation: ([path]) => api.local.continueOperation(path as string),
     localAbortOperation: ([path]) => api.local.abortOperation(path as string),
     localRepos: () => api.local.repos(),

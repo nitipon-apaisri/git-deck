@@ -82,6 +82,11 @@ export interface GraphMenuOps {
   reset: (hash: string, mode: ResetMode) => void
   /** Opens the Tags dialog on this commit. */
   createTag: (hash: string) => void
+  /** Bisect: remember the bad commit, then start with the good one. */
+  bisectPick: (bad: string) => void
+  bisectStart: (bad: string, good: string) => void
+  /** The commit picked as bad, waiting for a good one. */
+  bisectBad: string | null
   /** The checked-out branch, `null` while detached. */
   currentBranch: string | null
   /** A merge, cherry-pick, revert or rebase is waiting, so no second one starts. */
@@ -271,6 +276,10 @@ export function GitGraph({
         return menuOps.reset(action.hash, action.mode)
       case 'create-tag':
         return menuOps.createTag(action.hash)
+      case 'bisect-bad':
+        return menuOps.bisectPick(action.hash)
+      case 'bisect-good':
+        return menuOps.bisectStart(action.bad, action.good)
       case 'copy':
         void navigator.clipboard?.writeText(action.text).catch(() => {})
     }
@@ -283,7 +292,8 @@ export function GitGraph({
       menuOps && {
         currentBranch: menuOps.currentBranch,
         isMerge: commit.parents.length > 1,
-        operationActive: menuOps.operationActive
+        operationActive: menuOps.operationActive,
+        bisectBad: menuOps.bisectBad
       }
     )
     return refMenuEntries(

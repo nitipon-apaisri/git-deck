@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
+  bisectHint,
+  bisectTitle,
   conflictPreview,
   operationHint,
   operationTitle,
@@ -71,4 +73,19 @@ test('a rebase with every conflict fixed says it will replay the next commit', (
     }),
     /^1 file has conflicts/
   )
+})
+
+test('bisect title and hint', () => {
+  const s = {
+    bad: 'b'.repeat(40),
+    good: ['a'.repeat(40)],
+    skipped: [],
+    current: 'c'.repeat(40),
+    result: null
+  }
+  assert.equal(bisectTitle(s), 'Bisect: testing ccccccc')
+  assert.match(bisectHint(s), /1 good, 0 skipped/)
+  const done = { ...s, result: { hash: 'd'.repeat(40), subject: 'break it' } }
+  assert.equal(bisectTitle(done), 'Bisect found the first bad commit (ddddddd)')
+  assert.match(bisectHint(done), /break it/)
 })

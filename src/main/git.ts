@@ -24,6 +24,7 @@ import {
   sideLabels
 } from '../shared/conflict'
 import { parseBlame } from '../shared/blame'
+import { parseBisectLog } from '../shared/bisect'
 import { hunkFingerprint, linePatch, parseUnifiedDiff, splitPatch } from '../shared/diff'
 import type {
   BranchList,
@@ -36,6 +37,8 @@ import type {
   ConflictFile,
   ConflictRequest,
   ConflictSaveResult,
+  BisectMark,
+  BisectState,
   FileBlame,
   FileHistoryPage,
   DiffRequest,
@@ -1053,6 +1056,11 @@ export async function getOperation(cwd: string): Promise<OperationState | null> 
 }
 
 async function assertNoOperation(cwd: string): Promise<void> {
+  if (await readBisect(cwd)) {
+    throw new Error(
+      'A bisect is in progress. Finish or abort it before starting another operation.'
+    )
+  }
   const state = await getOperation(cwd)
   if (state) {
     throw new Error(
@@ -1750,4 +1758,50 @@ export async function unstageHunk(cwd: string, request: HunkRequest): Promise<vo
   await exec(cwd, ['apply', '--cached', '--reverse', '--recount', '--whitespace=nowarn', '-'], {
     stdin: patch
   })
+}
+
+// Bisect
+
+/** The running bisect, or `null`. Read from the git dir, so it survives a restart. */
+export async function readBisect(cwd: string): Promise<BisectState | null> {
+  const dirs = await gitDirs(cwd)
+  if (!dirs || !existsSync(resolve(dirs.gitDir, 'BISECT_START'))) return null
+  let log = ''
+  try {
+    log = readFileSync(resolve(dirs.gitDir, 'BISECT_LOG'), 'utf8')
+  } catch {
+    // Just started: no log yet.
+  }
+  return { ...parseBisectLog(log), current: await tryRun(cwd, ['rev-parse', 'HEAD']) }
+}
+
+export async function bisectStart(cwd: string, bad: string, good: string): Promise<BisectState> {
+  await assertCommit(cwd, bad)
+  await assertCommit(cwd, good)
+  if (
+    bad === good ||
+    (await tryRun(cwd, ['rev-parse', bad])) === (await tryRun(cwd, ['rev-parse', good]))
+  ) {
+    throw new Error('Pick a good commit that is different from the bad one')
+  }
+  await assertNoOperation(cwd) // also refuses a second bisect
+  await run(cwd, ['bisect', 'start', bad, good])
+  const state = await readBisect(cwd)
+  if (!state) throw new Error('The bisect did not start')
+  return state
+}
+
+export async function bisectMark(cwd: string, mark: BisectMark): Promise<BisectState> {
+  if (mark !== 'good' && mark !== 'bad' && mark !== 'skip') throw new Error('Invalid bisect mark')
+  const before = await readBisect(cwd)
+  if (!before) throw new Error('There is no bisect in progress')
+  if (before.result) throw new Error('The bisect has already found its commit. Finish it.')
+  await run(cwd, ['bisect', mark])
+  return (await readBisect(cwd)) ?? before
+}
+
+/** Ends the bisect and returns to the branch it started on. */
+export async function bisectReset(cwd: string): Promise<void> {
+  if (!(await readBisect(cwd))) throw new Error('There is no bisect in progress')
+  await run(cwd, ['bisect', 'reset'])
 }
