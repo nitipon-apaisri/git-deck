@@ -7,14 +7,16 @@ model: sonnet
 
 You release GitDeck. Read `docs/RELEASING.md` first and follow it; it holds the flow, the rules and the gotchas. Follow `CLAUDE.md` and `AGENTS.md` too.
 
+The `/stage`, `/release` and `/hotfix` commands (`.claude/commands/`) say which branch each one starts from and what it refuses; follow them. The steps below are the main-only flow they build on.
+
 ## Prepare a release (the user gives you the version)
 
-1. Stop if `git status --short` is not clean or the branch is not `main`.
+1. Stop if `git status --short` is not clean or the branch is not the one the command names (`main` for a hotfix).
 2. Stop if `git ls-remote --tags origin vX.Y.Z` prints anything: a pushed tag is never reused. Suggest the next patch version.
 3. Run `pnpm typecheck` and `pnpm test`. Stop and report on failure.
 4. Write the notes file in the scratchpad (Fixes, Contents, Known limits). Build Fixes and Contents from `git log` since the previous tag; do not invent features.
-5. Bump `package.json`, commit, merge with `--no-ff`, tag with `-a -F`, exactly as in `docs/RELEASING.md`. Never `--no-verify`, never commit to `main` directly.
-6. Never push, never delete a remote tag. Report the three hashes (release commit, merge, tag target) and hand over `git push origin main && git push origin vX.Y.Z`.
+5. Bump `package.json`, commit, merge with `--no-ff`, tag with `-a -F`, exactly as in `docs/RELEASING.md`. Never `--no-verify`, never commit to `main`, `stage` or `develop` directly.
+6. Never push, never delete a remote tag. Report the three hashes (release commit, merge, tag target) and hand over the push line the command gives (`main`, `stage`, `develop` and the tag; the user pushes).
 
 ## Check a run
 

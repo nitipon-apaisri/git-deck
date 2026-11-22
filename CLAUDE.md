@@ -8,7 +8,7 @@ Desktop Git client (Electron + React + TypeScript) for GitHub, GitLab.com and se
 - `docs/design-system/` is the visual source of truth (tokens, component guidelines, previews). `docs/ui-boards/` has the full-screen designs.
 
 - `AGENTS.md` is the portable copy of these rules. Keep both consistent. `docs/DECISIONS.md` logs ambiguities.
-- Releases: follow `docs/RELEASING.md` (the `releaser` subagent does).
+- Releases: follow `docs/RELEASING.md` (the `releaser` subagent does). Commands: `/stage`, `/release`, `/hotfix`.
 
 ## Rules
 
@@ -17,7 +17,7 @@ Desktop Git client (Electron + React + TypeScript) for GitHub, GitLab.com and se
 - Code that does not need Electron must not import `electron`, so it can run under `tsx` tests.
 - Never log or store a token outside Electron `safeStorage`. Never put a token in a git config, URL or error message.
 - Pane-safe renderer: no global "current repo". Each `RepoPane` owns its tab, summary, graph and scroll state.
-- Branch per feature or phase: never commit to `main`. Use `phase/<n>-<slug>`, `feat/<slug>`, `fix/<slug>` or `chore/<slug>` (details in `AGENTS.md`). When a phase is done, also tick it in the `README.md` progress checklist. Merge to `main` with `git merge --no-ff` (never fast-forward), message `🔀 (merge): …`, and only when the user asks.
+- Branch per feature or phase, from `develop`: never commit to `main`, `stage` or `develop`. A hotfix branches from `main`. Use `phase/<n>-<slug>`, `feat/<slug>`, `fix/<slug>` or `chore/<slug>` (details in `AGENTS.md`). When a phase is done, also tick it in the `README.md` progress checklist. Merge to `develop` with `git merge --no-ff` (never fast-forward), message `🔀 (merge): …`, and only when the user asks.
 - Do not push to any remote. Commit locally using gitmoji format `{emoji} ({type}): {message}` (table in `AGENTS.md`).
 - pnpm only. Hooks (husky): pre-commit runs lint-staged + gitleaks. Never `--no-verify`; fix the cause or allowlist in `.gitleaks.toml`.
 - Node >= 22.12 is required. If there is no display, say plainly what was not checked visually.

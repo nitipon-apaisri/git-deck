@@ -23,7 +23,9 @@ export function isNewer(current: string, latest: string): boolean {
 export function parseRelease(payload: unknown): { version: string; url: string } | null {
   if (typeof payload !== 'object' || payload === null) return null
   const { tag_name: tag, html_url: url } = payload as Record<string, unknown>
-  if (typeof tag !== 'string' || typeof url !== 'string' || !parts(tag)) return null
+  // A -rc tag is a pre-release: never offer it, even if the API returned one.
+  if (typeof tag !== 'string' || typeof url !== 'string' || !parts(tag) || tag.includes('-'))
+    return null
   if (!url.startsWith('https://github.com/')) return null
   return { version: tag.replace(/^v/, ''), url }
 }
