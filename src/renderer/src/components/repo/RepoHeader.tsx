@@ -37,12 +37,7 @@ export function RepoHeader({
         {children}
         <div className="flex flex-none items-center gap-1">
           {local ? null : (
-            <IconButton
-              label="Open on web"
-              icon="external"
-              className="size-9"
-              onClick={onOpenWeb}
-            />
+            <IconButton label="Open on web" icon="globe" className="size-9" onClick={onOpenWeb} />
           )}
           {onClose ? (
             <IconButton label="Close pane" icon="x" className="size-9" onClick={onClose} />
