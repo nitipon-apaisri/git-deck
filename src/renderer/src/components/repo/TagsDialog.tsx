@@ -33,7 +33,7 @@ const SEARCH_FROM = 8
 const NOTE_MS = 4000
 
 const MORE_CLASS =
-  'cursor-pointer border-0 bg-transparent p-0 text-[12px] text-(--accent-text) hover:underline'
+  'inline-flex h-6 cursor-pointer items-center gap-1 rounded-full border border-border bg-card px-3 text-[12px] text-foreground transition-colors duration-(--motion-fast) hover:bg-accent'
 
 /** A tag message cut to three lines with a fade; "View more" shows up only when it is cut. */
 function TagMessage({ text }: { text: string }) {
@@ -56,11 +56,11 @@ function TagMessage({ text }: { text: string }) {
         {cut && !open ? (
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-linear-to-t from-secondary to-transparent"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-secondary from-35% to-transparent"
           />
         ) : null}
         {cut && !open ? (
-          <div className="absolute inset-x-0 bottom-0 flex justify-center">
+          <div className="absolute inset-x-0 bottom-0.5 flex justify-center">
             <button
               type="button"
               aria-expanded={false}
@@ -68,6 +68,7 @@ function TagMessage({ text }: { text: string }) {
               onClick={() => setOpen(true)}
             >
               View more
+              <Icon name="chevron-down" size="sm" />
             </button>
           </div>
         ) : null}
@@ -76,6 +77,9 @@ function TagMessage({ text }: { text: string }) {
         <div className="mt-0.5 flex justify-center">
           <button type="button" aria-expanded className={MORE_CLASS} onClick={() => setOpen(false)}>
             View less
+            <span className="inline-grid rotate-180">
+              <Icon name="chevron-down" size="sm" />
+            </span>
           </button>
         </div>
       ) : null}
