@@ -642,6 +642,74 @@ Runs on `phase/25-packaging`. Reverses the "installers" part of the old non-goal
 
 **Verify:** `isNewer` and release-payload tests. `pnpm package` produces a dmg on the build machine and the app starts with a working terminal. Not verifiable here: signing and notarization (there is no Developer ID), and the workflow until a tag is pushed.
 
+## Phases 26 to 31 — Roadmap 2
+
+Priority order chosen by the user on 2026-11-22; reasons and open questions in `docs/DECISIONS.md` (2026-11-22, Roadmap 2). Same rules as Phases 20 to 25: one branch per phase, pure logic gets `tsx` tests (no `electron` import), UI gets a manual Verify list, say plainly what was not checked visually, run `design-qa` after UI phases, tick `PLAN.md` and `README.md`, commit locally, never push. Nothing here is started.
+
+## Phase 26 — Line-level discard
+
+Runs on `phase/26-line-discard`. Builds on the existing line staging in the diff dialog. Destructive, so it confirms first.
+
+- [ ] `git.ts`: `discardLines(repo, path, selection)` reverses the selected lines of the working-tree diff (reverse patch through `git apply -R` on stdin, the same path line staging uses). A pure patch builder is shared with line staging, not copied.
+- [ ] Refuse (clear error, nothing written) when the patch no longer applies because the file changed; never leave a half-applied file.
+- [ ] Renderer: a "Discard selected lines" action beside Stage and Unstage in the diff dialog, with a confirm that names the file and the line count. Danger colour from tokens. Untracked and binary files stay whole-file only.
+- [ ] README: remove "line-level discard" from "Not planned".
+
+**Verify:** temp-repo tests (single line, mixed add and delete selection, line in a hunk with context, CRLF file, file changed since the diff was read, untracked file refused). Manual: discard one line, then undo via nothing (it is not undoable, the confirm says so).
+
+## Phase 27 — Create pull request / merge request
+
+Runs on `phase/27-create-pr-mr`. Write access: GitHub's `repo` scope already allows it; GitLab needs `api` instead of `read_api`. A token that lacks it gets a clear message, not a silent failure.
+
+- [ ] First, check the GitHub create-pull-request and GitLab create-merge-request endpoints and scopes against the official docs. Log the result and the GitLab scope change in `docs/DECISIONS.md`.
+- [ ] `GitProvider` gains `createChangeRequest(repo, { title, body, head, base, draft })`; GitHub and GitLab implement it (same-origin only, no token in any error). Normalised result type in `src/shared`.
+- [ ] IPC channel with validated input. Existing "Create PR/MR" link stays as the fallback when the token is read-only.
+- [ ] Renderer: a "Create PR/MR" dialog in the PR/MR tab: source branch (current by default), target (default branch), title (last commit subject), body, draft toggle. Offers "Push branch first" when the branch has no upstream. Opens the new PR/MR on success. Hidden for local-only repos.
+- [ ] Settings, Integrations: say which scope enables creation; the token help text for GitLab is updated.
+
+**Verify:** mock-server tests per provider (created, draft, already exists, 401, 403 missing scope, 422 validation, cross-origin dropped). Manual: a real GitHub repo and a GitLab repo (not checked before).
+
+## Phase 28 — More AI providers for commit messages
+
+Runs on `phase/28-ai-providers`. Today `AiSection` supports only the Claude Code CLI. Extend it without changing "opt-in, nothing is committed for you".
+
+- [ ] A provider interface for "suggest a message from a staged diff" in main, with the current Claude CLI as the first implementation. The diff cap (60 KB) and the warning text apply to every provider.
+- [ ] HTTP providers first: OpenAI and Gemini (and any OpenAI-compatible base URL). Keys live only in Electron `safeStorage`, never in a URL, config file, log or error message.
+- [ ] CLI providers second: Codex and OpenCode through the user's installed command, run with an argument array, no shell. Missing command gives a plain message.
+- [ ] Settings, AI: choose the provider, store its key, a "Test" button; the sparkles button uses the chosen one. The warning names where the diff goes.
+
+**Verify:** mock-server tests for each HTTP provider (success, 401, 429, timeout, oversized diff truncated, key absent from errors). CLI providers tested with a fake executable. Manual: each real provider, which cannot be checked without keys.
+
+## Phase 29 — Change log detail
+
+Runs on `phase/29-changelog`. Scope depends on an open question in `docs/DECISIONS.md` (repo changelog between two tags, GitDeck's own "what's new", or host release notes). The default below is the first one.
+
+- [ ] `git.ts`: `changelog(repo, from, to)` reads the commits between two tags or refs; a pure grouper by gitmoji or conventional type; tested.
+- [ ] Renderer: a "Changelog" view reachable from the Tags dialog (pick two tags, default newest and previous) showing grouped commits, with click-through to the commit and a "Copy as Markdown" button.
+
+**Verify:** temp-repo tests (two tags, no previous tag, merge commits, unknown type, empty range). Manual: the view in a window.
+
+## Phase 30 — Interactive rebase
+
+Runs on `phase/30-interactive-rebase`. The largest and riskiest phase; it comes after the smaller ones are stable.
+
+- [ ] `git.ts`: `rebasePlan(repo, base)` lists the commits to replay; `rebaseRun(repo, base, todo)` runs `git rebase -i` with a generated todo (pick, reword, squash, fixup, drop, reorder) fed through `GIT_SEQUENCE_EDITOR` pointing at a temp file, never a shell string. Refuse on a dirty tree, on pushed commits unless the user confirms, and on merge commits in range.
+- [ ] Reuse `OperationBanner` and the conflict editor for stops: Continue, Skip, Abort. A running rebase is detected from the git dir, as bisect is.
+- [ ] Renderer: a todo-list editor dialog (reorder, change action, edit reword messages) opened from a graph row's context menu ("Rebase onto here, interactively"). Abort is always visible.
+- [ ] README: remove "interactive rebase" from "Not planned".
+
+**Verify:** temp-repo tests (reorder, squash, fixup, drop, reword, conflict then continue, conflict then abort, refused cases). Manual: the editor and the banner in the window.
+
+## Phase 31 — Project event notifications (polling, not webhooks)
+
+Runs on `phase/31-notifications`. A desktop app has no public URL, so real webhooks would need a relay server, which breaks the "no runtime dependencies, tokens stay local" model. This phase polls the host's events instead. Whether that is acceptable is an open question in `docs/DECISIONS.md`.
+
+- [ ] A pure event differ: given the previous and current PR/MR lists of a repo, emit events (created, merged, closed, new review, checks failed); tested.
+- [ ] Per-project settings: which events to watch. Polling runs only while the app is open, at an interval no shorter than 60 s, reusing the Phase 22 cache and the same-origin and rate-limit handling. Stops on 401 or 403.
+- [ ] Native notifications through Electron `Notification` in main, with the host and repo name only (no token, no diff). Click opens the PR/MR in the pane. Off by default.
+
+**Verify:** differ tests (new, merged, closed, reopened, no change, first load emits nothing). Mock-server polling tests (interval, backoff on 429, stop on 401). Manual: a notification on a real PR/MR, which cannot be checked without one.
+
 ---
 
 ## Graph algorithm (src/shared/graph-layout.ts)
@@ -673,4 +741,4 @@ Row shape: `{ commit, lane, color, edges: { part: 'top'|'bottom'|'through', from
 
 ## Non-goals for this version
 
-Interactive rebase, line-level discard, a full-file three-way editor, `rerere`, external merge tools, submodule conflicts, in-app PR/MR creation and review, OAuth login (tokens only), SQLite cache, silent auto-update (an update notice is Phase 25), more than two split panes, drag-and-drop between projects, cloning all repos of a project at once.
+Interactive rebase, line-level discard, in-app PR/MR creation (these three are planned in Phases 26, 27 and 30), a full-file three-way editor, `rerere`, external merge tools, submodule conflicts, in-app PR/MR review, OAuth login (tokens only), SQLite cache, silent auto-update (an update notice is Phase 25), more than two split panes, drag-and-drop between projects, cloning all repos of a project at once.
