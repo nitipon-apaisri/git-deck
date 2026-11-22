@@ -32,6 +32,9 @@ const FORM_ID = 'tag-form'
 const SEARCH_FROM = 8
 const NOTE_MS = 4000
 
+const MORE_CLASS =
+  'cursor-pointer border-0 bg-transparent p-0 text-[12px] text-(--accent-text) hover:underline'
+
 /** A tag message cut to three lines with a fade; "View more" shows up only when it is cut. */
 function TagMessage({ text }: { text: string }) {
   const box = useRef<HTMLParagraphElement>(null)
@@ -53,19 +56,28 @@ function TagMessage({ text }: { text: string }) {
         {cut && !open ? (
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-linear-to-t from-secondary to-transparent"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-linear-to-t from-secondary to-transparent"
           />
         ) : null}
+        {cut && !open ? (
+          <div className="absolute inset-x-0 bottom-0 flex justify-center">
+            <button
+              type="button"
+              aria-expanded={false}
+              className={MORE_CLASS}
+              onClick={() => setOpen(true)}
+            >
+              View more
+            </button>
+          </div>
+        ) : null}
       </div>
-      {cut || open ? (
-        <button
-          type="button"
-          aria-expanded={open}
-          className="mt-0.5 cursor-pointer border-0 bg-transparent p-0 text-[12px] text-(--accent-text) hover:underline"
-          onClick={() => setOpen(!open)}
-        >
-          {open ? 'View less' : 'View more'}
-        </button>
+      {open ? (
+        <div className="mt-0.5 flex justify-center">
+          <button type="button" aria-expanded className={MORE_CLASS} onClick={() => setOpen(false)}>
+            View less
+          </button>
+        </div>
       ) : null}
     </div>
   )
