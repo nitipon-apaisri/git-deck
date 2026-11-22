@@ -17,12 +17,18 @@ interface Props {
 }
 
 const STATE_LABEL = { open: 'Open', merged: 'Merged', closed: 'Closed' } as const
+const STATE_TONE = { open: 'success', merged: 'merged', closed: 'danger' } as const
+const FILTERS = ['all', 'open', 'merged', 'closed'] as const
+type Filter = (typeof FILTERS)[number]
 
 export function ChangeRequestsTab({ repoKey, host, webUrl, active }: Props) {
   const { items, loading, error, reload } = useChangeRequests(repoKey, active)
+  const [filter, setFilter] = useState<Filter>('all')
   const [openError, setOpenError] = useState<string | null>(null)
   const noun = host === 'github' ? 'pull request' : 'merge request'
   const short = host === 'github' ? 'PR' : 'MR'
+
+  const shown = (items ?? []).filter((c) => filter === 'all' || c.state === filter)
 
   async function open(url: string): Promise<void> {
     setOpenError(null)
@@ -48,15 +54,37 @@ export function ChangeRequestsTab({ repoKey, host, webUrl, active }: Props) {
       </div>
       {error ? <ErrorBanner onRetry={reload}>{error}</ErrorBanner> : null}
       {openError ? <ErrorBanner>{openError}</ErrorBanner> : null}
+      {items && items.length > 0 ? (
+        <div role="group" aria-label="Filter by status" className="flex gap-1.5">
+          {FILTERS.map((f) => {
+            const count = f === 'all' ? items.length : items.filter((c) => c.state === f).length
+            return (
+              <Button
+                key={f}
+                variant={filter === f ? 'primary' : 'default'}
+                className="h-8 px-3"
+                aria-pressed={filter === f}
+                onClick={() => setFilter(f)}
+              >
+                {f === 'all' ? 'All' : STATE_LABEL[f]} {count}
+              </Button>
+            )
+          })}
+        </div>
+      ) : null}
       {items === null ? (
         loading ? (
           <Skeleton className="h-16 w-full" />
         ) : null
       ) : items.length === 0 ? (
         <p className="m-0 text-[13px] text-muted-foreground">No {noun}s.</p>
+      ) : shown.length === 0 ? (
+        <p className="m-0 text-[13px] text-muted-foreground">
+          No {filter} {noun}s.
+        </p>
       ) : (
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
-          {items.map((cr) => (
+          {shown.map((cr) => (
             <Row key={cr.number} repoKey={repoKey} cr={cr} short={short} onOpen={open} />
           ))}
         </ul>
@@ -87,7 +115,9 @@ function Row({
           <span className="min-w-0 truncate text-[13px] font-medium">{cr.title}</span>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-muted-foreground">
-          <Badge>{cr.draft ? 'Draft' : STATE_LABEL[cr.state]}</Badge>
+          <Badge tone={cr.draft ? 'neutral' : STATE_TONE[cr.state]}>
+            {cr.draft ? 'Draft' : STATE_LABEL[cr.state]}
+          </Badge>
           <span>
             {short} #{cr.number} by {cr.author || 'unknown'} ·{' '}
             {timeAgo(Date.parse(cr.updatedAt), now)}

@@ -19,6 +19,10 @@
   --success-text: #8fdba6;
   --success-bg: #6fcb8b24;
   --danger: #f58a8e;
+  --danger-text: #f7a1a4;
+  --danger-bg: #f58a8e24;
+  --merged-text: #c2a3f5;
+  --merged-bg: #a57af024;
   --warning-text: #f0c27a;
   --warning-bg: #e9b05a29;
   --neutral: #3a3d44;
@@ -79,6 +83,10 @@
   --success-text: #1e7a3c;
   --success-bg: #2fa05a1f;
   --danger: #c2373c;
+  --danger-text: #a32a2f;
+  --danger-bg: #c2373c1a;
+  --merged-text: #6d3fd0;
+  --merged-bg: #8b5cf61f;
   --warning-text: #7a4e00;
   --warning-bg: #c4821424;
   --neutral: #e3e5ea;
