@@ -642,13 +642,31 @@ Runs on `phase/25-packaging`. Reverses the "installers" part of the old non-goal
 
 **Verify:** `isNewer` and release-payload tests. `pnpm package` produces a dmg on the build machine and the app starts with a working terminal. Not verifiable here: signing and notarization (there is no Developer ID), and the workflow until a tag is pushed.
 
-## Phases 26 to 31 — Roadmap 2
+## Phases 26 to 32 — Roadmap 2
 
-Priority order chosen by the user on 2026-11-22; reasons and open questions in `docs/DECISIONS.md` (2026-11-22, Roadmap 2). Same rules as Phases 20 to 25: one branch per phase, pure logic gets `tsx` tests (no `electron` import), UI gets a manual Verify list, say plainly what was not checked visually, run `design-qa` after UI phases, tick `PLAN.md` and `README.md`, commit locally, never push. Nothing here is started.
+Priority order chosen by the user on 2026-11-22; reasons and open questions in `docs/DECISIONS.md` (2026-11-22, Roadmap 2). Phase 26 changes the branch workflow first; Phases 27 to 32 then branch from `develop`. Same rules as Phases 20 to 25: one branch per phase, pure logic gets `tsx` tests (no `electron` import), UI gets a manual Verify list, say plainly what was not checked visually, run `design-qa` after UI phases, tick `PLAN.md` and `README.md`, commit locally, never push. Nothing here is started.
 
-## Phase 26 — Line-level discard
+## Phase 26 — Release workflow: develop, stage, main
 
-Runs on `phase/26-line-discard`. Builds on the existing line staging in the diff dialog. Destructive, so it confirms first.
+Runs on `chore/release-workflow`, branched from `main` (the last one that does). Needs the user's approval of this plan first. Reason and trade-offs in `docs/DECISIONS.md` (2026-11-22, Release workflow).
+
+Model: `main` is released code only. `develop` is the integration branch. `stage` is the release candidate, frozen while it is tested. Features and fixes branch from `develop`; a hotfix for released code branches from `main`. Merges are always `--no-ff`. Nothing here pushes: the user pushes.
+
+- [ ] Create `develop` and `stage` locally from `main`. The user pushes them and sets `develop` as the default branch on GitHub if wanted.
+- [ ] `.github/workflows/release.yml`: a tag like `v0.2.0-rc.1` publishes a GitHub pre-release (`prerelease: ${{ contains(github.ref_name, '-rc.') }}`); `vX.Y.Z` stays a normal release. The update check already reads the latest non-pre-release; a test confirms `isNewer` and the check ignore `-rc` tags.
+- [ ] Project slash commands in `.claude/commands/`, each a thin file that follows `docs/RELEASING.md`:
+  - `stage`: clean `develop`, run typecheck and tests, merge `develop` into `stage` with `--no-ff` (`🔀 (merge): stage <version>-rc.N`), bump the version to `X.Y.Z-rc.N`, tag `vX.Y.Z-rc.N`. Hands over the push command.
+  - `release`: `stage` must be clean and equal to the tested rc. Final version bump and notes, merge `stage` into `main` with `--no-ff`, tag `vX.Y.Z`, then merge `main` back into `develop` and `stage` so the bump is not lost. Hands over the push commands.
+  - `hotfix`: branch `fix/<slug>` from `main`; after the user merges it, release a patch from `main`, then merge `main` into `stage` and `develop`.
+- [ ] A refusal in each command: dirty tree, wrong branch, a tag that already exists on the remote, a stage that is behind `develop` when `release` runs (say so, do not merge for the user).
+- [ ] Rules updated together, and kept consistent: `CLAUDE.md`, `AGENTS.md` ("branch from `develop`", "never commit to `main`, `stage` or `develop`", merge targets), `docs/RELEASING.md` (flow, rc builds, hotfix sync-back, the new gotchas), `.claude/agents/releaser.md` and `committer.md`. The `.claude/settings.json` deny on `git push*` stays.
+- [ ] README: contributing note on the branch model.
+
+**Verify:** run the three commands against a throw-away clone with a bare remote: `stage` produces an rc tag on `stage`; `release` lands `main` and merges back into `develop` and `stage`; `hotfix` syncs back; each refusal fires. The workflow change is proven only by pushing a real `-rc` tag (not checked here). Say so in the report.
+
+## Phase 27 — Line-level discard
+
+Runs on `phase/27-line-discard`. Builds on the existing line staging in the diff dialog. Destructive, so it confirms first.
 
 - [ ] `git.ts`: `discardLines(repo, path, selection)` reverses the selected lines of the working-tree diff (reverse patch through `git apply -R` on stdin, the same path line staging uses). A pure patch builder is shared with line staging, not copied.
 - [ ] Refuse (clear error, nothing written) when the patch no longer applies because the file changed; never leave a half-applied file.
@@ -657,9 +675,9 @@ Runs on `phase/26-line-discard`. Builds on the existing line staging in the diff
 
 **Verify:** temp-repo tests (single line, mixed add and delete selection, line in a hunk with context, CRLF file, file changed since the diff was read, untracked file refused). Manual: discard one line, then undo via nothing (it is not undoable, the confirm says so).
 
-## Phase 27 — Create pull request / merge request
+## Phase 28 — Create pull request / merge request
 
-Runs on `phase/27-create-pr-mr`. Write access: GitHub's `repo` scope already allows it; GitLab needs `api` instead of `read_api`. A token that lacks it gets a clear message, not a silent failure.
+Runs on `phase/28-create-pr-mr`. Write access: GitHub's `repo` scope already allows it; GitLab needs `api` instead of `read_api`. A token that lacks it gets a clear message, not a silent failure.
 
 - [ ] First, check the GitHub create-pull-request and GitLab create-merge-request endpoints and scopes against the official docs. Log the result and the GitLab scope change in `docs/DECISIONS.md`.
 - [ ] `GitProvider` gains `createChangeRequest(repo, { title, body, head, base, draft })`; GitHub and GitLab implement it (same-origin only, no token in any error). Normalised result type in `src/shared`.
@@ -669,9 +687,9 @@ Runs on `phase/27-create-pr-mr`. Write access: GitHub's `repo` scope already all
 
 **Verify:** mock-server tests per provider (created, draft, already exists, 401, 403 missing scope, 422 validation, cross-origin dropped). Manual: a real GitHub repo and a GitLab repo (not checked before).
 
-## Phase 28 — More AI providers for commit messages
+## Phase 29 — More AI providers for commit messages
 
-Runs on `phase/28-ai-providers`. Today `AiSection` supports only the Claude Code CLI. Extend it without changing "opt-in, nothing is committed for you".
+Runs on `phase/29-ai-providers`. Today `AiSection` supports only the Claude Code CLI. Extend it without changing "opt-in, nothing is committed for you".
 
 - [ ] A provider interface for "suggest a message from a staged diff" in main, with the current Claude CLI as the first implementation. The diff cap (60 KB) and the warning text apply to every provider.
 - [ ] HTTP providers first: OpenAI and Gemini (and any OpenAI-compatible base URL). Keys live only in Electron `safeStorage`, never in a URL, config file, log or error message.
@@ -680,18 +698,18 @@ Runs on `phase/28-ai-providers`. Today `AiSection` supports only the Claude Code
 
 **Verify:** mock-server tests for each HTTP provider (success, 401, 429, timeout, oversized diff truncated, key absent from errors). CLI providers tested with a fake executable. Manual: each real provider, which cannot be checked without keys.
 
-## Phase 29 — Change log detail
+## Phase 30 — Change log detail
 
-Runs on `phase/29-changelog`. Scope depends on an open question in `docs/DECISIONS.md` (repo changelog between two tags, GitDeck's own "what's new", or host release notes). The default below is the first one.
+Runs on `phase/30-changelog`. Scope depends on an open question in `docs/DECISIONS.md` (repo changelog between two tags, GitDeck's own "what's new", or host release notes). The default below is the first one.
 
 - [ ] `git.ts`: `changelog(repo, from, to)` reads the commits between two tags or refs; a pure grouper by gitmoji or conventional type; tested.
 - [ ] Renderer: a "Changelog" view reachable from the Tags dialog (pick two tags, default newest and previous) showing grouped commits, with click-through to the commit and a "Copy as Markdown" button.
 
 **Verify:** temp-repo tests (two tags, no previous tag, merge commits, unknown type, empty range). Manual: the view in a window.
 
-## Phase 30 — Interactive rebase
+## Phase 31 — Interactive rebase
 
-Runs on `phase/30-interactive-rebase`. The largest and riskiest phase; it comes after the smaller ones are stable.
+Runs on `phase/31-interactive-rebase`. The largest and riskiest phase; it comes after the smaller ones are stable.
 
 - [ ] `git.ts`: `rebasePlan(repo, base)` lists the commits to replay; `rebaseRun(repo, base, todo)` runs `git rebase -i` with a generated todo (pick, reword, squash, fixup, drop, reorder) fed through `GIT_SEQUENCE_EDITOR` pointing at a temp file, never a shell string. Refuse on a dirty tree, on pushed commits unless the user confirms, and on merge commits in range.
 - [ ] Reuse `OperationBanner` and the conflict editor for stops: Continue, Skip, Abort. A running rebase is detected from the git dir, as bisect is.
@@ -700,9 +718,9 @@ Runs on `phase/30-interactive-rebase`. The largest and riskiest phase; it comes 
 
 **Verify:** temp-repo tests (reorder, squash, fixup, drop, reword, conflict then continue, conflict then abort, refused cases). Manual: the editor and the banner in the window.
 
-## Phase 31 — Project event notifications (polling, not webhooks)
+## Phase 32 — Project event notifications (polling, not webhooks)
 
-Runs on `phase/31-notifications`. A desktop app has no public URL, so real webhooks would need a relay server, which breaks the "no runtime dependencies, tokens stay local" model. This phase polls the host's events instead. Whether that is acceptable is an open question in `docs/DECISIONS.md`.
+Runs on `phase/32-notifications`. A desktop app has no public URL, so real webhooks would need a relay server, which breaks the "no runtime dependencies, tokens stay local" model. This phase polls the host's events instead. Whether that is acceptable is an open question in `docs/DECISIONS.md`.
 
 - [ ] A pure event differ: given the previous and current PR/MR lists of a repo, emit events (created, merged, closed, new review, checks failed); tested.
 - [ ] Per-project settings: which events to watch. Polling runs only while the app is open, at an interval no shorter than 60 s, reusing the Phase 22 cache and the same-origin and rate-limit handling. Stops on 401 or 403.
@@ -741,4 +759,4 @@ Row shape: `{ commit, lane, color, edges: { part: 'top'|'bottom'|'through', from
 
 ## Non-goals for this version
 
-Interactive rebase, line-level discard, in-app PR/MR creation (these three are planned in Phases 26, 27 and 30), a full-file three-way editor, `rerere`, external merge tools, submodule conflicts, in-app PR/MR review, OAuth login (tokens only), SQLite cache, silent auto-update (an update notice is Phase 25), more than two split panes, drag-and-drop between projects, cloning all repos of a project at once.
+Interactive rebase, line-level discard, in-app PR/MR creation (these three are planned in Phases 27, 28 and 31), a full-file three-way editor, `rerere`, external merge tools, submodule conflicts, in-app PR/MR review, OAuth login (tokens only), SQLite cache, silent auto-update (an update notice is Phase 25), more than two split panes, drag-and-drop between projects, cloning all repos of a project at once.
