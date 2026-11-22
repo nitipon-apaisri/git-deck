@@ -523,3 +523,11 @@ The 2px focus ring looked heavy on text inputs (palette, filters, forms). Text i
 - **Why:** v0.1.0 to v0.1.2 were tagged before a release built, for reasons nobody had written down (retired runners, implicit electron-builder publish, no signature, a login-PATH bug). The doc is the single source; the agent only applies it.
 - **Not built:** workflow-generated release body, notarisation, an Intel test runner (listed under Ideas in the doc). The `git push` deny rule stays: the user pushes.
 - **Not verified:** that a fresh agent follows the doc end to end (needs a real release).
+
+## 2026-11-22: Roadmap 2, Phases 26 to 31
+
+- **Decision:** the user's priority order is line-level discard, create PR/MR, more AI providers, change log, interactive rebase, notifications. Planned in `PLAN.md`; nothing is built.
+- **Why this order:** small and low-risk first (discard reuses line staging); create PR/MR is the most-used missing workflow; AI extends an existing Settings section; interactive rebase is the largest and riskiest, so it follows once the rest is stable.
+- **Webhooks changed to polling:** a desktop app has no public URL for a host to call, and a relay server would break the "no runtime dependencies, tokens stay local" model. Phase 31 polls PR/MR lists while the app is open. Open question: is that acceptable?
+- **Open questions:** (1) what "change log" means: commits between two tags (the Phase 29 default), GitDeck's own "what's new", or host release notes; (2) AI order: HTTP APIs first (the plan's default) or CLI agents first; (3) ship each phase as its own release, or batch 26 to 28 as v0.2.0.
+- **Scope change to log when built:** GitLab creation needs the `api` scope instead of `read_api` (Phase 27).
