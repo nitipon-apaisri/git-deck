@@ -32,13 +32,13 @@ const FORM_ID = 'tag-form'
 const SEARCH_FROM = 8
 const NOTE_MS = 4000
 
-/** Three lines of 12px text at 18px. */
-const CLAMP_PX = 54
+/** About four and a half lines of 12px text at 18px. */
+const CLAMP_PX = 80
 
 const MORE_CLASS =
   'inline-flex h-6 cursor-pointer items-center gap-1 rounded-full border border-border bg-card px-3 text-[12px] text-foreground transition-colors duration-(--motion-fast) hover:bg-accent'
 
-/** A tag message cut to three lines with a fade; "View more" shows up only when it is cut. */
+/** A tag message cut to CLAMP_PX with a fade; "View more" shows up only when it is cut. */
 function TagMessage({ text }: { text: string }) {
   const box = useRef<HTMLParagraphElement>(null)
   const [open, setOpen] = useState(false)
