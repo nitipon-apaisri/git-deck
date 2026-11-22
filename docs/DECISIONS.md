@@ -524,10 +524,17 @@ The 2px focus ring looked heavy on text inputs (palette, filters, forms). Text i
 - **Not built:** workflow-generated release body, notarisation, an Intel test runner (listed under Ideas in the doc). The `git push` deny rule stays: the user pushes.
 - **Not verified:** that a fresh agent follows the doc end to end (needs a real release).
 
-## 2026-11-22: Roadmap 2, Phases 26 to 31
+## 2026-11-22: Roadmap 2, Phases 27 to 32
 
 - **Decision:** the user's priority order is line-level discard, create PR/MR, more AI providers, change log, interactive rebase, notifications. Planned in `PLAN.md`; nothing is built.
 - **Why this order:** small and low-risk first (discard reuses line staging); create PR/MR is the most-used missing workflow; AI extends an existing Settings section; interactive rebase is the largest and riskiest, so it follows once the rest is stable.
-- **Webhooks changed to polling:** a desktop app has no public URL for a host to call, and a relay server would break the "no runtime dependencies, tokens stay local" model. Phase 31 polls PR/MR lists while the app is open. Open question: is that acceptable?
-- **Open questions:** (1) what "change log" means: commits between two tags (the Phase 29 default), GitDeck's own "what's new", or host release notes; (2) AI order: HTTP APIs first (the plan's default) or CLI agents first; (3) ship each phase as its own release, or batch 26 to 28 as v0.2.0.
-- **Scope change to log when built:** GitLab creation needs the `api` scope instead of `read_api` (Phase 27).
+- **Webhooks changed to polling:** a desktop app has no public URL for a host to call, and a relay server would break the "no runtime dependencies, tokens stay local" model. Phase 32 polls PR/MR lists while the app is open. Open question: is that acceptable?
+- **Open questions:** (1) what "change log" means: commits between two tags (the Phase 30 default), GitDeck's own "what's new", or host release notes; (2) AI order: HTTP APIs first (the plan's default) or CLI agents first; (3) ship each phase as its own release, or batch 26 to 28 as v0.2.0.
+- **Scope change to log when built:** GitLab creation needs the `api` scope instead of `read_api` (Phase 28).
+
+## 2026-11-22: Release workflow, Phase 26
+
+- **Decision:** `develop` (integration), `stage` (release candidate, published as a `-rc` pre-release), `main` (released code only). Features and fixes branch from `develop`; hotfixes from `main` and are merged back into `stage` and `develop`. Commands `stage`, `release` and `hotfix` automate it locally; the user still pushes.
+- **Why:** the packaged app is where past release bugs showed up (v0.1.0 to v0.1.2, the terminal helper), so an installable rc is worth a step before `main`. Without an rc build, `stage` would only be an extra merge.
+- **Trade-offs:** `stage` is all or nothing (an unfinished feature already in `develop` cannot be held back; keep it on its own branch). Fixes found while testing go on a branch from `stage` and are merged back into `develop`. Phases 27 to 32 were renumbered from 26 to 31 so this phase comes first.
+- **Not decided:** whether `develop` becomes GitHub's default branch (the user's call).
