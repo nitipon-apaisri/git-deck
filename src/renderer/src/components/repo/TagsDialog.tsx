@@ -32,6 +32,9 @@ const FORM_ID = 'tag-form'
 const SEARCH_FROM = 8
 const NOTE_MS = 4000
 
+/** Three lines of 12px text at 18px. */
+const CLAMP_PX = 54
+
 const MORE_CLASS =
   'inline-flex h-6 cursor-pointer items-center gap-1 rounded-full border border-border bg-card px-3 text-[12px] text-foreground transition-colors duration-(--motion-fast) hover:bg-accent'
 
@@ -40,41 +43,50 @@ function TagMessage({ text }: { text: string }) {
   const box = useRef<HTMLParagraphElement>(null)
   const [open, setOpen] = useState(false)
   const [cut, setCut] = useState(false)
+  // The full height, so max-height has a number to animate to.
+  const [full, setFull] = useState(0)
   useLayoutEffect(() => {
     const el = box.current
-    if (el && !open) setCut(el.scrollHeight > el.clientHeight + 1)
-  }, [text, open])
+    if (!el) return
+    // Against the clamp, not clientHeight: that is mid-transition after a collapse.
+    setFull(el.scrollHeight)
+    setCut(el.scrollHeight > CLAMP_PX + 1)
+  }, [text])
   return (
     <div className="mt-1">
       <div className="relative">
         <p
           ref={box}
-          className={`m-0 text-[12px] text-muted-foreground [overflow-wrap:anywhere] ${open ? '' : 'max-h-13.5 overflow-hidden'}`}
+          style={{ maxHeight: open ? full : CLAMP_PX }}
+          className="m-0 overflow-hidden text-[12px] text-muted-foreground transition-[max-height] duration-(--motion-base) ease-(--ease-out) [overflow-wrap:anywhere]"
         >
           {text}
         </p>
-        {cut && !open ? (
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-secondary from-35% to-transparent"
-          />
-        ) : null}
-        {cut && !open ? (
-          <div className="absolute inset-x-0 bottom-0.5 flex justify-center">
-            <button
-              type="button"
-              aria-expanded={false}
-              className={MORE_CLASS}
-              onClick={() => setOpen(true)}
+        {cut ? (
+          <>
+            <span
+              aria-hidden="true"
+              className={`pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-secondary from-35% to-transparent transition-opacity duration-(--motion-base) ease-(--ease-out) ${open ? 'opacity-0' : 'opacity-100'}`}
+            />
+            <div
+              className={`absolute inset-x-0 bottom-0.5 flex justify-center transition-[opacity,transform] duration-(--motion-base) ease-(--ease-out) ${open ? 'pointer-events-none translate-y-1 opacity-0' : 'opacity-100'}`}
             >
-              View more
-              <Icon name="chevron-down" size="sm" />
-            </button>
-          </div>
+              <button
+                type="button"
+                aria-expanded={false}
+                tabIndex={open ? -1 : 0}
+                className={MORE_CLASS}
+                onClick={() => setOpen(true)}
+              >
+                View more
+                <Icon name="chevron-down" size="sm" />
+              </button>
+            </div>
+          </>
         ) : null}
       </div>
       {open ? (
-        <div className="mt-0.5 flex justify-center">
+        <div className="animate-in fade-in-0 mt-0.5 flex justify-center duration-(--motion-base)">
           <button type="button" aria-expanded className={MORE_CLASS} onClick={() => setOpen(false)}>
             View less
             <span className="inline-grid rotate-180">
