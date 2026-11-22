@@ -652,15 +652,15 @@ Runs on `chore/release-workflow`, branched from `main` (the last one that does).
 
 Model: `main` is released code only. `develop` is the integration branch. `stage` is the release candidate, frozen while it is tested. Features and fixes branch from `develop`; a hotfix for released code branches from `main`. Merges are always `--no-ff`. Nothing here pushes: the user pushes.
 
-- [ ] Create `develop` and `stage` locally from `main`. The user pushes them and sets `develop` as the default branch on GitHub if wanted.
-- [ ] `.github/workflows/release.yml`: a tag like `v0.2.0-rc.1` publishes a GitHub pre-release (`prerelease: ${{ contains(github.ref_name, '-rc.') }}`); `vX.Y.Z` stays a normal release. The update check already reads the latest non-pre-release; a test confirms `isNewer` and the check ignore `-rc` tags.
-- [ ] Project slash commands in `.claude/commands/`, each a thin file that follows `docs/RELEASING.md`:
+- [x] Create `develop` and `stage` locally from `main`. The user pushes them and sets `develop` as the default branch on GitHub if wanted.
+- [x] `.github/workflows/release.yml`: a tag like `v0.2.0-rc.1` publishes a GitHub pre-release (`prerelease: ${{ contains(github.ref_name, '-rc.') }}`); `vX.Y.Z` stays a normal release. The update check already reads the latest non-pre-release; a test confirms `isNewer` and the check ignore `-rc` tags.
+- [x] Project slash commands in `.claude/commands/`, each a thin file that follows `docs/RELEASING.md`:
   - `stage`: clean `develop`, run typecheck and tests, merge `develop` into `stage` with `--no-ff` (`🔀 (merge): stage <version>-rc.N`), bump the version to `X.Y.Z-rc.N`, tag `vX.Y.Z-rc.N`. Hands over the push command.
   - `release`: `stage` must be clean and equal to the tested rc. Final version bump and notes, merge `stage` into `main` with `--no-ff`, tag `vX.Y.Z`, then merge `main` back into `develop` and `stage` so the bump is not lost. Hands over the push commands.
   - `hotfix`: branch `fix/<slug>` from `main`; after the user merges it, release a patch from `main`, then merge `main` into `stage` and `develop`.
-- [ ] A refusal in each command: dirty tree, wrong branch, a tag that already exists on the remote, a stage that is behind `develop` when `release` runs (say so, do not merge for the user).
-- [ ] Rules updated together, and kept consistent: `CLAUDE.md`, `AGENTS.md` ("branch from `develop`", "never commit to `main`, `stage` or `develop`", merge targets), `docs/RELEASING.md` (flow, rc builds, hotfix sync-back, the new gotchas), `.claude/agents/releaser.md` and `committer.md`. The `.claude/settings.json` deny on `git push*` stays.
-- [ ] README: contributing note on the branch model.
+- [x] A refusal in each command: dirty tree, wrong branch, a tag that already exists on the remote, a stage that is behind `develop` when `release` runs (say so, do not merge for the user).
+- [x] Rules updated together, and kept consistent: `CLAUDE.md`, `AGENTS.md` ("branch from `develop`", "never commit to `main`, `stage` or `develop`", merge targets), `docs/RELEASING.md` (flow, rc builds, hotfix sync-back, the new gotchas), `.claude/agents/releaser.md` and `committer.md`. The `.claude/settings.json` deny on `git push*` stays.
+- [x] README: contributing note on the branch model.
 
 **Verify:** run the three commands against a throw-away clone with a bare remote: `stage` produces an rc tag on `stage`; `release` lands `main` and merges back into `develop` and `stage`; `hotfix` syncs back; each refusal fires. The workflow change is proven only by pushing a real `-rc` tag (not checked here). Say so in the report.
 

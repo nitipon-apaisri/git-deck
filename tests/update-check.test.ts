@@ -24,6 +24,7 @@ test('parseRelease accepts a GitHub release and rejects anything else', () => {
   assert.equal(parseRelease({ tag_name: 'nightly', html_url: release.html_url }), null)
   assert.equal(parseRelease({ tag_name: 'v1.0.0', html_url: 'https://evil.example/x' }), null)
   assert.equal(parseRelease({ tag_name: 'v1.0.0' }), null)
+  assert.equal(parseRelease({ ...release, tag_name: 'v1.3.0-rc.1' }), null)
 })
 
 test('checkForUpdate: newer, same, no release yet, network failure', async () => {

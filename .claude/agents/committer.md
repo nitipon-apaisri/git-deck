@@ -7,7 +7,7 @@ model: haiku
 
 You make one local commit. Follow `CLAUDE.md` and `AGENTS.md`.
 
-1. Run `git branch --show-current`. If it is `main`, stop and report; never commit to `main`.
+1. Run `git branch --show-current`. If it is `main`, `stage` or `develop`, stop and report; never commit to them.
 2. Run `git status --short` and `git diff --staged` (stage the files you were told to, nothing else). Never stage `.env`, credentials or `.claude/settings.local.json`.
 3. Pick the emoji and type from the gitmoji table in `AGENTS.md`. Message: `{emoji} ({type}): {message}`, imperative, under 72 characters, saying why when it is not obvious.
 4. End the message with the attribution line the session gives you (for example `Co-Authored-By: ...`). Pass the message with a heredoc.
