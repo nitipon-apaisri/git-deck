@@ -36,9 +36,9 @@ const NOTE_MS = 4000
 const CLAMP_PX = 80
 
 const MORE_CLASS =
-  'inline-flex h-6 cursor-pointer items-center gap-1 rounded-full border border-border bg-card px-3 text-[12px] text-foreground transition-colors duration-(--motion-fast) hover:bg-accent'
+  'inline-grid size-6 cursor-pointer place-items-center rounded-full border border-border bg-card p-0 text-foreground transition-colors duration-(--motion-fast) hover:bg-accent'
 
-/** A tag message cut to CLAMP_PX with a fade; "View more" shows up only when it is cut. */
+/** A tag message cut to CLAMP_PX with a fade; the expand button shows up only when it is cut. */
 function TagMessage({ text }: { text: string }) {
   const box = useRef<HTMLParagraphElement>(null)
   const [open, setOpen] = useState(false)
@@ -74,11 +74,12 @@ function TagMessage({ text }: { text: string }) {
               <button
                 type="button"
                 aria-expanded={false}
+                aria-label="View more"
+                title="View more"
                 tabIndex={open ? -1 : 0}
                 className={MORE_CLASS}
                 onClick={() => setOpen(true)}
               >
-                View more
                 <Icon name="chevron-down" size="sm" />
               </button>
             </div>
@@ -87,8 +88,14 @@ function TagMessage({ text }: { text: string }) {
       </div>
       {open ? (
         <div className="animate-in fade-in-0 mt-0.5 flex justify-center duration-(--motion-base)">
-          <button type="button" aria-expanded className={MORE_CLASS} onClick={() => setOpen(false)}>
-            View less
+          <button
+            type="button"
+            aria-expanded
+            aria-label="View less"
+            title="View less"
+            className={MORE_CLASS}
+            onClick={() => setOpen(false)}
+          >
             <span className="inline-grid rotate-180">
               <Icon name="chevron-down" size="sm" />
             </span>
