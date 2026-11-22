@@ -143,6 +143,10 @@ GitDeck does not update itself. Settings, About, Check for updates asks GitHub f
 
 Build it yourself with `pnpm package` (output in `dist/`). A `v*` tag pushed to GitHub runs `.github/workflows/release.yml`, which builds both architectures and attaches them to a Release.
 
+### Contributing: branches
+
+`main` is released code only, `develop` is where features and fixes land, and `stage` holds the release candidate. Branch from `develop` (a hotfix for released code branches from `main`) and merge with `--no-ff`. A `vX.Y.Z-rc.N` tag on `stage` publishes a GitHub pre-release to test; `vX.Y.Z` on `main` is the release. The full flow, with the `/stage`, `/release` and `/hotfix` commands, is in [`docs/RELEASING.md`](docs/RELEASING.md).
+
 ## Progress
 
 Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
@@ -174,7 +178,7 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 23: File history and blame
 - [x] Phase 24: Bisect
 - [x] Phase 25: Packaging and update notice
-- [ ] Phase 26: Release workflow (develop, stage, main)
+- [x] Phase 26: Release workflow (develop, stage, main)
 - [ ] Phase 27: Line-level discard
 - [ ] Phase 28: Create pull request / merge request
 - [ ] Phase 29: More AI providers for commit messages

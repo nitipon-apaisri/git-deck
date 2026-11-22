@@ -34,10 +34,10 @@ Desktop Git client (Electron + React + TypeScript) for GitHub, GitLab.com and se
 
 ## Branches
 
-- Never commit directly to `main`. Create a new branch from `main` for every feature or phase before making changes.
+- Never commit directly to `main`, `stage` or `develop`. Create a new branch from `develop` for every feature or phase before making changes. A hotfix for released code branches from `main` (`/hotfix`). `stage` only receives `develop` merges (`/stage`); `main` only receives `stage` or hotfix merges (`/release`). See `docs/RELEASING.md`.
 - Names: `phase/<n>-<slug>` for a PLAN.md phase (for example `phase/1-scaffold`), `feat/<slug>` for a feature, `fix/<slug>` for a bug fix, `chore/<slug>` for tooling or docs.
-- Finish a branch by running its Verify steps, ticking the PLAN.md boxes and the `README.md` progress checklist, then stop. Merging to `main` is the user's call. Never push.
-- Merge with `git merge --no-ff <branch>`, never fast-forward, so every phase or feature shows as one merge commit and `git log --first-parent` reads as one line per branch. Message: `🔀 (merge): <what the branch did>`, for example `🔀 (merge): phase 6, repo pane, overview and info`. Run the merge only when the user asks.
+- Finish a branch by running its Verify steps, ticking the PLAN.md boxes and the `README.md` progress checklist, then stop. Merging to `develop` is the user's call. Never push.
+- Merge with `git merge --no-ff <branch>`, never fast-forward, so every phase or feature shows as one merge commit and `git log --first-parent` reads as one line per branch. Message: `🔀 (merge): <what the branch did>`, for example `🔀 (merge): phase 6, repo pane, overview and info`. Features merge into `develop`. Run a merge only when the user asks.
 
 ## Commits (gitmoji)
 
