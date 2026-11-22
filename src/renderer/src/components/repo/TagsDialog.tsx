@@ -32,13 +32,13 @@ const FORM_ID = 'tag-form'
 const SEARCH_FROM = 8
 const NOTE_MS = 4000
 
-/** About four and a half lines of 12px text at 18px. */
-const CLAMP_PX = 80
+/** Four lines of 12px text at 18px, so the cut falls between lines. */
+const CLAMP_PX = 72
 
 const MORE_CLASS =
-  'inline-grid size-6 cursor-pointer place-items-center rounded-full border border-border bg-card p-0 text-foreground transition-colors duration-(--motion-fast) hover:bg-accent'
+  'cursor-pointer border-0 bg-transparent p-0 text-[12px] leading-4.5 text-(--accent-text) hover:underline'
 
-/** A tag message cut to CLAMP_PX with a fade; the expand button shows up only when it is cut. */
+/** A tag message cut to CLAMP_PX; "… View more" ends its last line, "View less" follows the full text. */
 function TagMessage({ text }: { text: string }) {
   const box = useRef<HTMLParagraphElement>(null)
   const [open, setOpen] = useState(false)
@@ -53,54 +53,43 @@ function TagMessage({ text }: { text: string }) {
     setCut(el.scrollHeight > CLAMP_PX + 1)
   }, [text])
   return (
-    <div className="mt-1">
-      <div className="relative">
-        <p
-          ref={box}
-          style={{ maxHeight: open ? full : CLAMP_PX }}
-          className="m-0 overflow-hidden text-[12px] text-muted-foreground transition-[max-height] duration-(--motion-base) ease-(--ease-out) [overflow-wrap:anywhere]"
-        >
-          {text}
-        </p>
-        {cut ? (
+    <div className="relative mt-1">
+      <p
+        ref={box}
+        style={{ maxHeight: open ? full : CLAMP_PX }}
+        className="m-0 overflow-hidden text-[12px] leading-4.5 text-muted-foreground transition-[max-height] duration-(--motion-base) ease-(--ease-out) [overflow-wrap:anywhere]"
+      >
+        {text}
+        {cut && open ? (
           <>
-            <span
-              aria-hidden="true"
-              className={`pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-secondary from-35% to-transparent transition-opacity duration-(--motion-base) ease-(--ease-out) ${open ? 'opacity-0' : 'opacity-100'}`}
-            />
-            <div
-              className={`absolute inset-x-0 bottom-0.5 flex justify-center transition-[opacity,transform] duration-(--motion-base) ease-(--ease-out) ${open ? 'pointer-events-none translate-y-1 opacity-0' : 'opacity-100'}`}
+            {' '}
+            <button
+              type="button"
+              aria-expanded
+              className={MORE_CLASS}
+              onClick={() => setOpen(false)}
             >
-              <button
-                type="button"
-                aria-expanded={false}
-                aria-label="View more"
-                title="View more"
-                tabIndex={open ? -1 : 0}
-                className={MORE_CLASS}
-                onClick={() => setOpen(true)}
-              >
-                <Icon name="chevron-down" size="sm" />
-              </button>
-            </div>
+              View less
+            </button>
           </>
         ) : null}
-      </div>
-      {open ? (
-        <div className="animate-in fade-in-0 mt-0.5 flex justify-center duration-(--motion-base)">
+      </p>
+      {cut ? (
+        // Sits on the end of the last visible line and covers the text under it.
+        <span
+          className={`absolute right-0 bottom-0 flex h-4.5 items-center bg-linear-to-r from-transparent to-secondary to-25% pl-8 text-[12px] text-muted-foreground transition-opacity duration-(--motion-base) ease-(--ease-out) ${open ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
+        >
+          …&nbsp;
           <button
             type="button"
-            aria-expanded
-            aria-label="View less"
-            title="View less"
+            aria-expanded={false}
+            tabIndex={open ? -1 : 0}
             className={MORE_CLASS}
-            onClick={() => setOpen(false)}
+            onClick={() => setOpen(true)}
           >
-            <span className="inline-grid rotate-180">
-              <Icon name="chevron-down" size="sm" />
-            </span>
+            View more
           </button>
-        </div>
+        </span>
       ) : null}
     </div>
   )
