@@ -53,7 +53,10 @@ export function AboutSection() {
           </Button>
         </div>
       ) : null}
-      <ChangelogList />
+      <div className="flex flex-col gap-1">
+        <h3 className="m-0 text-[14px] leading-5 font-semibold">Change log</h3>
+        <ChangelogList />
+      </div>
     </div>
   )
 }
