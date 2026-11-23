@@ -1,7 +1,8 @@
-import { countItems, getJson, HttpError, paginate } from '../http'
+import { countItems, getJson, HttpError, paginate, postJson } from '../http'
 import type {
   ChangeRequest,
   CheckState,
+  CreateChangeRequestInput,
   ChecksInfo,
   Contributor,
   LanguageShare,
@@ -10,7 +11,7 @@ import type {
   Visibility
 } from '../../shared/types'
 import { MAX_CONTRIBUTORS, MAX_LANGUAGES, type GitProvider, type VerifiedUser } from './types'
-import { encodePath, ok, percent, required, throwIfAllFailed } from './util'
+import { encodePath, ok, percent, required, sameOrigin, throwIfAllFailed } from './util'
 
 interface GhUser {
   login: string
@@ -241,6 +242,16 @@ export class GitHubProvider implements GitProvider {
   async listChangeRequests(repo: Repo): Promise<ChangeRequest[]> {
     const url = `${this.root}/repos/${encodePath(repo.fullName)}/pulls?state=all&sort=updated&direction=desc&per_page=50`
     return (await paginate<GhPull>(url, this.headers, 2)).map(normalizePull)
+  }
+
+  async createChangeRequest(repo: Repo, input: CreateChangeRequestInput): Promise<ChangeRequest> {
+    const url = `${this.root}/repos/${encodePath(repo.fullName)}/pulls`
+    const { title, body, head, base, draft } = input
+    const pull = required(
+      await postJson<GhPull>(url, this.headers, { title, body, head, base, draft }),
+      'GitHub'
+    )
+    return sameOrigin(normalizePull(pull), this.root)
   }
 
   async getChecks(repo: Repo, ref: string): Promise<ChecksInfo> {

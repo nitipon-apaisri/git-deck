@@ -11,7 +11,8 @@ import type {
   ConflictRequest,
   HunkRequest,
   PullMode,
-  ResetMode
+  ResetMode,
+  CreateChangeRequestInput
 } from '../shared/types'
 import type { MainApi } from './service'
 
@@ -42,6 +43,8 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     summaryFetch: ([key]) => api.summary.fetch(key as string),
     changesList: ([key]) => api.changes.list(key as string),
     changesChecks: ([key, ref]) => api.changes.checks(key as string, ref as string),
+    changesCreate: ([key, input]) =>
+      api.changes.create(key as string, input as CreateChangeRequestInput),
     localLinks: () => api.local.links(),
     localLink: ([key]) => api.local.link(key as string),
     localUnlink: ([key]) => api.local.unlink(key as string),

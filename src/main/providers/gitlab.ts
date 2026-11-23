@@ -1,16 +1,17 @@
-import { countItems, getJson, getPage, HttpError, paginate } from '../http'
+import { countItems, getJson, getPage, HttpError, paginate, postJson } from '../http'
 import type {
   ChangeRequest,
   CheckState,
   ChecksInfo,
   Contributor,
+  CreateChangeRequestInput,
   LanguageShare,
   Repo,
   RepoSummary,
   Visibility
 } from '../../shared/types'
 import { MAX_CONTRIBUTORS, MAX_LANGUAGES, type GitProvider, type VerifiedUser } from './types'
-import { ok, required, throwIfAllFailed } from './util'
+import { ok, required, sameOrigin, throwIfAllFailed } from './util'
 
 interface GlUser {
   username: string
@@ -216,6 +217,18 @@ export class GitLabProvider implements GitProvider {
   async listChangeRequests(repo: Repo): Promise<ChangeRequest[]> {
     const url = `${this.root}/projects/${encodeURIComponent(repo.remoteId)}/merge_requests?state=all&order_by=updated_at&sort=desc&per_page=50`
     return (await paginate<GlMr>(url, this.headers, 2)).map(normalizeMr)
+  }
+
+  async createChangeRequest(repo: Repo, input: CreateChangeRequestInput): Promise<ChangeRequest> {
+    const url = `${this.root}/projects/${encodeURIComponent(repo.remoteId)}/merge_requests`
+    const payload = {
+      title: input.draft ? `Draft: ${input.title}` : input.title,
+      description: input.body,
+      source_branch: input.head,
+      target_branch: input.base
+    }
+    const mr = required(await postJson<GlMr>(url, this.headers, payload), 'GitLab')
+    return sameOrigin(normalizeMr(mr), this.root)
   }
 
   async getChecks(repo: Repo, ref: string): Promise<ChecksInfo> {

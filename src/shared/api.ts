@@ -30,6 +30,7 @@ import type {
   RepoStatus,
   RepoSummary,
   ChangeRequest,
+  CreateChangeRequestInput,
   ChecksInfo,
   ResetMode,
   StashEntry,
@@ -93,6 +94,8 @@ export interface Api {
   changes: {
     list(repoKey: string): Promise<ChangeRequest[]>
     checks(repoKey: string, ref: string): Promise<ChecksInfo>
+    /** Opens a pull/merge request on the host. Needs write access; a local-only repo throws. */
+    create(repoKey: string, input: CreateChangeRequestInput): Promise<ChangeRequest>
   }
   local: {
     links(): Promise<Record<string, string>>
@@ -245,6 +248,7 @@ export const IPC = {
   summaryFetch: 'summary:fetch',
   changesList: 'changes:list',
   changesChecks: 'changes:checks',
+  changesCreate: 'changes:create',
   localLinks: 'local:links',
   localLink: 'local:link',
   localUnlink: 'local:unlink',

@@ -228,7 +228,7 @@ test('tokenUrl pre-fills the scopes for each host', () => {
     gl.origin + gl.pathname,
     'https://git.acme.dev/gitlab/-/user_settings/personal_access_tokens'
   )
-  assert.equal(gl.searchParams.get('scopes'), 'read_api,read_repository')
+  assert.equal(gl.searchParams.get('scopes'), 'api,read_repository')
   assert.equal(gl.searchParams.get('name'), 'GitDeck')
   const gh = new URL(tokenUrl('github', 'https://github.com'))
   assert.equal(gh.origin + gh.pathname, 'https://github.com/settings/tokens/new')

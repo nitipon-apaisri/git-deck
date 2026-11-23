@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { AccountType, ChangeRequest } from '@shared/types'
+import type { AccountType, BranchList, ChangeRequest } from '@shared/types'
 import { CHECK_LABEL, createUrl } from '../../lib/changeView'
 import { errorMessage } from '../../lib/errors'
 import { timeAgo } from '../../lib/format'
@@ -7,11 +7,16 @@ import { useNow } from '../../state/useNow'
 import { useChangeRequests, useChecks } from '../../state/changeData'
 import { Badge, Button, ErrorBanner, Skeleton, Spinner } from '../ui'
 import { CheckDot } from '../ui/CheckDot'
+import { CreateChangeRequestDialog } from './CreateChangeRequestDialog'
 
 interface Props {
   repoKey: string
   host: AccountType
   webUrl: string
+  defaultBranch: string
+  /** The clone and its branches; without them the dialog cannot read or push, so the browser link stays. */
+  linkedPath?: string
+  branches?: BranchList | null
   /** The tab is showing: only then is anything fetched. */
   active: boolean
 }
@@ -21,12 +26,21 @@ const STATE_TONE = { open: 'success', merged: 'merged', closed: 'danger' } as co
 const FILTERS = ['all', 'open', 'merged', 'closed'] as const
 type Filter = (typeof FILTERS)[number]
 
-export function ChangeRequestsTab({ repoKey, host, webUrl, active }: Props) {
+export function ChangeRequestsTab({
+  repoKey,
+  host,
+  webUrl,
+  defaultBranch,
+  linkedPath,
+  branches,
+  active
+}: Props) {
   const { items, loading, error, reload } = useChangeRequests(repoKey, active)
   const [filter, setFilter] = useState<Filter>('all')
   const [openError, setOpenError] = useState<string | null>(null)
+  const [creating, setCreating] = useState(false)
   const noun = host === 'github' ? 'pull request' : 'merge request'
-  const short = host === 'github' ? 'PR' : 'MR'
+  const short = host === 'github' ? ('PR' as const) : ('MR' as const)
 
   const shown = (items ?? []).filter((c) => filter === 'all' || c.state === filter)
 
@@ -50,8 +64,30 @@ export function ChangeRequestsTab({ repoKey, host, webUrl, active }: Props) {
         <Button onClick={reload} disabled={loading}>
           Refresh
         </Button>
-        <Button onClick={() => void open(createUrl(host, webUrl))}>Create {short}</Button>
+        <Button
+          onClick={() =>
+            linkedPath && branches?.current ? setCreating(true) : void open(createUrl(host, webUrl))
+          }
+        >
+          Create {short}
+        </Button>
       </div>
+      {creating && linkedPath && branches ? (
+        <CreateChangeRequestDialog
+          repoKey={repoKey}
+          linkedPath={linkedPath}
+          branches={branches}
+          defaultBranch={defaultBranch}
+          short={short}
+          fallbackUrl={createUrl(host, webUrl)}
+          onClose={() => setCreating(false)}
+          onCreated={(cr) => {
+            setCreating(false)
+            reload()
+            if (cr.webUrl) void open(cr.webUrl)
+          }}
+        />
+      ) : null}
       {error ? <ErrorBanner onRetry={reload}>{error}</ErrorBanner> : null}
       {openError ? <ErrorBanner>{openError}</ErrorBanner> : null}
       {items && items.length > 0 ? (

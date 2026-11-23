@@ -25,7 +25,8 @@ import type {
   DiffRequest,
   PullMode,
   Repo,
-  RepoSummary
+  RepoSummary,
+  CreateChangeRequestInput
 } from '../shared/types'
 import { buildPrompt, runClaude } from './ai'
 import * as realGit from './git'
@@ -232,6 +233,21 @@ function checkBranchName(name: unknown): string {
     throw new Error('The branch name is not valid')
   }
   return name
+}
+
+function checkChangeRequest(input: unknown): CreateChangeRequestInput {
+  const i = input as Partial<CreateChangeRequestInput> | null
+  const title = typeof i?.title === 'string' ? i.title.trim() : ''
+  if (!title || title.length > 256) throw new Error('The title must be 1 to 256 characters')
+  if (typeof i?.body !== 'string' || i.body.length > 60000)
+    throw new Error('The description is too long')
+  return {
+    title,
+    body: i.body,
+    head: checkBranchName(i.head),
+    base: checkBranchName(i.base),
+    draft: i.draft === true
+  }
 }
 
 const MAX_STASH_MESSAGE_LENGTH = 500
@@ -792,6 +808,13 @@ export function createService(deps: ServiceDeps): {
     },
     changes: {
       list: guard((repoKey) => withProvider(repoKey, [], (p, r) => p.listChangeRequests(r))),
+      create: guard(async (repoKey, input) => {
+        const v = checkChangeRequest(input)
+        if (parseRepoKey(repoKey as string).accountId === LOCAL_ACCOUNT) {
+          throw new Error('A local-only repository has no host to create a request on')
+        }
+        return withProvider(repoKey as string, null as never, (p, r) => p.createChangeRequest(r, v))
+      }),
       checks: guard((repoKey, ref) =>
         withProvider(repoKey, { state: 'none', items: [] }, (p, r) => p.getChecks(r, String(ref)))
       )

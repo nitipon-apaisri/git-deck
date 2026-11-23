@@ -47,7 +47,8 @@ const api: Api = {
   },
   changes: {
     list: (repoKey) => call(IPC.changesList, repoKey),
-    checks: (repoKey, ref) => call(IPC.changesChecks, repoKey, ref)
+    checks: (repoKey, ref) => call(IPC.changesChecks, repoKey, ref),
+    create: (repoKey, input) => call(IPC.changesCreate, repoKey, input)
   },
   local: {
     links: () => call(IPC.localLinks),

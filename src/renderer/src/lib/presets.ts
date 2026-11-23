@@ -97,7 +97,7 @@ export function tryNormalize(type: AccountType, input: string): string | null {
 /** Scopes each host needs: shown under the token field and pre-filled in the link. */
 export const TOKEN_SCOPES: Record<AccountType, readonly string[]> = {
   github: ['repo', 'read:org'],
-  gitlab: ['read_api', 'read_repository']
+  gitlab: ['api', 'read_repository']
 }
 
 /** The host's "new personal access token" page with the scopes filled in. */

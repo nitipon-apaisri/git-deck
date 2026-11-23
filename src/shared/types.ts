@@ -423,6 +423,15 @@ export interface ChangeRequest {
   checksRef: string
 }
 
+/** What "Create PR/MR" sends. `head` and `base` are branch names in the same repository. */
+export interface CreateChangeRequestInput {
+  title: string
+  body: string
+  head: string
+  base: string
+  draft: boolean
+}
+
 /** CI for one ref. `none` is "no CI info": no CI, or a host without the endpoint. */
 export interface ChecksInfo {
   state: CheckState

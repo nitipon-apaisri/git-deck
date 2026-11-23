@@ -545,3 +545,11 @@ The 2px focus ring looked heavy on text inputs (palette, filters, forms). Text i
 - **Why:** the work-tree diff is index to work tree, so reverting chosen lines is the same patch an unstage builds. `git apply` writes all or nothing, and the fingerprint check refuses a file that changed since the diff was read.
 - **Confirm:** asked in main through `ui.confirm` (names the file and line count, says it cannot be undone), like `discard`. A declined prompt resolves `false`.
 - **Limits:** tracked files with a text diff only. Untracked, created, deleted, renamed, conflicted and binary files stay whole-file. Not undoable.
+
+## 2026-11-23: Phase 28 as built (create PR/MR)
+
+- **Endpoints:** GitHub `POST /repos/{owner}/{repo}/pulls` with `title, body, head, base, draft` (token needs `repo`, which GitDeck already asks for). GitLab `POST /projects/:id/merge_requests` with `title, description, source_branch, target_branch`; GitLab has no draft field on create, so a draft is the `Draft: ` title prefix. **Written from memory of the official docs, not re-read in this session: confirm against the docs before release.**
+- **Scope change:** GitLab creation needs `api` (it includes `read_api`). The "Create token" link and README now ask for `api` + `read_repository`. Tokens that only have `read_api` keep reading; creation answers 403 and the dialog offers the host's own page.
+- **Errors:** `postJson` puts the host's own `message` / `errors[].message` (capped at 300 characters) after the status, so 422 "already exists" is readable. GETs keep the short text. Request headers are never in a message.
+- **Same origin:** the result's `webUrl` is blanked if it points off the host we called; the dialog then does not open it.
+- **Dialog:** needs a linked clone with a checked-out branch (it reads the last commit subject and can push). Otherwise "Create PR/MR" still opens the browser page. "Push first" pushes the checked-out branch only (`local.push`, sets upstream when missing). Head and base are plain branch names in the same repository: no forks.
