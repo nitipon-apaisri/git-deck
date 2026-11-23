@@ -15,7 +15,7 @@ import {
   useAiEnabled,
   useAiSettings
 } from '../../state/ai'
-import { Button, CheckOption, Field, Icon, Select, TextInput } from '../ui'
+import { Button, CheckOption, Field, Icon, ProviderLogo, Select, TextInput } from '../ui'
 
 type Status =
   | { kind: 'idle' }
@@ -23,7 +23,11 @@ type Status =
   | { kind: 'ok'; text: string }
   | { kind: 'error'; text: string }
 
-const PROVIDER_OPTIONS = AI_PROVIDER_IDS.map((id) => ({ value: id, label: AI_PROVIDERS[id].label }))
+const PROVIDER_OPTIONS = AI_PROVIDER_IDS.map((id) => ({
+  value: id,
+  label: AI_PROVIDERS[id].label,
+  leading: <ProviderLogo provider={id} />
+}))
 
 function urlError(input: string): string | null {
   if (!input.trim()) return null
