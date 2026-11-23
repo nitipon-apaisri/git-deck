@@ -18,6 +18,36 @@ interface Props {
 
 const FORM_ID = 'create-change-request-form'
 
+/** No house select exists yet: a native one with the TextInput look. */
+function BranchSelect({
+  options,
+  value,
+  onChange,
+  ...rest
+}: {
+  options: string[]
+  value: string
+  onChange: (v: string) => void
+  id: string
+}) {
+  return (
+    <select
+      {...rest}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="h-9 min-w-0 rounded-md border border-(--border-strong) bg-secondary px-3 text-[13px] text-foreground"
+    >
+      {options.map((b) => (
+        <option key={b} value={b}>
+          {b}
+        </option>
+      ))}
+    </select>
+  )
+}
+
+const unique = (xs: string[]): string[] => [...new Set(xs.filter(Boolean))]
+
 export function CreateChangeRequestDialog({
   repoKey,
   linkedPath,
@@ -33,6 +63,13 @@ export function CreateChangeRequestDialog({
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [draft, setDraft] = useState(false)
+  // Remote branches come as `origin/main`; the host wants the name without the remote.
+  const remoteNames = branches.remote.map((r) => {
+    const remote = branches.remotes.find((n) => r.startsWith(`${n}/`))
+    return remote ? r.slice(remote.length + 1) : r
+  })
+  const headOptions = unique([head, ...branches.local.map((b) => b.name)])
+  const baseOptions = unique([defaultBranch, ...remoteNames, base])
   const local = branches.local.find((b) => b.name === head)
   // `git push` here only ever pushes the checked-out branch, so offer it for that one.
   const canPush = head === branches.current && (!local?.upstream || local.ahead > 0)
@@ -104,24 +141,10 @@ export function CreateChangeRequestDialog({
         ) : null}
         <div className="grid grid-cols-2 gap-3">
           <Field label="From branch">
-            {(c) => (
-              <TextInput
-                {...c}
-                value={head}
-                spellCheck={false}
-                onChange={(e) => setHead(e.target.value)}
-              />
-            )}
+            {(c) => <BranchSelect {...c} options={headOptions} value={head} onChange={setHead} />}
           </Field>
           <Field label="Into branch">
-            {(c) => (
-              <TextInput
-                {...c}
-                value={base}
-                spellCheck={false}
-                onChange={(e) => setBase(e.target.value)}
-              />
-            )}
+            {(c) => <BranchSelect {...c} options={baseOptions} value={base} onChange={setBase} />}
           </Field>
         </div>
         <Field label="Title">
