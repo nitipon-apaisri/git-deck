@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import type { BranchList, ChangeRequest } from '@shared/types'
 import { errorMessage } from '../../lib/errors'
-import { Button, CheckOption, Dialog, ErrorBanner, Field, TextInput, Textarea } from '../ui'
+import { Button, CheckOption, Dialog, ErrorBanner, Field, Icon, TextInput, Textarea } from '../ui'
 
 interface Props {
   repoKey: string
@@ -31,18 +31,23 @@ function BranchSelect({
   id: string
 }) {
   return (
-    <select
-      {...rest}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="h-9 min-w-0 rounded-md border border-(--border-strong) bg-secondary px-3 text-[13px] text-foreground"
-    >
-      {options.map((b) => (
-        <option key={b} value={b}>
-          {b}
-        </option>
-      ))}
-    </select>
+    <div className="relative flex">
+      <select
+        {...rest}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-9 min-w-0 flex-1 cursor-pointer appearance-none truncate rounded-md border border-(--border-strong) bg-secondary pr-9 pl-3 text-[13px] text-foreground"
+      >
+        {options.map((b) => (
+          <option key={b} value={b}>
+            {b}
+          </option>
+        ))}
+      </select>
+      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-muted-foreground">
+        <Icon name="chevron-down" size="sm" />
+      </span>
+    </div>
   )
 }
 
