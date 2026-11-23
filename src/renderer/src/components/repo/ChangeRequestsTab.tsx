@@ -35,7 +35,12 @@ export function ChangeRequestsTab({
   branches,
   active
 }: Props) {
-  const { items, loading, error, reload } = useChangeRequests(repoKey, active)
+  const { items: listed, loading, error, reload } = useChangeRequests(repoKey, active)
+  // The host's list can lag a moment behind a create, so keep what we just made until it shows up.
+  const [created, setCreated] = useState<ChangeRequest[]>([])
+  const items = listed
+    ? [...created.filter((c) => !listed.some((l) => l.number === c.number)), ...listed]
+    : listed
   const [filter, setFilter] = useState<Filter>('all')
   const [openError, setOpenError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
@@ -83,6 +88,7 @@ export function ChangeRequestsTab({
           onClose={() => setCreating(false)}
           onCreated={(cr) => {
             setCreating(false)
+            setCreated((prev) => [cr, ...prev])
             reload()
             if (cr.webUrl) void open(cr.webUrl)
           }}
