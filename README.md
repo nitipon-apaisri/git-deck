@@ -133,7 +133,7 @@ Known limits:
 - Split View has two panes at most.
 - The graph shows the history that `git log` reports for the linked folder. Detached HEAD and graphs with more than about ten lanes at once were not checked.
 
-Not planned for this version: interactive rebase, line-level discard, a full-file three-way editor, creating pull or merge requests, OAuth sign-in (tokens only), a SQLite cache, silent auto-update, signing and notarisation, more than two panes, drag-and-drop between projects, and cloning every repository of a project at once.
+Not planned for this version: interactive rebase, a full-file three-way editor, creating pull or merge requests, OAuth sign-in (tokens only), a SQLite cache, silent auto-update, signing and notarisation, more than two panes, drag-and-drop between projects, and cloning every repository of a project at once.
 
 ### Install
 
@@ -179,7 +179,7 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 24: Bisect
 - [x] Phase 25: Packaging and update notice
 - [x] Phase 26: Release workflow (develop, stage, main)
-- [ ] Phase 27: Line-level discard
+- [x] Phase 27: Line-level discard
 - [ ] Phase 28: Create pull request / merge request
 - [ ] Phase 29: More AI providers for commit messages
 - [ ] Phase 30: Change log detail

@@ -668,10 +668,10 @@ Model: `main` is released code only. `develop` is the integration branch. `stage
 
 Runs on `phase/27-line-discard`. Builds on the existing line staging in the diff dialog. Destructive, so it confirms first.
 
-- [ ] `git.ts`: `discardLines(repo, path, selection)` reverses the selected lines of the working-tree diff (reverse patch through `git apply -R` on stdin, the same path line staging uses). A pure patch builder is shared with line staging, not copied.
-- [ ] Refuse (clear error, nothing written) when the patch no longer applies because the file changed; never leave a half-applied file.
-- [ ] Renderer: a "Discard selected lines" action beside Stage and Unstage in the diff dialog, with a confirm that names the file and the line count. Danger colour from tokens. Untracked and binary files stay whole-file only.
-- [ ] README: remove "line-level discard" from "Not planned".
+- [x] `git.ts`: `discardLines(repo, path, selection)` reverses the selected lines of the working-tree diff (reverse patch through `git apply -R` on stdin, the same path line staging uses). A pure patch builder is shared with line staging, not copied.
+- [x] Refuse (clear error, nothing written) when the patch no longer applies because the file changed; never leave a half-applied file.
+- [x] Renderer: a "Discard selected lines" action beside Stage and Unstage in the diff dialog, with a confirm that names the file and the line count. Danger colour from tokens. Untracked and binary files stay whole-file only.
+- [x] README: remove "line-level discard" from "Not planned".
 
 **Verify:** temp-repo tests (single line, mixed add and delete selection, line in a hunk with context, CRLF file, file changed since the diff was read, untracked file refused). Manual: discard one line, then undo via nothing (it is not undoable, the confirm says so).
 

@@ -1686,7 +1686,7 @@ export async function rebase(cwd: string, onto: string): Promise<OperationResult
 }
 
 /** Checks the request, re-reads the file's diff and returns the one hunk as a patch. */
-async function hunkPatch(cwd: string, request: HunkRequest): Promise<string> {
+async function hunkPatch(cwd: string, request: HunkRequest, discard = false): Promise<string> {
   const { source, path, index, fingerprint, lines } = request
   if (source !== 'worktree' && source !== 'staged') throw new Error('Invalid hunk')
   if (!Number.isInteger(index) || index < 0 || index > 100_000) throw new Error('Invalid hunk')
@@ -1742,7 +1742,8 @@ async function hunkPatch(cwd: string, request: HunkRequest): Promise<string> {
     parts.header,
     parts.hunks[index],
     lines,
-    source === 'staged' ? 'unstage' : 'stage'
+    // A discard reverts the worktree: the same patch an unstage builds, applied with --reverse.
+    source === 'staged' || discard ? 'unstage' : 'stage'
   )
 }
 
@@ -1758,6 +1759,15 @@ export async function unstageHunk(cwd: string, request: HunkRequest): Promise<vo
   await exec(cwd, ['apply', '--cached', '--reverse', '--recount', '--whitespace=nowarn', '-'], {
     stdin: patch
   })
+}
+
+/** Throws away the selected changed lines of a tracked file's worktree diff. `git apply` writes all or nothing. */
+export async function discardLines(cwd: string, request: HunkRequest): Promise<void> {
+  if (request.source !== 'worktree' || request.lines === undefined) {
+    throw new Error('Select unstaged lines to discard')
+  }
+  const patch = await hunkPatch(cwd, request, true)
+  await exec(cwd, ['apply', '--reverse', '--recount', '--whitespace=nowarn', '-'], { stdin: patch })
 }
 
 // Bisect

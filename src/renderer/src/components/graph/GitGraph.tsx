@@ -153,12 +153,16 @@ export function GitGraph({
   const [hunkBusy, setHunkBusy] = useState(false)
   const [hunkError, setHunkError] = useState<string | null>(null)
 
-  async function runHunk(source: 'worktree' | 'staged', request: HunkRequest): Promise<void> {
+  async function runHunk(
+    source: 'worktree' | 'staged' | 'discard',
+    request: HunkRequest
+  ): Promise<void> {
     if (!path || hunkBusy) return
     setHunkBusy(true)
     setHunkError(null)
     try {
-      if (source === 'staged') await window.api.local.unstageHunk(path, request)
+      if (source === 'discard') await window.api.local.discardLines(path, request)
+      else if (source === 'staged') await window.api.local.unstageHunk(path, request)
       else await window.api.local.stageHunk(path, request)
     } catch (err) {
       setHunkError(errorMessage(err))
@@ -519,7 +523,18 @@ export function GitGraph({
                           index,
                           fingerprint,
                           ...(lines ? { lines } : {})
-                        })
+                        }),
+                      onDiscard:
+                        openDiff.source === 'worktree'
+                          ? (index, fingerprint, lines) =>
+                              void runHunk('discard', {
+                                path: openDiff.path,
+                                source: 'worktree',
+                                index,
+                                fingerprint,
+                                lines
+                              })
+                          : undefined
                     }
                   : undefined
               }

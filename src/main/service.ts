@@ -116,6 +116,7 @@ export type GitOps = Pick<
   | 'bisectReset'
   | 'stageHunk'
   | 'unstageHunk'
+  | 'discardLines'
   | 'getConflictFile'
   | 'resolveConflictRegions'
   | 'resolveConflictFile'
@@ -1238,6 +1239,19 @@ export function createService(deps: ServiceDeps): {
         linkedRepoKey(path)
         const request = checkHunk(hunk)
         return serial(path, () => git.unstageHunk(path, request))
+      }),
+      discardLines: guard(async (path, hunk) => {
+        linkedRepoKey(path)
+        const request = checkHunk(hunk)
+        const count = request.lines?.length ?? 0
+        const ok = await ui.confirm({
+          message: `Discard ${count} ${count === 1 ? 'line' : 'lines'} in ${request.path}?`,
+          detail: 'The lines are removed from the file. This cannot be undone.',
+          confirmLabel: 'Discard'
+        })
+        if (!ok) return false
+        await serial(path, () => git.discardLines(path, request))
+        return true
       }),
       conflictFile: guard(async (path, file) => {
         linkedRepoKey(path)

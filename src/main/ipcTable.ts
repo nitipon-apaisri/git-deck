@@ -120,6 +120,8 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     localSkipOperation: ([path]) => api.local.skipOperation(path as string),
     localStageHunk: ([path, hunk]) => api.local.stageHunk(path as string, hunk as HunkRequest),
     localUnstageHunk: ([path, hunk]) => api.local.unstageHunk(path as string, hunk as HunkRequest),
+    localDiscardLines: ([path, hunk]) =>
+      api.local.discardLines(path as string, hunk as HunkRequest),
     localConflictFile: ([path, file]) => api.local.conflictFile(path as string, file as string),
     localResolveConflict: ([path, request]) =>
       api.local.resolveConflict(path as string, request as ConflictRequest),
