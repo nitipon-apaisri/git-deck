@@ -691,10 +691,10 @@ Runs on `phase/28-create-pr-mr`. Write access: GitHub's `repo` scope already all
 
 Runs on `phase/29-ai-providers`. Today `AiSection` supports only the Claude Code CLI. Extend it without changing "opt-in, nothing is committed for you".
 
-- [ ] A provider interface for "suggest a message from a staged diff" in main, with the current Claude CLI as the first implementation. The diff cap (60 KB) and the warning text apply to every provider.
-- [ ] HTTP providers first: OpenAI and Gemini (and any OpenAI-compatible base URL). Keys live only in Electron `safeStorage`, never in a URL, config file, log or error message.
-- [ ] CLI providers second: Codex and OpenCode through the user's installed command, run with an argument array, no shell. Missing command gives a plain message.
-- [ ] Settings, AI: choose the provider, store its key, a "Test" button; the sparkles button uses the chosen one. The warning names where the diff goes.
+- [x] A provider interface for "suggest a message from a staged diff" in main, with the current Claude CLI as the first implementation. The diff cap (60 KB) and the warning text apply to every provider.
+- [x] HTTP providers first: OpenAI and Gemini (and any OpenAI-compatible base URL). Keys live only in Electron `safeStorage`, never in a URL, config file, log or error message.
+- [x] CLI providers second: Codex and OpenCode through the user's installed command, run with an argument array, no shell. Missing command gives a plain message.
+- [x] Settings, AI: choose the provider, store its key, a "Test" button; the sparkles button uses the chosen one. The warning names where the diff goes.
 
 **Verify:** mock-server tests for each HTTP provider (success, 401, 429, timeout, oversized diff truncated, key absent from errors). CLI providers tested with a fake executable. Manual: each real provider, which cannot be checked without keys.
 

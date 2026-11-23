@@ -14,6 +14,7 @@ import type {
   ResetMode,
   CreateChangeRequestInput
 } from '../shared/types'
+import type { AiConfig, AiProviderId } from '../shared/ai'
 import type { MainApi } from './service'
 
 export type Handler = (args: unknown[]) => Promise<unknown>
@@ -85,7 +86,8 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
       api.local.deleteRemoteBranch(path as string, name as string),
     localPull: ([path, mode]) => api.local.pull(path as string, mode as PullMode),
     localPush: ([path, force]) => api.local.push(path as string, force as boolean),
-    localSuggestCommitMessage: ([path]) => api.local.suggestCommitMessage(path as string),
+    localSuggestCommitMessage: ([path, config]) =>
+      api.local.suggestCommitMessage(path as string, config as AiConfig),
     localStashes: ([path]) => api.local.stashes(path as string),
     localStashPush: ([path, message, untracked]) =>
       api.local.stashPush(path as string, message as string, untracked as boolean),
@@ -143,6 +145,10 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     localRemove: ([key]) => api.local.remove(key as string),
     openExternal: ([url]) => api.openExternal(url as string),
     checkForUpdate: () => api.checkForUpdate(),
+    aiSaveKey: ([provider, key]) => api.ai.saveKey(provider as AiProviderId, key as string),
+    aiRemoveKey: ([provider]) => api.ai.removeKey(provider as AiProviderId),
+    aiHasKey: ([provider]) => api.ai.hasKey(provider as AiProviderId),
+    aiTest: ([config]) => api.ai.test(config as AiConfig),
     projectsList: () => api.projects.list(),
     projectsCreate: ([input]) => api.projects.create(input as ProjectCreateInput),
     projectsUpdate: ([id, patch]) => api.projects.update(id as string, patch as ProjectPatchInput),

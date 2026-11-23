@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAiEnabled } from '../../state/ai'
+import { aiConfigOf, useAiEnabled, useAiSettings } from '../../state/ai'
 import { cn } from '@/lib/cn'
 import type { RepoStatus, StatusEntry } from '@shared/types'
 import {
@@ -161,6 +161,7 @@ export function ChangesPanel({
   const [problem, setProblem] = useState<string | null>(null)
   const [generating, setGenerating] = useState(false)
   const aiEnabled = useAiEnabled()
+  const aiSettings = useAiSettings()
 
   const groups = groupStatus(status?.entries ?? [])
 
@@ -191,7 +192,7 @@ export function ChangesPanel({
     setGenerating(true)
     setProblem(null)
     try {
-      setMessage(await window.api.local.suggestCommitMessage(path))
+      setMessage(await window.api.local.suggestCommitMessage(path, aiConfigOf(aiSettings)))
     } catch (err) {
       setProblem(errorMessage(err))
     } finally {

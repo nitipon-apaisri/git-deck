@@ -78,7 +78,7 @@ const api: Api = {
     deleteRemoteBranch: (path, name) => call(IPC.localDeleteRemoteBranch, path, name),
     pull: (path, mode) => call(IPC.localPull, path, mode),
     push: (path, force) => call(IPC.localPush, path, force),
-    suggestCommitMessage: (path) => call(IPC.localSuggestCommitMessage, path),
+    suggestCommitMessage: (path, config) => call(IPC.localSuggestCommitMessage, path, config),
     stashes: (path) => call(IPC.localStashes, path),
     stashPush: (path, message, untracked) => call(IPC.localStashPush, path, message, untracked),
     stashApply: (path, index, hash) => call(IPC.localStashApply, path, index, hash),
@@ -132,6 +132,12 @@ const api: Api = {
         ipcRenderer.removeListener(IPC.gitProgress, listener)
       }
     }
+  },
+  ai: {
+    saveKey: (provider, key) => call(IPC.aiSaveKey, provider, key),
+    removeKey: (provider) => call(IPC.aiRemoveKey, provider),
+    hasKey: (provider) => call(IPC.aiHasKey, provider),
+    test: (config) => call(IPC.aiTest, config)
   },
   openExternal: (url) => call(IPC.openExternal, url),
   checkForUpdate: () => call(IPC.checkForUpdate),

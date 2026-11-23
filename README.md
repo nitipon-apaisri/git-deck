@@ -18,7 +18,7 @@ Built with Electron, React and TypeScript.
 - **File history and blame.** A per-file tab with `git log --follow` history and a blame toggle. Click an entry to open that commit.
 - **Bisect.** Start from a graph row. A banner shows the commit under test with Good, Bad, Skip and Abort, then the result.
 - **Pull and merge requests, CI.** A read-only tab with state, author, reviewers, labels and checks, plus a status dot beside the branch in the graph. Opening "Create PR/MR" goes to the host's compare page.
-- **AI commit messages.** Optional, off by default. A sparkles button fills the message field from the staged diff using the Claude Code CLI. It never commits.
+- **AI commit messages.** Optional, off by default. A sparkles button fills the message field from the staged diff using the provider you pick: the Claude Code, Codex or OpenCode CLI, or OpenAI, Gemini or any OpenAI-compatible server with a key kept in the OS keychain. It never commits.
 - **Integrated terminal.** A shell per pane, opened with the Terminal button or Ctrl+\`, in the repository's folder.
 - **Command palette.** `Mod+Shift+P` jumps to repositories, branches and tags and runs actions such as fetch, pull and theme switch.
 - **Projects.** A named group of repositories from any host or account, with its own icon and colour. A project has an overview page with totals, a sortable table of its repositories, and "Fetch all linked".
@@ -181,7 +181,7 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 26: Release workflow (develop, stage, main)
 - [x] Phase 27: Line-level discard
 - [x] Phase 28: Create pull request / merge request
-- [ ] Phase 29: More AI providers for commit messages
+- [x] Phase 29: More AI providers for commit messages
 - [ ] Phase 30: Change log detail
 - [ ] Phase 31: Interactive rebase
 - [ ] Phase 32: Project event notifications
