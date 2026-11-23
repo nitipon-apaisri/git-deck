@@ -698,14 +698,14 @@ Runs on `phase/29-ai-providers`. Today `AiSection` supports only the Claude Code
 
 **Verify:** mock-server tests for each HTTP provider (success, 401, 429, timeout, oversized diff truncated, key absent from errors). CLI providers tested with a fake executable. Manual: each real provider, which cannot be checked without keys.
 
-## Phase 30 — Change log detail
+## Phase 30 — Change log
 
-Runs on `phase/30-changelog`. Scope depends on an open question in `docs/DECISIONS.md` (repo changelog between two tags, GitDeck's own "what's new", or host release notes). The default below is the first one.
+Runs on `phase/30-changelog`. The "change log" is GitDeck's own, per release version (decided 2026-11-24; see `docs/DECISIONS.md`).
 
-- [ ] `git.ts`: `changelog(repo, from, to)` reads the commits between two tags or refs; a pure grouper by gitmoji or conventional type; tested.
-- [ ] Renderer: a "Changelog" view reachable from the Tags dialog (pick two tags, default newest and previous) showing grouped commits, with click-through to the commit and a "Copy as Markdown" button.
+- [x] `CHANGELOG.md` at the repo root, one `## X.Y.Z` entry per release (Fixes, Contents, Known limits), backfilled from 0.1.2 on. A pure parser in `src/shared/changelog.ts`, tested.
+- [x] Settings > About shows the bundled file, newest first, the installed version open. `docs/RELEASING.md` and the `releaser` agent add the entry at each release; a test fails if the top entry is not the `package.json` version.
 
-**Verify:** temp-repo tests (two tags, no previous tag, merge commits, unknown type, empty range). Manual: the view in a window.
+**Verify:** parser and file-shape tests. Manual: the list in the About section of a window.
 
 ## Phase 31 — Interactive rebase
 

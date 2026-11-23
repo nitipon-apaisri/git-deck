@@ -182,6 +182,6 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 27: Line-level discard
 - [x] Phase 28: Create pull request / merge request
 - [x] Phase 29: More AI providers for commit messages
-- [ ] Phase 30: Change log detail
+- [x] Phase 30: Change log detail
 - [ ] Phase 31: Interactive rebase
 - [ ] Phase 32: Project event notifications

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { UpdateCheck } from '@shared/types'
 import { errorMessage } from '../../lib/errors'
 import { Button, ErrorBanner } from '../ui'
+import { ChangelogList } from './ChangelogList'
 
 /** Manual update check against the latest GitHub release. Nothing runs at launch. */
 export function AboutSection() {
@@ -52,6 +53,7 @@ export function AboutSection() {
           </Button>
         </div>
       ) : null}
+      <ChangelogList />
     </div>
   )
 }
