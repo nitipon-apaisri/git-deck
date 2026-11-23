@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { configureFetch } from '../src/main/http'
-import { checkForUpdate, isNewer, parseRelease } from '../src/main/updateCheck'
+import { checkForUpdate, fetchReleaseNotes, isNewer, parseRelease } from '../src/main/updateCheck'
 
 const release = { tag_name: 'v1.2.0', html_url: 'https://github.com/o/r/releases/tag/v1.2.0' }
 const reply = (status: number, body: unknown) => async () =>
@@ -40,4 +40,25 @@ test('checkForUpdate: newer, same, no release yet, network failure', async () =>
     throw new Error('offline')
   })
   await assert.rejects(checkForUpdate('1.0.0'), /offline/)
+})
+
+test('fetchReleaseNotes: only newer, non-pre-release versions, with their bodies', async () => {
+  const item = (tag: string, body: unknown) => ({
+    tag_name: tag,
+    html_url: `https://github.com/o/r/releases/tag/${tag}`,
+    body
+  })
+  configureFetch(
+    reply(200, [
+      item('v1.3.0', 'Fixes\n- a'),
+      item('v1.3.0-rc.1', ''),
+      item('v1.2.0', 'x'),
+      item('v1.4.0', null)
+    ])
+  )
+  assert.deepEqual(await fetchReleaseNotes('1.2.0'), [
+    { version: '1.3.0', url: 'https://github.com/o/r/releases/tag/v1.3.0', body: 'Fixes\n- a' }
+  ])
+  configureFetch(reply(200, { not: 'a list' }))
+  assert.deepEqual(await fetchReleaseNotes('1.2.0'), [])
 })

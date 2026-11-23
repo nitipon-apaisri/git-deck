@@ -35,6 +35,7 @@ import type {
   ResetMode,
   StashEntry,
   TagEntry,
+  ReleaseNote,
   VerifiedUser
 } from './types'
 import type { AiConfig, AiProviderId } from './ai'
@@ -234,6 +235,8 @@ export interface Api {
   openExternal(url: string): Promise<void>
   /** The installed version and, when GitHub has a newer release, its version and page. */
   checkForUpdate(): Promise<UpdateCheck>
+  /** Notes of releases newer than the installed version, from GitHub. Only when asked. */
+  releaseNotes(): Promise<ReleaseNote[]>
   projects: {
     list(): Promise<Project[]>
     create(input: ProjectCreateInput): Promise<Project>
@@ -329,6 +332,7 @@ export const IPC = {
   aiTest: 'ai:test',
   openExternal: 'openExternal',
   checkForUpdate: 'checkForUpdate',
+  releaseNotes: 'releaseNotes',
   projectsList: 'projects:list',
   projectsCreate: 'projects:create',
   projectsUpdate: 'projects:update',

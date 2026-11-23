@@ -11,6 +11,7 @@ export interface ChangelogEntry {
 }
 
 /** `## X.Y.Z` starts an entry, `### Title` a section, `- text` an item. Anything else is ignored. */
+// Also reads a GitHub release body wrapped as `## X.Y.Z\n<body>`.
 export function parseChangelog(markdown: string): ChangelogEntry[] {
   const entries: ChangelogEntry[] = []
   for (const line of markdown.split('\n')) {
@@ -21,9 +22,11 @@ export function parseChangelog(markdown: string): ChangelogEntry[] {
     }
     const entry = entries.at(-1)
     if (!entry) continue
-    const title = /^### (.+?)\s*$/.exec(line)?.[1]
+    // A release body on GitHub names its sections bare ("Fixes"), the file uses "### Fixes".
+    const m = /^(?:###\s+(.+?)|\**(Fixes|Contents|Known limits)\**:?)\s*$/.exec(line)
+    const title = m?.[1] ?? m?.[2]
     if (title) entry.sections.push({ title, items: [] })
-    else if (line.startsWith('- ')) entry.sections.at(-1)?.items.push(line.slice(2))
+    else if (/^[-*] /.test(line)) entry.sections.at(-1)?.items.push(line.slice(2))
   }
   return entries
 }

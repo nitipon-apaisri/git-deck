@@ -21,6 +21,20 @@ test('parseChangelog: versions, sections and items; stray text is ignored', () =
   assert.deepEqual(parseChangelog(''), [])
 })
 
+test('parseChangelog reads a GitHub release body with bare section names', () => {
+  const body = 'Fixes\n- a\n\nContents\n* b\n\nKnown limits\n- c'
+  assert.deepEqual(parseChangelog(`## 1.0.0\n${body}`), [
+    {
+      version: '1.0.0',
+      sections: [
+        { title: 'Fixes', items: ['a'] },
+        { title: 'Contents', items: ['b'] },
+        { title: 'Known limits', items: ['c'] }
+      ]
+    }
+  ])
+})
+
 test('CHANGELOG.md: the newest entry is the package.json version, each has all three sections', () => {
   const { version } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
   const entries = parseChangelog(file)

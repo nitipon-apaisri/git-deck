@@ -487,6 +487,13 @@ export interface BisectState {
 
 export type BisectMark = 'good' | 'bad' | 'skip'
 
+/** A GitHub release newer than the installed version; `body` is its Markdown notes. */
+export interface ReleaseNote {
+  version: string
+  url: string
+  body: string
+}
+
 /** Result of the manual update check. `latest` is null when nothing newer exists. */
 export interface UpdateCheck {
   current: string

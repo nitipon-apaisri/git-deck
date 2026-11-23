@@ -1,7 +1,8 @@
 import { Fragment, useState } from 'react'
-import { parseChangelog } from '@shared/changelog'
+import { parseChangelog, type ChangelogEntry } from '@shared/changelog'
 import changelog from '../../../../../CHANGELOG.md?raw'
-import { Icon } from '../ui'
+import { errorMessage } from '../../lib/errors'
+import { Button, ErrorBanner, Icon } from '../ui'
 
 // Bundled at build time, so it works offline. A test keeps the top entry equal to the app version.
 const ENTRIES = parseChangelog(changelog)
@@ -22,8 +23,14 @@ function Inline({ text }: { text: string }) {
   )
 }
 
-/** One line per release, newest first. The newest (the installed version) starts open. */
+/** One line per release, newest first. The newest bundled one is the installed version and starts open. */
 export function ChangelogList() {
+  // Releases newer than the installed one, read from GitHub only when asked.
+  const [newer, setNewer] = useState<ChangelogEntry[]>([])
+  const [busy, setBusy] = useState(false)
+  const [status, setStatus] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const entries = [...newer, ...ENTRIES]
   const [open, setOpen] = useState<ReadonlySet<string>>(
     () => new Set(ENTRIES.slice(0, 1).map((e) => e.version))
   )
@@ -34,9 +41,38 @@ export function ChangelogList() {
       return next
     })
 
+  async function load(): Promise<void> {
+    setBusy(true)
+    setError(null)
+    setStatus(null)
+    try {
+      const notes = await window.api.releaseNotes()
+      const parsed = notes.flatMap((n) => parseChangelog(`## ${n.version}\n${n.body}`))
+      setNewer(parsed)
+      setOpen((prev) => new Set([...prev, ...parsed.slice(0, 1).map((e) => e.version)]))
+      setStatus(parsed.length ? null : 'These are the latest notes.')
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <section aria-label="Change log" className="flex flex-col">
-      {ENTRIES.map((entry, i) => {
+      <div className="mb-2 flex items-center gap-3">
+        <h3 className="m-0 flex-1 text-[14px] leading-5 font-semibold">Change log</h3>
+        {status ? (
+          <span className="text-[12px] text-muted-foreground" role="status">
+            {status}
+          </span>
+        ) : null}
+        <Button variant="ghost" icon="refresh" disabled={busy} onClick={() => void load()}>
+          Check for newer notes
+        </Button>
+      </div>
+      {error ? <ErrorBanner onDismiss={() => setError(null)}>{error}</ErrorBanner> : null}
+      {entries.map((entry) => {
         const shown = open.has(entry.version)
         const panel = `changelog-${entry.version}`
         return (
@@ -51,8 +87,10 @@ export function ChangelogList() {
               >
                 <Icon name={shown ? 'chevron-down' : 'chevron-right'} size="sm" />
                 <span className="text-[14px] leading-5 font-semibold">{entry.version}</span>
-                {i === 0 ? (
+                {entry.version === ENTRIES[0].version ? (
                   <span className="text-[12px] text-muted-foreground">Installed</span>
+                ) : newer.includes(entry) ? (
+                  <span className="text-[12px] text-(--accent-text)">New</span>
                 ) : null}
               </button>
               <button
