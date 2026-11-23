@@ -179,6 +179,8 @@ export interface Api {
     /** Stage one hunk of a tracked file. Main rebuilds the patch, so a stale diff is refused. */
     stageHunk(path: string, hunk: HunkRequest): Promise<void>
     unstageHunk(path: string, hunk: HunkRequest): Promise<void>
+    /** Discard selected unstaged lines. Asks first, resolves `false` when declined. */
+    discardLines(path: string, hunk: HunkRequest): Promise<boolean>
     /**
      * One conflicted file: its regions, or why it has none, and the whole-file actions that apply.
      * `file` must be a path `status` lists as conflicted.
@@ -292,6 +294,7 @@ export const IPC = {
   localSkipOperation: 'local:skipOperation',
   localStageHunk: 'local:stageHunk',
   localUnstageHunk: 'local:unstageHunk',
+  localDiscardLines: 'local:discardLines',
   localConflictFile: 'local:conflictFile',
   localResolveConflict: 'local:resolveConflict',
   localResolveConflictFile: 'local:resolveConflictFile',

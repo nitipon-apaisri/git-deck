@@ -100,6 +100,7 @@ const api: Api = {
     skipOperation: (path) => call(IPC.localSkipOperation, path),
     stageHunk: (path, hunk) => call(IPC.localStageHunk, path, hunk),
     unstageHunk: (path, hunk) => call(IPC.localUnstageHunk, path, hunk),
+    discardLines: (path, hunk) => call(IPC.localDiscardLines, path, hunk),
     conflictFile: (path, file) => call(IPC.localConflictFile, path, file),
     resolveConflict: (path, request) => call(IPC.localResolveConflict, path, request),
     resolveConflictFile: (path, file, action) =>

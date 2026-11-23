@@ -538,3 +538,10 @@ The 2px focus ring looked heavy on text inputs (palette, filters, forms). Text i
 - **Why:** the packaged app is where past release bugs showed up (v0.1.0 to v0.1.2, the terminal helper), so an installable rc is worth a step before `main`. Without an rc build, `stage` would only be an extra merge.
 - **Trade-offs:** `stage` is all or nothing (an unfinished feature already in `develop` cannot be held back; keep it on its own branch). Fixes found while testing go on a branch from `stage` and are merged back into `develop`. Phases 27 to 32 were renumbered from 26 to 31 so this phase comes first.
 - **Not decided:** whether `develop` becomes GitHub's default branch (the user's call).
+
+## 2026-11-23: Phase 27 as built (line-level discard)
+
+- **Decision:** `discardLines` reuses `hunkPatch` and `linePatch` with the `unstage` direction (unselected `+` stays as context, unselected `-` is dropped), applied with `git apply --reverse` to the work tree. No second patch builder.
+- **Why:** the work-tree diff is index to work tree, so reverting chosen lines is the same patch an unstage builds. `git apply` writes all or nothing, and the fingerprint check refuses a file that changed since the diff was read.
+- **Confirm:** asked in main through `ui.confirm` (names the file and line count, says it cannot be undone), like `discard`. A declined prompt resolves `false`.
+- **Limits:** tracked files with a text diff only. Untracked, created, deleted, renamed, conflicted and binary files stay whole-file. Not undoable.
