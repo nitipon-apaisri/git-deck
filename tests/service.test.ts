@@ -138,6 +138,9 @@ async function rig(opts: { seed?: boolean } = { seed: true }): Promise<Rig> {
       return emptySummary
     },
     listChangeRequests: async () => [],
+    createChangeRequest: async () => {
+      throw new Error('unused')
+    },
     getChecks: async () => ({ state: 'none', items: [] })
   }
   const ui: Ui = {
@@ -255,6 +258,9 @@ test('accounts.add refuses when secure storage is unavailable', async () => {
       listRepos: async () => [],
       getSummary: async () => emptySummary,
       listChangeRequests: async () => [],
+      createChangeRequest: async () => {
+        throw new Error('unused')
+      },
       getChecks: async () => ({ state: 'none', items: [] })
     })
   })

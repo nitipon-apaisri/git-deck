@@ -438,6 +438,9 @@ export function RepoPane({
               repoKey={repo.key}
               host={account.type}
               webUrl={repo.webUrl}
+              defaultBranch={repo.defaultBranch}
+              linkedPath={linkedPath}
+              branches={branches}
               active={tab === 'pulls'}
             />
           </div>

@@ -679,11 +679,11 @@ Runs on `phase/27-line-discard`. Builds on the existing line staging in the diff
 
 Runs on `phase/28-create-pr-mr`. Write access: GitHub's `repo` scope already allows it; GitLab needs `api` instead of `read_api`. A token that lacks it gets a clear message, not a silent failure.
 
-- [ ] First, check the GitHub create-pull-request and GitLab create-merge-request endpoints and scopes against the official docs. Log the result and the GitLab scope change in `docs/DECISIONS.md`.
-- [ ] `GitProvider` gains `createChangeRequest(repo, { title, body, head, base, draft })`; GitHub and GitLab implement it (same-origin only, no token in any error). Normalised result type in `src/shared`.
-- [ ] IPC channel with validated input. Existing "Create PR/MR" link stays as the fallback when the token is read-only.
-- [ ] Renderer: a "Create PR/MR" dialog in the PR/MR tab: source branch (current by default), target (default branch), title (last commit subject), body, draft toggle. Offers "Push branch first" when the branch has no upstream. Opens the new PR/MR on success. Hidden for local-only repos.
-- [ ] Settings, Integrations: say which scope enables creation; the token help text for GitLab is updated.
+- [x] First, check the GitHub create-pull-request and GitLab create-merge-request endpoints and scopes against the official docs. Log the result and the GitLab scope change in `docs/DECISIONS.md`.
+- [x] `GitProvider` gains `createChangeRequest(repo, { title, body, head, base, draft })`; GitHub and GitLab implement it (same-origin only, no token in any error). Normalised result type in `src/shared`.
+- [x] IPC channel with validated input. Existing "Create PR/MR" link stays as the fallback when the token is read-only.
+- [x] Renderer: a "Create PR/MR" dialog in the PR/MR tab: source branch (current by default), target (default branch), title (last commit subject), body, draft toggle. Offers "Push branch first" when the branch has no upstream. Opens the new PR/MR on success. Hidden for local-only repos.
+- [x] Settings, Integrations: say which scope enables creation; the token help text for GitLab is updated.
 
 **Verify:** mock-server tests per provider (created, draft, already exists, 401, 403 missing scope, 422 validation, cross-origin dropped). Manual: a real GitHub repo and a GitLab repo (not checked before).
 

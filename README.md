@@ -50,10 +50,10 @@ pnpm lint       # ESLint
 
 Open **Accounts**, pick a host, paste a token, press **Test connection**, then **Add account**. GitDeck only ever sends the token to that host.
 
-| Host   | Token                                                                                                                                                   |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GitHub | A classic token with the `repo` scope, or a fine-grained token with read access to **Metadata** and **Contents** (read and write **Contents** to push). |
-| GitLab | A personal access token with the `read_api` and `read_repository` scopes (add `write_repository` to push).                                              |
+| Host   | Token                                                                                                                                                               |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GitHub | A classic token with the `repo` scope, or a fine-grained token with read access to **Metadata** and **Contents** (read and write **Contents** to push).             |
+| GitLab | A personal access token with the `api` and `read_repository` scopes (`api` is what creates merge requests; `read_api` still reads; add `write_repository` to push). |
 
 Cloning a private repository over HTTPS uses the same token. For SSH, GitDeck uses whatever your own `ssh` setup already does.
 
@@ -180,7 +180,7 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 25: Packaging and update notice
 - [x] Phase 26: Release workflow (develop, stage, main)
 - [x] Phase 27: Line-level discard
-- [ ] Phase 28: Create pull request / merge request
+- [x] Phase 28: Create pull request / merge request
 - [ ] Phase 29: More AI providers for commit messages
 - [ ] Phase 30: Change log detail
 - [ ] Phase 31: Interactive rebase
