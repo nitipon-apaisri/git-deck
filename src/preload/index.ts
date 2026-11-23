@@ -87,7 +87,6 @@ const api: Api = {
     cherryPick: (path, hash) => call(IPC.localCherryPick, path, hash),
     merge: (path, branch, noFf) => call(IPC.localMerge, path, branch, noFf),
     tags: (path) => call(IPC.localTags, path),
-    changelog: (path, from, to) => call(IPC.localChangelog, path, from, to),
     createTag: (path, name, hash, message) => call(IPC.localCreateTag, path, name, hash, message),
     deleteTag: (path, name) => call(IPC.localDeleteTag, path, name),
     pushTag: (path, name) => call(IPC.localPushTag, path, name),

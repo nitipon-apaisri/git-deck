@@ -13,7 +13,6 @@ import {
 } from 'node:fs'
 import { dirname, resolve, sep } from 'node:path'
 import { Semaphore } from './semaphore'
-import type { ChangelogCommit } from '../shared/changelog'
 import {
   applyResolutions,
   ConflictParseError,
@@ -1448,52 +1447,6 @@ export async function listTags(cwd: string): Promise<TagEntry[]> {
     })
   }
   return tags
-}
-
-const MAX_CHANGELOG = 2000
-
-async function assertCommitRef(cwd: string, ref: string): Promise<void> {
-  // A leading "-" would be read as an option.
-  if (
-    !ref ||
-    ref.startsWith('-') ||
-    (await tryRun(cwd, ['rev-parse', '--verify', '--quiet', `${ref}^{commit}`])) === null
-  ) {
-    throw new Error(`There is no tag or commit "${ref}"`)
-  }
-}
-
-/** The commits in `from..to`, newest first. `from` is `null` for everything up to `to`. */
-export async function changelog(
-  cwd: string,
-  from: string | null,
-  to: string
-): Promise<ChangelogCommit[]> {
-  await assertCommitRef(cwd, to)
-  if (from !== null) await assertCommitRef(cwd, from)
-  const format = ['%H', '%an', '%ct', '%P', '%s'].join('%x1f') + '%x1e'
-  const out =
-    (await tryRun(cwd, [
-      'log',
-      `--max-count=${MAX_CHANGELOG}`,
-      `--format=${format}`,
-      from === null ? to : `${from}..${to}`,
-      '--'
-    ])) ?? ''
-  const commits: ChangelogCommit[] = []
-  for (const row of out.split(RS)) {
-    const text = row.replace(/^\n/, '')
-    if (!text) continue
-    const [hash, author, at, parents, subject] = text.split(FS)
-    commits.push({
-      hash,
-      author,
-      at: toInt(at) ?? 0,
-      subject,
-      merge: parents.split(' ').filter(Boolean).length > 1
-    })
-  }
-  return commits
 }
 
 /** A tag at `hash`, or at HEAD when `hash` is `null`. A message makes it annotated. */
