@@ -46,7 +46,7 @@ import { watchRepo as realWatchRepo } from './watcher'
 import { createProvider as realCreateProvider, normalizeBaseUrl } from './providers'
 import type { GitProvider } from './providers/types'
 import type { Store } from './store'
-import { checkForUpdate } from './updateCheck'
+import { checkForUpdate, fetchReleaseNotes } from './updateCheck'
 import { allowHostTemporarily, setInsecureHosts } from './tls'
 import { isHttp } from './urls'
 
@@ -1377,6 +1377,7 @@ export function createService(deps: ServiceDeps): {
       test: guard(async (config) => askAi(config, TEST_PROMPT))
     },
     checkForUpdate: guard(async () => checkForUpdate(ui.version ?? '0.0.0')),
+    releaseNotes: guard(async () => fetchReleaseNotes(ui.version ?? '0.0.0')),
     openExternal: guard(async (url) => {
       if (typeof url !== 'string' || !isHttp(url)) {
         throw new Error('Only http and https links can be opened')

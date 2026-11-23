@@ -145,6 +145,7 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     localRemove: ([key]) => api.local.remove(key as string),
     openExternal: ([url]) => api.openExternal(url as string),
     checkForUpdate: () => api.checkForUpdate(),
+    releaseNotes: () => api.releaseNotes(),
     aiSaveKey: ([provider, key]) => api.ai.saveKey(provider as AiProviderId, key as string),
     aiRemoveKey: ([provider]) => api.ai.removeKey(provider as AiProviderId),
     aiHasKey: ([provider]) => api.ai.hasKey(provider as AiProviderId),
