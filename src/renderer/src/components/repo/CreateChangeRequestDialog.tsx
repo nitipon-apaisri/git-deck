@@ -1,7 +1,17 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import type { BranchList, ChangeRequest } from '@shared/types'
 import { errorMessage } from '../../lib/errors'
-import { Button, CheckOption, Dialog, ErrorBanner, Field, Icon, TextInput, Textarea } from '../ui'
+import {
+  Button,
+  CheckOption,
+  Dialog,
+  ErrorBanner,
+  Field,
+  Select,
+  TextInput,
+  Textarea,
+  type SelectOption
+} from '../ui'
 
 interface Props {
   repoKey: string
@@ -18,38 +28,7 @@ interface Props {
 
 const FORM_ID = 'create-change-request-form'
 
-/** No house select exists yet: a native one with the TextInput look. */
-function BranchSelect({
-  options,
-  value,
-  onChange,
-  ...rest
-}: {
-  options: string[]
-  value: string
-  onChange: (v: string) => void
-  id: string
-}) {
-  return (
-    <div className="relative flex">
-      <select
-        {...rest}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-9 min-w-0 flex-1 cursor-pointer appearance-none truncate rounded-md border border-(--border-strong) bg-secondary pr-9 pl-3 text-[13px] text-foreground"
-      >
-        {options.map((b) => (
-          <option key={b} value={b}>
-            {b}
-          </option>
-        ))}
-      </select>
-      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-muted-foreground">
-        <Icon name="chevron-down" size="sm" />
-      </span>
-    </div>
-  )
-}
+const asOptions = (xs: string[]): SelectOption[] => xs.map((b) => ({ value: b, label: b }))
 
 const unique = (xs: string[]): string[] => [...new Set(xs.filter(Boolean))]
 
@@ -146,10 +125,14 @@ export function CreateChangeRequestDialog({
         ) : null}
         <div className="grid grid-cols-2 gap-3">
           <Field label="From branch">
-            {(c) => <BranchSelect {...c} options={headOptions} value={head} onChange={setHead} />}
+            {(c) => (
+              <Select {...c} options={asOptions(headOptions)} value={head} onChange={setHead} />
+            )}
           </Field>
           <Field label="Into branch">
-            {(c) => <BranchSelect {...c} options={baseOptions} value={base} onChange={setBase} />}
+            {(c) => (
+              <Select {...c} options={asOptions(baseOptions)} value={base} onChange={setBase} />
+            )}
           </Field>
         </div>
         <Field label="Title">

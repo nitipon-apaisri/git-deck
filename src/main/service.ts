@@ -28,7 +28,15 @@ import type {
   RepoSummary,
   CreateChangeRequestInput
 } from '../shared/types'
-import { buildPrompt, runClaude } from './ai'
+import {
+  AI_PROVIDERS,
+  AI_PROVIDER_IDS,
+  isAiProvider,
+  normalizeAiBaseUrl,
+  type AiConfig,
+  type AiProviderId
+} from '../shared/ai'
+import { TEST_PROMPT, buildPrompt, suggest as realSuggest, type SuggestOptions } from './ai'
 import * as realGit from './git'
 import { NO_OPERATION } from './git'
 import { MAX_REGION_TEXT } from '../shared/conflict'
@@ -136,8 +144,8 @@ export interface ServiceDeps {
   watchRepo?: typeof realWatchRepo
   createProvider?: (account: Pick<Account, 'id' | 'type' | 'baseUrl'>, token: string) => GitProvider
   git?: GitOps
-  /** Replaceable in tests: asks Claude Code for a commit message. */
-  suggestMessage?: (prompt: string) => Promise<string>
+  /** Replaceable in tests: asks the chosen provider for a commit message. */
+  suggestMessage?: typeof realSuggest
 }
 
 const MAX_GRAPH_PAGE = 2000
@@ -177,6 +185,33 @@ export function sanitizeFolderName(name: string): string {
 function percentOf(line: string): number | null {
   const match = /(\d{1,3})%/.exec(line)
   return match ? Math.min(100, Number(match[1])) : null
+}
+
+const MODEL_RE = /^[A-Za-z0-9][\w.:/#@+-]{0,127}$/
+
+/** Provider, model and URL from the page. The model never starts with `-`: it is a CLI argument. */
+export function checkAiConfig(raw: unknown): AiConfig {
+  const c = raw as Partial<Record<keyof AiConfig, unknown>> | null
+  if (typeof c !== 'object' || c === null || !isAiProvider(c.provider)) {
+    throw new Error('Choose an AI provider')
+  }
+  const config: AiConfig = { provider: c.provider }
+  const model = typeof c.model === 'string' ? c.model.trim() : ''
+  if (model) {
+    if (!MODEL_RE.test(model)) throw new Error('The model name is not valid')
+    config.model = model
+  }
+  if (c.provider === 'compatible') {
+    config.baseUrl = normalizeAiBaseUrl(typeof c.baseUrl === 'string' ? c.baseUrl : '')
+  }
+  return config
+}
+
+function checkAiProvider(provider: unknown): AiProviderId {
+  if (!isAiProvider(provider) || !AI_PROVIDERS[provider].key) {
+    throw new Error('This provider takes no API key')
+  }
+  return provider
 }
 
 function normaliseInput(raw: unknown): AccountInput {
@@ -379,7 +414,14 @@ export function createService(deps: ServiceDeps): {
   const { store, ui } = deps
   const git: GitOps = deps.git ?? realGit
   const makeProvider = deps.createProvider ?? realCreateProvider
-  const suggest = deps.suggestMessage ?? ((prompt: string) => runClaude(prompt))
+  const suggest = deps.suggestMessage ?? realSuggest
+
+  function askAi(raw: unknown, prompt: string): Promise<string> {
+    const config = checkAiConfig(raw)
+    const options: SuggestOptions = { model: config.model, baseUrl: config.baseUrl }
+    if (AI_PROVIDERS[config.provider].key) options.key = store.getAiKey(config.provider)
+    return suggest(config.provider, prompt, options)
+  }
 
   const inflight = new Map<string, Promise<unknown>>()
   const writeQueues = new Map<string, Promise<unknown>>()
@@ -431,10 +473,10 @@ export function createService(deps: ServiceDeps): {
   }
 
   function allTokens(): string[] {
-    return store
-      .listAccounts()
-      .map((a) => store.getToken(a.id))
-      .filter((t): t is string => typeof t === 'string')
+    return [
+      ...store.listAccounts().map((a) => store.getToken(a.id)),
+      ...AI_PROVIDER_IDS.map((id) => store.getAiKey(id))
+    ].filter((t): t is string => typeof t === 'string')
   }
 
   /** Every error leaves main with a plain, token-free message. */
@@ -1016,11 +1058,12 @@ export function createService(deps: ServiceDeps): {
         )
         return true
       }),
-      suggestCommitMessage: guard(async (path) => {
+      suggestCommitMessage: guard(async (path, config) => {
         linkedRepoKey(path)
+        checkAiConfig(config)
         const { stat, diff } = await git.getStagedDiff(path)
         if (!diff.trim()) throw new Error('Stage some changes first')
-        return suggest(buildPrompt(stat, diff))
+        return askAi(config, buildPrompt(stat, diff))
       }),
       stashes: guard(async (path) => {
         linkedRepoKey(path)
@@ -1315,6 +1358,23 @@ export function createService(deps: ServiceDeps): {
         }
         await store.removeLocalRepo(repoKey as string)
       })
+    },
+    ai: {
+      saveKey: guard(
+        async (provider, key) => {
+          const id = checkAiProvider(provider)
+          const value = typeof key === 'string' ? key.trim() : ''
+          if (!value) throw new Error('Enter the API key')
+          if (/\s/.test(value))
+            throw new Error('The API key must not contain spaces or line breaks')
+          if (value.length > MAX_TOKEN_LENGTH) throw new Error('The API key is too long')
+          await store.saveAiKey(id, value)
+        },
+        (_provider, key) => [key]
+      ),
+      removeKey: guard(async (provider) => store.removeAiKey(checkAiProvider(provider))),
+      hasKey: guard(async (provider) => store.hasAiKey(checkAiProvider(provider))),
+      test: guard(async (config) => askAi(config, TEST_PROMPT))
     },
     checkForUpdate: guard(async () => checkForUpdate(ui.version ?? '0.0.0')),
     openExternal: guard(async (url) => {

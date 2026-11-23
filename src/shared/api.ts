@@ -37,6 +37,7 @@ import type {
   TagEntry,
   VerifiedUser
 } from './types'
+import type { AiConfig, AiProviderId } from './ai'
 
 export type CloneProtocol = 'https' | 'ssh'
 
@@ -140,8 +141,8 @@ export interface Api {
     pull(path: string, mode: PullMode): Promise<void>
     /** Sets the upstream when there is none. A forced push asks first: `false` when declined. */
     push(path: string, force: boolean): Promise<boolean>
-    /** Asks the local Claude Code CLI for a message for the staged changes. Never commits. */
-    suggestCommitMessage(path: string): Promise<string>
+    /** Asks the chosen AI provider for a message for the staged changes. Never commits. */
+    suggestCommitMessage(path: string, config: AiConfig): Promise<string>
     stashes(path: string): Promise<StashEntry[]>
     stashPush(path: string, message: string, includeUntracked: boolean): Promise<void>
     /** `hash` is the entry's hash, so a list that changed since it was read is refused. */
@@ -221,6 +222,14 @@ export interface Api {
     unwatch(path: string): Promise<void>
     /** Fires with the folder path after its files or refs changed. Returns the unsubscribe. */
     onRepoChanged(cb: (path: string) => void): () => void
+  }
+  /** API keys go in and never come back: the page only learns whether one is saved. */
+  ai: {
+    saveKey(provider: AiProviderId, key: string): Promise<void>
+    removeKey(provider: AiProviderId): Promise<void>
+    hasKey(provider: AiProviderId): Promise<boolean>
+    /** Sends a tiny fixed prompt (no repository data) and returns the reply. */
+    test(config: AiConfig): Promise<string>
   }
   openExternal(url: string): Promise<void>
   /** The installed version and, when GitHub has a newer release, its version and page. */
@@ -314,6 +323,10 @@ export const IPC = {
   localRemove: 'local:remove',
   localWatch: 'local:watch',
   localUnwatch: 'local:unwatch',
+  aiSaveKey: 'ai:saveKey',
+  aiRemoveKey: 'ai:removeKey',
+  aiHasKey: 'ai:hasKey',
+  aiTest: 'ai:test',
   openExternal: 'openExternal',
   checkForUpdate: 'checkForUpdate',
   projectsList: 'projects:list',

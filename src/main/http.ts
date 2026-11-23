@@ -7,6 +7,9 @@ export function configureFetch(impl: FetchImpl): void {
   fetchImpl = impl
 }
 
+/** The configured fetch (Electron's `net.fetch` in the app), for callers with their own errors. */
+export const appFetch: FetchImpl = (input, init) => fetchImpl(input, init)
+
 export class HttpError extends Error {
   readonly status: number
   constructor(status: number, message: string) {
