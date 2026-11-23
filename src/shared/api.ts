@@ -37,6 +37,7 @@ import type {
   TagEntry,
   VerifiedUser
 } from './types'
+import type { ChangelogCommit } from './changelog'
 import type { AiConfig, AiProviderId } from './ai'
 
 export type CloneProtocol = 'https' | 'ssh'
@@ -155,6 +156,8 @@ export interface Api {
     /** `branch` is local or remote (`origin/x`). `noFf` always makes a merge commit. */
     merge(path: string, branch: string, noFf: boolean): Promise<OperationResult>
     tags(path: string): Promise<TagEntry[]>
+    /** Commits in `from..to`; `from` is `null` for the whole history up to `to`. */
+    changelog(path: string, from: string | null, to: string): Promise<ChangelogCommit[]>
     /** `hash` is a commit, or `null` for HEAD. A message makes an annotated tag. */
     createTag(
       path: string,
@@ -293,6 +296,7 @@ export const IPC = {
   localCherryPick: 'local:cherryPick',
   localMerge: 'local:merge',
   localTags: 'local:tags',
+  localChangelog: 'local:changelog',
   localCreateTag: 'local:createTag',
   localDeleteTag: 'local:deleteTag',
   localPushTag: 'local:pushTag',

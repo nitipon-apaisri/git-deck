@@ -702,8 +702,8 @@ Runs on `phase/29-ai-providers`. Today `AiSection` supports only the Claude Code
 
 Runs on `phase/30-changelog`. Scope depends on an open question in `docs/DECISIONS.md` (repo changelog between two tags, GitDeck's own "what's new", or host release notes). The default below is the first one.
 
-- [ ] `git.ts`: `changelog(repo, from, to)` reads the commits between two tags or refs; a pure grouper by gitmoji or conventional type; tested.
-- [ ] Renderer: a "Changelog" view reachable from the Tags dialog (pick two tags, default newest and previous) showing grouped commits, with click-through to the commit and a "Copy as Markdown" button.
+- [x] `git.ts`: `changelog(repo, from, to)` reads the commits between two tags or refs; a pure grouper by gitmoji or conventional type; tested.
+- [x] Renderer: a "Changelog" view reachable from the Tags dialog (pick two tags, default newest and previous) showing grouped commits, with click-through to the commit and a "Copy as Markdown" button.
 
 **Verify:** temp-repo tests (two tags, no previous tag, merge commits, unknown type, empty range). Manual: the view in a window.
 

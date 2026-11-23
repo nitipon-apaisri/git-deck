@@ -105,6 +105,7 @@ export type GitOps = Pick<
   | 'continueOperation'
   | 'abortOperation'
   | 'listTags'
+  | 'changelog'
   | 'createTag'
   | 'deleteTag'
   | 'getTagRemote'
@@ -1165,6 +1166,10 @@ export function createService(deps: ServiceDeps): {
       tags: guard(async (path) => {
         linkedRepoKey(path)
         return git.listTags(path)
+      }),
+      changelog: guard(async (path, from, to) => {
+        linkedRepoKey(path)
+        return git.changelog(path, from, to)
       }),
       createTag: guard(async (path, name, hash, message) => {
         linkedRepoKey(path)

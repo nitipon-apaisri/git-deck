@@ -488,6 +488,10 @@ export function RepoPane({
           path={linkedPath}
           startHash={tagsRequest.hash}
           onChanged={actions.refresh}
+          onOpenCommit={(hash) => {
+            setTagsRequest(null)
+            commands.reveal(hash)
+          }}
           onClose={() => setTagsRequest(null)}
         />
       ) : null}

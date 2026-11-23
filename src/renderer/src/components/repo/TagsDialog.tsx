@@ -3,6 +3,7 @@ import type { TagEntry } from '@shared/types'
 import { errorMessage } from '../../lib/errors'
 import { timeAgo } from '../../lib/format'
 import { tagKind, tagStartLabel } from '../../lib/historyView'
+import { ChangelogDialog } from './ChangelogDialog'
 import { useNow } from '../../state/useNow'
 import {
   Button,
@@ -24,6 +25,8 @@ interface TagsDialogProps {
   startHash: string | null
   /** Something changed: the graph reads its tags and badges again. */
   onChanged: () => void
+  /** Close the dialog and show a commit in the graph. */
+  onOpenCommit: (hash: string) => void
   onClose: () => void
 }
 
@@ -96,7 +99,7 @@ function TagMessage({ text }: { text: string }) {
 }
 
 /** Make a tag, push it, and delete it here or on the remote. */
-export function TagsDialog({ path, startHash, onChanged, onClose }: TagsDialogProps) {
+export function TagsDialog({ path, startHash, onChanged, onOpenCommit, onClose }: TagsDialogProps) {
   const now = useNow()
   const [tags, setTags] = useState<TagEntry[] | null>(null)
   const [name, setName] = useState('')
@@ -107,6 +110,7 @@ export function TagsDialog({ path, startHash, onChanged, onClose }: TagsDialogPr
   const [note, setNote] = useState<string | null>(null)
   const [pushAfter, setPushAfter] = useState(false)
   const [filter, setFilter] = useState('')
+  const [changelogOpen, setChangelogOpen] = useState(false)
   const [menu, setMenu] = useState<{ tag: TagEntry; x: number; y: number } | null>(null)
 
   // The status line goes away by itself.
@@ -225,12 +229,29 @@ export function TagsDialog({ path, startHash, onChanged, onClose }: TagsDialogPr
   const needle = filter.trim().toLowerCase()
   const shown = (tags ?? []).filter((t) => t.name.toLowerCase().includes(needle))
 
+  if (changelogOpen) {
+    return (
+      <ChangelogDialog
+        path={path}
+        tags={tags ?? []}
+        onOpenCommit={onOpenCommit}
+        onBack={() => setChangelogOpen(false)}
+        onClose={onClose}
+      />
+    )
+  }
+
   return (
     <Dialog
       title="Tags"
       description={`A new tag points at ${tagStartLabel(startHash)}.`}
       width={560}
       onClose={onClose}
+      actionsStart={
+        <Button variant="ghost" icon="book" onClick={() => setChangelogOpen(true)}>
+          Change log
+        </Button>
+      }
     >
       <div className="flex flex-col gap-4">
         <form id={FORM_ID} className="flex flex-col gap-3" onSubmit={(e) => void create(e)}>

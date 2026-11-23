@@ -101,6 +101,8 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     localMerge: ([path, branch, noFf]) =>
       api.local.merge(path as string, branch as string, noFf as boolean),
     localTags: ([path]) => api.local.tags(path as string),
+    localChangelog: ([path, from, to]) =>
+      api.local.changelog(path as string, from as string | null, to as string),
     localCreateTag: ([path, name, hash, message]) =>
       api.local.createTag(
         path as string,
