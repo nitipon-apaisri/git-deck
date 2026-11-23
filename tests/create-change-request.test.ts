@@ -135,3 +135,14 @@ test('a result link to another origin is blanked', async () => {
   reply = { code: 201, body: glMr({ web_url: 'https://evil.example/x' }) }
   assert.equal((await gl().createChangeRequest(glRepo, input)).webUrl, '')
 })
+
+test('a 422 whose errors have no message still says which field failed', async () => {
+  reply = {
+    code: 422,
+    body: {
+      message: 'Validation Failed',
+      errors: [{ resource: 'PullRequest', field: 'head', code: 'invalid' }]
+    }
+  }
+  await assert.rejects(gh().createChangeRequest(ghRepo, input), /PullRequest head invalid/)
+})

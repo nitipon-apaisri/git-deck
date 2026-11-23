@@ -52,7 +52,14 @@ async function request(
 async function hostMessage(res: Response): Promise<string> {
   try {
     const j = JSON.parse(await res.text()) as { message?: unknown; errors?: unknown }
-    const parts = [j.message, ...(Array.isArray(j.errors) ? j.errors.map((e) => e?.message) : [])]
+    // GitHub 422 errors are often `{resource, field, code}` with no message: spell them out.
+    const one = (e: unknown): unknown => {
+      if (typeof e === 'string') return e
+      const o = e as { message?: unknown; resource?: unknown; field?: unknown; code?: unknown }
+      if (typeof o?.message === 'string') return o.message
+      return [o?.resource, o?.field, o?.code].filter((x) => typeof x === 'string').join(' ')
+    }
+    const parts = [j.message, ...(Array.isArray(j.errors) ? j.errors.map(one) : [])]
     return parts
       .flatMap((m) => (Array.isArray(m) ? m : [m]))
       .filter((m): m is string => typeof m === 'string' && m !== '')
