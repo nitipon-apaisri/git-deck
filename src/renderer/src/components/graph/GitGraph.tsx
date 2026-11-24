@@ -78,6 +78,8 @@ export interface GraphMenuOps {
   cherryPick: (hash: string) => void
   merge: (branch: string, noFf: boolean) => void
   rebase: (onto: string) => void
+  /** Opens the interactive rebase dialog on the commits after `base`. */
+  rebaseInteractive: (base: string) => void
   revert: (hash: string) => void
   reset: (hash: string, mode: ResetMode) => void
   /** Opens the Tags dialog on this commit. */
@@ -274,6 +276,8 @@ export function GitGraph({
         return menuOps.cherryPick(action.hash)
       case 'rebase':
         return menuOps.rebase(action.onto)
+      case 'rebase-interactive':
+        return menuOps.rebaseInteractive(action.base)
       case 'revert':
         return menuOps.revert(action.hash)
       case 'reset':

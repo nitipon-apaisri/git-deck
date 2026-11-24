@@ -5,13 +5,16 @@ import {
   chmodSync,
   existsSync,
   lstatSync,
+  mkdtempSync,
   readFileSync,
   realpathSync,
   renameSync,
+  rmSync,
   unlinkSync,
   writeFileSync
 } from 'node:fs'
-import { dirname, resolve, sep } from 'node:path'
+import { tmpdir } from 'node:os'
+import { dirname, join, resolve, sep } from 'node:path'
 import { Semaphore } from './semaphore'
 import {
   applyResolutions,
@@ -51,6 +54,8 @@ import type {
   LocalRemote,
   OperationKind,
   OperationResult,
+  RebasePlan,
+  RebaseTodoItem,
   OperationState,
   PullMode,
   RepoStatus,
@@ -1682,6 +1687,125 @@ export async function rebase(cwd: string, onto: string): Promise<OperationResult
     return { conflicted: false }
   } catch (err) {
     return settle(cwd, ['rebase', '--abort'], err)
+  }
+}
+
+const MAX_REBASE_COMMITS = 500
+const MAX_REWORD_MESSAGE = 10_000
+const REBASE_ACTIONS = new Set(['pick', 'reword', 'squash', 'fixup', 'drop'])
+
+/** POSIX single quotes: git runs the editor and `exec` lines through `sh`. */
+function shQuote(value: string): string {
+  return `'${value.replace(/'/g, `'\\''`)}'`
+}
+
+/**
+ * The commits an interactive rebase onto `base` would replay, oldest first, and which of them a
+ * remote-tracking branch already has. `base` is a commit of the current branch's history.
+ */
+export async function rebasePlan(cwd: string, base: string): Promise<RebasePlan> {
+  await assertCommit(cwd, base)
+  if (!(await currentBranch(cwd))) throw new Error('Check out a branch first. HEAD is detached.')
+  if ((await tryRun(cwd, ['merge-base', '--is-ancestor', base, 'HEAD'])) === null) {
+    throw new Error('Choose a commit in the history of the current branch')
+  }
+  const out = await run(cwd, [
+    'log',
+    '--reverse',
+    `--format=${RS}%H${FS}%P${FS}%B`,
+    `-n${MAX_REBASE_COMMITS + 1}`,
+    `${base}..HEAD`
+  ])
+  const commits: RebasePlan['commits'] = []
+  for (const record of out.split(RS)) {
+    if (!record.trim()) continue
+    const [hash, parents, ...body] = record.replace(/^\n/, '').split(FS)
+    if (parents.includes(' ')) {
+      throw new Error(
+        'There is a merge commit in this range. Interactive rebase does not replay merges.'
+      )
+    }
+    const message = body.join(FS).trim()
+    commits.push({ hash, subject: message.split('\n')[0], message })
+  }
+  if (commits.length === 0) throw new Error('There are no commits after that one to rebase')
+  if (commits.length > MAX_REBASE_COMMITS) {
+    throw new Error(`Too many commits to rebase at once (the limit is ${MAX_REBASE_COMMITS})`)
+  }
+  const unpushed = new Set(
+    (await run(cwd, ['rev-list', 'HEAD', '--not', base, '--remotes'])).split('\n').filter(Boolean)
+  )
+  return { commits, pushed: commits.map((c) => c.hash).filter((h) => !unpushed.has(h)) }
+}
+
+/**
+ * Runs `git rebase -i` onto `base` with a todo built here from checked hashes and actions. The
+ * todo reaches git through a temp file (GIT_SEQUENCE_EDITOR copies it), a reworded message goes
+ * in its own file, so no user text is ever part of a command line. Stops on conflicts, like a merge.
+ */
+export async function rebaseRun(
+  cwd: string,
+  base: string,
+  todo: RebaseTodoItem[],
+  allowPushed: boolean
+): Promise<OperationResult> {
+  await assertNoOperation(cwd)
+  const plan = await rebasePlan(cwd, base)
+  const status = await getStatus(cwd)
+  if (status.entries.some((e) => !e.untracked)) {
+    throw new Error('Commit or stash your changes before rebasing.')
+  }
+  if (plan.pushed.length > 0 && !allowPushed) {
+    throw new Error('Some of these commits are already pushed. Rewriting them needs a force push.')
+  }
+  if (!Array.isArray(todo) || todo.length !== plan.commits.length) {
+    throw new Error('The todo list must name every commit once')
+  }
+  const known = new Set(plan.commits.map((c) => c.hash))
+  const seen = new Set<string>()
+  for (const item of todo) {
+    if (!item || !REBASE_ACTIONS.has(item.action) || !known.has(item.hash) || seen.has(item.hash)) {
+      throw new Error('The todo list is not valid')
+    }
+    seen.add(item.hash)
+    if (item.action === 'reword') {
+      const message = typeof item.message === 'string' ? item.message.trim() : ''
+      if (!message || message.length > MAX_REWORD_MESSAGE) {
+        throw new Error('A reworded commit needs a message')
+      }
+    }
+  }
+  const firstKept = todo.find((i) => i.action !== 'drop')
+  if (!firstKept || firstKept.action === 'squash' || firstKept.action === 'fixup') {
+    throw new Error('The first commit that is kept must be a pick or a reword')
+  }
+  const dir = mkdtempSync(join(tmpdir(), 'gitdeck-rebase-'))
+  try {
+    const lines: string[] = []
+    todo.forEach((item, i) => {
+      if (item.action === 'drop') return
+      lines.push(`${item.action === 'reword' ? 'pick' : item.action} ${item.hash}`)
+      if (item.action === 'reword') {
+        const file = join(dir, `message-${i}`)
+        writeFileSync(file, `${item.message!.trim()}\n`)
+        lines.push(`exec git commit --amend --allow-empty -q -F ${shQuote(file)}`)
+      }
+    })
+    const todoFile = join(dir, 'todo')
+    writeFileSync(todoFile, `${lines.join('\n')}\n`)
+    const env = { GIT_SEQUENCE_EDITOR: `cp ${shQuote(todoFile)}`, GIT_EDITOR: 'true' }
+    await exec(
+      cwd,
+      ['-c', 'rebase.autoStash=false', '-c', 'rebase.autoSquash=false', 'rebase', '-i', base],
+      { env }
+    )
+    return { conflicted: false }
+  } catch (err) {
+    return settle(cwd, ['rebase', '--abort'], err)
+  } finally {
+    // A stopped rebase has read the todo, but a reworded message is read when its exec runs.
+    // That happens before the stop only for earlier commits, so keep the files while it runs.
+    if (!(await getOperation(cwd))) rmSync(dir, { recursive: true, force: true })
   }
 }
 

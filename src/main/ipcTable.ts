@@ -10,6 +10,7 @@ import type {
   ConflictAction,
   ConflictRequest,
   HunkRequest,
+  RebaseTodoItem,
   PullMode,
   ResetMode,
   CreateChangeRequestInput
@@ -122,6 +123,9 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
       api.local.renameRemote(path as string, from as string, to as string),
     localRemoveRemote: ([path, name]) => api.local.removeRemote(path as string, name as string),
     localRebase: ([path, onto]) => api.local.rebase(path as string, onto as string),
+    localRebasePlan: ([path, base]) => api.local.rebasePlan(path as string, base as string),
+    localRebaseRun: ([path, base, todo]) =>
+      api.local.rebaseRun(path as string, base as string, todo as RebaseTodoItem[]),
     localSkipOperation: ([path]) => api.local.skipOperation(path as string),
     localStageHunk: ([path, hunk]) => api.local.stageHunk(path as string, hunk as HunkRequest),
     localUnstageHunk: ([path, hunk]) => api.local.unstageHunk(path as string, hunk as HunkRequest),

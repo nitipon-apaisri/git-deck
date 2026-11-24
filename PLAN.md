@@ -711,10 +711,10 @@ Runs on `phase/30-changelog`. The "change log" is GitDeck's own, per release ver
 
 Runs on `phase/31-interactive-rebase`. The largest and riskiest phase; it comes after the smaller ones are stable.
 
-- [ ] `git.ts`: `rebasePlan(repo, base)` lists the commits to replay; `rebaseRun(repo, base, todo)` runs `git rebase -i` with a generated todo (pick, reword, squash, fixup, drop, reorder) fed through `GIT_SEQUENCE_EDITOR` pointing at a temp file, never a shell string. Refuse on a dirty tree, on pushed commits unless the user confirms, and on merge commits in range.
-- [ ] Reuse `OperationBanner` and the conflict editor for stops: Continue, Skip, Abort. A running rebase is detected from the git dir, as bisect is.
-- [ ] Renderer: a todo-list editor dialog (reorder, change action, edit reword messages) opened from a graph row's context menu ("Rebase onto here, interactively"). Abort is always visible.
-- [ ] README: remove "interactive rebase" from "Not planned".
+- [x] `git.ts`: `rebasePlan(repo, base)` lists the commits to replay; `rebaseRun(repo, base, todo)` runs `git rebase -i` with a generated todo (pick, reword, squash, fixup, drop, reorder) fed through `GIT_SEQUENCE_EDITOR` pointing at a temp file, never a shell string. Refuse on a dirty tree, on pushed commits unless the user confirms, and on merge commits in range.
+- [x] Reuse `OperationBanner` and the conflict editor for stops: Continue, Skip, Abort. A running rebase is detected from the git dir, as bisect is.
+- [x] Renderer: a todo-list editor dialog (reorder, change action, edit reword messages) opened from a graph row's context menu ("Rebase onto here, interactively"). Abort is always visible.
+- [x] README: remove "interactive rebase" from "Not planned".
 
 **Verify:** temp-repo tests (reorder, squash, fixup, drop, reword, conflict then continue, conflict then abort, refused cases). Manual: the editor and the banner in the window.
 

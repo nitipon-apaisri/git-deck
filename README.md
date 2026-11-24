@@ -2,7 +2,7 @@
 
 A desktop Git client for GitHub, GitLab.com and self-hosted GitLab. Browse every repository you can reach, read its commit graph, group repositories from different hosts into Projects, and put two repositories side by side.
 
-Beyond reading, GitDeck stages, commits, switches branches, pushes and pulls, stashes, cherry-picks and merges. Tags, revert, reset, remotes, non-interactive rebase and hunk staging are in. Single lines can be staged and unstaged from the diff dialog. Merge conflicts can be resolved inside the app, region by region (see [Known limits](#known-limits-and-roadmap)).
+Beyond reading, GitDeck stages, commits, switches branches, pushes and pulls, stashes, cherry-picks and merges. Tags, revert, reset, remotes, non-interactive and interactive rebase and hunk staging are in. Single lines can be staged and unstaged from the diff dialog. Merge conflicts can be resolved inside the app, region by region (see [Known limits](#known-limits-and-roadmap)).
 
 Built with Electron, React and TypeScript.
 
@@ -13,7 +13,7 @@ Built with Electron, React and TypeScript.
 - **Open a folder.** Open any local Git repository without an account. It appears under Local with its graph and folder info.
 - **Local clones.** Clone over HTTPS or SSH, or link an existing folder. Fetch, open the folder, and read local branch, ahead/behind and working tree state.
 - **Commit graph.** A lane graph of the whole history, loaded 500 commits at a time and virtualised, so a repository with thousands of commits stays smooth. Select a commit to see its message and changed files.
-- **History operations.** Tags (create, annotate, push, delete here or on the remote), revert, reset (soft, mixed or hard, with a confirm for hard) and remotes (add, rename, remove). Non-interactive rebase onto a branch or commit, and staging one hunk at a time from the diff. Revert and rebase reuse the conflict banner, and a rebase can skip the commit it stopped on. URLs never carry a token.
+- **History operations.** Tags (create, annotate, push, delete here or on the remote), revert, reset (soft, mixed or hard, with a confirm for hard) and remotes (add, rename, remove). Non-interactive rebase onto a branch or commit, interactive rebase from a graph row (reorder, reword, squash, fixup, drop), and staging one hunk at a time from the diff. Revert and rebase reuse the conflict banner, and a rebase can skip the commit it stopped on. URLs never carry a token.
 - **Working tree.** Changes tab with diffs, staging by file, hunk or single line, commit, branches, checkout, push and pull, stash, cherry-pick and merge. Conflicts are resolved in an in-app editor.
 - **File history and blame.** A per-file tab with `git log --follow` history and a blame toggle. Click an entry to open that commit.
 - **Bisect.** Start from a graph row. A banner shows the commit under test with Good, Bad, Skip and Abort, then the result.
@@ -133,7 +133,7 @@ Known limits:
 - Split View has two panes at most.
 - The graph shows the history that `git log` reports for the linked folder. Detached HEAD and graphs with more than about ten lanes at once were not checked.
 
-Not planned for this version: interactive rebase, a full-file three-way editor, creating pull or merge requests, OAuth sign-in (tokens only), a SQLite cache, silent auto-update, signing and notarisation, more than two panes, drag-and-drop between projects, and cloning every repository of a project at once.
+Not planned for this version: a full-file three-way editor, creating pull or merge requests, OAuth sign-in (tokens only), a SQLite cache, silent auto-update, signing and notarisation, more than two panes, drag-and-drop between projects, and cloning every repository of a project at once.
 
 ### Install
 
@@ -183,5 +183,5 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 28: Create pull request / merge request
 - [x] Phase 29: More AI providers for commit messages
 - [x] Phase 30: Change log detail
-- [ ] Phase 31: Interactive rebase
+- [x] Phase 31: Interactive rebase
 - [ ] Phase 32: Project event notifications

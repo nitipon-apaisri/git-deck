@@ -361,6 +361,22 @@ export interface OperationResult {
   conflicted: boolean
 }
 
+export type RebaseAction = 'pick' | 'reword' | 'squash' | 'fixup' | 'drop'
+
+export interface RebaseTodoItem {
+  action: RebaseAction
+  hash: string
+  /** The new message of a `reword`. Never part of the todo text or a command line. */
+  message?: string
+}
+
+export interface RebasePlan {
+  /** The commits to replay, oldest first. */
+  commits: { hash: string; subject: string; message: string }[]
+  /** Hashes of those commits that a remote-tracking branch already has. */
+  pushed: string[]
+}
+
 export interface LocalInfo {
   path: string
   currentBranch: string | null

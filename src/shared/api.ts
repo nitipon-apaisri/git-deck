@@ -21,6 +21,8 @@ import type {
   ConflictRequest,
   ConflictSaveResult,
   OperationResult,
+  RebasePlan,
+  RebaseTodoItem,
   BisectMark,
   BisectState,
   OperationState,
@@ -179,6 +181,13 @@ export interface Api {
     removeRemote(path: string, name: string): Promise<boolean>
     /** `onto` is a local or remote branch (`origin/x`) or a commit hash. Non-interactive. */
     rebase(path: string, onto: string): Promise<OperationResult>
+    /** The commits `rebaseRun` would replay onto `base`, a commit of this branch. Throws when it cannot. */
+    rebasePlan(path: string, base: string): Promise<RebasePlan>
+    /**
+     * `git rebase -i` with this todo. Pushed commits ask first. `null` means the user declined;
+     * `conflicted` means it stopped: continue, skip or abort through `local.operation`.
+     */
+    rebaseRun(path: string, base: string, todo: RebaseTodoItem[]): Promise<OperationResult | null>
     /** Rebase only. Asks first, resolves `false` when declined. */
     skipOperation(path: string): Promise<boolean>
     /** Stage one hunk of a tracked file. Main rebuilds the patch, so a stale diff is refused. */
@@ -307,6 +316,8 @@ export const IPC = {
   localRenameRemote: 'local:renameRemote',
   localRemoveRemote: 'local:removeRemote',
   localRebase: 'local:rebase',
+  localRebasePlan: 'local:rebase-plan',
+  localRebaseRun: 'local:rebase-run',
   localSkipOperation: 'local:skipOperation',
   localStageHunk: 'local:stageHunk',
   localUnstageHunk: 'local:unstageHunk',

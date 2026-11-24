@@ -22,6 +22,7 @@ import type {
   ConflictChoice,
   ConflictRequest,
   HunkRequest,
+  RebaseTodoItem,
   DiffRequest,
   PullMode,
   Repo,
@@ -118,6 +119,8 @@ export type GitOps = Pick<
   | 'renameRemote'
   | 'removeRemote'
   | 'rebase'
+  | 'rebasePlan'
+  | 'rebaseRun'
   | 'skipOperation'
   | 'readBisect'
   | 'bisectStart'
@@ -268,6 +271,24 @@ function checkBranchName(name: unknown): string {
     throw new Error('The branch name is not valid')
   }
   return name
+}
+
+function checkRebaseTodo(value: unknown): RebaseTodoItem[] {
+  if (!Array.isArray(value) || value.length === 0 || value.length > 500) {
+    throw new Error('The todo list is not valid')
+  }
+  return value.map((v) => {
+    const i = v as Partial<RebaseTodoItem> | null
+    if (
+      typeof i?.hash !== 'string' ||
+      !/^[0-9a-f]{40,64}$/i.test(i.hash) ||
+      typeof i.action !== 'string' ||
+      (i.message !== undefined && typeof i.message !== 'string')
+    ) {
+      throw new Error('The todo list is not valid')
+    }
+    return { hash: i.hash, action: i.action as RebaseTodoItem['action'], message: i.message }
+  })
 }
 
 function checkChangeRequest(input: unknown): CreateChangeRequestInput {
@@ -1281,6 +1302,29 @@ export function createService(deps: ServiceDeps): {
         linkedRepoKey(path)
         const target = checkBranchName(onto)
         return serial(path, () => git.rebase(path, target))
+      }),
+      rebasePlan: guard(async (path, base) => {
+        linkedRepoKey(path)
+        const hash = checkBranchName(base)
+        return serial(path, () => git.rebasePlan(path, hash))
+      }),
+      rebaseRun: guard(async (path, base, todo) => {
+        linkedRepoKey(path)
+        const hash = checkBranchName(base)
+        const items = checkRebaseTodo(todo)
+        return serial(path, async () => {
+          const { pushed } = await git.rebasePlan(path, hash)
+          if (pushed.length > 0) {
+            const ok = await ui.confirm({
+              message: `Rewrite ${pushed.length} pushed commit${pushed.length === 1 ? '' : 's'}?`,
+              detail:
+                "A remote already has them. After the rebase you must force-push, which can overwrite other people's work.",
+              confirmLabel: 'Rewrite'
+            })
+            if (!ok) return null
+          }
+          return git.rebaseRun(path, hash, items, pushed.length > 0)
+        })
       }),
       skipOperation: guard(async (path) => {
         linkedRepoKey(path)
