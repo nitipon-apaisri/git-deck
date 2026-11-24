@@ -42,7 +42,7 @@ export function NotificationsSection() {
       </p>
       {enabled === null ? null : (
         <CheckOption
-          label="Show PR/MR notifications"
+          label="Allow notifications"
           checked={enabled}
           onChange={(on) => void choose(on)}
           warning={enabled ? undefined : 'Off: nothing is checked, whatever projects ask for.'}
