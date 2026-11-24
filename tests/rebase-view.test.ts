@@ -11,9 +11,9 @@ import {
 
 const plan = {
   commits: [
-    { hash: 'a'.repeat(40), subject: 'one' },
-    { hash: 'b'.repeat(40), subject: 'two' },
-    { hash: 'c'.repeat(40), subject: 'three' }
+    { hash: 'a'.repeat(40), subject: 'one', message: 'one\n\nbody' },
+    { hash: 'b'.repeat(40), subject: 'two', message: 'two' },
+    { hash: 'c'.repeat(40), subject: 'three', message: 'three' }
   ],
   pushed: []
 }
@@ -26,6 +26,10 @@ test('rows start as picks in plan order, unchanged', () => {
   )
   assert.equal(isUnchanged(rows, plan), true)
   assert.equal(rebaseProblem(rows), null)
+})
+
+test('a reword starts from the whole message, body included', () => {
+  assert.equal(rowsFromPlan(plan)[0].message, 'one\n\nbody')
 })
 
 test('moveRow swaps neighbours and ignores the ends', () => {

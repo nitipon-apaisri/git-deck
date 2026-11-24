@@ -12,7 +12,7 @@ export interface RebaseRow {
 export const REBASE_ACTION_OPTIONS: { value: RebaseAction; label: string }[] = [
   { value: 'pick', label: 'Pick (keep)' },
   { value: 'reword', label: 'Reword (new message)' },
-  { value: 'squash', label: 'Squash (join, edit message)' },
+  { value: 'squash', label: 'Squash (join, keep both messages)' },
   { value: 'fixup', label: 'Fixup (join, drop message)' },
   { value: 'drop', label: 'Drop (remove)' }
 ]
@@ -22,7 +22,7 @@ export function rowsFromPlan(plan: RebasePlan): RebaseRow[] {
     hash: c.hash,
     subject: c.subject,
     action: 'pick',
-    message: c.subject
+    message: c.message
   }))
 }
 
@@ -50,6 +50,11 @@ export function rebaseProblem(rows: RebaseRow[]): string | null {
     return 'A reworded commit needs a message.'
   }
   return null
+}
+
+/** Why "Start rebase" is off while the list can run, or `null`. */
+export function unchangedHint(rows: RebaseRow[], plan: RebasePlan): string | null {
+  return isUnchanged(rows, plan) ? 'Reorder, reword, join or drop a commit to start.' : null
 }
 
 /** True when running would change nothing: every row is a pick in the original order. */

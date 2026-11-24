@@ -1712,20 +1712,21 @@ export async function rebasePlan(cwd: string, base: string): Promise<RebasePlan>
   const out = await run(cwd, [
     'log',
     '--reverse',
-    `--format=%H${FS}%P${FS}%s`,
+    `--format=${RS}%H${FS}%P${FS}%B`,
     `-n${MAX_REBASE_COMMITS + 1}`,
     `${base}..HEAD`
   ])
   const commits: RebasePlan['commits'] = []
-  for (const line of out.split('\n')) {
-    if (!line) continue
-    const [hash, parents, ...subject] = line.split(FS)
+  for (const record of out.split(RS)) {
+    if (!record.trim()) continue
+    const [hash, parents, ...body] = record.replace(/^\n/, '').split(FS)
     if (parents.includes(' ')) {
       throw new Error(
         'There is a merge commit in this range. Interactive rebase does not replay merges.'
       )
     }
-    commits.push({ hash, subject: subject.join(FS) })
+    const message = body.join(FS).trim()
+    commits.push({ hash, subject: message.split('\n')[0], message })
   }
   if (commits.length === 0) throw new Error('There are no commits after that one to rebase')
   if (commits.length > MAX_REBASE_COMMITS) {

@@ -39,6 +39,10 @@ test('plan lists commits oldest first and none as pushed', async () => {
     hashes
   )
   assert.deepEqual(plan.pushed, [])
+  assert.deepEqual(
+    plan.commits.map((c) => c.subject),
+    ['a', 'b', 'c']
+  )
 })
 
 test('reorder, drop, fixup and squash', async () => {
@@ -143,4 +147,17 @@ test('a conflict stops, then abort restores the branch', async () => {
   await abortOperation(dir)
   assert.equal(git(dir, 'rev-parse', 'HEAD'), before)
   assert.equal(await getOperation(dir), null)
+})
+
+test('plan carries the whole message, body included', async () => {
+  const dir = emptyRepo()
+  const base = commit(dir, 'base.txt', 'base')
+  writeFileSync(join(dir, 'x.txt'), 'x')
+  git(dir, 'add', '.')
+  git(dir, 'commit', '-q', '-m', 'subject', '-m', 'line one\nline two')
+  commit(dir, 'y.txt', 'next')
+  const { commits } = await rebasePlan(dir, base)
+  assert.equal(commits[0].subject, 'subject')
+  assert.equal(commits[0].message, 'subject\n\nline one\nline two')
+  assert.equal(commits[1].message, 'next')
 })

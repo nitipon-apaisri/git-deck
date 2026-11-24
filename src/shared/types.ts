@@ -372,7 +372,7 @@ export interface RebaseTodoItem {
 
 export interface RebasePlan {
   /** The commits to replay, oldest first. */
-  commits: { hash: string; subject: string }[]
+  commits: { hash: string; subject: string; message: string }[]
   /** Hashes of those commits that a remote-tracking branch already has. */
   pushed: string[]
 }

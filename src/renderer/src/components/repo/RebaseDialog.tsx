@@ -9,9 +9,10 @@ import {
   rebaseProblem,
   rowsFromPlan,
   toTodo,
+  unchangedHint,
   type RebaseRow
 } from '../../lib/rebaseView'
-import { Button, Dialog, ErrorBanner, IconButton, Select, Spinner, TextInput } from '../ui'
+import { Button, Dialog, ErrorBanner, IconButton, Select, Spinner, Textarea } from '../ui'
 
 interface RebaseDialogProps {
   /** The linked folder. */
@@ -98,12 +99,16 @@ export function RebaseDialog({ path, base, onChanged, onClose }: RebaseDialogPro
             must force-push afterwards.
           </p>
         ) : null}
-        {invalid ? <p className="m-0 text-muted-foreground">{invalid}</p> : null}
+        {(invalid ?? (plan ? unchangedHint(rows, plan) : null)) ? (
+          <p className="m-0 text-muted-foreground">
+            {invalid ?? (plan ? unchangedHint(rows, plan) : null)}
+          </p>
+        ) : null}
         <ol className="m-0 flex list-none flex-col gap-1 p-0">
           {rows.map((row, i) => (
             <li
               key={row.hash}
-              className="flex flex-col gap-2 rounded-md bg-secondary px-3 py-2"
+              className={`flex flex-col gap-2 rounded-md bg-secondary py-2 pr-3 ${row.action === 'squash' || row.action === 'fixup' ? 'ml-6 pl-3' : 'pl-3'}`}
               data-dropped={row.action === 'drop' || undefined}
             >
               <div className="flex items-center gap-2">
@@ -145,10 +150,12 @@ export function RebaseDialog({ path, base, onChanged, onClose }: RebaseDialogPro
                 ) : null}
               </div>
               {row.action === 'reword' ? (
-                <TextInput
+                <Textarea
+                  data-autofocus
                   aria-label={`New message for ${row.hash.slice(0, 7)}`}
                   value={row.message}
-                  maxLength={1000}
+                  rows={Math.min(6, row.message.split('\n').length + 1)}
+                  maxLength={10000}
                   disabled={busy}
                   onChange={(e) => setRows(patchRow(rows, i, { message: e.target.value }))}
                 />
