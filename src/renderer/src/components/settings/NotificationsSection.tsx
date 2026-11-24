@@ -26,11 +26,9 @@ export function NotificationsSection() {
     setError(null)
     setStatus(null)
     try {
-      setStatus(
-        (await window.api.notify.test())
-          ? 'Sent. If nothing appeared, allow notifications for GitDeck (Electron when run with pnpm dev) in your system settings.'
-          : 'This system does not support notifications.'
-      )
+      const problem = await window.api.notify.test()
+      if (problem) setError(problem)
+      else setStatus('Sent. It should be on screen or in Notification Center.')
     } catch (err) {
       setError(errorMessage(err))
     }

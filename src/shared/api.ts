@@ -252,8 +252,8 @@ export interface Api {
     /** The app-wide switch in Settings. On unless turned off. */
     enabled(): Promise<boolean>
     setEnabled(on: boolean): Promise<void>
-    /** Shows a fixed notification. `false` when the system cannot show notifications. */
-    test(): Promise<boolean>
+    /** Shows a fixed notification. `null` when shown, else why it was not. */
+    test(): Promise<string | null>
   }
   projects: {
     list(): Promise<Project[]>

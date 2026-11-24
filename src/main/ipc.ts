@@ -68,7 +68,9 @@ export function registerIpc(store: Store): () => void {
       }
     },
     emitNotify: ({ repoKey, projectId, title, body }) => {
-      if (!Notification.isSupported()) return false
+      if (!Notification.isSupported()) {
+        return Promise.resolve('This system does not support notifications.')
+      }
       const note = new Notification({ title, body })
       shownNotes.add(note)
       if (shownNotes.size > 50) shownNotes.delete(shownNotes.values().next().value as Notification)
@@ -83,8 +85,18 @@ export function registerIpc(store: Store): () => void {
         // The test notification has no repository: focusing is all it does.
         if (repoKey) win.webContents.send(IPC.notifyOpen, { repoKey, projectId })
       })
+      // macOS refuses unsigned or not-allowed apps with a `failed` event, not an exception.
+      const outcome = new Promise<string | null>((resolve) => {
+        note.once('show', () => resolve(null))
+        note.once('failed', (_event, error) => {
+          shownNotes.delete(note)
+          resolve(error)
+        })
+        // shortcut: no event within 5 s counts as shown (Linux may not emit `show`).
+        setTimeout(() => resolve(null), 5000)
+      })
       note.show()
-      return true
+      return outcome
     }
   })
 

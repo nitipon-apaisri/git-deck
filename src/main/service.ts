@@ -145,8 +145,13 @@ export interface ServiceDeps {
   emitTerminalData?(id: string, data: string): void
   emitTerminalExit?(id: string, exitCode: number): void
   /** Shows a PR/MR notification. Without it, nothing is polled. Text only: no URL, no token. */
-  /** Returns whether the system could show it. */
-  emitNotify?(notice: { repoKey: string; projectId: string; title: string; body: string }): boolean
+  /** Resolves `null` when shown, else the system's reason. */
+  emitNotify?(notice: {
+    repoKey: string
+    projectId: string
+    title: string
+    body: string
+  }): Promise<string | null>
   /** Replaceable in tests: starts a pty. */
   spawnPty?: SpawnPty
   /** Replaceable in tests. */
@@ -593,7 +598,7 @@ export function createService(deps: ServiceDeps): {
         kind === 'stopped' || !cr
           ? 'Stopped checking for PR/MR events: the host refused the token.'
           : noticeBody(kind, cr)
-      deps.emitNotify?.({ repoKey, projectId, title: `${host} · ${repo.fullName}`, body })
+      void deps.emitNotify?.({ repoKey, projectId, title: `${host} · ${repo.fullName}`, body })
     }
   })
   if (deps.emitNotify) poller.start()
@@ -1463,15 +1468,20 @@ export function createService(deps: ServiceDeps): {
         await store.setNotificationsEnabled(on)
         poller.restart()
       }),
-      test: guard(
-        async () =>
-          deps.emitNotify?.({
-            repoKey: '',
-            projectId: '',
-            title: 'GitDeck',
-            body: 'Notifications work.'
-          }) ?? false
-      )
+      test: guard(async () => {
+        if (!deps.emitNotify) return 'Notifications are not available here.'
+        const error = await deps.emitNotify({
+          repoKey: '',
+          projectId: '',
+          title: 'GitDeck',
+          body: 'Notifications work.'
+        })
+        if (error === null) return null
+        // UNErrorDomain 1: macOS did not allow it (permission off, or an unsigned build).
+        return /UNErrorDomain error 1\b/.test(error)
+          ? `macOS did not allow it (${error}). Turn on notifications for GitDeck in System Settings > Notifications. A development or unsigned build may not be allowed at all.`
+          : error
+      })
     },
     projects: {
       list: guard(async () => store.getProjects()),

@@ -755,7 +755,7 @@ test('local.remove forgets the repository and its link, and only accepts local k
 
 test('notify: test sends a fixed notification, the switch is checked and silences polling', async () => {
   const r = await rig()
-  assert.equal(await r.api.notify.test(), false, 'no notifier: nothing shown')
+  assert.match((await r.api.notify.test()) ?? '', /not available/, 'no notifier: nothing shown')
   await assert.rejects(r.api.notify.setEnabled('yes' as never), /Invalid notifications setting/)
 
   let lists = 0
@@ -764,6 +764,7 @@ test('notify: test sends a fixed notification, the switch is checked and silence
     return []
   }
   const shown: { title: string; body: string }[] = []
+  let refusal: string | null = null
   const service = createService({
     store: r.store,
     ui: {
@@ -775,15 +776,19 @@ test('notify: test sends a fixed notification, the switch is checked and silence
     emitProgress: () => {},
     emitRepoChanged: () => {},
     createProvider: () => r.provider,
-    emitNotify: (n) => {
+    emitNotify: async (n) => {
+      if (refusal) return refusal
       shown.push({ title: n.title, body: n.body })
-      return true
+      return null
     }
   })
   try {
     const { api } = service
-    assert.equal(await api.notify.test(), true)
+    assert.equal(await api.notify.test(), null)
     assert.deepEqual(shown, [{ title: 'GitDeck', body: 'Notifications work.' }])
+    refusal = 'The operation couldn’t be completed. (UNErrorDomain error 1.)'
+    assert.match((await api.notify.test()) ?? '', /macOS did not allow it .*System Settings/)
+    refusal = null
 
     await api.notify.setEnabled(false)
     assert.equal(await api.notify.enabled(), false)
