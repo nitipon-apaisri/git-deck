@@ -1,6 +1,6 @@
 {
   "name": "gitdeck",
-  "version": "0.1.6",
+  "version": "0.2.0-rc.1",
   "private": true,
   "description": "GitDeck - desktop Git client for GitHub and GitLab",
   "packageManager": "pnpm@10.0.0",

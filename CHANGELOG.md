@@ -2,6 +2,30 @@
 
 What changed in each GitDeck release, newest first. The app shows this file in Settings > About. `docs/RELEASING.md` says how an entry is added: one `## X.Y.Z` heading per release, with the sections Fixes, Contents and Known limits.
 
+## 0.2.0
+
+### Fixes
+
+- None. No fixes to 0.1.6 features; fixes made while building the new features are part of them.
+
+### Contents
+
+- Discard chosen lines of a file from the diff, not only the whole file (phase 27).
+- Create a pull request or merge request from GitDeck, with an option to push the branch first (phase 28). GitLab now asks for the `api` token scope to create merge requests.
+- More AI providers for commit messages: OpenAI, Gemini, any OpenAI-compatible server (such as Ollama), and the Codex and OpenCode command-line tools (phase 29). Keys are kept encrypted.
+- GitDeck's own change log in Settings > About, with a button to check GitHub for newer release notes (phase 30).
+- Interactive rebase from a commit's graph menu: reorder, drop, squash, fixup and reword commits (phase 31).
+- PR/MR notifications per project (new, merged, closed, reviewer requested, checks failed), checked every 2 minutes while GitDeck is open, with an Allow notifications switch and a test button in Settings > Notifications (phase 32).
+
+### Known limits
+
+- Not notarised (no Apple Developer ID): macOS still asks to confirm the first launch.
+- The x64 build is cross-built on an arm64 runner and has not been run on an Intel Mac.
+- The update check is manual only (Settings, About).
+- Notifications in the packaged app, and clicking one to open the PR/MR tab, have not been checked yet. Notifications are polled, so they can arrive up to 2 minutes late.
+- Interactive rebase has no edit or break actions and does not rebase merge commits.
+- The new AI providers have not been tried with live keys.
+
 ## 0.1.6
 
 ### Fixes
