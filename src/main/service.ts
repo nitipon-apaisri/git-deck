@@ -1470,6 +1470,8 @@ export function createService(deps: ServiceDeps): {
       }),
       test: guard(async () => {
         if (!deps.emitNotify) return 'Notifications are not available here.'
+        if (!store.notificationsEnabled())
+          return 'Notifications are off. Tick Allow notifications first.'
         const error = await deps.emitNotify({
           repoKey: '',
           projectId: '',

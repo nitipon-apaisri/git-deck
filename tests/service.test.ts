@@ -792,6 +792,8 @@ test('notify: test sends a fixed notification, the switch is checked and silence
 
     await api.notify.setEnabled(false)
     assert.equal(await api.notify.enabled(), false)
+    assert.match((await api.notify.test()) ?? '', /off/)
+    assert.equal(shown.length, 1, 'switched off: the test sends nothing')
     const p = await api.projects.create({ name: 'Watched', repoKeys: ['acc1:1'] })
     await api.projects.update(p.id, { notify: ['merged'] })
     await new Promise((resolve) => setTimeout(resolve, 20))
