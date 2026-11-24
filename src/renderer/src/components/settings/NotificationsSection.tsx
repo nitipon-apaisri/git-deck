@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { errorMessage } from '../../lib/errors'
-import { Button, CheckOption } from '../ui'
+import { Button, SwitchOption } from '../ui'
 
 /** The app-wide switch for PR/MR notifications, and a test notification. */
 export function NotificationsSection() {
@@ -38,7 +38,7 @@ export function NotificationsSection() {
   return (
     <div className="flex flex-col gap-4">
       {enabled === null ? null : (
-        <CheckOption
+        <SwitchOption
           label="Allow notifications"
           checked={enabled}
           onChange={(on) => void choose(on)}

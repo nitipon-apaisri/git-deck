@@ -78,6 +78,36 @@ interface CheckOptionProps {
   warning?: ReactNode
 }
 
+/** An on/off setting in the same box as `CheckOption`: label left, switch right. */
+export function SwitchOption({ label, checked, onChange }: Omit<CheckOptionProps, 'warning'>) {
+  const id = useId()
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-secondary p-3">
+      <label htmlFor={id} className="cursor-pointer font-medium">
+        {label}
+      </label>
+      <button
+        id={id}
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={cn(
+          'relative h-5 w-9 flex-none cursor-pointer rounded-full transition-colors',
+          checked ? 'bg-primary' : 'bg-(--border-strong)'
+        )}
+      >
+        <span
+          className={cn(
+            'absolute top-0.5 left-0.5 size-4 rounded-full transition-transform',
+            checked ? 'translate-x-4 bg-primary-foreground' : 'bg-muted-foreground'
+          )}
+        />
+      </button>
+    </div>
+  )
+}
+
 /** A related option in its own `radius-lg` box, with its warning below. */
 export function CheckOption({ label, checked, onChange, warning }: CheckOptionProps) {
   const id = useId()
