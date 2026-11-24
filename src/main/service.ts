@@ -1477,9 +1477,9 @@ export function createService(deps: ServiceDeps): {
           body: 'Notifications work.'
         })
         if (error === null) return null
-        // UNErrorDomain 1: macOS did not allow it (permission off, or an unsigned build).
+        // UNErrorDomain 1: macOS did not allow it (permission off, or a linker-signed dev Electron).
         return /UNErrorDomain error 1\b/.test(error)
-          ? `macOS did not allow it (${error}). Turn on notifications for GitDeck in System Settings > Notifications. A development or unsigned build may not be allowed at all.`
+          ? `macOS did not allow it (${error}). Turn on notifications for GitDeck in System Settings > Notifications. Running pnpm dev: re-sign Electron first (see the README).`
           : error
       })
     },

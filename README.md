@@ -47,6 +47,8 @@ pnpm lint       # ESLint
 
 `pnpm format` runs Prettier. A pre-commit hook runs lint-staged and a secret scan (gitleaks).
 
+Notifications under `pnpm dev` on macOS: the Electron that pnpm installs is only linker-signed, so macOS never lists it in System Settings > Notifications and refuses its notifications (`UNErrorDomain error 1`). Sign it once: `codesign --force --deep --sign - node_modules/electron/dist/Electron.app`, restart `pnpm dev`, click **Send a test notification** in Settings > Notifications and allow it when macOS asks. Reinstalling Electron undoes this. The packaged app is signed by electron-builder and does not need it.
+
 ## Connecting an account
 
 Open **Accounts**, pick a host, paste a token, press **Test connection**, then **Add account**. GitDeck only ever sends the token to that host.
