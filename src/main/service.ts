@@ -10,6 +10,7 @@ import {
   createProject,
   removeRepos,
   updateProject,
+  checkNotify,
   type ProjectInput,
   type ProjectPatch
 } from '../shared/projects'
@@ -22,12 +23,22 @@ import type {
   ConflictChoice,
   ConflictRequest,
   HunkRequest,
+  RebaseTodoItem,
   DiffRequest,
   PullMode,
   Repo,
-  RepoSummary
+  RepoSummary,
+  CreateChangeRequestInput
 } from '../shared/types'
-import { buildPrompt, runClaude } from './ai'
+import {
+  AI_PROVIDERS,
+  AI_PROVIDER_IDS,
+  isAiProvider,
+  normalizeAiBaseUrl,
+  type AiConfig,
+  type AiProviderId
+} from '../shared/ai'
+import { TEST_PROMPT, buildPrompt, suggest as realSuggest, type SuggestOptions } from './ai'
 import * as realGit from './git'
 import { NO_OPERATION } from './git'
 import { MAX_REGION_TEXT } from '../shared/conflict'
@@ -37,7 +48,9 @@ import { watchRepo as realWatchRepo } from './watcher'
 import { createProvider as realCreateProvider, normalizeBaseUrl } from './providers'
 import type { GitProvider } from './providers/types'
 import type { Store } from './store'
-import { checkForUpdate } from './updateCheck'
+import { checkForUpdate, fetchReleaseNotes } from './updateCheck'
+import { createPoller } from './notifyPoller'
+import { noticeBody } from '../shared/notify'
 import { allowHostTemporarily, setInsecureHosts } from './tls'
 import { isHttp } from './urls'
 
@@ -109,6 +122,8 @@ export type GitOps = Pick<
   | 'renameRemote'
   | 'removeRemote'
   | 'rebase'
+  | 'rebasePlan'
+  | 'rebaseRun'
   | 'skipOperation'
   | 'readBisect'
   | 'bisectStart'
@@ -116,6 +131,7 @@ export type GitOps = Pick<
   | 'bisectReset'
   | 'stageHunk'
   | 'unstageHunk'
+  | 'discardLines'
   | 'getConflictFile'
   | 'resolveConflictRegions'
   | 'resolveConflictFile'
@@ -128,14 +144,22 @@ export interface ServiceDeps {
   emitRepoChanged(path: string): void
   emitTerminalData?(id: string, data: string): void
   emitTerminalExit?(id: string, exitCode: number): void
+  /** Shows a PR/MR notification. Without it, nothing is polled. Text only: no URL, no token. */
+  /** Resolves `null` when shown, else the system's reason. */
+  emitNotify?(notice: {
+    repoKey: string
+    projectId: string
+    title: string
+    body: string
+  }): Promise<string | null>
   /** Replaceable in tests: starts a pty. */
   spawnPty?: SpawnPty
   /** Replaceable in tests. */
   watchRepo?: typeof realWatchRepo
   createProvider?: (account: Pick<Account, 'id' | 'type' | 'baseUrl'>, token: string) => GitProvider
   git?: GitOps
-  /** Replaceable in tests: asks Claude Code for a commit message. */
-  suggestMessage?: (prompt: string) => Promise<string>
+  /** Replaceable in tests: asks the chosen provider for a commit message. */
+  suggestMessage?: typeof realSuggest
 }
 
 const MAX_GRAPH_PAGE = 2000
@@ -175,6 +199,33 @@ export function sanitizeFolderName(name: string): string {
 function percentOf(line: string): number | null {
   const match = /(\d{1,3})%/.exec(line)
   return match ? Math.min(100, Number(match[1])) : null
+}
+
+const MODEL_RE = /^[A-Za-z0-9][\w.:/#@+-]{0,127}$/
+
+/** Provider, model and URL from the page. The model never starts with `-`: it is a CLI argument. */
+export function checkAiConfig(raw: unknown): AiConfig {
+  const c = raw as Partial<Record<keyof AiConfig, unknown>> | null
+  if (typeof c !== 'object' || c === null || !isAiProvider(c.provider)) {
+    throw new Error('Choose an AI provider')
+  }
+  const config: AiConfig = { provider: c.provider }
+  const model = typeof c.model === 'string' ? c.model.trim() : ''
+  if (model) {
+    if (!MODEL_RE.test(model)) throw new Error('The model name is not valid')
+    config.model = model
+  }
+  if (c.provider === 'compatible') {
+    config.baseUrl = normalizeAiBaseUrl(typeof c.baseUrl === 'string' ? c.baseUrl : '')
+  }
+  return config
+}
+
+function checkAiProvider(provider: unknown): AiProviderId {
+  if (!isAiProvider(provider) || !AI_PROVIDERS[provider].key) {
+    throw new Error('This provider takes no API key')
+  }
+  return provider
 }
 
 function normaliseInput(raw: unknown): AccountInput {
@@ -231,6 +282,39 @@ function checkBranchName(name: unknown): string {
     throw new Error('The branch name is not valid')
   }
   return name
+}
+
+function checkRebaseTodo(value: unknown): RebaseTodoItem[] {
+  if (!Array.isArray(value) || value.length === 0 || value.length > 500) {
+    throw new Error('The todo list is not valid')
+  }
+  return value.map((v) => {
+    const i = v as Partial<RebaseTodoItem> | null
+    if (
+      typeof i?.hash !== 'string' ||
+      !/^[0-9a-f]{40,64}$/i.test(i.hash) ||
+      typeof i.action !== 'string' ||
+      (i.message !== undefined && typeof i.message !== 'string')
+    ) {
+      throw new Error('The todo list is not valid')
+    }
+    return { hash: i.hash, action: i.action as RebaseTodoItem['action'], message: i.message }
+  })
+}
+
+function checkChangeRequest(input: unknown): CreateChangeRequestInput {
+  const i = input as Partial<CreateChangeRequestInput> | null
+  const title = typeof i?.title === 'string' ? i.title.trim() : ''
+  if (!title || title.length > 256) throw new Error('The title must be 1 to 256 characters')
+  if (typeof i?.body !== 'string' || i.body.length > 60000)
+    throw new Error('The description is too long')
+  return {
+    title,
+    body: i.body,
+    head: checkBranchName(i.head),
+    base: checkBranchName(i.base),
+    draft: i.draft === true
+  }
 }
 
 const MAX_STASH_MESSAGE_LENGTH = 500
@@ -362,7 +446,14 @@ export function createService(deps: ServiceDeps): {
   const { store, ui } = deps
   const git: GitOps = deps.git ?? realGit
   const makeProvider = deps.createProvider ?? realCreateProvider
-  const suggest = deps.suggestMessage ?? ((prompt: string) => runClaude(prompt))
+  const suggest = deps.suggestMessage ?? realSuggest
+
+  function askAi(raw: unknown, prompt: string): Promise<string> {
+    const config = checkAiConfig(raw)
+    const options: SuggestOptions = { model: config.model, baseUrl: config.baseUrl }
+    if (AI_PROVIDERS[config.provider].key) options.key = store.getAiKey(config.provider)
+    return suggest(config.provider, prompt, options)
+  }
 
   const inflight = new Map<string, Promise<unknown>>()
   const writeQueues = new Map<string, Promise<unknown>>()
@@ -414,10 +505,10 @@ export function createService(deps: ServiceDeps): {
   }
 
   function allTokens(): string[] {
-    return store
-      .listAccounts()
-      .map((a) => store.getToken(a.id))
-      .filter((t): t is string => typeof t === 'string')
+    return [
+      ...store.listAccounts().map((a) => store.getToken(a.id)),
+      ...AI_PROVIDER_IDS.map((id) => store.getAiKey(id))
+    ].filter((t): t is string => typeof t === 'string')
   }
 
   /** Every error leaves main with a plain, token-free message. */
@@ -492,6 +583,25 @@ export function createService(deps: ServiceDeps): {
       release()
     }
   }
+
+  // PR/MR notifications: polled in main, only for projects that turned events on.
+  const poller = createPoller({
+    // Off in Settings: nothing is watched, and turning it on starts from a fresh baseline.
+    projects: () => (store.notificationsEnabled() ? store.getProjects() : []),
+    list: (key) => withProvider(key, [], (p, r) => p.listChangeRequests(r)),
+    checks: (key, ref) =>
+      withProvider(key, { state: 'none', items: [] }, (p, r) => p.getChecks(r, ref)),
+    notify: ({ repoKey, projectId, kind, cr }) => {
+      const repo = requireRepo(repoKey)
+      const host = requireAccount(repo.accountId).host
+      const body =
+        kind === 'stopped' || !cr
+          ? 'Stopped checking for PR/MR events: the host refused the token.'
+          : noticeBody(kind, cr)
+      void deps.emitNotify?.({ repoKey, projectId, title: `${host} · ${repo.fullName}`, body })
+    }
+  })
+  if (deps.emitNotify) poller.start()
 
   async function addAccount(raw: AccountInput): Promise<Account> {
     const input = normaliseInput(raw)
@@ -729,7 +839,10 @@ export function createService(deps: ServiceDeps): {
     }
   ): Promise<T> {
     const { next, result } = change(store.getProjects())
-    return store.setProjects(next).then(() => result)
+    return store.setProjects(next).then(() => {
+      poller.restart()
+      return result
+    })
   }
 
   function checkKeys(keys: unknown, accountsMustExist: boolean): string[] {
@@ -791,6 +904,13 @@ export function createService(deps: ServiceDeps): {
     },
     changes: {
       list: guard((repoKey) => withProvider(repoKey, [], (p, r) => p.listChangeRequests(r))),
+      create: guard(async (repoKey, input) => {
+        const v = checkChangeRequest(input)
+        if (parseRepoKey(repoKey as string).accountId === LOCAL_ACCOUNT) {
+          throw new Error('A local-only repository has no host to create a request on')
+        }
+        return withProvider(repoKey as string, null as never, (p, r) => p.createChangeRequest(r, v))
+      }),
       checks: guard((repoKey, ref) =>
         withProvider(repoKey, { state: 'none', items: [] }, (p, r) => p.getChecks(r, String(ref)))
       )
@@ -992,11 +1112,12 @@ export function createService(deps: ServiceDeps): {
         )
         return true
       }),
-      suggestCommitMessage: guard(async (path) => {
+      suggestCommitMessage: guard(async (path, config) => {
         linkedRepoKey(path)
+        checkAiConfig(config)
         const { stat, diff } = await git.getStagedDiff(path)
         if (!diff.trim()) throw new Error('Stage some changes first')
-        return suggest(buildPrompt(stat, diff))
+        return askAi(config, buildPrompt(stat, diff))
       }),
       stashes: guard(async (path) => {
         linkedRepoKey(path)
@@ -1215,6 +1336,29 @@ export function createService(deps: ServiceDeps): {
         const target = checkBranchName(onto)
         return serial(path, () => git.rebase(path, target))
       }),
+      rebasePlan: guard(async (path, base) => {
+        linkedRepoKey(path)
+        const hash = checkBranchName(base)
+        return serial(path, () => git.rebasePlan(path, hash))
+      }),
+      rebaseRun: guard(async (path, base, todo) => {
+        linkedRepoKey(path)
+        const hash = checkBranchName(base)
+        const items = checkRebaseTodo(todo)
+        return serial(path, async () => {
+          const { pushed } = await git.rebasePlan(path, hash)
+          if (pushed.length > 0) {
+            const ok = await ui.confirm({
+              message: `Rewrite ${pushed.length} pushed commit${pushed.length === 1 ? '' : 's'}?`,
+              detail:
+                "A remote already has them. After the rebase you must force-push, which can overwrite other people's work.",
+              confirmLabel: 'Rewrite'
+            })
+            if (!ok) return null
+          }
+          return git.rebaseRun(path, hash, items, pushed.length > 0)
+        })
+      }),
       skipOperation: guard(async (path) => {
         linkedRepoKey(path)
         const state = await git.getOperation(path)
@@ -1238,6 +1382,19 @@ export function createService(deps: ServiceDeps): {
         linkedRepoKey(path)
         const request = checkHunk(hunk)
         return serial(path, () => git.unstageHunk(path, request))
+      }),
+      discardLines: guard(async (path, hunk) => {
+        linkedRepoKey(path)
+        const request = checkHunk(hunk)
+        const count = request.lines?.length ?? 0
+        const ok = await ui.confirm({
+          message: `Discard ${count} ${count === 1 ? 'line' : 'lines'} in ${request.path}?`,
+          detail: 'The lines are removed from the file. This cannot be undone.',
+          confirmLabel: 'Discard'
+        })
+        if (!ok) return false
+        await serial(path, () => git.discardLines(path, request))
+        return true
       }),
       conflictFile: guard(async (path, file) => {
         linkedRepoKey(path)
@@ -1279,13 +1436,55 @@ export function createService(deps: ServiceDeps): {
         await store.removeLocalRepo(repoKey as string)
       })
     },
+    ai: {
+      saveKey: guard(
+        async (provider, key) => {
+          const id = checkAiProvider(provider)
+          const value = typeof key === 'string' ? key.trim() : ''
+          if (!value) throw new Error('Enter the API key')
+          if (/\s/.test(value))
+            throw new Error('The API key must not contain spaces or line breaks')
+          if (value.length > MAX_TOKEN_LENGTH) throw new Error('The API key is too long')
+          await store.saveAiKey(id, value)
+        },
+        (_provider, key) => [key]
+      ),
+      removeKey: guard(async (provider) => store.removeAiKey(checkAiProvider(provider))),
+      hasKey: guard(async (provider) => store.hasAiKey(checkAiProvider(provider))),
+      test: guard(async (config) => askAi(config, TEST_PROMPT))
+    },
     checkForUpdate: guard(async () => checkForUpdate(ui.version ?? '0.0.0')),
+    releaseNotes: guard(async () => fetchReleaseNotes(ui.version ?? '0.0.0')),
     openExternal: guard(async (url) => {
       if (typeof url !== 'string' || !isHttp(url)) {
         throw new Error('Only http and https links can be opened')
       }
       await ui.openExternal(url)
     }),
+    notify: {
+      enabled: guard(async () => store.notificationsEnabled()),
+      setEnabled: guard(async (on) => {
+        if (typeof on !== 'boolean') throw new Error('Invalid notifications setting')
+        await store.setNotificationsEnabled(on)
+        poller.restart()
+      }),
+      test: guard(async () => {
+        if (!deps.emitNotify) return 'Notifications are not available here.'
+        if (!store.notificationsEnabled())
+          return 'Notifications are off. Tick Allow notifications first.'
+        const error = await deps.emitNotify({
+          repoKey: '',
+          projectId: '',
+          title: 'GitDeck',
+          body: 'Notifications work.'
+        })
+        if (error === null) return null
+        // UNErrorDomain 1: macOS did not allow it (permission off, or a linker-signed dev Electron).
+        return /UNErrorDomain error 1\b/.test(error)
+          ? `macOS did not allow it (${error}). Turn on notifications for GitDeck in System Settings > Notifications. Running pnpm dev: re-sign Electron first (see the README).`
+          : error
+      })
+    },
     projects: {
       list: guard(async () => store.getProjects()),
       create: guard(async (input) => {
@@ -1312,7 +1511,8 @@ export function createService(deps: ServiceDeps): {
         const projectPatch: ProjectPatch = {
           name: text(raw['name'], 'project name', true),
           icon: text(raw['icon'], 'icon', true),
-          color: text(raw['color'], 'color', true)
+          color: text(raw['color'], 'color', true),
+          notify: raw['notify'] === undefined ? undefined : checkNotify(raw['notify'])
         }
         return mutateProjects((projects) => {
           const project = updateProject(projects, id, projectPatch)
@@ -1342,9 +1542,18 @@ export function createService(deps: ServiceDeps): {
           const project = removeRepos(current, keys)
           return { next: projects.map((p) => (p.id === id ? project : p)), result: project }
         })
-      })
+      }),
+      // Events flow main to renderer; preload implements this, the service never does.
+      onNotifyOpen: () => () => {}
     }
   }
 
-  return { api, syncInsecureHosts, shutdown: () => terminals.killAll() }
+  return {
+    api,
+    syncInsecureHosts,
+    shutdown: () => {
+      poller.stop()
+      terminals.killAll()
+    }
+  }
 }

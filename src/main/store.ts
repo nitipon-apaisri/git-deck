@@ -20,6 +20,10 @@ interface Config {
   projects: Project[]
   /** Folders opened without an account. Their links are in `links` too. */
   localRepos: Repo[]
+  /** base64 of the encrypted AI API key, keyed by provider id */
+  aiKeys: Record<string, string>
+  /** App-wide switch for PR/MR notifications. Missing means on: projects opt in one by one. */
+  notifications?: boolean
 }
 
 interface CacheFile {
@@ -32,7 +36,8 @@ const emptyConfig = (): Config => ({
   tokens: {},
   links: {},
   projects: [],
-  localRepos: []
+  localRepos: [],
+  aiKeys: {}
 })
 const emptyCache = (): CacheFile => ({ repos: {}, summaries: {} })
 
@@ -94,11 +99,24 @@ export class Store {
     return structuredClone(this.config.accounts)
   }
 
-  async saveAccount(account: Account, token: string): Promise<void> {
+  private seal(secret: string, what: string): string {
     if (!this.crypto.isAvailable()) {
-      throw new Error('Secure storage is unavailable, so the token cannot be stored safely')
+      throw new Error(`Secure storage is unavailable, so the ${what} cannot be stored safely`)
     }
-    const encrypted = this.crypto.encrypt(token).toString('base64')
+    return this.crypto.encrypt(secret).toString('base64')
+  }
+
+  private unseal(stored: string | undefined): string | null {
+    if (!stored || !this.crypto.isAvailable()) return null
+    try {
+      return this.crypto.decrypt(Buffer.from(stored, 'base64'))
+    } catch {
+      return null
+    }
+  }
+
+  async saveAccount(account: Account, token: string): Promise<void> {
+    const encrypted = this.seal(token, 'token')
     const others = this.config.accounts.filter((a) => a.id !== account.id)
     this.config.accounts = [...others, account]
     this.config.tokens[account.id] = encrypted
@@ -106,13 +124,27 @@ export class Store {
   }
 
   getToken(accountId: string): string | null {
-    const stored = this.config.tokens[accountId]
-    if (!stored || !this.crypto.isAvailable()) return null
-    try {
-      return this.crypto.decrypt(Buffer.from(stored, 'base64'))
-    } catch {
-      return null
-    }
+    return this.unseal(this.config.tokens[accountId])
+  }
+
+  // AI provider keys: same safeStorage path as tokens. Only main reads them back.
+
+  async saveAiKey(provider: string, key: string): Promise<void> {
+    this.config.aiKeys[provider] = this.seal(key, 'key')
+    await this.persist('config')
+  }
+
+  getAiKey(provider: string): string | null {
+    return this.unseal(this.config.aiKeys[provider])
+  }
+
+  hasAiKey(provider: string): boolean {
+    return Object.hasOwn(this.config.aiKeys, provider)
+  }
+
+  async removeAiKey(provider: string): Promise<void> {
+    delete this.config.aiKeys[provider]
+    await this.persist('config')
   }
 
   async removeAccount(accountId: string): Promise<void> {
@@ -166,6 +198,17 @@ export class Store {
     this.config.projects = this.config.projects.map((p) =>
       p.repoKeys.includes(repoKey) ? removeRepos(p, [repoKey]) : p
     )
+    await this.persist('config')
+  }
+
+  // Notifications
+
+  notificationsEnabled(): boolean {
+    return this.config.notifications !== false
+  }
+
+  async setNotificationsEnabled(on: boolean): Promise<void> {
+    this.config.notifications = on
     await this.persist('config')
   }
 

@@ -1,7 +1,7 @@
 // The only bridge between the sandboxed page and main. Every call is a fixed
 // channel with plain data, so the page never gets ipcRenderer itself.
 import { contextBridge, ipcRenderer } from 'electron'
-import { IPC, type Api, type GitProgress, type IpcResult } from '../shared/api'
+import { IPC, type Api, type GitProgress, type IpcResult, type NotifyTarget } from '../shared/api'
 
 async function call<T>(channel: string, ...args: unknown[]): Promise<T> {
   const result = (await ipcRenderer.invoke(channel, ...args)) as IpcResult<T>
@@ -47,7 +47,8 @@ const api: Api = {
   },
   changes: {
     list: (repoKey) => call(IPC.changesList, repoKey),
-    checks: (repoKey, ref) => call(IPC.changesChecks, repoKey, ref)
+    checks: (repoKey, ref) => call(IPC.changesChecks, repoKey, ref),
+    create: (repoKey, input) => call(IPC.changesCreate, repoKey, input)
   },
   local: {
     links: () => call(IPC.localLinks),
@@ -77,7 +78,7 @@ const api: Api = {
     deleteRemoteBranch: (path, name) => call(IPC.localDeleteRemoteBranch, path, name),
     pull: (path, mode) => call(IPC.localPull, path, mode),
     push: (path, force) => call(IPC.localPush, path, force),
-    suggestCommitMessage: (path) => call(IPC.localSuggestCommitMessage, path),
+    suggestCommitMessage: (path, config) => call(IPC.localSuggestCommitMessage, path, config),
     stashes: (path) => call(IPC.localStashes, path),
     stashPush: (path, message, untracked) => call(IPC.localStashPush, path, message, untracked),
     stashApply: (path, index, hash) => call(IPC.localStashApply, path, index, hash),
@@ -97,9 +98,12 @@ const api: Api = {
     renameRemote: (path, from, to) => call(IPC.localRenameRemote, path, from, to),
     removeRemote: (path, name) => call(IPC.localRemoveRemote, path, name),
     rebase: (path, onto) => call(IPC.localRebase, path, onto),
+    rebasePlan: (path, base) => call(IPC.localRebasePlan, path, base),
+    rebaseRun: (path, base, todo) => call(IPC.localRebaseRun, path, base, todo),
     skipOperation: (path) => call(IPC.localSkipOperation, path),
     stageHunk: (path, hunk) => call(IPC.localStageHunk, path, hunk),
     unstageHunk: (path, hunk) => call(IPC.localUnstageHunk, path, hunk),
+    discardLines: (path, hunk) => call(IPC.localDiscardLines, path, hunk),
     conflictFile: (path, file) => call(IPC.localConflictFile, path, file),
     resolveConflict: (path, request) => call(IPC.localResolveConflict, path, request),
     resolveConflictFile: (path, file, action) =>
@@ -131,15 +135,34 @@ const api: Api = {
       }
     }
   },
+  ai: {
+    saveKey: (provider, key) => call(IPC.aiSaveKey, provider, key),
+    removeKey: (provider) => call(IPC.aiRemoveKey, provider),
+    hasKey: (provider) => call(IPC.aiHasKey, provider),
+    test: (config) => call(IPC.aiTest, config)
+  },
   openExternal: (url) => call(IPC.openExternal, url),
   checkForUpdate: () => call(IPC.checkForUpdate),
+  releaseNotes: () => call(IPC.releaseNotes),
+  notify: {
+    enabled: () => call(IPC.notifyEnabled),
+    setEnabled: (on) => call(IPC.notifySetEnabled, on),
+    test: () => call(IPC.notifyTest)
+  },
   projects: {
     list: () => call(IPC.projectsList),
     create: (input) => call(IPC.projectsCreate, input),
     update: (id, patch) => call(IPC.projectsUpdate, id, patch),
     remove: (id) => call(IPC.projectsRemove, id),
     addRepos: (id, repoKeys) => call(IPC.projectsAddRepos, id, repoKeys),
-    removeRepos: (id, repoKeys) => call(IPC.projectsRemoveRepos, id, repoKeys)
+    removeRepos: (id, repoKeys) => call(IPC.projectsRemoveRepos, id, repoKeys),
+    onNotifyOpen: (cb) => {
+      const listener = (_event: unknown, target: NotifyTarget): void => cb(target)
+      ipcRenderer.on(IPC.notifyOpen, listener)
+      return () => {
+        ipcRenderer.removeListener(IPC.notifyOpen, listener)
+      }
+    }
   }
 }
 

@@ -68,6 +68,18 @@ test('icon and colour rules', () => {
   assert.equal(createProject([], { name: 'g', color: 'rose' }).color, 'rose')
 })
 
+test('updateProject sets notification events, de-duplicated, and rejects unknown ones', () => {
+  const a = createProject([], { name: 'Alpha' }, clock)
+  assert.equal(a.notify, undefined, 'off by default')
+  const u = updateProject([a], a.id, { notify: ['merged', 'merged', 'review'] }, clock)
+  assert.deepEqual(u.notify, ['merged', 'review'])
+  assert.deepEqual(updateProject([u], a.id, { name: 'Beta' }, clock).notify, ['merged', 'review'])
+  assert.throws(
+    () => updateProject([a], a.id, { notify: ['push' as never] }, clock),
+    /Unknown notification event/
+  )
+})
+
 test('updateProject allows keeping its own name and rejects others', () => {
   const a = createProject([], { name: 'Alpha' }, clock)
   const b = createProject([a], { name: 'Beta' }, clock)

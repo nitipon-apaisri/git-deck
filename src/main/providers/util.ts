@@ -33,3 +33,12 @@ export function percent(part: number, total: number): number {
 export function encodePath(fullName: string): string {
   return fullName.split('/').map(encodeURIComponent).join('/')
 }
+
+/** Blanks a result link that points off the host we called, so the UI never opens it. */
+export function sameOrigin<T extends { webUrl: string }>(item: T, root: string): T {
+  try {
+    return new URL(item.webUrl).origin === new URL(root).origin ? item : { ...item, webUrl: '' }
+  } catch {
+    return { ...item, webUrl: '' }
+  }
+}

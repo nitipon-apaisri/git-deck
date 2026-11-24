@@ -15,7 +15,7 @@ The `/stage`, `/release` and `/hotfix` commands (`.claude/commands/`) say which 
 2. Stop if `git ls-remote --tags origin vX.Y.Z` prints anything: a pushed tag is never reused. Suggest the next patch version.
 3. Run `pnpm typecheck` and `pnpm test`. Stop and report on failure.
 4. Write the notes file in the scratchpad (Fixes, Contents, Known limits). Build Fixes and Contents from `git log` since the previous tag; do not invent features.
-5. Bump `package.json`, commit, merge with `--no-ff`, tag with `-a -F`, exactly as in `docs/RELEASING.md`. Never `--no-verify`, never commit to `main`, `stage` or `develop` directly.
+5. Prepend the notes to `CHANGELOG.md` as a `## X.Y.Z` entry (format in `docs/RELEASING.md`), bump `package.json`, commit both, merge with `--no-ff`, tag with `-a -F`, exactly as in `docs/RELEASING.md`. Never `--no-verify`, never commit to `main`, `stage` or `develop` directly.
 6. Never push, never delete a remote tag. Report the three hashes (release commit, merge, tag target) and hand over the push line the command gives (`main`, `stage`, `develop` and the tag; the user pushes).
 
 ## Check a run

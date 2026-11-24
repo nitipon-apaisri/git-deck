@@ -17,7 +17,7 @@ import {
   visibleLineCount
 } from '../../lib/changesView'
 import type { DiffState } from '../../state/changesData'
-import { Button, ErrorBanner, IconButton, Skeleton } from '../ui'
+import { Button, ErrorBanner, Icon, IconButton, Menu, Skeleton, type MenuEntry } from '../ui'
 
 interface DiffViewProps {
   /** The file's path, shown in the header. */
@@ -34,6 +34,8 @@ interface DiffViewProps {
     onRun: (index: number, fingerprint: string, lines?: number[]) => void
     /** Direction of the per-line button. Present when single lines may be staged. */
     lineDirection?: 'stage' | 'unstage'
+    /** Present for an unstaged diff: throws the ticked lines away (the host confirms). */
+    onDiscard?: (index: number, fingerprint: string, lines: number[]) => void
   }
 }
 
@@ -53,6 +55,7 @@ const LINE: Record<DiffLine['type'], { mark: string; row: string; text: string }
 export function DiffView({ path, state, onClose, onHistory, hunkAction }: DiffViewProps) {
   const { diff } = state
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [menu, setMenu] = useState<{ h: number; x: number; y: number } | null>(null)
   const total = diff ? diff.hunks.reduce((n, h) => n + h.lines.length, 0) : 0
   type Picked = { hunk: number; lines: LineSelection; anchor: number }
   const none: Picked = { hunk: -1, lines: [], anchor: -1 }
@@ -67,6 +70,59 @@ export function DiffView({ path, state, onClose, onHistory, hunkAction }: DiffVi
     })
   const showAll = expanded === path
   const shown = diff ? limitHunks(diff.hunks, showAll ? total : visibleLineCount(total)) : []
+
+  const menuEntries = (h: number): MenuEntry[] => {
+    if (!hunkAction || !diff) return []
+    const hunk = diff.hunks[h]
+    const mine = picked.hunk === h ? picked.lines : []
+    const fingerprint = hunkFingerprint(hunk.lines)
+    const out: MenuEntry[] = [
+      {
+        kind: 'item',
+        id: 'hunk',
+        label: hunkAction.label,
+        leading: (
+          <Icon name={hunkAction.lineDirection === 'unstage' ? 'minus' : 'plus'} size="sm" />
+        ),
+        disabled: hunkAction.busy,
+        onSelect: () => hunkAction.onRun(h, fingerprint)
+      }
+    ]
+    if (hunkAction.lineDirection && canSelectLines(diff, hunk)) {
+      out.push(
+        {
+          kind: 'item',
+          id: 'all',
+          label: 'Select all changed lines',
+          leading: <Icon name="check" size="sm" />,
+          onSelect: () => setPicked({ hunk: h, lines: selectAllChanged(hunk), anchor: -1 })
+        },
+        {
+          kind: 'item',
+          id: 'clear',
+          label: 'Clear selection',
+          leading: <Icon name="x" size="sm" />,
+          disabled: mine.length === 0,
+          onSelect: () => setPicked({ hunk: -1, lines: [], anchor: -1 })
+        }
+      )
+      if (hunkAction.onDiscard) {
+        out.push(
+          { kind: 'separator', id: 'sep' },
+          {
+            kind: 'item',
+            id: 'discard',
+            label: `Discard ${mine.length} ${mine.length === 1 ? 'line' : 'lines'}`,
+            leading: <Icon name="trash" size="sm" />,
+            danger: true,
+            disabled: hunkAction.busy || mine.length === 0,
+            onSelect: () => hunkAction.onDiscard!(h, fingerprint, [...mine])
+          }
+        )
+      }
+    }
+    return out
+  }
 
   return (
     <section
@@ -130,55 +186,35 @@ export function DiffView({ path, state, onClose, onHistory, hunkAction }: DiffVi
                 <div key={h}>
                   <div className="flex items-center gap-2 bg-secondary px-3 py-0.5 text-muted-foreground">
                     <span className="min-w-0 flex-1">{hunk.header}</span>
-                    {splittable && mine.length > 0 ? (
-                      <Button
-                        variant="ghost"
-                        className="sticky right-2 h-6 flex-none px-2 text-[12px]"
-                        disabled={hunkAction.busy}
-                        onClick={() =>
-                          hunkAction.onRun(h, hunkFingerprint(diff!.hunks[h].lines), [...mine])
-                        }
-                      >
-                        {buttonLabel(hunkAction.lineDirection!, mine.length)}
-                      </Button>
-                    ) : null}
-                    {splittable ? (
-                      <>
+                    {/* One sticky group, so the buttons never overlap when the header scrolls. */}
+                    <div className="sticky right-2 flex flex-none items-center gap-1 bg-secondary">
+                      {splittable && mine.length > 0 ? (
                         <Button
                           variant="ghost"
-                          className="h-6 flex-none px-2 text-[12px]"
+                          icon={hunkAction.lineDirection === 'stage' ? 'plus' : 'minus'}
+                          className="h-6 px-2 text-[12px]"
+                          title={buttonLabel(hunkAction.lineDirection!, mine.length)}
+                          aria-label={buttonLabel(hunkAction.lineDirection!, mine.length)}
+                          disabled={hunkAction.busy}
                           onClick={() =>
-                            setPicked({
-                              hunk: h,
-                              lines: selectAllChanged(diff!.hunks[h]),
-                              anchor: -1
-                            })
+                            hunkAction.onRun(h, hunkFingerprint(diff!.hunks[h].lines), [...mine])
                           }
                         >
-                          Select all
+                          {mine.length}
                         </Button>
-                        {mine.length > 0 ? (
-                          <Button
-                            variant="ghost"
-                            className="h-6 flex-none px-2 text-[12px]"
-                            onClick={() => setPicked({ hunk: -1, lines: [], anchor: -1 })}
-                          >
-                            Clear
-                          </Button>
-                        ) : null}
-                      </>
-                    ) : null}
-                    {hunkAction && diff ? (
-                      <Button
-                        variant="ghost"
-                        className="sticky right-2 h-6 flex-none px-2 text-[12px]"
-                        disabled={hunkAction.busy}
-                        // The fingerprint comes from the whole hunk, never from the shortened view.
-                        onClick={() => hunkAction.onRun(h, hunkFingerprint(diff.hunks[h].lines))}
-                      >
-                        {hunkAction.label}
-                      </Button>
-                    ) : null}
+                      ) : null}
+                      {hunkAction && diff ? (
+                        <IconButton
+                          label="Hunk actions"
+                          icon="more"
+                          className="size-6"
+                          onClick={(e) => {
+                            const r = e.currentTarget.getBoundingClientRect()
+                            setMenu({ h, x: r.left, y: r.bottom + 4 })
+                          }}
+                        />
+                      ) : null}
+                    </div>
                   </div>
                   {lines.map((line, i) => {
                     const look = LINE[line.type]
@@ -245,6 +281,14 @@ export function DiffView({ path, state, onClose, onHistory, hunkAction }: DiffVi
         <Button variant="ghost" onClick={() => setExpanded(path)}>
           Show all {total.toLocaleString('en-GB')} lines
         </Button>
+      ) : null}
+      {menu ? (
+        <Menu
+          label="Hunk actions"
+          at={{ x: menu.x, y: menu.y }}
+          entries={menuEntries(menu.h)}
+          onClose={() => setMenu(null)}
+        />
       ) : null}
     </section>
   )

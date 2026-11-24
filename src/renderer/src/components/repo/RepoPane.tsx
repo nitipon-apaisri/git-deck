@@ -32,6 +32,7 @@ import { useChecks } from '../../state/changeData'
 import type { BranchCheck } from '../../lib/graphView'
 import { RepoHeader } from './RepoHeader'
 import { RemotesDialog } from './RemotesDialog'
+import { RebaseDialog } from './RebaseDialog'
 import { StashDialog } from './StashDialog'
 import { TagsDialog } from './TagsDialog'
 import { TerminalPanel } from './TerminalPanel'
@@ -183,6 +184,7 @@ export function RepoPane({
   // The commit picked as bad, waiting for a good one. Per pane, like everything else here.
   const [bisectBad, setBisectBad] = useState<string | null>(null)
   const [stashOpen, setStashOpen] = useState(false)
+  const [rebaseBase, setRebaseBase] = useState<string | null>(null)
   // `hash` is the commit a new tag points at, `null` for the checked-out one.
   const [tagsRequest, setTagsRequest] = useState<{ hash: string | null } | null>(null)
   const [remotesOpen, setRemotesOpen] = useState(false)
@@ -402,6 +404,7 @@ export function RepoPane({
                       cherryPick: actions.cherryPick,
                       merge: actions.merge,
                       rebase: actions.rebase,
+                      rebaseInteractive: setRebaseBase,
                       revert: actions.revert,
                       reset: actions.reset,
                       createTag: (hash) => setTagsRequest({ hash }),
@@ -438,6 +441,9 @@ export function RepoPane({
               repoKey={repo.key}
               host={account.type}
               webUrl={repo.webUrl}
+              defaultBranch={repo.defaultBranch}
+              linkedPath={linkedPath}
+              branches={branches}
               active={tab === 'pulls'}
             />
           </div>
@@ -478,6 +484,14 @@ export function RepoPane({
           stashes={stashes}
           onChanged={actions.refresh}
           onClose={() => setStashOpen(false)}
+        />
+      ) : null}
+      {rebaseBase && linkedPath ? (
+        <RebaseDialog
+          path={linkedPath}
+          base={rebaseBase}
+          onChanged={actions.refresh}
+          onClose={() => setRebaseBase(null)}
         />
       ) : null}
       {tagsRequest && linkedPath ? (

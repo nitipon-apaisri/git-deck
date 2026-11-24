@@ -10,16 +10,19 @@ import type {
   ConflictAction,
   ConflictRequest,
   HunkRequest,
+  RebaseTodoItem,
   PullMode,
-  ResetMode
+  ResetMode,
+  CreateChangeRequestInput
 } from '../shared/types'
+import type { AiConfig, AiProviderId } from '../shared/ai'
 import type { MainApi } from './service'
 
 export type Handler = (args: unknown[]) => Promise<unknown>
 
 export type RequestChannel = Exclude<
   keyof typeof IPC,
-  'gitProgress' | 'repoChanged' | 'terminalData' | 'terminalExit'
+  'gitProgress' | 'repoChanged' | 'terminalData' | 'terminalExit' | 'notifyOpen'
 >
 
 // The casts mark the trust boundary: the service validates every argument at runtime.
@@ -42,6 +45,8 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     summaryFetch: ([key]) => api.summary.fetch(key as string),
     changesList: ([key]) => api.changes.list(key as string),
     changesChecks: ([key, ref]) => api.changes.checks(key as string, ref as string),
+    changesCreate: ([key, input]) =>
+      api.changes.create(key as string, input as CreateChangeRequestInput),
     localLinks: () => api.local.links(),
     localLink: ([key]) => api.local.link(key as string),
     localUnlink: ([key]) => api.local.unlink(key as string),
@@ -82,7 +87,8 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
       api.local.deleteRemoteBranch(path as string, name as string),
     localPull: ([path, mode]) => api.local.pull(path as string, mode as PullMode),
     localPush: ([path, force]) => api.local.push(path as string, force as boolean),
-    localSuggestCommitMessage: ([path]) => api.local.suggestCommitMessage(path as string),
+    localSuggestCommitMessage: ([path, config]) =>
+      api.local.suggestCommitMessage(path as string, config as AiConfig),
     localStashes: ([path]) => api.local.stashes(path as string),
     localStashPush: ([path, message, untracked]) =>
       api.local.stashPush(path as string, message as string, untracked as boolean),
@@ -117,9 +123,14 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
       api.local.renameRemote(path as string, from as string, to as string),
     localRemoveRemote: ([path, name]) => api.local.removeRemote(path as string, name as string),
     localRebase: ([path, onto]) => api.local.rebase(path as string, onto as string),
+    localRebasePlan: ([path, base]) => api.local.rebasePlan(path as string, base as string),
+    localRebaseRun: ([path, base, todo]) =>
+      api.local.rebaseRun(path as string, base as string, todo as RebaseTodoItem[]),
     localSkipOperation: ([path]) => api.local.skipOperation(path as string),
     localStageHunk: ([path, hunk]) => api.local.stageHunk(path as string, hunk as HunkRequest),
     localUnstageHunk: ([path, hunk]) => api.local.unstageHunk(path as string, hunk as HunkRequest),
+    localDiscardLines: ([path, hunk]) =>
+      api.local.discardLines(path as string, hunk as HunkRequest),
     localConflictFile: ([path, file]) => api.local.conflictFile(path as string, file as string),
     localResolveConflict: ([path, request]) =>
       api.local.resolveConflict(path as string, request as ConflictRequest),
@@ -138,6 +149,14 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     localRemove: ([key]) => api.local.remove(key as string),
     openExternal: ([url]) => api.openExternal(url as string),
     checkForUpdate: () => api.checkForUpdate(),
+    releaseNotes: () => api.releaseNotes(),
+    aiSaveKey: ([provider, key]) => api.ai.saveKey(provider as AiProviderId, key as string),
+    aiRemoveKey: ([provider]) => api.ai.removeKey(provider as AiProviderId),
+    aiHasKey: ([provider]) => api.ai.hasKey(provider as AiProviderId),
+    aiTest: ([config]) => api.ai.test(config as AiConfig),
+    notifyEnabled: () => api.notify.enabled(),
+    notifySetEnabled: ([on]) => api.notify.setEnabled(on as boolean),
+    notifyTest: () => api.notify.test(),
     projectsList: () => api.projects.list(),
     projectsCreate: ([input]) => api.projects.create(input as ProjectCreateInput),
     projectsUpdate: ([id, patch]) => api.projects.update(id as string, patch as ProjectPatchInput),

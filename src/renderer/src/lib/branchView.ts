@@ -112,6 +112,7 @@ export type RefAction =
   | { type: 'bisect-bad'; hash: string }
   | { type: 'bisect-good'; bad: string; good: string }
   | { type: 'rebase'; onto: string }
+  | { type: 'rebase-interactive'; base: string }
   | { type: 'revert'; hash: string }
   | { type: 'reset'; hash: string; mode: ResetMode }
   | { type: 'copy'; text: string; what: string }
@@ -269,6 +270,14 @@ export function refActions(
       id: 'rebase-commit',
       label: `Rebase ${context.currentBranch} onto this commit`,
       action: { type: 'rebase', onto: hash },
+      group: 'commit'
+    })
+  }
+  if (canStart && context.currentBranch) {
+    items.push({
+      id: 'rebase-interactive',
+      label: 'Rebase onto here, interactively',
+      action: { type: 'rebase-interactive', base: hash },
       group: 'commit'
     })
   }

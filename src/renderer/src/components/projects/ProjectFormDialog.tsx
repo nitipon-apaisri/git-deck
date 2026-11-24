@@ -1,6 +1,7 @@
-import { useId, useMemo, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import type { Account, Project, Repo } from '@shared/types'
+import type { Account, NotifyEvent, Project, Repo } from '@shared/types'
+import { NOTIFY_EVENTS } from '@shared/notify'
 import { DEFAULT_ICON, PROJECT_COLORS } from '@shared/projects'
 import { cn } from '@/lib/cn'
 import { LOCAL_ACCOUNT_ID } from '../../lib/localRepos'
@@ -70,6 +71,14 @@ export function ProjectFormDialog({
   const [chosen, setChosen] = useState<Set<string>>(
     () => new Set(editing ? editing.repoKeys : initialRepoKeys)
   )
+  const [notify, setNotify] = useState<NotifyEvent[]>(editing?.notify ?? [])
+  const [notifyOff, setNotifyOff] = useState(false)
+  useEffect(() => {
+    window.api.notify.enabled().then(
+      (on) => setNotifyOff(!on),
+      () => {}
+    )
+  }, [])
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
@@ -179,7 +188,13 @@ export function ProjectFormDialog({
     setSaving(true)
     setSaveError(null)
     try {
-      await onSave({ name: name.trim(), icon, color, repoKeys: [...chosen] })
+      await onSave({
+        name: name.trim(),
+        icon,
+        color,
+        repoKeys: [...chosen],
+        ...(editing ? { notify } : {})
+      })
       onClose()
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Could not save the project')
@@ -372,6 +387,36 @@ export function ProjectFormDialog({
             ) : null}
           </div>
         </fieldset>
+
+        {editing ? (
+          <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
+            <legend className="mb-2 p-0 font-medium">
+              Notifications{' '}
+              <span className="font-normal text-muted-foreground">(off by default)</span>
+            </legend>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+              {NOTIFY_EVENTS.map(({ id, label }) => (
+                <label key={id} className="flex cursor-pointer items-center gap-2.5">
+                  <input
+                    type="checkbox"
+                    className="m-0 size-4 accent-(--accent)"
+                    checked={notify.includes(id)}
+                    onChange={(e) =>
+                      setNotify((current) =>
+                        e.target.checked ? [...current, id] : current.filter((x) => x !== id)
+                      )
+                    }
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+            <span className="text-[12px] text-muted-foreground">
+              Checks this project&apos;s hosted repositories every 2 minutes while GitDeck is open.
+              {notifyOff ? ' Turned off in Settings > Notifications.' : ''}
+            </span>
+          </fieldset>
+        ) : null}
 
         {saveError ? (
           <span
