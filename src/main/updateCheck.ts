@@ -1,9 +1,12 @@
 // No electron import. Asks GitHub for the latest release of this public repo; nothing is sent
 // but the request itself (no token, no app data).
-import type { UpdateCheck } from '../shared/types'
+import type { ReleaseNote, UpdateCheck } from '../shared/types'
 import { getJson, HttpError } from './http'
 
 export const RELEASES_API = 'https://api.github.com/repos/nitipon-apaisri/git-deck/releases/latest'
+
+const RELEASES_LIST_API =
+  'https://api.github.com/repos/nitipon-apaisri/git-deck/releases?per_page=20'
 
 function parts(version: string): number[] | null {
   const m = /^v?(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$/.exec(version.trim())
@@ -28,6 +31,21 @@ export function parseRelease(payload: unknown): { version: string; url: string }
     return null
   if (!url.startsWith('https://github.com/')) return null
   return { version: tag.replace(/^v/, ''), url }
+}
+
+/** Notes of the releases newer than `current`, newest first. Pre-releases are skipped. */
+export async function fetchReleaseNotes(current: string): Promise<ReleaseNote[]> {
+  const list = await getJson(RELEASES_LIST_API, { Accept: 'application/vnd.github+json' })
+  if (!Array.isArray(list)) return []
+  const notes: ReleaseNote[] = []
+  for (const item of list) {
+    const release = parseRelease(item)
+    const body = (item as { body?: unknown }).body
+    if (release && typeof body === 'string' && isNewer(current, release.version)) {
+      notes.push({ ...release, body })
+    }
+  }
+  return notes
 }
 
 export async function checkForUpdate(current: string): Promise<UpdateCheck> {

@@ -668,10 +668,10 @@ Model: `main` is released code only. `develop` is the integration branch. `stage
 
 Runs on `phase/27-line-discard`. Builds on the existing line staging in the diff dialog. Destructive, so it confirms first.
 
-- [ ] `git.ts`: `discardLines(repo, path, selection)` reverses the selected lines of the working-tree diff (reverse patch through `git apply -R` on stdin, the same path line staging uses). A pure patch builder is shared with line staging, not copied.
-- [ ] Refuse (clear error, nothing written) when the patch no longer applies because the file changed; never leave a half-applied file.
-- [ ] Renderer: a "Discard selected lines" action beside Stage and Unstage in the diff dialog, with a confirm that names the file and the line count. Danger colour from tokens. Untracked and binary files stay whole-file only.
-- [ ] README: remove "line-level discard" from "Not planned".
+- [x] `git.ts`: `discardLines(repo, path, selection)` reverses the selected lines of the working-tree diff (reverse patch through `git apply -R` on stdin, the same path line staging uses). A pure patch builder is shared with line staging, not copied.
+- [x] Refuse (clear error, nothing written) when the patch no longer applies because the file changed; never leave a half-applied file.
+- [x] Renderer: a "Discard selected lines" action beside Stage and Unstage in the diff dialog, with a confirm that names the file and the line count. Danger colour from tokens. Untracked and binary files stay whole-file only.
+- [x] README: remove "line-level discard" from "Not planned".
 
 **Verify:** temp-repo tests (single line, mixed add and delete selection, line in a hunk with context, CRLF file, file changed since the diff was read, untracked file refused). Manual: discard one line, then undo via nothing (it is not undoable, the confirm says so).
 
@@ -679,11 +679,11 @@ Runs on `phase/27-line-discard`. Builds on the existing line staging in the diff
 
 Runs on `phase/28-create-pr-mr`. Write access: GitHub's `repo` scope already allows it; GitLab needs `api` instead of `read_api`. A token that lacks it gets a clear message, not a silent failure.
 
-- [ ] First, check the GitHub create-pull-request and GitLab create-merge-request endpoints and scopes against the official docs. Log the result and the GitLab scope change in `docs/DECISIONS.md`.
-- [ ] `GitProvider` gains `createChangeRequest(repo, { title, body, head, base, draft })`; GitHub and GitLab implement it (same-origin only, no token in any error). Normalised result type in `src/shared`.
-- [ ] IPC channel with validated input. Existing "Create PR/MR" link stays as the fallback when the token is read-only.
-- [ ] Renderer: a "Create PR/MR" dialog in the PR/MR tab: source branch (current by default), target (default branch), title (last commit subject), body, draft toggle. Offers "Push branch first" when the branch has no upstream. Opens the new PR/MR on success. Hidden for local-only repos.
-- [ ] Settings, Integrations: say which scope enables creation; the token help text for GitLab is updated.
+- [x] First, check the GitHub create-pull-request and GitLab create-merge-request endpoints and scopes against the official docs. Log the result and the GitLab scope change in `docs/DECISIONS.md`.
+- [x] `GitProvider` gains `createChangeRequest(repo, { title, body, head, base, draft })`; GitHub and GitLab implement it (same-origin only, no token in any error). Normalised result type in `src/shared`.
+- [x] IPC channel with validated input. Existing "Create PR/MR" link stays as the fallback when the token is read-only.
+- [x] Renderer: a "Create PR/MR" dialog in the PR/MR tab: source branch (current by default), target (default branch), title (last commit subject), body, draft toggle. Offers "Push branch first" when the branch has no upstream. Opens the new PR/MR on success. Hidden for local-only repos.
+- [x] Settings, Integrations: say which scope enables creation; the token help text for GitLab is updated.
 
 **Verify:** mock-server tests per provider (created, draft, already exists, 401, 403 missing scope, 422 validation, cross-origin dropped). Manual: a real GitHub repo and a GitLab repo (not checked before).
 
@@ -691,30 +691,30 @@ Runs on `phase/28-create-pr-mr`. Write access: GitHub's `repo` scope already all
 
 Runs on `phase/29-ai-providers`. Today `AiSection` supports only the Claude Code CLI. Extend it without changing "opt-in, nothing is committed for you".
 
-- [ ] A provider interface for "suggest a message from a staged diff" in main, with the current Claude CLI as the first implementation. The diff cap (60 KB) and the warning text apply to every provider.
-- [ ] HTTP providers first: OpenAI and Gemini (and any OpenAI-compatible base URL). Keys live only in Electron `safeStorage`, never in a URL, config file, log or error message.
-- [ ] CLI providers second: Codex and OpenCode through the user's installed command, run with an argument array, no shell. Missing command gives a plain message.
-- [ ] Settings, AI: choose the provider, store its key, a "Test" button; the sparkles button uses the chosen one. The warning names where the diff goes.
+- [x] A provider interface for "suggest a message from a staged diff" in main, with the current Claude CLI as the first implementation. The diff cap (60 KB) and the warning text apply to every provider.
+- [x] HTTP providers first: OpenAI and Gemini (and any OpenAI-compatible base URL). Keys live only in Electron `safeStorage`, never in a URL, config file, log or error message.
+- [x] CLI providers second: Codex and OpenCode through the user's installed command, run with an argument array, no shell. Missing command gives a plain message.
+- [x] Settings, AI: choose the provider, store its key, a "Test" button; the sparkles button uses the chosen one. The warning names where the diff goes.
 
 **Verify:** mock-server tests for each HTTP provider (success, 401, 429, timeout, oversized diff truncated, key absent from errors). CLI providers tested with a fake executable. Manual: each real provider, which cannot be checked without keys.
 
-## Phase 30 — Change log detail
+## Phase 30 — Change log
 
-Runs on `phase/30-changelog`. Scope depends on an open question in `docs/DECISIONS.md` (repo changelog between two tags, GitDeck's own "what's new", or host release notes). The default below is the first one.
+Runs on `phase/30-changelog`. The "change log" is GitDeck's own, per release version (decided 2026-11-24; see `docs/DECISIONS.md`).
 
-- [ ] `git.ts`: `changelog(repo, from, to)` reads the commits between two tags or refs; a pure grouper by gitmoji or conventional type; tested.
-- [ ] Renderer: a "Changelog" view reachable from the Tags dialog (pick two tags, default newest and previous) showing grouped commits, with click-through to the commit and a "Copy as Markdown" button.
+- [x] `CHANGELOG.md` at the repo root, one `## X.Y.Z` entry per release (Fixes, Contents, Known limits), backfilled from 0.1.2 on. A pure parser in `src/shared/changelog.ts`, tested.
+- [x] Settings > About shows the bundled file, newest first, the installed version open. `docs/RELEASING.md` and the `releaser` agent add the entry at each release; a test fails if the top entry is not the `package.json` version.
 
-**Verify:** temp-repo tests (two tags, no previous tag, merge commits, unknown type, empty range). Manual: the view in a window.
+**Verify:** parser and file-shape tests. Manual: the list in the About section of a window.
 
 ## Phase 31 — Interactive rebase
 
 Runs on `phase/31-interactive-rebase`. The largest and riskiest phase; it comes after the smaller ones are stable.
 
-- [ ] `git.ts`: `rebasePlan(repo, base)` lists the commits to replay; `rebaseRun(repo, base, todo)` runs `git rebase -i` with a generated todo (pick, reword, squash, fixup, drop, reorder) fed through `GIT_SEQUENCE_EDITOR` pointing at a temp file, never a shell string. Refuse on a dirty tree, on pushed commits unless the user confirms, and on merge commits in range.
-- [ ] Reuse `OperationBanner` and the conflict editor for stops: Continue, Skip, Abort. A running rebase is detected from the git dir, as bisect is.
-- [ ] Renderer: a todo-list editor dialog (reorder, change action, edit reword messages) opened from a graph row's context menu ("Rebase onto here, interactively"). Abort is always visible.
-- [ ] README: remove "interactive rebase" from "Not planned".
+- [x] `git.ts`: `rebasePlan(repo, base)` lists the commits to replay; `rebaseRun(repo, base, todo)` runs `git rebase -i` with a generated todo (pick, reword, squash, fixup, drop, reorder) fed through `GIT_SEQUENCE_EDITOR` pointing at a temp file, never a shell string. Refuse on a dirty tree, on pushed commits unless the user confirms, and on merge commits in range.
+- [x] Reuse `OperationBanner` and the conflict editor for stops: Continue, Skip, Abort. A running rebase is detected from the git dir, as bisect is.
+- [x] Renderer: a todo-list editor dialog (reorder, change action, edit reword messages) opened from a graph row's context menu ("Rebase onto here, interactively"). Abort is always visible.
+- [x] README: remove "interactive rebase" from "Not planned".
 
 **Verify:** temp-repo tests (reorder, squash, fixup, drop, reword, conflict then continue, conflict then abort, refused cases). Manual: the editor and the banner in the window.
 
@@ -722,9 +722,9 @@ Runs on `phase/31-interactive-rebase`. The largest and riskiest phase; it comes 
 
 Runs on `phase/32-notifications`. A desktop app has no public URL, so real webhooks would need a relay server, which breaks the "no runtime dependencies, tokens stay local" model. This phase polls the host's events instead. Whether that is acceptable is an open question in `docs/DECISIONS.md`.
 
-- [ ] A pure event differ: given the previous and current PR/MR lists of a repo, emit events (created, merged, closed, new review, checks failed); tested.
-- [ ] Per-project settings: which events to watch. Polling runs only while the app is open, at an interval no shorter than 60 s, reusing the Phase 22 cache and the same-origin and rate-limit handling. Stops on 401 or 403.
-- [ ] Native notifications through Electron `Notification` in main, with the host and repo name only (no token, no diff). Click opens the PR/MR in the pane. Off by default.
+- [x] A pure event differ: given the previous and current PR/MR lists of a repo, emit events (created, merged, closed, new review, checks failed); tested.
+- [x] Per-project settings: which events to watch. Polling runs only while the app is open, at an interval no shorter than 60 s, reusing the Phase 22 cache and the same-origin and rate-limit handling. Stops on 401 or 403.
+- [x] Native notifications through Electron `Notification` in main, with the host and repo name only (no token, no diff). Click opens the PR/MR in the pane. Off by default.
 
 **Verify:** differ tests (new, merged, closed, reopened, no change, first load emits nothing). Mock-server polling tests (interval, backoff on 429, stop on 401). Manual: a notification on a real PR/MR, which cannot be checked without one.
 

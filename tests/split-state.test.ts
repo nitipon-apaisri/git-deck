@@ -78,6 +78,18 @@ test('select while split is off still finds a repo in the hidden pane', () => {
 
 // openInSplit
 
+test('open selects the repository and shows the tab in the pane that holds it', () => {
+  const s = run([
+    { type: 'select', repoKey: 'a:1' },
+    { type: 'openInSplit', repoKey: 'a:2' },
+    { type: 'open', repoKey: 'a:1', tab: 'pulls' }
+  ])
+  assert.deepEqual(keys(s), ['a:1', 'a:2'])
+  assert.equal(s.active, 0)
+  assert.equal(s.panes[0].tab, 'pulls')
+  assert.equal(s.panes[1].tab, 'overview')
+})
+
 test('openInSplit turns split on and loads the other pane, which becomes active', () => {
   const s = run([
     { type: 'select', repoKey: 'a:1' },

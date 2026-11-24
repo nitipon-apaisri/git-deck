@@ -1,5 +1,6 @@
 // Pure helpers: no electron, no I/O. Callers persist the returned values.
-import type { Project, ProjectSummary, RepoSummary } from './types'
+import { isNotifyEvent } from './notify'
+import type { NotifyEvent, Project, ProjectSummary, RepoSummary } from './types'
 
 export const PROJECT_COLORS = [
   'blue',
@@ -62,6 +63,7 @@ export interface ProjectPatch {
   name?: string
   icon?: string
   color?: string
+  notify?: NotifyEvent[]
 }
 
 export interface Clock {
@@ -135,7 +137,15 @@ export function updateProject(
   const color = patch.color ?? current.color
   if (!isValidIcon(icon)) throw new Error('Unknown project icon')
   if (!isValidColor(color)) throw new Error('Unknown project color')
-  return { ...current, name, icon, color, updatedAt: clock.now() }
+  const notify = patch.notify === undefined ? current.notify : checkNotify(patch.notify)
+  return { ...current, name, icon, color, notify, updatedAt: clock.now() }
+}
+
+export function checkNotify(events: unknown): NotifyEvent[] {
+  if (!Array.isArray(events) || !events.every(isNotifyEvent)) {
+    throw new Error('Unknown notification event')
+  }
+  return unique(events) as NotifyEvent[]
 }
 
 export function addRepos(

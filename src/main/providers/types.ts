@@ -1,4 +1,11 @@
-import type { ChangeRequest, ChecksInfo, Repo, RepoSummary, VerifiedUser } from '../../shared/types'
+import type {
+  ChangeRequest,
+  ChecksInfo,
+  CreateChangeRequestInput,
+  Repo,
+  RepoSummary,
+  VerifiedUser
+} from '../../shared/types'
 
 export type { VerifiedUser }
 
@@ -10,6 +17,8 @@ export interface GitProvider {
   getSummary(repo: Repo): Promise<RepoSummary>
   /** The most recently updated pull/merge requests, any state. */
   listChangeRequests(repo: Repo): Promise<ChangeRequest[]>
+  /** Opens a pull/merge request. Throws `HttpError` (403: the token cannot write). */
+  createChangeRequest(repo: Repo, input: CreateChangeRequestInput): Promise<ChangeRequest>
   /** CI for a ref. A host or version without the endpoint answers `none`, not an error. */
   getChecks(repo: Repo, ref: string): Promise<ChecksInfo>
 }

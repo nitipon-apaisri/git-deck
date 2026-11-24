@@ -2,7 +2,7 @@
 
 A desktop Git client for GitHub, GitLab.com and self-hosted GitLab. Browse every repository you can reach, read its commit graph, group repositories from different hosts into Projects, and put two repositories side by side.
 
-Beyond reading, GitDeck stages, commits, switches branches, pushes and pulls, stashes, cherry-picks and merges. Tags, revert, reset, remotes, non-interactive rebase and hunk staging are in. Single lines can be staged and unstaged from the diff dialog. Merge conflicts can be resolved inside the app, region by region (see [Known limits](#known-limits-and-roadmap)).
+Beyond reading, GitDeck stages, commits, switches branches, pushes and pulls, stashes, cherry-picks and merges. Tags, revert, reset, remotes, non-interactive and interactive rebase and hunk staging are in. Single lines can be staged and unstaged from the diff dialog. Merge conflicts can be resolved inside the app, region by region (see [Known limits](#known-limits-and-roadmap)).
 
 Built with Electron, React and TypeScript.
 
@@ -13,12 +13,13 @@ Built with Electron, React and TypeScript.
 - **Open a folder.** Open any local Git repository without an account. It appears under Local with its graph and folder info.
 - **Local clones.** Clone over HTTPS or SSH, or link an existing folder. Fetch, open the folder, and read local branch, ahead/behind and working tree state.
 - **Commit graph.** A lane graph of the whole history, loaded 500 commits at a time and virtualised, so a repository with thousands of commits stays smooth. Select a commit to see its message and changed files.
-- **History operations.** Tags (create, annotate, push, delete here or on the remote), revert, reset (soft, mixed or hard, with a confirm for hard) and remotes (add, rename, remove). Non-interactive rebase onto a branch or commit, and staging one hunk at a time from the diff. Revert and rebase reuse the conflict banner, and a rebase can skip the commit it stopped on. URLs never carry a token.
+- **History operations.** Tags (create, annotate, push, delete here or on the remote), revert, reset (soft, mixed or hard, with a confirm for hard) and remotes (add, rename, remove). Non-interactive rebase onto a branch or commit, interactive rebase from a graph row (reorder, reword, squash, fixup, drop), and staging one hunk at a time from the diff. Revert and rebase reuse the conflict banner, and a rebase can skip the commit it stopped on. URLs never carry a token.
 - **Working tree.** Changes tab with diffs, staging by file, hunk or single line, commit, branches, checkout, push and pull, stash, cherry-pick and merge. Conflicts are resolved in an in-app editor.
 - **File history and blame.** A per-file tab with `git log --follow` history and a blame toggle. Click an entry to open that commit.
 - **Bisect.** Start from a graph row. A banner shows the commit under test with Good, Bad, Skip and Abort, then the result.
 - **Pull and merge requests, CI.** A read-only tab with state, author, reviewers, labels and checks, plus a status dot beside the branch in the graph. Opening "Create PR/MR" goes to the host's compare page.
-- **AI commit messages.** Optional, off by default. A sparkles button fills the message field from the staged diff using the Claude Code CLI. It never commits.
+- **PR/MR notifications.** Off by default. In Edit project, pick the events to watch: new, merged, closed, reviewer requested, checks failed. GitDeck checks the project's hosted repositories every 2 minutes while it is open (no webhooks, nothing leaves your machine but the usual API reads) and shows a system notification with the host and repository name. Clicking it opens the PR/MR tab. Settings > Notifications turns them all off at once and sends a test notification.
+- **AI commit messages.** Optional, off by default. A sparkles button fills the message field from the staged diff using the provider you pick: the Claude Code, Codex or OpenCode CLI, or OpenAI, Gemini or any OpenAI-compatible server with a key kept in the OS keychain. It never commits.
 - **Integrated terminal.** A shell per pane, opened with the Terminal button or Ctrl+\`, in the repository's folder.
 - **Command palette.** `Mod+Shift+P` jumps to repositories, branches and tags and runs actions such as fetch, pull and theme switch.
 - **Projects.** A named group of repositories from any host or account, with its own icon and colour. A project has an overview page with totals, a sortable table of its repositories, and "Fetch all linked".
@@ -46,14 +47,16 @@ pnpm lint       # ESLint
 
 `pnpm format` runs Prettier. A pre-commit hook runs lint-staged and a secret scan (gitleaks).
 
+Notifications under `pnpm dev` on macOS: the Electron that pnpm installs is only linker-signed, so macOS never lists it in System Settings > Notifications and refuses its notifications (`UNErrorDomain error 1`). Sign it once: `codesign --force --deep --sign - node_modules/electron/dist/Electron.app`, restart `pnpm dev`, click **Send a test notification** in Settings > Notifications and allow it when macOS asks. Reinstalling Electron undoes this. The packaged app is signed by electron-builder and does not need it.
+
 ## Connecting an account
 
 Open **Accounts**, pick a host, paste a token, press **Test connection**, then **Add account**. GitDeck only ever sends the token to that host.
 
-| Host   | Token                                                                                                                                                   |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GitHub | A classic token with the `repo` scope, or a fine-grained token with read access to **Metadata** and **Contents** (read and write **Contents** to push). |
-| GitLab | A personal access token with the `read_api` and `read_repository` scopes (add `write_repository` to push).                                              |
+| Host   | Token                                                                                                                                                               |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GitHub | A classic token with the `repo` scope, or a fine-grained token with read access to **Metadata** and **Contents** (read and write **Contents** to push).             |
+| GitLab | A personal access token with the `api` and `read_repository` scopes (`api` is what creates merge requests; `read_api` still reads; add `write_repository` to push). |
 
 Cloning a private repository over HTTPS uses the same token. For SSH, GitDeck uses whatever your own `ssh` setup already does.
 
@@ -133,7 +136,7 @@ Known limits:
 - Split View has two panes at most.
 - The graph shows the history that `git log` reports for the linked folder. Detached HEAD and graphs with more than about ten lanes at once were not checked.
 
-Not planned for this version: interactive rebase, line-level discard, a full-file three-way editor, creating pull or merge requests, OAuth sign-in (tokens only), a SQLite cache, silent auto-update, signing and notarisation, more than two panes, drag-and-drop between projects, and cloning every repository of a project at once.
+Not planned for this version: a full-file three-way editor, creating pull or merge requests, OAuth sign-in (tokens only), a SQLite cache, silent auto-update, signing and notarisation, more than two panes, drag-and-drop between projects, and cloning every repository of a project at once.
 
 ### Install
 
@@ -179,9 +182,9 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 24: Bisect
 - [x] Phase 25: Packaging and update notice
 - [x] Phase 26: Release workflow (develop, stage, main)
-- [ ] Phase 27: Line-level discard
-- [ ] Phase 28: Create pull request / merge request
-- [ ] Phase 29: More AI providers for commit messages
-- [ ] Phase 30: Change log detail
-- [ ] Phase 31: Interactive rebase
-- [ ] Phase 32: Project event notifications
+- [x] Phase 27: Line-level discard
+- [x] Phase 28: Create pull request / merge request
+- [x] Phase 29: More AI providers for commit messages
+- [x] Phase 30: Change log detail
+- [x] Phase 31: Interactive rebase
+- [x] Phase 32: Project event notifications

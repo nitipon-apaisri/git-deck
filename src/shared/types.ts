@@ -361,6 +361,22 @@ export interface OperationResult {
   conflicted: boolean
 }
 
+export type RebaseAction = 'pick' | 'reword' | 'squash' | 'fixup' | 'drop'
+
+export interface RebaseTodoItem {
+  action: RebaseAction
+  hash: string
+  /** The new message of a `reword`. Never part of the todo text or a command line. */
+  message?: string
+}
+
+export interface RebasePlan {
+  /** The commits to replay, oldest first. */
+  commits: { hash: string; subject: string; message: string }[]
+  /** Hashes of those commits that a remote-tracking branch already has. */
+  pushed: string[]
+}
+
 export interface LocalInfo {
   path: string
   currentBranch: string | null
@@ -391,7 +407,12 @@ export interface Project {
   repoKeys: string[]
   createdAt: number
   updatedAt: number
+  /** PR/MR events to show as notifications. Missing or empty: off (the default). */
+  notify?: NotifyEvent[]
 }
+
+/** `review`: a reviewer was requested, not a review submitted (the list has no reviews). */
+export type NotifyEvent = 'created' | 'merged' | 'closed' | 'review' | 'checksFailed'
 
 /** Computed in the renderer, never stored. */
 export interface ProjectSummary {
@@ -421,6 +442,15 @@ export interface ChangeRequest {
   updatedAt: string
   /** What `getChecks` takes: the head commit (GitHub) or the source branch (GitLab). */
   checksRef: string
+}
+
+/** What "Create PR/MR" sends. `head` and `base` are branch names in the same repository. */
+export interface CreateChangeRequestInput {
+  title: string
+  body: string
+  head: string
+  base: string
+  draft: boolean
 }
 
 /** CI for one ref. `none` is "no CI info": no CI, or a host without the endpoint. */
@@ -477,6 +507,13 @@ export interface BisectState {
 }
 
 export type BisectMark = 'good' | 'bad' | 'skip'
+
+/** A GitHub release newer than the installed version; `body` is its Markdown notes. */
+export interface ReleaseNote {
+  version: string
+  url: string
+  body: string
+}
 
 /** Result of the manual update check. `latest` is null when nothing newer exists. */
 export interface UpdateCheck {

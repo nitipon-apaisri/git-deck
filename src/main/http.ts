@@ -7,6 +7,9 @@ export function configureFetch(impl: FetchImpl): void {
   fetchImpl = impl
 }
 
+/** The configured fetch (Electron's `net.fetch` in the app), for callers with their own errors. */
+export const appFetch: FetchImpl = (input, init) => fetchImpl(input, init)
+
 export class HttpError extends Error {
   readonly status: number
   constructor(status: number, message: string) {
@@ -22,13 +25,21 @@ const MAX_PAGES = 100
 type Headers_ = Record<string, string>
 
 // Never put request headers in messages: they carry the token.
-async function request(url: string, headers: Headers_, method = 'GET'): Promise<Response> {
+async function request(
+  url: string,
+  headers: Headers_,
+  method = 'GET',
+  body?: string
+): Promise<Response> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
   try {
-    const res = await fetchImpl(url, { method, headers, signal: controller.signal })
+    const res = await fetchImpl(url, { method, headers, body, signal: controller.signal })
     if (!res.ok) {
-      throw new HttpError(res.status, `Request failed: ${res.status} ${res.statusText}`.trim())
+      const base = `Request failed: ${res.status} ${res.statusText}`.trim()
+      // Only a write has a useful reason in the body (422 "already exists"); a read keeps the short text.
+      const detail = method === 'GET' ? '' : await hostMessage(res)
+      throw new HttpError(res.status, detail ? `${base}: ${detail}` : base)
     }
     return res
   } catch (err) {
@@ -37,6 +48,28 @@ async function request(url: string, headers: Headers_, method = 'GET'): Promise<
     throw new HttpError(0, err instanceof Error ? err.message : 'Network error')
   } finally {
     clearTimeout(timer)
+  }
+}
+
+/** The host's own error text (`message`, `errors[].message`), capped. Never echoes the request. */
+async function hostMessage(res: Response): Promise<string> {
+  try {
+    const j = JSON.parse(await res.text()) as { message?: unknown; errors?: unknown }
+    // GitHub 422 errors are often `{resource, field, code}` with no message: spell them out.
+    const one = (e: unknown): unknown => {
+      if (typeof e === 'string') return e
+      const o = e as { message?: unknown; resource?: unknown; field?: unknown; code?: unknown }
+      if (typeof o?.message === 'string') return o.message
+      return [o?.resource, o?.field, o?.code].filter((x) => typeof x === 'string').join(' ')
+    }
+    const parts = [j.message, ...(Array.isArray(j.errors) ? j.errors.map(one) : [])]
+    return parts
+      .flatMap((m) => (Array.isArray(m) ? m : [m]))
+      .filter((m): m is string => typeof m === 'string' && m !== '')
+      .join('; ')
+      .slice(0, 300)
+  } catch {
+    return ''
   }
 }
 
@@ -53,6 +86,15 @@ async function readJson<T>(res: Response): Promise<T | null> {
 
 export async function getJson<T>(url: string, headers: Headers_ = {}): Promise<T | null> {
   return readJson<T>(await request(url, headers))
+}
+
+export async function postJson<T>(
+  url: string,
+  headers: Headers_,
+  body: unknown
+): Promise<T | null> {
+  const h = { ...headers, 'Content-Type': 'application/json' }
+  return readJson<T>(await request(url, h, 'POST', JSON.stringify(body)))
 }
 
 export interface LinkRels {

@@ -21,21 +21,27 @@ import type {
   ConflictRequest,
   ConflictSaveResult,
   OperationResult,
+  RebasePlan,
+  RebaseTodoItem,
   BisectMark,
   BisectState,
   OperationState,
+  NotifyEvent,
   Project,
   PullMode,
   Repo,
   RepoStatus,
   RepoSummary,
   ChangeRequest,
+  CreateChangeRequestInput,
   ChecksInfo,
   ResetMode,
   StashEntry,
   TagEntry,
+  ReleaseNote,
   VerifiedUser
 } from './types'
+import type { AiConfig, AiProviderId } from './ai'
 
 export type CloneProtocol = 'https' | 'ssh'
 
@@ -61,6 +67,7 @@ export interface ProjectPatchInput {
   name?: string
   icon?: string
   color?: string
+  notify?: NotifyEvent[]
 }
 
 export interface Api {
@@ -93,6 +100,8 @@ export interface Api {
   changes: {
     list(repoKey: string): Promise<ChangeRequest[]>
     checks(repoKey: string, ref: string): Promise<ChecksInfo>
+    /** Opens a pull/merge request on the host. Needs write access; a local-only repo throws. */
+    create(repoKey: string, input: CreateChangeRequestInput): Promise<ChangeRequest>
   }
   local: {
     links(): Promise<Record<string, string>>
@@ -137,8 +146,8 @@ export interface Api {
     pull(path: string, mode: PullMode): Promise<void>
     /** Sets the upstream when there is none. A forced push asks first: `false` when declined. */
     push(path: string, force: boolean): Promise<boolean>
-    /** Asks the local Claude Code CLI for a message for the staged changes. Never commits. */
-    suggestCommitMessage(path: string): Promise<string>
+    /** Asks the chosen AI provider for a message for the staged changes. Never commits. */
+    suggestCommitMessage(path: string, config: AiConfig): Promise<string>
     stashes(path: string): Promise<StashEntry[]>
     stashPush(path: string, message: string, includeUntracked: boolean): Promise<void>
     /** `hash` is the entry's hash, so a list that changed since it was read is refused. */
@@ -174,11 +183,20 @@ export interface Api {
     removeRemote(path: string, name: string): Promise<boolean>
     /** `onto` is a local or remote branch (`origin/x`) or a commit hash. Non-interactive. */
     rebase(path: string, onto: string): Promise<OperationResult>
+    /** The commits `rebaseRun` would replay onto `base`, a commit of this branch. Throws when it cannot. */
+    rebasePlan(path: string, base: string): Promise<RebasePlan>
+    /**
+     * `git rebase -i` with this todo. Pushed commits ask first. `null` means the user declined;
+     * `conflicted` means it stopped: continue, skip or abort through `local.operation`.
+     */
+    rebaseRun(path: string, base: string, todo: RebaseTodoItem[]): Promise<OperationResult | null>
     /** Rebase only. Asks first, resolves `false` when declined. */
     skipOperation(path: string): Promise<boolean>
     /** Stage one hunk of a tracked file. Main rebuilds the patch, so a stale diff is refused. */
     stageHunk(path: string, hunk: HunkRequest): Promise<void>
     unstageHunk(path: string, hunk: HunkRequest): Promise<void>
+    /** Discard selected unstaged lines. Asks first, resolves `false` when declined. */
+    discardLines(path: string, hunk: HunkRequest): Promise<boolean>
     /**
      * One conflicted file: its regions, or why it has none, and the whole-file actions that apply.
      * `file` must be a path `status` lists as conflicted.
@@ -217,9 +235,26 @@ export interface Api {
     /** Fires with the folder path after its files or refs changed. Returns the unsubscribe. */
     onRepoChanged(cb: (path: string) => void): () => void
   }
+  /** API keys go in and never come back: the page only learns whether one is saved. */
+  ai: {
+    saveKey(provider: AiProviderId, key: string): Promise<void>
+    removeKey(provider: AiProviderId): Promise<void>
+    hasKey(provider: AiProviderId): Promise<boolean>
+    /** Sends a tiny fixed prompt (no repository data) and returns the reply. */
+    test(config: AiConfig): Promise<string>
+  }
   openExternal(url: string): Promise<void>
   /** The installed version and, when GitHub has a newer release, its version and page. */
   checkForUpdate(): Promise<UpdateCheck>
+  /** Notes of releases newer than the installed version, from GitHub. Only when asked. */
+  releaseNotes(): Promise<ReleaseNote[]>
+  notify: {
+    /** The app-wide switch in Settings. On unless turned off. */
+    enabled(): Promise<boolean>
+    setEnabled(on: boolean): Promise<void>
+    /** Shows a fixed notification. `null` when shown, else why it was not. */
+    test(): Promise<string | null>
+  }
   projects: {
     list(): Promise<Project[]>
     create(input: ProjectCreateInput): Promise<Project>
@@ -227,7 +262,15 @@ export interface Api {
     remove(id: string): Promise<void>
     addRepos(id: string, repoKeys: string[]): Promise<Project>
     removeRepos(id: string, repoKeys: string[]): Promise<Project>
+    /** A notification was clicked: show that repository's PR/MR tab. */
+    onNotifyOpen(cb: (target: NotifyTarget) => void): () => void
   }
+}
+
+/** What a clicked notification opens. `projectId` is the project that asked for it. */
+export interface NotifyTarget {
+  repoKey: string
+  projectId: string
 }
 
 /** Channel names, shared so main and preload cannot drift apart. */
@@ -243,6 +286,7 @@ export const IPC = {
   summaryFetch: 'summary:fetch',
   changesList: 'changes:list',
   changesChecks: 'changes:checks',
+  changesCreate: 'changes:create',
   localLinks: 'local:links',
   localLink: 'local:link',
   localUnlink: 'local:unlink',
@@ -289,9 +333,12 @@ export const IPC = {
   localRenameRemote: 'local:renameRemote',
   localRemoveRemote: 'local:removeRemote',
   localRebase: 'local:rebase',
+  localRebasePlan: 'local:rebase-plan',
+  localRebaseRun: 'local:rebase-run',
   localSkipOperation: 'local:skipOperation',
   localStageHunk: 'local:stageHunk',
   localUnstageHunk: 'local:unstageHunk',
+  localDiscardLines: 'local:discardLines',
   localConflictFile: 'local:conflictFile',
   localResolveConflict: 'local:resolveConflict',
   localResolveConflictFile: 'local:resolveConflictFile',
@@ -307,8 +354,16 @@ export const IPC = {
   localRemove: 'local:remove',
   localWatch: 'local:watch',
   localUnwatch: 'local:unwatch',
+  aiSaveKey: 'ai:saveKey',
+  aiRemoveKey: 'ai:removeKey',
+  aiHasKey: 'ai:hasKey',
+  aiTest: 'ai:test',
   openExternal: 'openExternal',
   checkForUpdate: 'checkForUpdate',
+  releaseNotes: 'releaseNotes',
+  notifyEnabled: 'notify:enabled',
+  notifySetEnabled: 'notify:setEnabled',
+  notifyTest: 'notify:test',
   projectsList: 'projects:list',
   projectsCreate: 'projects:create',
   projectsUpdate: 'projects:update',
@@ -325,6 +380,8 @@ export const IPC = {
   terminalKill: 'terminal:kill',
   /** Main to renderer event, not a request. */
   terminalData: 'terminal:data',
+  /** Main to renderer event, not a request. */
+  notifyOpen: 'notify:open',
   /** Main to renderer event, not a request. */
   terminalExit: 'terminal:exit'
 } as const

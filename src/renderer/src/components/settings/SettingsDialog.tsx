@@ -12,11 +12,13 @@ import { AppearanceSection } from './AppearanceSection'
 import { AiSection } from './AiSection'
 import { AboutSection } from './AboutSection'
 import { IntegrationsSection } from './IntegrationsSection'
+import { NotificationsSection } from './NotificationsSection'
 
 const ICONS: Record<SettingsSection, IconName> = {
   appearance: 'palette',
   integrations: 'plug',
   ai: 'sparkles',
+  notifications: 'bell',
   about: 'book'
 }
 
@@ -106,6 +108,8 @@ export function SettingsDialog({
                 <AppearanceSection theme={theme} onThemeChange={onThemeChange} />
               ) : id === 'ai' ? (
                 <AiSection />
+              ) : id === 'notifications' ? (
+                <NotificationsSection />
               ) : id === 'about' ? (
                 <AboutSection />
               ) : (

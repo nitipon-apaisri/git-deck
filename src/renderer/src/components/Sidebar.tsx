@@ -529,7 +529,7 @@ function HostRow({ node, expanded, searching, state, onToggle, onRefresh }: Host
       leading={
         <>
           <Icon name={expanded ? 'chevron-down' : 'chevron-right'} size="sm" />
-          <HostTile tile={tile} host={host} />
+          <HostTile tile={tile} host={host} brand={account.type} />
         </>
       }
       trailing={

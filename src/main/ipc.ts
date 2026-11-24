@@ -1,5 +1,5 @@
 // The Electron side of IPC: dialogs, shell, sender checks and handler registration.
-import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, Notification, shell } from 'electron'
 import { IPC } from '../shared/api'
 import { buildHandlers, respond, type RequestChannel } from './ipcTable'
 import { createService, type Ui } from './service'
@@ -38,6 +38,9 @@ const electronUi: Ui = {
   version: app.getVersion()
 }
 
+// A notification with no reference can be garbage-collected and lose its click handler.
+const shownNotes = new Set<Notification>()
+
 /** Returns a function that re-syncs the insecure-TLS allowlist from stored accounts. */
 export function registerIpc(store: Store): () => void {
   const { api, syncInsecureHosts } = createService({
@@ -63,6 +66,37 @@ export function registerIpc(store: Store): () => void {
       for (const win of BrowserWindow.getAllWindows()) {
         win.webContents.send(IPC.repoChanged, path)
       }
+    },
+    emitNotify: ({ repoKey, projectId, title, body }) => {
+      if (!Notification.isSupported()) {
+        return Promise.resolve('This system does not support notifications.')
+      }
+      const note = new Notification({ title, body })
+      shownNotes.add(note)
+      if (shownNotes.size > 50) shownNotes.delete(shownNotes.values().next().value as Notification)
+      note.on('close', () => shownNotes.delete(note))
+      note.on('click', () => {
+        shownNotes.delete(note)
+        const [win] = BrowserWindow.getAllWindows()
+        if (!win) return
+        if (win.isMinimized()) win.restore()
+        win.show()
+        win.focus()
+        // The test notification has no repository: focusing is all it does.
+        if (repoKey) win.webContents.send(IPC.notifyOpen, { repoKey, projectId })
+      })
+      // macOS refuses unsigned or not-allowed apps with a `failed` event, not an exception.
+      const outcome = new Promise<string | null>((resolve) => {
+        note.once('show', () => resolve(null))
+        note.once('failed', (_event, error) => {
+          shownNotes.delete(note)
+          resolve(error)
+        })
+        // shortcut: no event within 5 s counts as shown (Linux may not emit `show`).
+        setTimeout(() => resolve(null), 5000)
+      })
+      note.show()
+      return outcome
     }
   })
 
