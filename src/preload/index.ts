@@ -1,7 +1,7 @@
 // The only bridge between the sandboxed page and main. Every call is a fixed
 // channel with plain data, so the page never gets ipcRenderer itself.
 import { contextBridge, ipcRenderer } from 'electron'
-import { IPC, type Api, type GitProgress, type IpcResult } from '../shared/api'
+import { IPC, type Api, type GitProgress, type IpcResult, type NotifyTarget } from '../shared/api'
 
 async function call<T>(channel: string, ...args: unknown[]): Promise<T> {
   const result = (await ipcRenderer.invoke(channel, ...args)) as IpcResult<T>
@@ -150,7 +150,14 @@ const api: Api = {
     update: (id, patch) => call(IPC.projectsUpdate, id, patch),
     remove: (id) => call(IPC.projectsRemove, id),
     addRepos: (id, repoKeys) => call(IPC.projectsAddRepos, id, repoKeys),
-    removeRepos: (id, repoKeys) => call(IPC.projectsRemoveRepos, id, repoKeys)
+    removeRepos: (id, repoKeys) => call(IPC.projectsRemoveRepos, id, repoKeys),
+    onNotifyOpen: (cb) => {
+      const listener = (_event: unknown, target: NotifyTarget): void => cb(target)
+      ipcRenderer.on(IPC.notifyOpen, listener)
+      return () => {
+        ipcRenderer.removeListener(IPC.notifyOpen, listener)
+      }
+    }
   }
 }
 

@@ -39,6 +39,8 @@ export const defaultSplit = (): SplitState => ({
 
 export type SplitAction =
   | { type: 'select'; repoKey: string }
+  /** Select, then show `tab` in the pane that holds the repository. */
+  | { type: 'open'; repoKey: string; tab: TabName }
   | { type: 'openInSplit'; repoKey: string }
   | { type: 'setActive'; pane: PaneId }
   | { type: 'setTab'; pane: PaneId; tab: TabName }
@@ -77,6 +79,10 @@ export function splitReducer(state: SplitState, action: SplitAction): SplitState
       const shown = paneShowing(state, action.repoKey)
       if (shown !== null) return shown === state.active ? state : { ...state, active: shown }
       return withPane(state, state.active, { repoKey: action.repoKey })
+    }
+    case 'open': {
+      const next = splitReducer(state, { type: 'select', repoKey: action.repoKey })
+      return splitReducer(next, { type: 'setTab', pane: next.active, tab: action.tab })
     }
     case 'openInSplit': {
       const shown = paneShowing(state, action.repoKey)

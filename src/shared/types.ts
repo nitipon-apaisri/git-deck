@@ -407,7 +407,12 @@ export interface Project {
   repoKeys: string[]
   createdAt: number
   updatedAt: number
+  /** PR/MR events to show as notifications. Missing or empty: off (the default). */
+  notify?: NotifyEvent[]
 }
+
+/** `review`: a reviewer was requested, not a review submitted (the list has no reviews). */
+export type NotifyEvent = 'created' | 'merged' | 'closed' | 'review' | 'checksFailed'
 
 /** Computed in the renderer, never stored. */
 export interface ProjectSummary {

@@ -22,7 +22,7 @@ export type Handler = (args: unknown[]) => Promise<unknown>
 
 export type RequestChannel = Exclude<
   keyof typeof IPC,
-  'gitProgress' | 'repoChanged' | 'terminalData' | 'terminalExit'
+  'gitProgress' | 'repoChanged' | 'terminalData' | 'terminalExit' | 'notifyOpen'
 >
 
 // The casts mark the trust boundary: the service validates every argument at runtime.

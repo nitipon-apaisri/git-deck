@@ -28,6 +28,7 @@ function loadSplit(): SplitState {
 export interface Split {
   state: SplitState
   select: (repoKey: string) => void
+  open: (repoKey: string, tab: TabName) => void
   openInSplit: (repoKey: string) => void
   setActive: (pane: PaneId) => void
   setTab: (pane: PaneId, tab: TabName) => void
@@ -55,6 +56,7 @@ export function useSplit(): Split {
   return {
     state,
     select: useCallback((repoKey) => dispatch({ type: 'select', repoKey }), []),
+    open: useCallback((repoKey, tab) => dispatch({ type: 'open', repoKey, tab }), []),
     openInSplit: useCallback((repoKey) => dispatch({ type: 'openInSplit', repoKey }), []),
     setActive: useCallback((pane) => dispatch({ type: 'setActive', pane }), []),
     setTab: useCallback((pane, tab) => dispatch({ type: 'setTab', pane, tab }), []),

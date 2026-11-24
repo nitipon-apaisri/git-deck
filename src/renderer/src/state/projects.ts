@@ -78,7 +78,8 @@ export function useProjects(): Projects {
         let project = await window.api.projects.update(id, {
           name: value.name,
           icon: value.icon,
-          color: value.color
+          color: value.color,
+          notify: value.notify
         })
         put(project)
         const { add, remove } = diffRepoKeys(current.repoKeys, value.repoKeys)

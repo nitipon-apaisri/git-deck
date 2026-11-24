@@ -528,7 +528,7 @@ The 2px focus ring looked heavy on text inputs (palette, filters, forms). Text i
 
 - **Decision:** the user's priority order is line-level discard, create PR/MR, more AI providers, change log, interactive rebase, notifications. Planned in `PLAN.md`; nothing is built.
 - **Why this order:** small and low-risk first (discard reuses line staging); create PR/MR is the most-used missing workflow; AI extends an existing Settings section; interactive rebase is the largest and riskiest, so it follows once the rest is stable.
-- **Webhooks changed to polling:** a desktop app has no public URL for a host to call, and a relay server would break the "no runtime dependencies, tokens stay local" model. Phase 32 polls PR/MR lists while the app is open. Open question: is that acceptable?
+- **Webhooks changed to polling:** a desktop app has no public URL for a host to call, and a relay server would break the "no runtime dependencies, tokens stay local" model. Phase 32 polls PR/MR lists while the app is open. Accepted when Phase 32 started (2026-11-24).
 - **Open questions:** (1) what "change log" means: commits between two tags (the Phase 30 default), GitDeck's own "what's new", or host release notes; (2) AI order: HTTP APIs first (the plan's default) or CLI agents first; (3) ship each phase as its own release, or batch 26 to 28 as v0.2.0.
 - **Scope change to log when built:** GitLab creation needs the `api` scope instead of `read_api` (Phase 28).
 
@@ -581,3 +581,14 @@ The 2px focus ring looked heavy on text inputs (palette, filters, forms). Text i
 - **Stops:** reuse `OperationBanner` and the conflict editor (Continue, Skip, Abort). The dialog has no Abort of its own: it closes as soon as the run starts, and the banner is where a running rebase is aborted. Not "always visible" inside the dialog as the plan said, because there is no running state while it is open.
 - **Not done:** `edit` and `break` actions, rebasing merges (`--rebase-merges`), and Windows without Git for Windows' `sh`/`cp`.
 - **Not verified:** the dialog and banner in a window (no display check was done).
+
+## 2026-11-24: Phase 32 as built (PR/MR notifications)
+
+- **Polling accepted:** starting the phase settled the open question above. Main polls; nothing is pushed to GitDeck from outside.
+- **Setting:** `Project.notify` (event ids), set in Edit project, missing or empty means off. Events: new, merged, closed, reviewer requested, checks failed. A repository in two projects uses the union of their events. `local:` repositories are never polled.
+- **"New review" is "reviewer requested":** the user's choice. The PR/MR list has requested reviewers but no submitted reviews, so this needs no extra call. Submitted reviews would need one more request per changed PR/MR.
+- **Differ (`src/shared/notify.ts`, pure):** the first load is a baseline. "New" means a number above the highest one seen, so an old request re-entering the 100-item window is not new. Reopened emits nothing.
+- **Poller (`src/main/notifyPoller.ts`, no electron):** every 2 minutes (the plan's floor is 60 s; a poll is two list pages per repository), one repository at a time. Checks are read only for open requests whose head changed or whose last state was pending, and the first sighting is a baseline. 429 doubles that repository's delay up to 30 minutes and a success resets it. 401 or 403 stops that repository with one "stopped" notification; saving any project change retries it. Other errors wait for the next tick.
+- **"Reuse the Phase 22 cache":** not literally. That cache is per pane in the renderer; the poller keeps its own last list in main and calls the same `listChangeRequests` / `getChecks`, so same-origin pagination and error text are shared.
+- **Notification:** Electron `Notification` in main, title `<host> · <owner/repo>`, body `#12 merged: <title>`. No URL, token or diff. A click focuses the window, switches to the project if the current scope lacks the repository, and opens that repository's PR/MR tab. It does not highlight the single request (skipped).
+- **Not verified:** a real notification and its click (needs a display and a real PR/MR).

@@ -118,6 +118,21 @@ export function App() {
     setOverviewOn(false)
     split.select(key)
   }
+  // A clicked notification: switch to its project if the current scope lacks the repository.
+  const { open: openPaneTab, clear: clearPanes } = split
+  useEffect(
+    () =>
+      window.api.projects.onNotifyOpen(({ repoKey, projectId }) => {
+        if (scope && !scope.repoKeys.includes(repoKey)) {
+          clearPanes()
+          setScopeId(projectId)
+          writeStored(SCOPE_KEY, projectId)
+        }
+        setOverviewOn(false)
+        openPaneTab(repoKey, 'pulls')
+      }),
+    [scope, openPaneTab, clearPanes]
+  )
   function openRepoInSplit(key: string): void {
     setOverviewOn(false)
     split.openInSplit(key)

@@ -26,6 +26,7 @@ import type {
   BisectMark,
   BisectState,
   OperationState,
+  NotifyEvent,
   Project,
   PullMode,
   Repo,
@@ -66,6 +67,7 @@ export interface ProjectPatchInput {
   name?: string
   icon?: string
   color?: string
+  notify?: NotifyEvent[]
 }
 
 export interface Api {
@@ -253,7 +255,15 @@ export interface Api {
     remove(id: string): Promise<void>
     addRepos(id: string, repoKeys: string[]): Promise<Project>
     removeRepos(id: string, repoKeys: string[]): Promise<Project>
+    /** A notification was clicked: show that repository's PR/MR tab. */
+    onNotifyOpen(cb: (target: NotifyTarget) => void): () => void
   }
+}
+
+/** What a clicked notification opens. `projectId` is the project that asked for it. */
+export interface NotifyTarget {
+  repoKey: string
+  projectId: string
 }
 
 /** Channel names, shared so main and preload cannot drift apart. */
@@ -360,6 +370,8 @@ export const IPC = {
   terminalKill: 'terminal:kill',
   /** Main to renderer event, not a request. */
   terminalData: 'terminal:data',
+  /** Main to renderer event, not a request. */
+  notifyOpen: 'notify:open',
   /** Main to renderer event, not a request. */
   terminalExit: 'terminal:exit'
 } as const

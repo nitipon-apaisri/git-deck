@@ -689,7 +689,7 @@ test('git errors reach the caller without a token', async () => {
 test('every request channel has a handler, and each dispatches to the service', async () => {
   const r = await rig()
   const handlers = buildHandlers(r.api)
-  const events = ['gitProgress', 'repoChanged', 'terminalData', 'terminalExit']
+  const events = ['gitProgress', 'repoChanged', 'terminalData', 'terminalExit', 'notifyOpen']
   const requests = Object.keys(IPC).filter((k) => !events.includes(k))
   assert.deepEqual(Object.keys(handlers).sort(), requests.sort())
   assert.equal(
