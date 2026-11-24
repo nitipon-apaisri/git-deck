@@ -248,6 +248,13 @@ export interface Api {
   checkForUpdate(): Promise<UpdateCheck>
   /** Notes of releases newer than the installed version, from GitHub. Only when asked. */
   releaseNotes(): Promise<ReleaseNote[]>
+  notify: {
+    /** The app-wide switch in Settings. On unless turned off. */
+    enabled(): Promise<boolean>
+    setEnabled(on: boolean): Promise<void>
+    /** Shows a fixed notification. `false` when the system cannot show notifications. */
+    test(): Promise<boolean>
+  }
   projects: {
     list(): Promise<Project[]>
     create(input: ProjectCreateInput): Promise<Project>
@@ -354,6 +361,9 @@ export const IPC = {
   openExternal: 'openExternal',
   checkForUpdate: 'checkForUpdate',
   releaseNotes: 'releaseNotes',
+  notifyEnabled: 'notify:enabled',
+  notifySetEnabled: 'notify:setEnabled',
+  notifyTest: 'notify:test',
   projectsList: 'projects:list',
   projectsCreate: 'projects:create',
   projectsUpdate: 'projects:update',

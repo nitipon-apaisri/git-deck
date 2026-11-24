@@ -144,6 +144,11 @@ const api: Api = {
   openExternal: (url) => call(IPC.openExternal, url),
   checkForUpdate: () => call(IPC.checkForUpdate),
   releaseNotes: () => call(IPC.releaseNotes),
+  notify: {
+    enabled: () => call(IPC.notifyEnabled),
+    setEnabled: (on) => call(IPC.notifySetEnabled, on),
+    test: () => call(IPC.notifyTest)
+  },
   projects: {
     list: () => call(IPC.projectsList),
     create: (input) => call(IPC.projectsCreate, input),

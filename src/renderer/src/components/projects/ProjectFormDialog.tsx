@@ -1,4 +1,4 @@
-import { useId, useMemo, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import type { Account, NotifyEvent, Project, Repo } from '@shared/types'
 import { NOTIFY_EVENTS } from '@shared/notify'
@@ -72,6 +72,13 @@ export function ProjectFormDialog({
     () => new Set(editing ? editing.repoKeys : initialRepoKeys)
   )
   const [notify, setNotify] = useState<NotifyEvent[]>(editing?.notify ?? [])
+  const [notifyOff, setNotifyOff] = useState(false)
+  useEffect(() => {
+    window.api.notify.enabled().then(
+      (on) => setNotifyOff(!on),
+      () => {}
+    )
+  }, [])
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
@@ -406,6 +413,7 @@ export function ProjectFormDialog({
             </div>
             <span className="text-[12px] text-muted-foreground">
               Checks this project&apos;s hosted repositories every 2 minutes while GitDeck is open.
+              {notifyOff ? ' Turned off in Settings > Notifications.' : ''}
             </span>
           </fieldset>
         ) : null}

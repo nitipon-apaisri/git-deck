@@ -145,7 +145,8 @@ export interface ServiceDeps {
   emitTerminalData?(id: string, data: string): void
   emitTerminalExit?(id: string, exitCode: number): void
   /** Shows a PR/MR notification. Without it, nothing is polled. Text only: no URL, no token. */
-  emitNotify?(notice: { repoKey: string; projectId: string; title: string; body: string }): void
+  /** Returns whether the system could show it. */
+  emitNotify?(notice: { repoKey: string; projectId: string; title: string; body: string }): boolean
   /** Replaceable in tests: starts a pty. */
   spawnPty?: SpawnPty
   /** Replaceable in tests. */
@@ -580,7 +581,8 @@ export function createService(deps: ServiceDeps): {
 
   // PR/MR notifications: polled in main, only for projects that turned events on.
   const poller = createPoller({
-    projects: () => store.getProjects(),
+    // Off in Settings: nothing is watched, and turning it on starts from a fresh baseline.
+    projects: () => (store.notificationsEnabled() ? store.getProjects() : []),
     list: (key) => withProvider(key, [], (p, r) => p.listChangeRequests(r)),
     checks: (key, ref) =>
       withProvider(key, { state: 'none', items: [] }, (p, r) => p.getChecks(r, ref)),
@@ -1454,6 +1456,23 @@ export function createService(deps: ServiceDeps): {
       }
       await ui.openExternal(url)
     }),
+    notify: {
+      enabled: guard(async () => store.notificationsEnabled()),
+      setEnabled: guard(async (on) => {
+        if (typeof on !== 'boolean') throw new Error('Invalid notifications setting')
+        await store.setNotificationsEnabled(on)
+        poller.restart()
+      }),
+      test: guard(
+        async () =>
+          deps.emitNotify?.({
+            repoKey: '',
+            projectId: '',
+            title: 'GitDeck',
+            body: 'Notifications work.'
+          }) ?? false
+      )
+    },
     projects: {
       list: guard(async () => store.getProjects()),
       create: guard(async (input) => {

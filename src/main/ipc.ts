@@ -68,7 +68,7 @@ export function registerIpc(store: Store): () => void {
       }
     },
     emitNotify: ({ repoKey, projectId, title, body }) => {
-      if (!Notification.isSupported()) return
+      if (!Notification.isSupported()) return false
       const note = new Notification({ title, body })
       shownNotes.add(note)
       if (shownNotes.size > 50) shownNotes.delete(shownNotes.values().next().value as Notification)
@@ -80,9 +80,11 @@ export function registerIpc(store: Store): () => void {
         if (win.isMinimized()) win.restore()
         win.show()
         win.focus()
-        win.webContents.send(IPC.notifyOpen, { repoKey, projectId })
+        // The test notification has no repository: focusing is all it does.
+        if (repoKey) win.webContents.send(IPC.notifyOpen, { repoKey, projectId })
       })
       note.show()
+      return true
     }
   })
 
