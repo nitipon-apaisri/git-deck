@@ -100,7 +100,7 @@ export function SwitchOption({ label, checked, onChange }: Omit<CheckOptionProps
         <span
           className={cn(
             'absolute top-0.5 left-0.5 size-4 rounded-full transition-transform',
-            checked ? 'translate-x-4 bg-primary-foreground' : 'bg-muted-foreground'
+            checked ? 'translate-x-4 bg-primary-foreground' : 'bg-foreground'
           )}
         />
       </button>
