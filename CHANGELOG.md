@@ -22,7 +22,8 @@ What changed in each GitDeck release, newest first. The app shows this file in S
 - Not notarised (no Apple Developer ID): macOS still asks to confirm the first launch.
 - The x64 build is cross-built on an arm64 runner and has not been run on an Intel Mac.
 - The update check is manual only (Settings, About).
-- Notifications in the packaged app, and clicking one to open the PR/MR tab, have not been checked yet. Notifications are polled, so they can arrive up to 2 minutes late.
+- Notifications are polled, so they can arrive up to 2 minutes late.
+- Not checked by hand: the Merged, Reviewer requested and Checks failed notification types, and notifications for GitLab.
 - Interactive rebase has no edit or break actions and does not rebase merge commits.
 - The new AI providers have not been tried with live keys.
 
