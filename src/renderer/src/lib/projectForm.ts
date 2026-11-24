@@ -6,7 +6,7 @@ import {
   isValidIcon,
   validateName
 } from '../../../shared/projects'
-import type { Project, Repo } from '../../../shared/types'
+import type { NotifyEvent, Project, Repo } from '../../../shared/types'
 import { accountIdOf } from './projectScope'
 
 export interface ProjectFormValue {
@@ -14,6 +14,8 @@ export interface ProjectFormValue {
   icon: string
   color: string
   repoKeys: string[]
+  /** Edit only: the PR/MR events to notify about. */
+  notify?: NotifyEvent[]
 }
 
 export const NAME_LIMIT = MAX_NAME_LENGTH

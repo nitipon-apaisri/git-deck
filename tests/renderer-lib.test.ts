@@ -461,7 +461,8 @@ test('every accent except the default has dark and light overrides for all five 
 test('settings sections: arrows wrap, Home and End jump, other keys do nothing', () => {
   assert.equal(sectionAfterKey('appearance', 'ArrowDown'), 'integrations')
   assert.equal(sectionAfterKey('integrations', 'ArrowDown'), 'ai')
-  assert.equal(sectionAfterKey('ai', 'ArrowDown'), 'about')
+  assert.equal(sectionAfterKey('ai', 'ArrowDown'), 'notifications')
+  assert.equal(sectionAfterKey('notifications', 'ArrowDown'), 'about')
   assert.equal(sectionAfterKey('about', 'ArrowDown'), 'appearance')
   assert.equal(sectionAfterKey('appearance', 'ArrowUp'), 'about')
   assert.equal(sectionAfterKey('about', 'Home'), 'appearance')

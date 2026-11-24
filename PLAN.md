@@ -722,9 +722,9 @@ Runs on `phase/31-interactive-rebase`. The largest and riskiest phase; it comes 
 
 Runs on `phase/32-notifications`. A desktop app has no public URL, so real webhooks would need a relay server, which breaks the "no runtime dependencies, tokens stay local" model. This phase polls the host's events instead. Whether that is acceptable is an open question in `docs/DECISIONS.md`.
 
-- [ ] A pure event differ: given the previous and current PR/MR lists of a repo, emit events (created, merged, closed, new review, checks failed); tested.
-- [ ] Per-project settings: which events to watch. Polling runs only while the app is open, at an interval no shorter than 60 s, reusing the Phase 22 cache and the same-origin and rate-limit handling. Stops on 401 or 403.
-- [ ] Native notifications through Electron `Notification` in main, with the host and repo name only (no token, no diff). Click opens the PR/MR in the pane. Off by default.
+- [x] A pure event differ: given the previous and current PR/MR lists of a repo, emit events (created, merged, closed, new review, checks failed); tested.
+- [x] Per-project settings: which events to watch. Polling runs only while the app is open, at an interval no shorter than 60 s, reusing the Phase 22 cache and the same-origin and rate-limit handling. Stops on 401 or 403.
+- [x] Native notifications through Electron `Notification` in main, with the host and repo name only (no token, no diff). Click opens the PR/MR in the pane. Off by default.
 
 **Verify:** differ tests (new, merged, closed, reopened, no change, first load emits nothing). Mock-server polling tests (interval, backoff on 429, stop on 401). Manual: a notification on a real PR/MR, which cannot be checked without one.
 

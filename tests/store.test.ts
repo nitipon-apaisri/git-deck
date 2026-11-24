@@ -165,3 +165,12 @@ test('forgetting a local repository removes it from every project', async () => 
   await store.removeLocalRepo('local:abc')
   assert.deepEqual(store.getProjects()[0].repoKeys, ['acc:1'])
 })
+
+test('notifications are on by default and the switch survives a reload', async () => {
+  const { store, dir } = await newStore()
+  assert.equal(store.notificationsEnabled(), true)
+  await store.setNotificationsEnabled(false)
+  const again = new Store(dir, fakeCrypto())
+  await again.load()
+  assert.equal(again.notificationsEnabled(), false)
+})

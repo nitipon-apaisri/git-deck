@@ -18,6 +18,7 @@ Built with Electron, React and TypeScript.
 - **File history and blame.** A per-file tab with `git log --follow` history and a blame toggle. Click an entry to open that commit.
 - **Bisect.** Start from a graph row. A banner shows the commit under test with Good, Bad, Skip and Abort, then the result.
 - **Pull and merge requests, CI.** A read-only tab with state, author, reviewers, labels and checks, plus a status dot beside the branch in the graph. Opening "Create PR/MR" goes to the host's compare page.
+- **PR/MR notifications.** Off by default. In Edit project, pick the events to watch: new, merged, closed, reviewer requested, checks failed. GitDeck checks the project's hosted repositories every 2 minutes while it is open (no webhooks, nothing leaves your machine but the usual API reads) and shows a system notification with the host and repository name. Clicking it opens the PR/MR tab. Settings > Notifications turns them all off at once and sends a test notification.
 - **AI commit messages.** Optional, off by default. A sparkles button fills the message field from the staged diff using the provider you pick: the Claude Code, Codex or OpenCode CLI, or OpenAI, Gemini or any OpenAI-compatible server with a key kept in the OS keychain. It never commits.
 - **Integrated terminal.** A shell per pane, opened with the Terminal button or Ctrl+\`, in the repository's folder.
 - **Command palette.** `Mod+Shift+P` jumps to repositories, branches and tags and runs actions such as fetch, pull and theme switch.
@@ -45,6 +46,8 @@ pnpm lint       # ESLint
 ```
 
 `pnpm format` runs Prettier. A pre-commit hook runs lint-staged and a secret scan (gitleaks).
+
+Notifications under `pnpm dev` on macOS: the Electron that pnpm installs is only linker-signed, so macOS never lists it in System Settings > Notifications and refuses its notifications (`UNErrorDomain error 1`). Sign it once: `codesign --force --deep --sign - node_modules/electron/dist/Electron.app`, restart `pnpm dev`, click **Send a test notification** in Settings > Notifications and allow it when macOS asks. Reinstalling Electron undoes this. The packaged app is signed by electron-builder and does not need it.
 
 ## Connecting an account
 
@@ -184,4 +187,4 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 29: More AI providers for commit messages
 - [x] Phase 30: Change log detail
 - [x] Phase 31: Interactive rebase
-- [ ] Phase 32: Project event notifications
+- [x] Phase 32: Project event notifications

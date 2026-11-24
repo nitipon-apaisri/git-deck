@@ -689,7 +689,7 @@ test('git errors reach the caller without a token', async () => {
 test('every request channel has a handler, and each dispatches to the service', async () => {
   const r = await rig()
   const handlers = buildHandlers(r.api)
-  const events = ['gitProgress', 'repoChanged', 'terminalData', 'terminalExit']
+  const events = ['gitProgress', 'repoChanged', 'terminalData', 'terminalExit', 'notifyOpen']
   const requests = Object.keys(IPC).filter((k) => !events.includes(k))
   assert.deepEqual(Object.keys(handlers).sort(), requests.sort())
   assert.equal(
@@ -751,4 +751,58 @@ test('local.remove forgets the repository and its link, and only accepts local k
   assert.deepEqual(await r.api.local.repos(), [])
   assert.equal((await r.api.local.links())[opened.key], undefined)
   await assert.rejects(r.api.local.info(opened.description), /not linked/)
+})
+
+test('notify: test sends a fixed notification, the switch is checked and silences polling', async () => {
+  const r = await rig()
+  assert.match((await r.api.notify.test()) ?? '', /not available/, 'no notifier: nothing shown')
+  await assert.rejects(r.api.notify.setEnabled('yes' as never), /Invalid notifications setting/)
+
+  let lists = 0
+  r.provider.listChangeRequests = async () => {
+    lists++
+    return []
+  }
+  const shown: { title: string; body: string }[] = []
+  let refusal: string | null = null
+  const service = createService({
+    store: r.store,
+    ui: {
+      pickFolder: async () => null,
+      confirm: async () => false,
+      reveal: () => {},
+      openExternal: async () => {}
+    },
+    emitProgress: () => {},
+    emitRepoChanged: () => {},
+    createProvider: () => r.provider,
+    emitNotify: async (n) => {
+      if (refusal) return refusal
+      shown.push({ title: n.title, body: n.body })
+      return null
+    }
+  })
+  try {
+    const { api } = service
+    assert.equal(await api.notify.test(), null)
+    assert.deepEqual(shown, [{ title: 'GitDeck', body: 'Notifications work.' }])
+    refusal = 'The operation couldn’t be completed. (UNErrorDomain error 1.)'
+    assert.match((await api.notify.test()) ?? '', /macOS did not allow it .*System Settings/)
+    refusal = null
+
+    await api.notify.setEnabled(false)
+    assert.equal(await api.notify.enabled(), false)
+    assert.match((await api.notify.test()) ?? '', /off/)
+    assert.equal(shown.length, 1, 'switched off: the test sends nothing')
+    const p = await api.projects.create({ name: 'Watched', repoKeys: ['acc1:1'] })
+    await api.projects.update(p.id, { notify: ['merged'] })
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    assert.equal(lists, 0, 'switched off: nothing is polled')
+
+    await api.notify.setEnabled(true)
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    assert.equal(lists, 1, 'switched on: polled right away')
+  } finally {
+    service.shutdown()
+  }
 })

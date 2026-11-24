@@ -10,6 +10,7 @@ import {
   createProject,
   removeRepos,
   updateProject,
+  checkNotify,
   type ProjectInput,
   type ProjectPatch
 } from '../shared/projects'
@@ -48,6 +49,8 @@ import { createProvider as realCreateProvider, normalizeBaseUrl } from './provid
 import type { GitProvider } from './providers/types'
 import type { Store } from './store'
 import { checkForUpdate, fetchReleaseNotes } from './updateCheck'
+import { createPoller } from './notifyPoller'
+import { noticeBody } from '../shared/notify'
 import { allowHostTemporarily, setInsecureHosts } from './tls'
 import { isHttp } from './urls'
 
@@ -141,6 +144,14 @@ export interface ServiceDeps {
   emitRepoChanged(path: string): void
   emitTerminalData?(id: string, data: string): void
   emitTerminalExit?(id: string, exitCode: number): void
+  /** Shows a PR/MR notification. Without it, nothing is polled. Text only: no URL, no token. */
+  /** Resolves `null` when shown, else the system's reason. */
+  emitNotify?(notice: {
+    repoKey: string
+    projectId: string
+    title: string
+    body: string
+  }): Promise<string | null>
   /** Replaceable in tests: starts a pty. */
   spawnPty?: SpawnPty
   /** Replaceable in tests. */
@@ -573,6 +584,25 @@ export function createService(deps: ServiceDeps): {
     }
   }
 
+  // PR/MR notifications: polled in main, only for projects that turned events on.
+  const poller = createPoller({
+    // Off in Settings: nothing is watched, and turning it on starts from a fresh baseline.
+    projects: () => (store.notificationsEnabled() ? store.getProjects() : []),
+    list: (key) => withProvider(key, [], (p, r) => p.listChangeRequests(r)),
+    checks: (key, ref) =>
+      withProvider(key, { state: 'none', items: [] }, (p, r) => p.getChecks(r, ref)),
+    notify: ({ repoKey, projectId, kind, cr }) => {
+      const repo = requireRepo(repoKey)
+      const host = requireAccount(repo.accountId).host
+      const body =
+        kind === 'stopped' || !cr
+          ? 'Stopped checking for PR/MR events: the host refused the token.'
+          : noticeBody(kind, cr)
+      void deps.emitNotify?.({ repoKey, projectId, title: `${host} · ${repo.fullName}`, body })
+    }
+  })
+  if (deps.emitNotify) poller.start()
+
   async function addAccount(raw: AccountInput): Promise<Account> {
     const input = normaliseInput(raw)
     const user = await verify(input)
@@ -809,7 +839,10 @@ export function createService(deps: ServiceDeps): {
     }
   ): Promise<T> {
     const { next, result } = change(store.getProjects())
-    return store.setProjects(next).then(() => result)
+    return store.setProjects(next).then(() => {
+      poller.restart()
+      return result
+    })
   }
 
   function checkKeys(keys: unknown, accountsMustExist: boolean): string[] {
@@ -1428,6 +1461,30 @@ export function createService(deps: ServiceDeps): {
       }
       await ui.openExternal(url)
     }),
+    notify: {
+      enabled: guard(async () => store.notificationsEnabled()),
+      setEnabled: guard(async (on) => {
+        if (typeof on !== 'boolean') throw new Error('Invalid notifications setting')
+        await store.setNotificationsEnabled(on)
+        poller.restart()
+      }),
+      test: guard(async () => {
+        if (!deps.emitNotify) return 'Notifications are not available here.'
+        if (!store.notificationsEnabled())
+          return 'Notifications are off. Tick Allow notifications first.'
+        const error = await deps.emitNotify({
+          repoKey: '',
+          projectId: '',
+          title: 'GitDeck',
+          body: 'Notifications work.'
+        })
+        if (error === null) return null
+        // UNErrorDomain 1: macOS did not allow it (permission off, or a linker-signed dev Electron).
+        return /UNErrorDomain error 1\b/.test(error)
+          ? `macOS did not allow it (${error}). Turn on notifications for GitDeck in System Settings > Notifications. Running pnpm dev: re-sign Electron first (see the README).`
+          : error
+      })
+    },
     projects: {
       list: guard(async () => store.getProjects()),
       create: guard(async (input) => {
@@ -1454,7 +1511,8 @@ export function createService(deps: ServiceDeps): {
         const projectPatch: ProjectPatch = {
           name: text(raw['name'], 'project name', true),
           icon: text(raw['icon'], 'icon', true),
-          color: text(raw['color'], 'color', true)
+          color: text(raw['color'], 'color', true),
+          notify: raw['notify'] === undefined ? undefined : checkNotify(raw['notify'])
         }
         return mutateProjects((projects) => {
           const project = updateProject(projects, id, projectPatch)
@@ -1484,9 +1542,18 @@ export function createService(deps: ServiceDeps): {
           const project = removeRepos(current, keys)
           return { next: projects.map((p) => (p.id === id ? project : p)), result: project }
         })
-      })
+      }),
+      // Events flow main to renderer; preload implements this, the service never does.
+      onNotifyOpen: () => () => {}
     }
   }
 
-  return { api, syncInsecureHosts, shutdown: () => terminals.killAll() }
+  return {
+    api,
+    syncInsecureHosts,
+    shutdown: () => {
+      poller.stop()
+      terminals.killAll()
+    }
+  }
 }

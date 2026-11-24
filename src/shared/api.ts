@@ -26,6 +26,7 @@ import type {
   BisectMark,
   BisectState,
   OperationState,
+  NotifyEvent,
   Project,
   PullMode,
   Repo,
@@ -66,6 +67,7 @@ export interface ProjectPatchInput {
   name?: string
   icon?: string
   color?: string
+  notify?: NotifyEvent[]
 }
 
 export interface Api {
@@ -246,6 +248,13 @@ export interface Api {
   checkForUpdate(): Promise<UpdateCheck>
   /** Notes of releases newer than the installed version, from GitHub. Only when asked. */
   releaseNotes(): Promise<ReleaseNote[]>
+  notify: {
+    /** The app-wide switch in Settings. On unless turned off. */
+    enabled(): Promise<boolean>
+    setEnabled(on: boolean): Promise<void>
+    /** Shows a fixed notification. `null` when shown, else why it was not. */
+    test(): Promise<string | null>
+  }
   projects: {
     list(): Promise<Project[]>
     create(input: ProjectCreateInput): Promise<Project>
@@ -253,7 +262,15 @@ export interface Api {
     remove(id: string): Promise<void>
     addRepos(id: string, repoKeys: string[]): Promise<Project>
     removeRepos(id: string, repoKeys: string[]): Promise<Project>
+    /** A notification was clicked: show that repository's PR/MR tab. */
+    onNotifyOpen(cb: (target: NotifyTarget) => void): () => void
   }
+}
+
+/** What a clicked notification opens. `projectId` is the project that asked for it. */
+export interface NotifyTarget {
+  repoKey: string
+  projectId: string
 }
 
 /** Channel names, shared so main and preload cannot drift apart. */
@@ -344,6 +361,9 @@ export const IPC = {
   openExternal: 'openExternal',
   checkForUpdate: 'checkForUpdate',
   releaseNotes: 'releaseNotes',
+  notifyEnabled: 'notify:enabled',
+  notifySetEnabled: 'notify:setEnabled',
+  notifyTest: 'notify:test',
   projectsList: 'projects:list',
   projectsCreate: 'projects:create',
   projectsUpdate: 'projects:update',
@@ -360,6 +380,8 @@ export const IPC = {
   terminalKill: 'terminal:kill',
   /** Main to renderer event, not a request. */
   terminalData: 'terminal:data',
+  /** Main to renderer event, not a request. */
+  notifyOpen: 'notify:open',
   /** Main to renderer event, not a request. */
   terminalExit: 'terminal:exit'
 } as const

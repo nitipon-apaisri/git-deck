@@ -22,7 +22,7 @@ export type Handler = (args: unknown[]) => Promise<unknown>
 
 export type RequestChannel = Exclude<
   keyof typeof IPC,
-  'gitProgress' | 'repoChanged' | 'terminalData' | 'terminalExit'
+  'gitProgress' | 'repoChanged' | 'terminalData' | 'terminalExit' | 'notifyOpen'
 >
 
 // The casts mark the trust boundary: the service validates every argument at runtime.
@@ -154,6 +154,9 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     aiRemoveKey: ([provider]) => api.ai.removeKey(provider as AiProviderId),
     aiHasKey: ([provider]) => api.ai.hasKey(provider as AiProviderId),
     aiTest: ([config]) => api.ai.test(config as AiConfig),
+    notifyEnabled: () => api.notify.enabled(),
+    notifySetEnabled: ([on]) => api.notify.setEnabled(on as boolean),
+    notifyTest: () => api.notify.test(),
     projectsList: () => api.projects.list(),
     projectsCreate: ([input]) => api.projects.create(input as ProjectCreateInput),
     projectsUpdate: ([id, patch]) => api.projects.update(id as string, patch as ProjectPatchInput),

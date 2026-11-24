@@ -22,6 +22,8 @@ interface Config {
   localRepos: Repo[]
   /** base64 of the encrypted AI API key, keyed by provider id */
   aiKeys: Record<string, string>
+  /** App-wide switch for PR/MR notifications. Missing means on: projects opt in one by one. */
+  notifications?: boolean
 }
 
 interface CacheFile {
@@ -196,6 +198,17 @@ export class Store {
     this.config.projects = this.config.projects.map((p) =>
       p.repoKeys.includes(repoKey) ? removeRepos(p, [repoKey]) : p
     )
+    await this.persist('config')
+  }
+
+  // Notifications
+
+  notificationsEnabled(): boolean {
+    return this.config.notifications !== false
+  }
+
+  async setNotificationsEnabled(on: boolean): Promise<void> {
+    this.config.notifications = on
     await this.persist('config')
   }
 

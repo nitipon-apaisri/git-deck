@@ -3,6 +3,7 @@ export const SETTINGS_SECTIONS = [
   { id: 'appearance', label: 'Appearance' },
   { id: 'integrations', label: 'Integrations' },
   { id: 'ai', label: 'AI' },
+  { id: 'notifications', label: 'Notifications' },
   { id: 'about', label: 'About' }
 ] as const
 
