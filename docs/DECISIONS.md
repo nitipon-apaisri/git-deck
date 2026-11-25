@@ -617,3 +617,16 @@ Requested by the user; every recommendation below was accepted. Written into `PL
 - **Empty circle:** it is the CI dot with state `none` on the checked-out pill. The pill now draws the dot only for success, failure or pending. The lane graph's HEAD ring is unchanged.
 - **"+n":** opens a menu of the remaining pills; picking one checks it out (tags and HEAD are disabled).
 - **Design QA leftovers (left as is):** one pill plus "+n" (column width), end truncation of names, `px-1.5` padding, native `title` tooltips and no keyboard route to double-click on the first pill (right-click menu and the "+n" list still work).
+
+## 2026-11-25, GitKraken-style pills (`feat/graph-pills-gitkraken`)
+
+Asked by the user after Phase 34, from two GitKraken screenshots. Settled with the user:
+
+- **Branch, not a phase:** a follow-up on its own branch.
+- **Check mark:** the checked-out branch has it again (first icon); a detached HEAD keeps it. This reverses the Phase 34 "HEAD only" line.
+- **Solid fill:** only the checked-out branch, in its own kind's colour (`main`, `feature` or `project`) filled solid: background `--ref-<kind>-fg`, text `--ref-head-fg`. Both themes work with existing tokens, so no new colours. A teal `--ref-current-*` pair and plain `--ref-head-*` blue were tried first and dropped: blue read like `main`, and teal made a colour that matches nothing else.
+- **"+n":** hover, focus or click opens a card under it listing the other refs as pills; Esc or leaving closes it. It replaces the `Menu`.
+- **Checkout:** a single click on a card entry checks it out; the main pill keeps double-click. Tags show in the card but are not clickable (tooltip says why).
+- **Size:** pills stay 20px, `ROW_HEIGHT` unchanged, no connector line to the commit node.
+- **"+n" card, design-qa fixes:** Tab or Down from the chip moves focus into the card; Up/Down move between entries; Tab leaves it; Escape closes from anywhere and returns focus to the chip; a click outside, a scroll or a resize closes it; a click pins it open (hover-away no longer closes it, a second click does); the card flips above the chip or is pulled in at the window edge; tags use `aria-disabled` so they stay focusable with their tooltip.
+- **Design-qa points left as they are:** one pill plus "+n" (column width), hand-rolled card instead of a shadcn Popover, `rounded-lg`/`z-50` literals, `hover:brightness-110`, `px-1.5` against `RefBadge`'s `px-2`, standalone `RefBadge` still only bolds `current`. None of this is run in the app; the keyboard flow is untested beyond typecheck and lint.
