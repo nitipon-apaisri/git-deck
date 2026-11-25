@@ -177,7 +177,7 @@ Any `path` argument must equal one of the stored link values, otherwise throw. V
 - [x] `gitAuth.ts`: build env for git using `GIT_CONFIG_COUNT/KEY_0/VALUE_0` with key `http.<origin>/.extraHeader` and value `Authorization: Basic base64(user:token)`. User is `x-access-token` for GitHub and `oauth2` for GitLab. Add `GIT_SSL_NO_VERIFY=true` only when the account allows insecure TLS. This scopes the token to one host and keeps it out of argv and `.git/config`.
 - [x] `git.ts` (CLI via `execFile`, never a shell; env `GIT_TERMINAL_PROMPT=0`, `LC_ALL=C`)
   - `repoRoot(dir)` via `rev-parse --show-toplevel`
-  - `getGraph(cwd, skip, limit)`: `git log --branches --remotes --tags --topo-order --decorate=full --format=<fields joined by %x1f + %x1e> --skip N -n M`. Parse decorations from full ref names (`refs/heads/`, `refs/remotes/`, `tag: refs/tags/`, `HEAD -> ...`), drop `*/HEAD` and stash. Return `[]` for an empty repo. Verify that `%D` really honours `--decorate=full` with the installed git, and adapt if not.
+  - `getGraph(cwd, skip, limit)`: `git log --branches --remotes --tags --date-order --decorate=full --format=<fields joined by %x1f + %x1e> --skip N -n M`. Parse decorations from full ref names (`refs/heads/`, `refs/remotes/`, `tag: refs/tags/`, `HEAD -> ...`), drop `*/HEAD` and stash. Return `[]` for an empty repo. Verify that `%D` really honours `--decorate=full` with the installed git, and adapt if not.
   - `getLocalInfo(cwd)` using `symbolic-ref`, `rev-parse`, `remote -v`, `for-each-ref`, `tag --sort=-creatordate`, `rev-list --count HEAD`, `status --porcelain`, `rev-list --left-right --count @{upstream}...HEAD`, `count-objects -v`. Individual failures yield null, not a thrown error. Strip credentials from remote URLs.
   - `getCommitDetail(cwd, hash)`: `show -s --format=%B` plus `-c core.quotepath=false show -m --first-parent --numstat --format=`.
   - `gitFetch(cwd, env)` with `fetch --all --prune`.
@@ -736,9 +736,9 @@ Requested and settled with the user on 2026-11-25 (questions and answers in `doc
 
 Runs on `fix/graph-date-order`. Today `getGraph` uses `--topo-order`, so a merged branch's older commits can appear above or between newer commits of another branch, which reads as "old commits over newer ones".
 
-- [ ] `git.ts` `getGraph`: `--topo-order` becomes `--date-order` (parents still follow their children, rows follow commit time as far as the graph allows). No setting.
-- [ ] `src/shared/graph-layout.ts` needs no new rule: it only needs parents after children. Update the "in topo order" wording in the algorithm section below.
-- [ ] Paging (`--skip`, `-n`) stays stable because the order is deterministic; a test proves two pages join with no gap or repeat.
+- [x] `git.ts` `getGraph`: `--topo-order` becomes `--date-order` (parents still follow their children, rows follow commit time as far as the graph allows). No setting.
+- [x] `src/shared/graph-layout.ts` needs no new rule: it only needs parents after children. Update the "in topo order" wording in the algorithm section below.
+- [x] Paging (`--skip`, `-n`) stays stable because the order is deterministic; a test proves two pages join with no gap or repeat.
 
 **Verify:** temp-repo test with a merged branch whose commits are older than a sibling's (row order follows commit time, every parent below its children, pages join). Manual: the history in the user's screenshot reads newest to oldest.
 

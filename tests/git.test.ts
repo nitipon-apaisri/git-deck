@@ -8,7 +8,7 @@ import {
   repoRoot,
   stripCredentials
 } from '../src/main/git'
-import { branchyRepo, emptyRepo, git, tempDir } from './helpers'
+import { branchyRepo, commit, emptyRepo, git, tempDir } from './helpers'
 
 test('parseDecorations reads full ref names and drops */HEAD and stash', () => {
   const refs = parseDecorations(
@@ -65,6 +65,40 @@ test('getGraph pages with skip and limit', async () => {
   assert.deepEqual(
     page.map((c) => c.hash),
     all.slice(2, 4).map((c) => c.hash)
+  )
+})
+
+test('getGraph uses date order, parents after children, and pages join', async () => {
+  const dir = emptyRepo()
+  const at = (day: number, fn: () => void): void => {
+    process.env.GIT_COMMITTER_DATE = process.env.GIT_AUTHOR_DATE = `2024-01-${day}T12:00:00Z`
+    try {
+      fn()
+    } finally {
+      delete process.env.GIT_COMMITTER_DATE
+      delete process.env.GIT_AUTHOR_DATE
+    }
+  }
+  at(10, () => commit(dir, 'a.txt', 'base'))
+  git(dir, 'checkout', '-q', '-b', 'old')
+  at(11, () => commit(dir, 'b.txt', 'old 1'))
+  at(12, () => commit(dir, 'c.txt', 'old 2'))
+  git(dir, 'checkout', '-q', 'main')
+  at(20, () => commit(dir, 'd.txt', 'new 1'))
+  at(21, () => commit(dir, 'e.txt', 'new 2'))
+  at(22, () => git(dir, 'merge', '-q', '--no-ff', '-m', 'merge old', 'old'))
+  const all = await getGraph(dir, 0, 50)
+  // Topo order would put old 1/old 2 between new commits; date order does not.
+  assert.deepEqual(
+    all.map((c) => c.subject),
+    ['merge old', 'new 2', 'new 1', 'old 2', 'old 1', 'base']
+  )
+  const index = new Map(all.map((c, i) => [c.hash, i]))
+  for (const c of all) for (const p of c.parents) assert.ok(index.get(p)! > index.get(c.hash)!)
+  const joined = [...(await getGraph(dir, 0, 3)), ...(await getGraph(dir, 3, 50))]
+  assert.deepEqual(
+    joined.map((c) => c.hash),
+    all.map((c) => c.hash)
   )
 })
 

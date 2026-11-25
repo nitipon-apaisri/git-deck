@@ -1,4 +1,4 @@
-// Pure, stateful lane assignment. Feed commits in topo order, page by page.
+// Pure, stateful lane assignment. Feed commits in git log order (parents after children), page by page.
 import type { GraphCommit } from './types'
 
 export type EdgePart = 'top' | 'bottom' | 'through'
