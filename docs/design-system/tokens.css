@@ -32,6 +32,8 @@
   --lane-6: #6fcb8b;
   --ref-head-bg: #9dbbff;
   --ref-head-fg: #0e1a33;
+  --ref-current-bg: #1b7f8c;
+  --ref-current-fg: #ffffff;
   --ref-main-fg: #b8ccff;
   --ref-main-bg: #5b93f829;
   --ref-main-edge: #5b93f873;
@@ -92,6 +94,8 @@
   --lane-6: #2fa05a;
   --ref-head-bg: #2e69dc;
   --ref-head-fg: #ffffff;
+  --ref-current-bg: #0b6f7c;
+  --ref-current-fg: #ffffff;
   --ref-main-fg: #1f4fb0;
   --ref-main-bg: #2e69dc1a;
   --ref-main-edge: #2e69dc59;
