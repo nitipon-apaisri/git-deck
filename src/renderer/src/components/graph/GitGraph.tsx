@@ -78,6 +78,8 @@ export interface GraphMenuOps {
   deleteBranch: (name: string) => void
   /** `origin/topic`: asks, then removes the branch on the remote. */
   deleteRemoteBranch: (name: string) => void
+  pushBranch: (name: string) => void
+  fastForwardBranch: (name: string) => void
   createBranch: (startPoint: string, startLabel: string) => void
   renameBranch: (name: string) => void
   cherryPick: (hash: string) => void
@@ -279,6 +281,10 @@ export function GitGraph({
         return menuOps.deleteBranch(action.name)
       case 'delete-remote-branch':
         return menuOps.deleteRemoteBranch(action.name)
+      case 'push-branch':
+        return menuOps.pushBranch(action.name)
+      case 'fast-forward-branch':
+        return menuOps.fastForwardBranch(action.name)
       case 'merge':
         return menuOps.merge(action.branch, action.noFf)
       case 'cherry-pick':

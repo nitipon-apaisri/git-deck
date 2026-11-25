@@ -516,6 +516,7 @@ export async function listBranches(cwd: string): Promise<BranchList> {
       current === null && (await tryRun(cwd, ['rev-parse', '--verify', '-q', 'HEAD'])) !== null,
     local,
     remote,
+    defaultBranch: await getDefaultBranch(cwd),
     remotes: remotesRaw.split('\n').filter(Boolean)
   }
 }
@@ -626,6 +627,96 @@ export async function deleteRemoteBranch(
   await slots.run(() =>
     progressProcess(cwd, ['push', '--progress', '--', remote, `:refs/heads/${branch}`], env, onLine)
   )
+}
+
+export interface BranchTarget {
+  remote: string
+  /** Credentials already stripped. */
+  url: string
+  /** The branch on the remote (`refs/heads/x`) it tracks, or `null` when it has no upstream. */
+  ref: string | null
+}
+
+/** The remote a local branch pushes to and fast-forwards from: its upstream, else `origin`. */
+export async function getBranchTarget(cwd: string, name: string): Promise<BranchTarget> {
+  await assertBranchName(cwd, name)
+  if (!(await refExists(cwd, `refs/heads/${name}`))) {
+    throw new Error(`There is no branch named "${name}"`)
+  }
+  const remotes = await getRemotes(cwd)
+  if (remotes.length === 0) throw new Error('This repository has no remote')
+  const tracked = await tryRun(cwd, ['config', '--get', `branch.${name}.remote`])
+  const merge = await tryRun(cwd, ['config', '--get', `branch.${name}.merge`])
+  if (tracked && tracked !== '.' && merge) {
+    const remote = remotes.find((r) => r.name === tracked)
+    if (!remote) throw new Error(`The remote "${tracked}" is not configured`)
+    return { remote: remote.name, url: remote.url, ref: merge }
+  }
+  const remote =
+    remotes.find((r) => r.name === 'origin') ?? (remotes.length === 1 ? remotes[0] : null)
+  if (!remote)
+    throw new Error('Several remotes exist and none is named origin. Set an upstream first.')
+  return { remote: remote.name, url: remote.url, ref: null }
+}
+
+/** Pushes one local branch to its upstream, and sets the upstream when it has none. */
+export async function pushBranch(
+  cwd: string,
+  name: string,
+  env: Record<string, string> = {},
+  onLine: (line: string) => void = () => {}
+): Promise<void> {
+  const target = await getBranchTarget(cwd, name)
+  const args = target.ref
+    ? ['push', '--progress', '--', target.remote, `refs/heads/${name}:${target.ref}`]
+    : ['push', '--progress', '--set-upstream', '--', target.remote, `refs/heads/${name}`]
+  await slots.run(() => progressProcess(cwd, args, env, onLine))
+}
+
+/**
+ * Moves a local branch up to its upstream without checking it out. Git itself refuses anything
+ * but a fast-forward, and refuses the checked-out branch (that one is a Pull).
+ */
+export async function fastForwardBranch(
+  cwd: string,
+  name: string,
+  env: Record<string, string> = {},
+  onLine: (line: string) => void = () => {}
+): Promise<void> {
+  const target = await getBranchTarget(cwd, name)
+  if (!target.ref) throw new Error(`"${name}" has no upstream branch to fast-forward from`)
+  if (name === (await currentBranch(cwd))) {
+    throw new Error('This branch is checked out. Use Pull to update it.')
+  }
+  try {
+    await slots.run(() =>
+      progressProcess(
+        cwd,
+        ['fetch', '--progress', '--', target.remote, `${target.ref}:refs/heads/${name}`],
+        env,
+        onLine
+      )
+    )
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    if (/non-fast-forward|rejected/i.test(message)) {
+      throw new Error(
+        `"${name}" cannot be fast-forwarded: it and its upstream each have commits the other lacks.`,
+        { cause: err }
+      )
+    }
+    throw err
+  }
+}
+
+/** The branch a repository treats as its default: the remote's HEAD, else `main` or `master`. */
+export async function getDefaultBranch(cwd: string): Promise<string | null> {
+  const head = await tryRun(cwd, ['symbolic-ref', '--short', '-q', 'refs/remotes/origin/HEAD'])
+  if (head?.startsWith('origin/')) return head.slice('origin/'.length)
+  for (const name of ['main', 'master']) {
+    if (await refExists(cwd, `refs/heads/${name}`)) return name
+  }
+  return null
 }
 
 export interface RemoteTarget {

@@ -12,6 +12,7 @@ import type {
   HunkRequest,
   RebaseTodoItem,
   PullMode,
+  BranchDeleteItem,
   ResetMode,
   CreateChangeRequestInput
 } from '../shared/types'
@@ -85,6 +86,11 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     localDeleteBranch: ([path, name]) => api.local.deleteBranch(path as string, name as string),
     localDeleteRemoteBranch: ([path, name]) =>
       api.local.deleteRemoteBranch(path as string, name as string),
+    localDeleteBranches: ([path, items, force]) =>
+      api.local.deleteBranches(path as string, items as BranchDeleteItem[], force as boolean),
+    localPushBranch: ([path, name]) => api.local.pushBranch(path as string, name as string),
+    localFastForwardBranch: ([path, name]) =>
+      api.local.fastForwardBranch(path as string, name as string),
     localPull: ([path, mode]) => api.local.pull(path as string, mode as PullMode),
     localPush: ([path, force]) => api.local.push(path as string, force as boolean),
     localSuggestCommitMessage: ([path, config]) =>

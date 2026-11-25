@@ -34,6 +34,7 @@ import { RepoHeader } from './RepoHeader'
 import { RemotesDialog } from './RemotesDialog'
 import { RebaseDialog } from './RebaseDialog'
 import { StashDialog } from './StashDialog'
+import { BranchesDialog } from './BranchesDialog'
 import { TagsDialog } from './TagsDialog'
 import { TerminalPanel } from './TerminalPanel'
 import { registerPane } from '../../state/paneCommands'
@@ -186,6 +187,7 @@ export function RepoPane({
   const [stashOpen, setStashOpen] = useState(false)
   const [rebaseBase, setRebaseBase] = useState<string | null>(null)
   // `hash` is the commit a new tag points at, `null` for the checked-out one.
+  const [branchesOpen, setBranchesOpen] = useState(false)
   const [tagsRequest, setTagsRequest] = useState<{ hash: string | null } | null>(null)
   const [remotesOpen, setRemotesOpen] = useState(false)
   // The conflicted file open in the editor. It lives here, so each pane has its own.
@@ -253,6 +255,7 @@ export function RepoPane({
             stashCount={stashes.length}
             onStash={() => setStashOpen(true)}
             onTags={() => setTagsRequest({ hash: null })}
+            onBranches={() => setBranchesOpen(true)}
             onRemotes={() => setRemotesOpen(true)}
             terminalOpen={terminalOpen}
             onToggleTerminal={toggleTerminal}
@@ -398,6 +401,8 @@ export function RepoPane({
                       checkout: actions.checkout,
                       deleteBranch: actions.deleteBranch,
                       deleteRemoteBranch: actions.deleteRemoteBranch,
+                      pushBranch: actions.pushBranch,
+                      fastForwardBranch: actions.fastForwardBranch,
                       createBranch: (startPoint, startLabel) =>
                         setNameRequest({ kind: 'create', startPoint, startLabel }),
                       renameBranch: (from) => setNameRequest({ kind: 'rename', from }),
@@ -492,6 +497,13 @@ export function RepoPane({
           base={rebaseBase}
           onChanged={actions.refresh}
           onClose={() => setRebaseBase(null)}
+        />
+      ) : null}
+      {branchesOpen && linkedPath ? (
+        <BranchesDialog
+          path={linkedPath}
+          onChanged={actions.refresh}
+          onClose={() => setBranchesOpen(false)}
         />
       ) : null}
       {tagsRequest && linkedPath ? (

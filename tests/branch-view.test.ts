@@ -27,6 +27,7 @@ const list = (extra: Partial<BranchList> = {}): BranchList => ({
   local: [branch('main', { current: true, upstream: 'origin/main' })],
   remote: ['origin/main'],
   remotes: ['origin'],
+  defaultBranch: 'main',
   ...extra
 })
 
@@ -93,7 +94,16 @@ test('refActions: another local branch can be checked out or deleted', () => {
   const items = refActions({ kind: 'branch', name: 'topic' }, 'abc1234')
   assert.deepEqual(
     items.map((i) => i.id),
-    ['checkout', 'delete', 'copy-name', 'checkout-commit', 'create-branch', 'copy-hash']
+    [
+      'checkout',
+      'delete',
+      'push',
+      'fast-forward',
+      'copy-name',
+      'checkout-commit',
+      'create-branch',
+      'copy-hash'
+    ]
   )
   assert.equal(items.find((i) => i.id === 'delete')?.danger, true)
 })
