@@ -601,7 +601,7 @@ The 2px focus ring looked heavy on text inputs (palette, filters, forms). Text i
 
 Requested by the user; every recommendation below was accepted. Written into `PLAN.md` and the `README.md` progress list. Nothing is built yet.
 
-- **Order:** 33 graph date order, 34 badge and double-click, 35 branch management, 36 bell, 37 notification setup. 33 is smallest; 37 follows 36 so both share one bell icon.
+- **Order:** 33 graph date order, 34 badge and double-click, 35 bell, 36 branch management, 37 notification setup. 33 is smallest; 37 follows 35 so both share one bell icon; 36 goes late because it is the only phase that deletes branches (remote too) and needs a real remote to check (reordered 2026-11-25).
 - **Graph order:** `--date-order` replaces `--topo-order` for everyone, no setting. Parents still come after children, so the lane algorithm is unchanged. Reason: with topo order a merged branch's old commits can sit above another branch's newer ones.
 - **Badge:** one pill per branch; local and remote at the same commit merge; monitor icon = local, provider logo = remote, with tooltips; check mark = HEAD only; empty circle removed. The exact visuals are the author's guess at what confused the user (no detail given beyond the screenshot); review with `design-qa`.
 - **Double-click:** local checks out; remote-only checks out or creates a tracking branch; tags do nothing; dirty tree shows git's error, no auto-stash.
