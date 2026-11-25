@@ -689,7 +689,14 @@ test('git errors reach the caller without a token', async () => {
 test('every request channel has a handler, and each dispatches to the service', async () => {
   const r = await rig()
   const handlers = buildHandlers(r.api)
-  const events = ['gitProgress', 'repoChanged', 'terminalData', 'terminalExit', 'notifyOpen']
+  const events = [
+    'gitProgress',
+    'repoChanged',
+    'terminalData',
+    'terminalExit',
+    'notifyOpen',
+    'inboxChanged'
+  ]
   const requests = Object.keys(IPC).filter((k) => !events.includes(k))
   assert.deepEqual(Object.keys(handlers).sort(), requests.sort())
   assert.equal(
@@ -802,6 +809,65 @@ test('notify: test sends a fixed notification, the switch is checked and silence
     await api.notify.setEnabled(true)
     await new Promise((resolve) => setTimeout(resolve, 20))
     assert.equal(lists, 1, 'switched on: polled right away')
+  } finally {
+    service.shutdown()
+  }
+})
+
+test('inbox: a poller notice is stored, listed, and marked read', async () => {
+  const r = await rig()
+  let calls = 0
+  r.provider.listChangeRequests = async () =>
+    calls++ === 0
+      ? []
+      : [
+          {
+            number: 7,
+            title: 'Fix it',
+            state: 'open',
+            draft: false,
+            author: 'ann',
+            reviewers: [],
+            labels: [],
+            sourceBranch: 'b',
+            targetBranch: 'main',
+            webUrl: 'https://gh.example/o/r/pull/7',
+            updatedAt: '2026-01-01T00:00:00Z',
+            checksRef: 'sha'
+          }
+        ]
+  let changed = 0
+  const service = createService({
+    store: r.store,
+    ui: {
+      pickFolder: async () => null,
+      confirm: async () => false,
+      reveal: () => {},
+      openExternal: async () => {}
+    },
+    emitProgress: () => {},
+    emitRepoChanged: () => {},
+    emitInboxChanged: () => void changed++,
+    createProvider: () => r.provider,
+    emitNotify: async () => null
+  })
+  try {
+    const { api } = service
+    const p = await api.projects.create({ name: 'Watched', repoKeys: ['acc1:1'] })
+    await api.projects.update(p.id, { notify: ['created'] })
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    assert.deepEqual(await api.inbox.list(), [], 'baseline poll adds nothing')
+    await api.notify.setEnabled(true) // restarts the poller
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    const [item] = await api.inbox.list()
+    assert.match(item!.body, /#7 opened: Fix it/)
+    assert.equal(item!.repoKey, 'acc1:1')
+    assert.equal(item!.read, false)
+    assert.ok(changed > 0)
+    await api.inbox.markRead(item!.id)
+    assert.equal((await api.inbox.list())[0]!.read, true)
+    await assert.rejects(api.inbox.markRead(5 as never), /Invalid notification/)
+    await api.inbox.markAllRead()
   } finally {
     service.shutdown()
   }

@@ -756,9 +756,9 @@ Runs on `phase/34-badge-checkout`.
 
 Runs on `phase/35-notification-bell`. Builds on Phase 32; no new event types.
 
-- [ ] An inbox in main: every poller notice is also appended, kept across restarts in the user data folder, capped at 100, holding title, body, repository, link and time only (no token, no diff). Pure store logic, no `electron` import. List, mark read and mark all read through IPC.
-- [ ] A bell in the top bar with the unread count and a list. Clicking an item opens that repository's PR/MR tab (the existing notification click path) and marks it read; "Mark all read".
-- [ ] The OS notification stays as it is.
+- [x] An inbox in main: every poller notice is also appended, kept across restarts in the user data folder, capped at 100, holding title, body, repository, link and time only (no token, no diff). Pure store logic, no `electron` import. List, mark read and mark all read through IPC.
+- [x] A bell in the top bar with the unread count and a list. Clicking an item opens that repository's PR/MR tab (the existing notification click path) and marks it read; "Mark all read".
+- [x] The OS notification stays as it is.
 
 **Verify:** store tests (append, cap at 100, mark read, mark all, survives a reload). Manual: the bell count and list after a real PR event, and after a restart.
 

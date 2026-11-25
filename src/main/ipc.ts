@@ -67,6 +67,9 @@ export function registerIpc(store: Store): () => void {
         win.webContents.send(IPC.repoChanged, path)
       }
     },
+    emitInboxChanged: () => {
+      for (const win of BrowserWindow.getAllWindows()) win.webContents.send(IPC.inboxChanged)
+    },
     emitNotify: ({ repoKey, projectId, title, body }) => {
       if (!Notification.isSupported()) {
         return Promise.resolve('This system does not support notifications.')

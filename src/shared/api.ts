@@ -1,5 +1,6 @@
 // The only surface the renderer can reach. It sends keys and ids, never URLs or
 // arbitrary paths: the main process looks the repo up in its own cache.
+import type { InboxItem } from './inbox'
 import type {
   UpdateCheck,
   AccountInput,
@@ -255,6 +256,13 @@ export interface Api {
     /** Shows a fixed notification. `null` when shown, else why it was not. */
     test(): Promise<string | null>
   }
+  inbox: {
+    list(): Promise<InboxItem[]>
+    markRead(id: string): Promise<void>
+    markAllRead(): Promise<void>
+    /** The inbox changed (a notice arrived or was read): fetch the list again. */
+    onChanged(cb: () => void): () => void
+  }
   projects: {
     list(): Promise<Project[]>
     create(input: ProjectCreateInput): Promise<Project>
@@ -364,6 +372,9 @@ export const IPC = {
   notifyEnabled: 'notify:enabled',
   notifySetEnabled: 'notify:setEnabled',
   notifyTest: 'notify:test',
+  inboxList: 'inbox:list',
+  inboxMarkRead: 'inbox:markRead',
+  inboxMarkAllRead: 'inbox:markAllRead',
   projectsList: 'projects:list',
   projectsCreate: 'projects:create',
   projectsUpdate: 'projects:update',
@@ -382,6 +393,8 @@ export const IPC = {
   terminalData: 'terminal:data',
   /** Main to renderer event, not a request. */
   notifyOpen: 'notify:open',
+  /** Main to renderer event, not a request. */
+  inboxChanged: 'inbox:changed',
   /** Main to renderer event, not a request. */
   terminalExit: 'terminal:exit'
 } as const

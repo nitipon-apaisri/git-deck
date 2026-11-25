@@ -1,6 +1,7 @@
 import type { Account, Project } from '@shared/types'
 import type { Orientation } from '../lib/splitState'
 import { ScopeSwitcher } from './projects/ScopeSwitcher'
+import { NotificationBell } from './NotificationBell'
 import { IconButton } from './ui'
 
 interface ToolbarProps {
@@ -22,6 +23,7 @@ interface ToolbarProps {
   onNewProject: () => void
   onManage: () => void
   onOpenPreferences: () => void
+  onOpenNotification: (target: { repoKey: string; projectId: string }) => void
 }
 
 export function Toolbar({
@@ -37,7 +39,8 @@ export function Toolbar({
   onScope,
   onNewProject,
   onManage,
-  onOpenPreferences
+  onOpenPreferences,
+  onOpenNotification
 }: ToolbarProps) {
   return (
     <header
@@ -78,6 +81,7 @@ export function Toolbar({
           aria-pressed={splitEnabled}
           onClick={onToggleSplit}
         />
+        <NotificationBell onOpen={onOpenNotification} />
         <IconButton label="Preferences" icon="sliders" onClick={onOpenPreferences} />
       </div>
     </header>

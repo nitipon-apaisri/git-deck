@@ -51,6 +51,7 @@ import type { Store } from './store'
 import { checkForUpdate, fetchReleaseNotes } from './updateCheck'
 import { createPoller } from './notifyPoller'
 import { noticeBody } from '../shared/notify'
+import { appendItem, markAllItemsRead, markItemRead } from '../shared/inbox'
 import { allowHostTemporarily, setInsecureHosts } from './tls'
 import { isHttp } from './urls'
 
@@ -142,6 +143,7 @@ export interface ServiceDeps {
   ui: Ui
   emitProgress(progress: GitProgress): void
   emitRepoChanged(path: string): void
+  emitInboxChanged?(): void
   emitTerminalData?(id: string, data: string): void
   emitTerminalExit?(id: string, exitCode: number): void
   /** Shows a PR/MR notification. Without it, nothing is polled. Text only: no URL, no token. */
@@ -598,7 +600,22 @@ export function createService(deps: ServiceDeps): {
         kind === 'stopped' || !cr
           ? 'Stopped checking for PR/MR events: the host refused the token.'
           : noticeBody(kind, cr)
-      void deps.emitNotify?.({ repoKey, projectId, title: `${host} · ${repo.fullName}`, body })
+      const title = `${host} · ${repo.fullName}`
+      void store
+        .inboxUpdate((items) =>
+          appendItem(items, {
+            id: randomUUID(),
+            title,
+            body,
+            repoKey,
+            projectId,
+            at: Date.now(),
+            read: false
+          })
+        )
+        .then(() => deps.emitInboxChanged?.())
+        .catch(() => {})
+      void deps.emitNotify?.({ repoKey, projectId, title, body })
     }
   })
   if (deps.emitNotify) poller.start()
@@ -1484,6 +1501,19 @@ export function createService(deps: ServiceDeps): {
           ? `macOS did not allow it (${error}). Turn on notifications for GitDeck in System Settings > Notifications. Running pnpm dev: re-sign Electron first (see the README).`
           : error
       })
+    },
+    inbox: {
+      list: guard(async () => store.inboxList()),
+      markRead: guard(async (id: string) => {
+        if (typeof id !== 'string') throw new Error('Invalid notification')
+        await store.inboxUpdate((items) => markItemRead(items, id))
+        deps.emitInboxChanged?.()
+      }),
+      markAllRead: guard(async () => {
+        await store.inboxUpdate(markAllItemsRead)
+        deps.emitInboxChanged?.()
+      }),
+      onChanged: () => () => {}
     },
     projects: {
       list: guard(async () => store.getProjects()),
