@@ -1,6 +1,12 @@
 // Pure view-model helpers for the commit graph. No DOM, so they run under tsx.
 import type { GraphEdge } from '../../../shared/graph-layout'
-import type { CheckState, CommitDetail, GraphCommit, GraphRef } from '../../../shared/types'
+import type {
+  CheckoutTarget,
+  CheckState,
+  CommitDetail,
+  GraphCommit,
+  GraphRef
+} from '../../../shared/types'
 import { timeAgo } from './format'
 import { unixDateText } from './repoView'
 
@@ -249,6 +255,13 @@ export function refPills(refs: readonly GraphRef[], defaultBranch: string): RefP
   for (const r of remotes) if (!twin.has(r)) pills.push(pill(r, { remote: true }, [r.name]))
   for (const t of views) if (t.refKind === 'tag') pills.push(pill(t, { tag: true }, [t.name]))
   return pills
+}
+
+/** What a double-click on a badge checks out: a branch, or a remote branch (git reuses a local twin). HEAD and tags: nothing. */
+export function badgeCheckoutTarget(badge: BadgeView): CheckoutTarget | null {
+  if (badge.refKind === 'branch') return { kind: 'branch', name: badge.name }
+  if (badge.refKind === 'remote') return { kind: 'remote', name: badge.name }
+  return null
 }
 
 /** HEAD is drawn as a ring. A detached HEAD is a `head` ref with no branch beside it. */

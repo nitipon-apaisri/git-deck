@@ -24,7 +24,12 @@ import { errorMessage } from '../../lib/errors'
 import { canStageHunks } from '../../lib/changesView'
 import { refActions, type RefAction } from '../../lib/branchView'
 import { refMenuEntries } from '../../lib/refMenu'
-import { graphWidth as lanesWidth, type BadgeView, type BranchCheck } from '../../lib/graphView'
+import {
+  badgeCheckoutTarget,
+  graphWidth as lanesWidth,
+  type BadgeView,
+  type BranchCheck
+} from '../../lib/graphView'
 import { detailPlacement } from '../../lib/splitLayout'
 import { Button, Dialog, ErrorBanner, Icon, Menu, Spinner, type MenuEntry } from '../ui'
 import { useDiff, useStatus } from '../../state/changesData'
@@ -250,6 +255,10 @@ export function GitGraph({
     commit: GraphCommit
     ref: BadgeView | null
   } | null>(null)
+  const activateBadge = (badge: BadgeView) => {
+    const target = badgeCheckoutTarget(badge)
+    if (target && menuOps && !menuOps.busy) menuOps.checkout(target)
+  }
   const openMenu = (commit: GraphCommit, at: { x: number; y: number }, ref: BadgeView | null) =>
     setMenu({ ...at, commit, ref })
 
@@ -432,6 +441,7 @@ export function GitGraph({
                   wipCount={status?.entries.length}
                   onSelect={select}
                   onMenu={menuOps ? openMenu : undefined}
+                  onActivate={menuOps ? activateBadge : undefined}
                 />
               ))}
             </div>

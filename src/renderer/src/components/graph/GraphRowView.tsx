@@ -62,6 +62,8 @@ interface GraphRowViewProps {
   onSelect: (hash: string) => void
   /** Right-click on the row (`ref` null) or on one of its badges. Absent when nothing is offered. */
   onMenu?: (commit: GraphCommit, at: { x: number; y: number }, ref: BadgeView | null) => void
+  /** Double-click on a badge. Absent: badges do nothing. */
+  onActivate?: (badge: BadgeView) => void
 }
 
 /** Lane drawing for one row: lines first, then the node on top. */
@@ -127,7 +129,8 @@ function GraphRowViewBase({
   wipCount = 0,
   id,
   onSelect,
-  onMenu
+  onMenu,
+  onActivate
 }: GraphRowViewProps) {
   const { commit } = row
   if (isWipHash(commit.hash)) {
@@ -189,6 +192,7 @@ function GraphRowViewBase({
         pills={pills}
         host={host}
         ci={ci}
+        onActivate={onActivate}
         onMenu={
           onMenu
             ? (event, badge) => {
