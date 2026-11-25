@@ -746,9 +746,9 @@ Runs on `fix/graph-date-order`. Today `getGraph` uses `--topo-order`, so a merge
 
 Runs on `phase/34-badge-checkout`.
 
-- [ ] `lib/graphView.ts`: one pill per branch name. A local and a remote ref at the same commit merge into one pill; ahead/behind shows only when they differ. Pure, tested.
-- [ ] `RefPills.tsx`: monitor icon means local, the provider logo means remote, each with a tooltip; the check mark means HEAD only; the empty circle is removed. The "+n" entries are interactive too.
-- [ ] Double-click a badge (new `onActivate` prop, threaded through `GraphRowView` to `GitGraph`): local branch checks it out; remote-only checks out the existing local branch of that name or creates a tracking branch; a tag does nothing. A dirty tree shows git's error, with no auto-stash. Reuses `menuOps.checkout` and the existing checkout IPC.
+- [x] `lib/graphView.ts`: one pill per branch name. A local and a remote ref at the same commit merge into one pill; ahead/behind shows only when they differ. Pure, tested.
+- [x] `RefPills.tsx`: monitor icon means local, the provider logo means remote, each with a tooltip; the check mark means HEAD only; the empty circle is removed. The "+n" entries are interactive too.
+- [x] Double-click a badge (new `onActivate` prop, threaded through `GraphRowView` to `GitGraph`): local branch checks it out; remote-only checks out the existing local branch of that name or creates a tracking branch; a tag does nothing. A dirty tree shows git's error, with no auto-stash. Reuses `menuOps.checkout` and the existing checkout IPC.
 
 **Verify:** tests for pill merging and the badge-to-checkout-target mapping. Manual: double-click local, remote-only and tag badges on a clean and a dirty tree; read the new pill in both themes.
 

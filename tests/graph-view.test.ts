@@ -16,6 +16,7 @@ import {
   wipCommit,
   additionsText,
   authorLabel,
+  badgeCheckoutTarget,
   badgeViews,
   bodyText,
   commitDateText,
@@ -422,4 +423,33 @@ test('a WIP commit on top of HEAD draws a lane down to HEAD, even past other row
   assert.equal(rows[0].edges.filter((e) => e.part === 'bottom').length, 1)
   assert.ok(rows[1].edges.some((e) => e.part === 'through' && e.from === rows[0].lane))
   assert.equal(rows[2].lane, rows[0].lane)
+})
+
+test('badgeCheckoutTarget maps a badge to what a double-click checks out', () => {
+  const [local, remote, tag, head] = badgeViews(
+    [
+      { name: 'topic', kind: 'branch' },
+      { name: 'origin/topic', kind: 'remote' },
+      { name: 'v1', kind: 'tag' },
+      { name: 'HEAD', kind: 'head' }
+    ],
+    'main'
+  ).sort(
+    (a, b) =>
+      ['branch', 'remote', 'tag', 'head'].indexOf(a.refKind) -
+      ['branch', 'remote', 'tag', 'head'].indexOf(b.refKind)
+  )
+  assert.deepEqual(badgeCheckoutTarget(local), { kind: 'branch', name: 'topic' })
+  assert.deepEqual(badgeCheckoutTarget(remote), { kind: 'remote', name: 'origin/topic' })
+  assert.equal(badgeCheckoutTarget(tag), null)
+  assert.equal(badgeCheckoutTarget(head), null)
+  // A merged pill acts on its local branch, so a double-click never makes a second one.
+  const [pill] = refPills(
+    [
+      { name: 'topic', kind: 'branch' },
+      { name: 'origin/topic', kind: 'remote' }
+    ],
+    'main'
+  )
+  assert.deepEqual(badgeCheckoutTarget(pill.badge), { kind: 'branch', name: 'topic' })
 })

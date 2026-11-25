@@ -610,3 +610,9 @@ Requested by the user; every recommendation below was accepted. Written into `PL
 - **Bell:** an in-app inbox of the existing Phase 32 PR/MR events, persisted, capped at 100, no secrets stored. No new event types.
 - **Setup is per project:** `Project.notify` is per project, so the repo-header toggle acts on the owning project (union when a repository is in several). The earlier idea of a per-repository setting was dropped for that reason.
 - **Open:** where the bell popover sits and what an item click targets beyond opening the PR/MR tab (assumed: top bar, PR/MR tab).
+
+## 2026-11-25, Phase 34 badge checkout
+
+- **Ahead/behind on the pill:** left out. Pills carry no tracking data (only the branch list does), so showing it needs branch data plumbed into the graph. Revisit with Phase 36.
+- **Empty circle:** read as the HEAD ring in the lane graph, left as is. The pills had none.
+- **"+n":** opens a menu of the remaining pills; picking one checks it out (tags and HEAD are disabled).
