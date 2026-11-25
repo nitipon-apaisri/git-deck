@@ -16,6 +16,7 @@ Desktop Git client (Electron + React + TypeScript) for GitHub, GitLab.com and se
 
 ## Workflow
 
+- Plan first: write the step-by-step plan for the phase and wait for the user's OK before editing code.
 - Do the phase you are asked to do, run its **Verify** steps, tick its boxes in `PLAN.md`, then stop.
 - Keep dependencies minimal. The packaged app has no runtime dependencies beyond what Vite bundles: `package.json` `dependencies` stays `react`, `react-dom` and `node-pty` (the one native module, for the integrated terminal, see `docs/DECISIONS.md`, Phase 19). UI libraries (shadcn's Radix, Tailwind, `class-variance-authority`, `clsx`, `tailwind-merge`, `@xterm/xterm`), fonts and build tools are devDependencies. No other native modules.
 - If something is ambiguous, pick the default from `PLAN.md` and record it in `docs/DECISIONS.md`.

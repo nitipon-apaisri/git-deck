@@ -4,7 +4,7 @@ Desktop Git client (Electron + React + TypeScript) for GitHub, GitLab.com and se
 
 ## Read first
 
-- `PLAN.md` is the build brief: 10 phases with checkboxes, stack versions, IPC contract and the graph algorithm. Do the phase you are asked to do, run its Verify steps, tick its boxes, then stop.
+- `PLAN.md` is the build brief: 10 phases with checkboxes, stack versions, IPC contract and the graph algorithm. Plan first: write the step-by-step plan for the phase and wait for the user's OK before editing code. Then do the phase you are asked to do, run its Verify steps, tick its boxes, then stop.
 - `docs/design-system/` is the visual source of truth (tokens, component guidelines, previews). `docs/ui-boards/` has the full-screen designs.
 
 - `AGENTS.md` is the portable copy of these rules. Keep both consistent. `docs/DECISIONS.md` logs ambiguities.

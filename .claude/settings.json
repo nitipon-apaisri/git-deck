@@ -25,6 +25,7 @@
       "Bash(rm -rf *)",
       "Read(./.env)",
       "Read(./.env.*)"
-    ]
+    ],
+    "defaultMode": "plan"
   }
 }
