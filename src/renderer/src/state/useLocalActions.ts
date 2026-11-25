@@ -1,21 +1,28 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { errorMessage } from '../lib/errors'
-import { activityDone } from '../lib/operationView'
+import type { ActivityKind } from '../lib/operationView'
 import type { CloneProtocol, GitProgress } from '@shared/api'
 import type { BisectMark, CheckoutTarget, PullMode, ResetMode } from '@shared/types'
 
-/** How long the confirmation of a finished write stays. */
-const DONE_MS = 4000
+/** How long the check and the cross stay on a button after a write ends. */
+const SUCCESS_MS = 4000
+const ERROR_MS = 6000
 
-export type LocalBusy = 'clone' | 'link' | 'fetch' | 'pull' | 'push' | 'branch' | null
+export type LocalBusy = ActivityKind | null
+
+/** How the last write with a button ended. `id` restarts the timer for a repeat. */
+export interface LocalOutcome {
+  id: number
+  kind: ActivityKind
+  status: 'success' | 'error'
+}
 
 export interface LocalActions {
   busy: LocalBusy
   /** Latest line of a clone, pull or push for this repository only, while it runs. */
   progress: GitProgress | null
-  error: string | null
-  /** The confirmation of the write that just ended, until it fades. `id` restarts the fade. */
-  done: { id: number; text: string } | null
+  /** The last write that has a button, until its check or cross goes. */
+  outcome: LocalOutcome | null
   /** Changes after a fetch, a clone or a link, so tabs that read the folder reload. */
   reloadToken: number
   /** Changes when files or refs change on disk: status, branches and stashes reload. */
@@ -69,12 +76,13 @@ export interface LocalActions {
 export function useLocalActions(
   repoKey: string,
   linkedPath: string | undefined,
-  onLinksChanged: () => void
+  onLinksChanged: () => void,
+  /** Where a failed write goes: the app's toasts. `kind` is `null` for a write without a button. */
+  onError: (kind: LocalBusy, message: string) => void
 ): LocalActions {
   const [busy, setBusy] = useState<LocalBusy>(null)
   const [progress, setProgress] = useState<GitProgress | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [done, setDone] = useState<{ id: number; text: string } | null>(null)
+  const [outcome, setOutcome] = useState<LocalOutcome | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
   // Bumped when files or refs change on disk. Separate from `reloadToken` so a plain edit
   // refreshes status and branches without resetting the graph's pages and scroll.
@@ -83,6 +91,11 @@ export function useLocalActions(
   useEffect(() => {
     busyRef.current = busy
   }, [busy])
+  // `run` stays stable: the caller may pass a new function on every render.
+  const onErrorRef = useRef(onError)
+  useEffect(() => {
+    onErrorRef.current = onError
+  }, [onError])
 
   useEffect(() => {
     if (!linkedPath) return
@@ -119,26 +132,29 @@ export function useLocalActions(
     [repoKey]
   )
 
-  // The confirmation shows for a few seconds, then goes. The next write replaces it at once.
+  // The check or the cross shows for a few seconds, then goes. The next write replaces it at once.
   useEffect(() => {
-    if (!done) return
-    const timer = setTimeout(() => setDone(null), DONE_MS)
+    if (!outcome) return
+    const timer = setTimeout(
+      () => setOutcome(null),
+      outcome.status === 'success' ? SUCCESS_MS : ERROR_MS
+    )
     return () => clearTimeout(timer)
-  }, [done])
+  }, [outcome])
 
-  /** `work` resolves `false` when the user declined or cancelled: that is no result to confirm. */
+  /** `work` resolves `false` when the user declined or cancelled: that is no result to show. */
   const run = useCallback(
     async (kind: LocalBusy, work: () => Promise<boolean | void>): Promise<void> => {
       setBusy(kind)
-      setError(null)
-      setDone(null)
+      setOutcome(null)
       try {
         const result = await work()
         if (kind !== null && result !== false) {
-          setDone({ id: Date.now(), text: activityDone(kind) })
+          setOutcome({ id: Date.now(), kind, status: 'success' })
         }
       } catch (err) {
-        setError(errorMessage(err))
+        if (kind !== null) setOutcome({ id: Date.now(), kind, status: 'error' })
+        onErrorRef.current(kind, errorMessage(err))
       } finally {
         setBusy(null)
         setProgress(null)
@@ -353,7 +369,6 @@ export function useLocalActions(
       setBusy('branch')
       try {
         await work(linkedPath)
-        setError(null)
         return null
       } catch (err) {
         return errorMessage(err)
@@ -379,8 +394,7 @@ export function useLocalActions(
   return {
     busy,
     progress,
-    error,
-    done,
+    outcome,
     reloadToken,
     watchToken,
     clone,

@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
   activityDone,
+  activityFailed,
+  buttonActivity,
   activityLabel,
   activityWaitTitle,
   bisectHint,
@@ -120,4 +122,20 @@ test('activity words say what runs, what ended and why a button waits', () => {
   assert.equal(activityLabel('fetch'), 'Fetching…')
   assert.equal(activityDone('push'), 'Push complete')
   assert.equal(activityWaitTitle('pull'), 'Pulling… Wait for it to finish.')
+})
+
+test('buttonActivity shows busy, then the outcome, only on the button that owns the write', () => {
+  assert.equal(buttonActivity(['push'], 'push', null), 'busy')
+  assert.equal(buttonActivity(['pull'], 'push', null), 'idle')
+  assert.equal(buttonActivity(['push'], null, { kind: 'push', status: 'success' }), 'success')
+  assert.equal(buttonActivity(['push'], null, { kind: 'push', status: 'error' }), 'error')
+  assert.equal(buttonActivity(['pull'], null, { kind: 'push', status: 'error' }), 'idle')
+  // A new write hides the last outcome of the same button.
+  assert.equal(buttonActivity(['push'], 'push', { kind: 'push', status: 'error' }), 'busy')
+  assert.equal(buttonActivity(['push'], null, null), 'idle')
+})
+
+test('activityFailed names the write, or a plain action', () => {
+  assert.equal(activityFailed('push'), 'push failed')
+  assert.equal(activityFailed(null), 'action failed')
 })
