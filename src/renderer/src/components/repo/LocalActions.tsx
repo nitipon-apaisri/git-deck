@@ -9,10 +9,17 @@ import {
   type RefAction
 } from '../../lib/branchView'
 import { refMenuEntries } from '../../lib/refMenu'
-import { activityWaitTitle, stashButtonLabel } from '../../lib/operationView'
+import {
+  activityDone,
+  activityFailed,
+  activityLabel,
+  activityWaitTitle,
+  buttonActivity,
+  stashButtonLabel,
+  type ActivityKind
+} from '../../lib/operationView'
 import type { LocalActions as Actions } from '../../state/useLocalActions'
 import { Button, Icon, IconButton, Menu, type MenuEntry } from '../ui'
-import { ActivityIndicator } from './ActivityIndicator'
 
 interface LocalActionsProps {
   repo: Repo
@@ -89,6 +96,24 @@ export function LocalActions({
   const working = busy !== null
   // A disabled button says what it waits for instead of going silent.
   const waitTitle = busy ? activityWaitTitle(busy) : undefined
+  const outcome = actions.outcome
+  const activity = (owns: readonly ActivityKind[]) => buttonActivity(owns, busy, outcome)
+  // The tooltip of a button that runs a write: git's line while it runs, then how it ended.
+  function titleFor(owns: readonly ActivityKind[], base?: string): string | undefined {
+    const a = activity(owns)
+    if (a === 'busy' && busy) return actions.progress?.line ?? activityLabel(busy)
+    if (a === 'success' && outcome) return activityDone(outcome.kind)
+    if (a === 'error' && outcome) return activityFailed(outcome.kind)
+    return waitTitle ?? base
+  }
+  // One live region for the screen reader: the label once, not every output line.
+  const status = busy
+    ? activityLabel(busy)
+    : outcome
+      ? outcome.status === 'success'
+        ? activityDone(outcome.kind)
+        : activityFailed(outcome.kind)
+      : ''
   const [menu, setMenu] = useState<OpenMenu | null>(null)
   const [row, setRow] = useState<HTMLDivElement | null>(null)
   const fade = useScrollFade(row)
@@ -229,11 +254,13 @@ export function LocalActions({
       >
         <Button
           icon="git-branch"
+          activity={activity(['branch'])}
           disabled={working || !branches}
           className="max-w-55 min-w-0"
-          title={
+          title={titleFor(
+            ['branch'],
             branches?.detached ? 'HEAD is detached. Choose a branch to switch to it.' : 'Branches'
-          }
+          )}
           aria-haspopup="menu"
           aria-expanded={menu?.id === 'branch'}
           onClick={(e) => open('branch', e.currentTarget)}
@@ -247,16 +274,19 @@ export function LocalActions({
           aria-label="Sync"
         >
           <IconButton
-            label={working ? (waitTitle ?? 'Fetch') : 'Fetch'}
+            label="Fetch"
+            title={titleFor(['fetch'], 'Fetch')}
             icon="refresh"
+            activity={activity(['fetch'])}
             disabled={working}
             className={SEGMENT_ICON}
             onClick={actions.fetch}
           />
           <Button
             icon="arrow-down"
+            activity={activity(['pull'])}
             disabled={working || !state.pull.enabled}
-            title={waitTitle ?? state.pull.title}
+            title={titleFor(['pull'], state.pull.title)}
             className={cn(SEGMENT, DIVIDER)}
             onClick={() => actions.pull('ff-only')}
           >
@@ -274,8 +304,9 @@ export function LocalActions({
           />
           <Button
             icon="arrow-up"
+            activity={activity(['push'])}
             disabled={working || !state.push.enabled}
-            title={waitTitle ?? state.push.title}
+            title={titleFor(['push'], state.push.title)}
             className={cn(SEGMENT, DIVIDER)}
             onClick={() => actions.push(false)}
           >
@@ -303,7 +334,9 @@ export function LocalActions({
             {b.label}
           </Button>
         ))}
-        <ActivityIndicator busy={busy} progress={actions.progress} done={actions.done} />
+        <span className="sr-only" role="status">
+          {status}
+        </span>
         {repo.accountId === 'local' ? null : (
           <Button
             variant="ghost"
@@ -350,6 +383,8 @@ export function LocalActions({
         <Button
           variant="primary"
           icon="download"
+          activity={activity(['clone'])}
+          title={titleFor(['clone'])}
           disabled={working}
           onClick={() => actions.clone('https')}
         >
@@ -357,14 +392,28 @@ export function LocalActions({
         </Button>
       ) : null}
       {repo.sshUrl ? (
-        <Button icon="download" disabled={working} onClick={() => actions.clone('ssh')}>
+        <Button
+          icon="download"
+          activity={activity(['clone'])}
+          title={titleFor(['clone'])}
+          disabled={working}
+          onClick={() => actions.clone('ssh')}
+        >
           Clone (SSH)
         </Button>
       ) : null}
-      <Button icon="link" disabled={working} onClick={actions.link}>
+      <Button
+        icon="link"
+        activity={activity(['link'])}
+        title={titleFor(['link'])}
+        disabled={working}
+        onClick={actions.link}
+      >
         Link existing folder
       </Button>
-      <ActivityIndicator busy={busy} progress={actions.progress} done={actions.done} />
+      <span className="sr-only" role="status">
+        {status}
+      </span>
     </div>
   )
 }

@@ -24,7 +24,7 @@ export function operationStepText(state: OperationState): string | null {
   return state.step ? `Step ${state.step.current} of ${state.step.total}` : null
 }
 
-/** The kinds of write the activity indicator names. */
+/** The kinds of write a button shows the progress of. */
 export type ActivityKind = 'clone' | 'link' | 'fetch' | 'pull' | 'push' | 'branch'
 
 const ACTIVITY: Record<ActivityKind, { doing: string; done: string }> = {
@@ -36,7 +36,7 @@ const ACTIVITY: Record<ActivityKind, { doing: string; done: string }> = {
   branch: { doing: 'Switching branch…', done: 'Branch switched' }
 }
 
-/** What is running, for the indicator and the tooltip on the disabled buttons. */
+/** What is running, for the tooltips and the screen reader. */
 export function activityLabel(kind: ActivityKind): string {
   return ACTIVITY[kind].doing
 }
@@ -44,6 +44,24 @@ export function activityLabel(kind: ActivityKind): string {
 /** The short confirmation after the write ended without an error. */
 export function activityDone(kind: ActivityKind): string {
   return ACTIVITY[kind].done
+}
+
+/** "push failed", for the toast title. A write without a button icon says "action failed". */
+export function activityFailed(kind: ActivityKind | null): string {
+  return kind ? `${kind} failed` : 'action failed'
+}
+
+export type ButtonActivity = 'idle' | 'busy' | 'success' | 'error'
+
+/** What one button shows: `owns` are the kinds of write it starts. */
+export function buttonActivity(
+  owns: readonly ActivityKind[],
+  busy: ActivityKind | null,
+  outcome: { kind: ActivityKind; status: 'success' | 'error' } | null
+): ButtonActivity {
+  if (busy && owns.includes(busy)) return 'busy'
+  if (outcome && owns.includes(outcome.kind)) return outcome.status
+  return 'idle'
 }
 
 /** The tooltip on a button that waits: names the running write. */

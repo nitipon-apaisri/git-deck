@@ -641,3 +641,13 @@ Asked by the user ("better UI/UX for the git processing section"). Settled with 
 - **UI-only rule loosened once:** `OperationState.step` (rebase only) is read in main from `msgnum`/`end` (`rebase-merge`) or `next`/`last` (`rebase-apply`), `null` when unreadable.
 - **Cards, not `Island`:** an island is one level only and the banner sits inside the pane's island, so the banner is a plain rounded block with a left stripe in `--warning-text`. Abort and Abort bisect use `variant="danger"`.
 - **Left as they are:** dialogs and the conflict editor keep their own busy states. Stash, tags and remotes buttons stay enabled while a write runs (as before).
+
+## 2026-11-25, Phase 39 button activity and toasts
+
+Asked by the user after trying the Phase 38 look ("add those to their own action button and animate the icon"). Settled with the user:
+
+- **Reverses part of Phase 38:** the activity pill (`ActivityIndicator`) and its keyframe are gone. Each write button shows its own state in its icon: spinner, green check (4 s), red cross (6 s). Only the icon is coloured; the button stays outlined, and `danger` stays for destructive actions.
+- **Toasts:** a small in-house stack at the app level (no new dependency), newest first, at most 3, stays until dismissed. Every error from a local write goes there, including writes with no button icon (merge, rebase, revert, reset, bisect), so the inline write-error banner is gone. The banner stays for the summary load error.
+- **Left inside their dialogs:** the errors of Create and Rename branch, which show beside the field (a toast behind a modal would be worse).
+- **Git's live line:** now the tooltip of the running button. One hidden status line announces the label once, not every output line.
+- **Known limits:** Clone (HTTPS) and Clone (SSH) both spin, because the hook does not record which one started. A write without a button (merge) shows a toast on failure but no icon.

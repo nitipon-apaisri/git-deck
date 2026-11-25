@@ -728,7 +728,7 @@ Runs on `phase/32-notifications`. A desktop app has no public URL, so real webho
 
 **Verify:** differ tests (new, merged, closed, reopened, no change, first load emits nothing). Mock-server polling tests (interval, backoff on 429, stop on 401). Manual: a notification on a real PR/MR, which cannot be checked without one.
 
-## Phases 33 to 38 — Roadmap 3
+## Phases 33 to 39 — Roadmap 3
 
 Requested and settled with the user on 2026-11-25 (questions and answers in `docs/DECISIONS.md`, 2026-11-25, Roadmap 3). Same rules as Phases 20 to 32: one branch per phase from `develop`, pure logic gets `tsx` tests (no `electron` import), UI gets a manual Verify list, say plainly what was not checked visually, run `design-qa` after UI phases, tick `PLAN.md` and `README.md`, commit locally, never push. Nothing here is started. Colours only from tokens.
 
@@ -792,6 +792,16 @@ Runs on `phase/38-git-activity-ui`, after Phase 37. Settled with the user on 202
 - [x] A repo error shows in `ErrorBanner` with a Copy details button.
 
 **Verify:** tests for `operationStepText`, the activity words and the rebase `step` (a rebase stopped twice, a merge with none). Manual: fetch, push and a stopped rebase in dark and light.
+
+## Phase 39 — Button activity and toasts
+
+Runs on `phase/39-button-activity`, after Phase 38. Settled with the user on 2026-11-25 after trying the Phase 38 look (see `docs/DECISIONS.md`). Colours only from tokens.
+
+- [x] Fetch, Pull, Push, the branch button, Clone and Link show their own state in their icon: a spinner while running, a green check for 4 s on success, a red cross for 6 s on failure. Only the icon changes colour; reduced motion shows a static icon.
+- [x] Every error from a local write shows as a toast (bottom-right, newest first, at most 3, `role="alert"`, Copy details, Dismiss, Esc, stays until dismissed), at the app level so Split View is clear about the repository. Errors of the create and rename branch dialogs stay inside the dialogs.
+- [x] The Phase 38 activity pill and the inline write-error banner are removed. The banner stays for the summary load error.
+
+**Verify:** tests for `buttonActivity`, `activityFailed` and the toast reducer (add, cap, dismiss). Manual: a push that works, one that fails (no remote) and Split View with a failure in the other pane.
 
 ---
 

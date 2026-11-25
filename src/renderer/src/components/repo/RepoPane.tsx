@@ -16,7 +16,9 @@ import {
   useStashes
 } from '../../state/repoData'
 import { useElementSize } from '../../state/useElementSize'
+import { usePushToast } from '../../state/toasts'
 import { useLocalActions } from '../../state/useLocalActions'
+import { activityFailed } from '../../lib/operationView'
 import { useNow } from '../../state/useNow'
 import { Button, ErrorBanner, Icon, IconButton, Island, Spinner, Tabs, panelId, tabId } from '../ui'
 import { GitGraph } from '../graph/GitGraph'
@@ -143,7 +145,10 @@ export function RepoPane({
   }, [active, linkedPath])
 
   const { summary, fetchedAt, loading, error, reload } = useRepoSummary(isLocal ? null : repo.key)
-  const actions = useLocalActions(repo.key, linkedPath, onLinksChanged)
+  const pushToast = usePushToast()
+  const actions = useLocalActions(repo.key, linkedPath, onLinksChanged, (kind, message) =>
+    pushToast({ repo: repo.fullName, action: activityFailed(kind), message })
+  )
   const { branches } = useBranches(linkedPath ?? null, actions.reloadToken + actions.watchToken)
   // A commit the command palette asked to show. `n` makes asking twice for one hash count.
   const [reveal, setReveal] = useState<{ hash: string; n: number } | null>(null)
@@ -208,7 +213,7 @@ export function RepoPane({
     }
   }
 
-  const problem = actions.error ?? webError
+  const problem = webError
   const status = error
     ? summary
       ? 'Showing saved data'
