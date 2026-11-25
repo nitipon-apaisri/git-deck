@@ -175,7 +175,6 @@ export function LocalActions({
             id: 'show-hidden',
             label: `Show hidden (${hidden.all.length})`,
             leading: <Icon name={hidden.showHidden ? 'eye' : 'eye-off'} size="sm" />,
-            checked: hidden.showHidden,
             keepOpen: true,
             onSelect: () => hidden.setShowHidden(!hidden.showHidden)
           })
