@@ -247,7 +247,7 @@ export function BranchesDialog({ path, onChanged, onClose }: BranchesDialogProps
         ) : null}
         <div className="flex flex-wrap items-center gap-4">
           <Button
-            variant="primary"
+            variant="danger"
             icon="trash"
             disabled={busy || count === 0}
             onClick={() => void deleteSelected(all)}
