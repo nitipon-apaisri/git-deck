@@ -614,5 +614,5 @@ Requested by the user; every recommendation below was accepted. Written into `PL
 ## 2026-11-25, Phase 34 badge checkout
 
 - **Ahead/behind on the pill:** left out. Pills carry no tracking data (only the branch list does), so showing it needs branch data plumbed into the graph. Revisit with Phase 36.
-- **Empty circle:** read as the HEAD ring in the lane graph, left as is. The pills had none.
+- **Empty circle:** it is the CI dot with state `none` on the checked-out pill. The pill now draws the dot only for success, failure or pending. The lane graph's HEAD ring is unchanged.
 - **"+n":** opens a menu of the remaining pills; picking one checks it out (tags and HEAD are disabled).

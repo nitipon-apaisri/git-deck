@@ -64,7 +64,9 @@ export function RefPills({ pills, host, ci, onMenu, onActivate }: RefPillsProps)
               : undefined
           }
         >
-          {first.current && ci && ci.branch === first.name ? <CheckDot state={ci.state} /> : null}
+          {first.current && ci && ci.branch === first.name && ci.state !== 'none' ? (
+            <CheckDot state={ci.state} />
+          ) : null}
           {first.kind === 'head' ? <Icon name="check" size="xs" /> : null}
           {first.tag ? <Icon name="tag" size="xs" /> : null}
           <span className={NAME}>{first.name}</span>
