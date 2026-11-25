@@ -1,4 +1,5 @@
-import { useCallback, useReducer, useRef, type KeyboardEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useReducer, useRef, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { toastsReducer, type Toast } from '../lib/toasts'
 import { ToastContext, type PushToast } from '../state/toasts'
 import { CopyButton, Icon, IconButton } from './ui'
@@ -21,28 +22,38 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 }
 
 function ToastHost({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: number) => void }) {
+  const newest = toasts[0]?.id
+  // Esc dismisses the newest toast, unless a dialog or a menu is open: Esc closes that first.
+  useEffect(() => {
+    if (newest === undefined) return
+    const onKeyDown = (e: KeyboardEvent): void => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return
+      if (document.querySelector('[role="dialog"], [role="menu"]')) return
+      onDismiss(newest)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [newest, onDismiss])
   if (toasts.length === 0) return null
-  return (
-    <div className="fixed right-4 bottom-4 z-50 flex w-96 max-w-[calc(100vw-2rem)] flex-col gap-2">
+  // In a portal above the dialog layer (z-50), and clickable while a modal dialog is open.
+  return createPortal(
+    <div className="pointer-events-auto fixed right-4 bottom-4 z-60 flex w-96 max-w-[calc(100vw-2rem)] flex-col gap-2">
       {toasts.map((t) => (
         <ToastItem key={t.id} toast={t} onDismiss={() => onDismiss(t.id)} />
       ))}
-    </div>
+    </div>,
+    document.body
   )
 }
 
 function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }) {
-  function onKeyDown(e: KeyboardEvent): void {
-    if (e.key === 'Escape') onDismiss()
-  }
   return (
     <div
       role="alert"
-      onKeyDown={onKeyDown}
       className="relative flex animate-banner-in items-start gap-2 rounded-lg border-l-[3px] border-(--danger) bg-card px-3 py-2.5 text-foreground shadow-(--shadow-menu) motion-reduce:animate-none"
     >
       <span className="mt-0.5 flex-none text-(--danger)">
-        <Icon name="x" size="sm" />
+        <Icon name="alert" size="sm" />
       </span>
       <div className="min-w-0 flex-1">
         <p className="m-0 font-semibold">
@@ -52,7 +63,11 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
           {toast.message}
         </p>
       </div>
-      <CopyButton text={`${toast.repo}: ${toast.action}\n${toast.message}`} what="details" />
+      <CopyButton
+        text={`${toast.repo}: ${toast.action}\n${toast.message}`}
+        what="details"
+        announce={false}
+      />
       <IconButton label="Dismiss" icon="x" onClick={onDismiss} />
     </div>
   )

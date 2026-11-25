@@ -5,11 +5,13 @@ interface CopyButtonProps {
   text: string
   /** What is being copied, for the label: "HTTPS clone URL". */
   what: string
+  /** Off inside an element that is already a live region (an alert), so it is not read twice. */
+  announce?: boolean
 }
 
 const RESET_MS = 1500
 
-export function CopyButton({ text, what }: CopyButtonProps) {
+export function CopyButton({ text, what, announce = true }: CopyButtonProps) {
   const [status, setStatus] = useState<'idle' | 'copied' | 'failed'>('idle')
   const timer = useRef<number | undefined>(undefined)
 
@@ -35,7 +37,7 @@ export function CopyButton({ text, what }: CopyButtonProps) {
       />
       <span
         className="absolute size-px overflow-hidden whitespace-nowrap [clip-path:inset(50%)]"
-        role="status"
+        role={announce ? 'status' : undefined}
       >
         {status === 'copied'
           ? `Copied ${what}`
