@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
-import type { Account, NotifyEvent, Project, Repo } from '@shared/types'
-import { ALL_NOTIFY_EVENTS } from '@shared/notify'
+import type { Account, Repo } from '@shared/types'
 import { Badge, IconButton } from '../ui'
 
 interface RepoHeaderProps {
@@ -11,12 +10,6 @@ interface RepoHeaderProps {
   /** A narrow pane: buttons show only their icon. */
   compact?: boolean
   onOpenWeb: () => void
-  /** Bell for the projects that own this repository; absent for local folders. */
-  notify?: {
-    owners: Project[]
-    on: boolean
-    onSet: (projectId: string, notify: NotifyEvent[]) => void
-  }
   /** Shows a close button when set (Split View only). */
   onClose?: () => void
   /** The repository actions (branch, fetch, pull, push, open folder), on the same row. */
@@ -29,7 +22,6 @@ export function RepoHeader({
   local = false,
   // compact,
   onOpenWeb,
-  notify,
   onClose,
   children
 }: RepoHeaderProps) {
@@ -44,19 +36,6 @@ export function RepoHeader({
         </div>
         {children}
         <div className="flex flex-none items-center gap-1">
-          {notify && notify.owners.length > 0 ? (
-            <IconButton
-              label={`${notify.on ? 'Turn off' : 'Turn on'} all notifications for ${notify.owners.map((p) => p.name).join(', ')}`}
-              icon="bell"
-              className="size-9"
-              active={notify.on}
-              onClick={() =>
-                notify.owners.forEach((p) =>
-                  notify.onSet(p.id, notify.on ? [] : [...ALL_NOTIFY_EVENTS])
-                )
-              }
-            />
-          ) : null}
           {local ? null : (
             <IconButton label="Open on web" icon="globe" className="size-9" onClick={onOpenWeb} />
           )}

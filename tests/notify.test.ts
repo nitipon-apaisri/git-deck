@@ -8,8 +8,7 @@ import {
   ALL_NOTIFY_EVENTS,
   allNotifyOn,
   diffChangeRequests,
-  noticeBody,
-  repoNotifyState
+  noticeBody
 } from '../src/shared/notify'
 import type { ChangeRequest, ChecksInfo, NotifyEvent, Project, Repo } from '../src/shared/types'
 
@@ -241,26 +240,10 @@ test('poller: checks failed only on a move to failure, and finished checks are n
   assert.deepEqual(summary(notices), ['checksFailed #1'], 'still failing: no repeat')
 })
 
-// Phase 37: all-events toggle and the repository bell state.
+// Phase 37: the all-events switch.
 test('all events: on, off, partial', () => {
   assert.equal(allNotifyOn(ALL_NOTIFY_EVENTS), true)
   assert.equal(allNotifyOn([]), false)
   assert.equal(allNotifyOn(undefined), false)
   assert.equal(allNotifyOn(['merged']), false)
-})
-
-test('repo bell state is the union across owning projects', () => {
-  const projects = [
-    { id: 'a', name: 'A', repoKeys: ['r'], notify: [] },
-    { id: 'b', name: 'B', repoKeys: ['r', 's'], notify: ['merged' as const] },
-    { id: 'c', name: 'C', repoKeys: ['s'], notify: ALL_NOTIFY_EVENTS }
-  ]
-  const r = repoNotifyState(projects, 'r')
-  assert.deepEqual(
-    r.owners.map((p) => p.id),
-    ['a', 'b']
-  )
-  assert.equal(r.on, true)
-  assert.equal(repoNotifyState(projects.slice(0, 1), 'r').on, false)
-  assert.deepEqual(repoNotifyState(projects, 'none'), { owners: [], on: false })
 })

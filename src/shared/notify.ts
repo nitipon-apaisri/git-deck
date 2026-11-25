@@ -67,12 +67,3 @@ export const ALL_NOTIFY_EVENTS: NotifyEvent[] = NOTIFY_EVENTS.map((e) => e.id)
 export function allNotifyOn(events: readonly NotifyEvent[] | undefined): boolean {
   return ALL_NOTIFY_EVENTS.every((id) => events?.includes(id))
 }
-
-/** A repository's notification state: the projects that own it, and "on" if any has an event. */
-export function repoNotifyState<P extends { repoKeys: string[]; notify?: NotifyEvent[] }>(
-  projects: readonly P[],
-  repoKey: string
-) {
-  const owners = projects.filter((p) => p.repoKeys.includes(repoKey))
-  return { owners, on: owners.some((p) => (p.notify?.length ?? 0) > 0) }
-}

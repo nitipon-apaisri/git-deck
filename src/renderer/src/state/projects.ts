@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { NotifyEvent, Project } from '@shared/types'
+import type { Project } from '@shared/types'
 import { errorMessage } from '../lib/errors'
 import { diffRepoKeys, replaceProject, type ProjectFormValue } from '../lib/projectForm'
 
@@ -15,8 +15,6 @@ export interface Projects {
   remove: (id: string) => Promise<void>
   addRepos: (id: string, repoKeys: string[]) => Promise<void>
   removeRepos: (id: string, repoKeys: string[]) => Promise<void>
-  /** Replaces a project's notification events. */
-  setNotify: (id: string, notify: NotifyEvent[]) => Promise<void>
 }
 
 /** The projects stored by main. Every change goes through main and comes back as data. */
@@ -133,16 +131,5 @@ export function useProjects(): Projects {
     [put]
   )
 
-  const setNotify = useCallback(
-    async (id: string, notify: NotifyEvent[]) => {
-      try {
-        put(await window.api.projects.update(id, { notify }))
-      } catch (err) {
-        throw new Error(errorMessage(err), { cause: err })
-      }
-    },
-    [put]
-  )
-
-  return { projects, ready, loadError, reload, save, remove, addRepos, removeRepos, setNotify }
+  return { projects, ready, loadError, reload, save, remove, addRepos, removeRepos }
 }

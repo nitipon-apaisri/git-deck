@@ -1,7 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/cn'
-import type { Account, NotifyEvent, Project, Repo } from '@shared/types'
-import { repoNotifyState } from '@shared/notify'
+import type { Account, Repo } from '@shared/types'
 import { errorMessage } from '../../lib/errors'
 import { timeAgo } from '../../lib/format'
 import { isLocalRepo } from '../../lib/localRepos'
@@ -66,8 +65,6 @@ interface RepoPaneProps {
   onActivate: () => void
   /** Called after a clone, link or unlink, so the workspace re-reads the links. */
   onLinksChanged: () => void
-  projects: Project[]
-  onSetNotify: (projectId: string, notify: NotifyEvent[]) => void
   /** 1 or 2: which pane this is. */
   paneNumber: 1 | 2
   /** Split View is on, so the pane says which one it is and can be closed. */
@@ -91,8 +88,6 @@ export function RepoPane({
   onTabChange,
   onActivate,
   onLinksChanged,
-  projects,
-  onSetNotify,
   paneNumber,
   split,
   onClose,
@@ -244,9 +239,6 @@ export function RepoPane({
           local={isLocal}
           compact={narrow}
           onOpenWeb={() => void openWeb()}
-          notify={
-            isLocal ? undefined : { ...repoNotifyState(projects, repo.key), onSet: onSetNotify }
-          }
           onClose={split ? onClose : undefined}
         >
           <LocalActions
