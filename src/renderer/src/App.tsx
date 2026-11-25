@@ -299,6 +299,8 @@ export function App() {
           links={state.links}
           loading={anyLoading}
           onLinksChanged={() => void refreshLinks()}
+          projects={projects}
+          onSetNotify={(id, events) => void guarded(projectsApi.setNotify(id, events))}
           overview={
             overviewVisible && scope && view ? (
               <ProjectOverview

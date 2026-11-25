@@ -51,7 +51,7 @@ import type { GitProvider } from './providers/types'
 import type { Store } from './store'
 import { checkForUpdate, fetchReleaseNotes } from './updateCheck'
 import { createPoller } from './notifyPoller'
-import { noticeBody } from '../shared/notify'
+import { ALL_NOTIFY_EVENTS, noticeBody } from '../shared/notify'
 import { appendItem, markAllItemsRead, markItemRead } from '../shared/inbox'
 import { allowHostTemporarily, setInsecureHosts } from './tls'
 import { isHttp } from './urls'
@@ -1608,7 +1608,11 @@ export function createService(deps: ServiceDeps): {
           repoKeys: raw['repoKeys'] === undefined ? undefined : checkKeys(raw['repoKeys'], true)
         }
         return mutateProjects((projects) => {
-          const project = createProject(projects, projectInput)
+          const created = createProject(projects, projectInput)
+          // A new project follows the app-wide switch; Settings stays the master off.
+          const project = store.notificationsEnabled()
+            ? { ...created, notify: [...ALL_NOTIFY_EVENTS] }
+            : created
           return { next: [...projects, project], result: project }
         })
       }),

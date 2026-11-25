@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { Account, Repo } from '@shared/types'
+import type { Account, NotifyEvent, Project, Repo } from '@shared/types'
 import type { PaneId } from '../lib/splitState'
 import type { Split } from '../state/useSplit'
 import { RepoPane } from './repo/RepoPane'
@@ -16,6 +16,8 @@ interface MainPaneProps {
   /** Some account is still loading its repositories. */
   loading: boolean
   onLinksChanged: () => void
+  projects: Project[]
+  onSetNotify: (projectId: string, notify: NotifyEvent[]) => void
   /** The project overview. It replaces the panes while it shows. */
   overview: ReactNode
 }
@@ -31,6 +33,8 @@ export function MainPane({
   links,
   loading,
   onLinksChanged,
+  projects,
+  onSetNotify,
   overview
 }: MainPaneProps) {
   const { state } = split
@@ -51,6 +55,8 @@ export function MainPane({
           onTabChange={(next) => split.setTab(id, next)}
           onActivate={() => split.setActive(id)}
           onLinksChanged={onLinksChanged}
+          projects={projects}
+          onSetNotify={onSetNotify}
           paneNumber={id === 0 ? 1 : 2}
           split={state.enabled}
           onClose={() => split.close(id)}

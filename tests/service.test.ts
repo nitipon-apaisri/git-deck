@@ -534,6 +534,14 @@ test('openExternal accepts http and https only', async () => {
 
 // Projects
 
+test('projects: a new project follows the app-wide notifications switch', async () => {
+  const r = await rig()
+  const on = await r.api.projects.create({ name: 'On' })
+  assert.equal(on.notify?.length, 5)
+  await r.api.notify.setEnabled(false)
+  assert.deepEqual((await r.api.projects.create({ name: 'Off' })).notify ?? [], [])
+})
+
 test('projects: create validates and returns the project', async () => {
   const r = await rig()
   const p = await r.api.projects.create({ name: '  Platform ', repoKeys: ['acc1:1', 'acc1:1'] })
@@ -853,7 +861,9 @@ test('inbox: a poller notice is stored, listed, and marked read', async () => {
   })
   try {
     const { api } = service
+    await api.notify.setEnabled(false) // a project made now starts with no events
     const p = await api.projects.create({ name: 'Watched', repoKeys: ['acc1:1'] })
+    await api.notify.setEnabled(true)
     await api.projects.update(p.id, { notify: ['created'] })
     await new Promise((resolve) => setTimeout(resolve, 20))
     assert.deepEqual(await api.inbox.list(), [], 'baseline poll adds nothing')

@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import type { Account, NotifyEvent, Project, Repo } from '@shared/types'
-import { NOTIFY_EVENTS } from '@shared/notify'
+import { ALL_NOTIFY_EVENTS, NOTIFY_EVENTS, allNotifyOn } from '@shared/notify'
 import { DEFAULT_ICON, PROJECT_COLORS } from '@shared/projects'
 import { cn } from '@/lib/cn'
 import { LOCAL_ACCOUNT_ID } from '../../lib/localRepos'
@@ -21,7 +21,17 @@ import {
   type PickerRow,
   type ProjectFormValue
 } from '../../lib/projectForm'
-import { Button, Dialog, Field, HostTile, Icon, ProjectIcon, TextInput, isIconName } from '../ui'
+import {
+  Button,
+  Dialog,
+  Field,
+  HostTile,
+  Icon,
+  ProjectIcon,
+  SwitchOption,
+  TextInput,
+  isIconName
+} from '../ui'
 
 interface ProjectFormDialogProps {
   projects: Project[]
@@ -394,6 +404,11 @@ export function ProjectFormDialog({
               Notifications{' '}
               <span className="font-normal text-muted-foreground">(off by default)</span>
             </legend>
+            <SwitchOption
+              label="Enable all events"
+              checked={allNotifyOn(notify)}
+              onChange={(on) => setNotify(on ? [...ALL_NOTIFY_EVENTS] : [])}
+            />
             <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
               {NOTIFY_EVENTS.map(({ id, label }) => (
                 <label key={id} className="flex cursor-pointer items-center gap-2.5">
