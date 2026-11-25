@@ -18,6 +18,13 @@ interface RefPillsProps {
   onActivate?: (badge: BadgeView) => void
 }
 
+// The checked-out branch keeps its own colour, filled solid: the kind's text colour becomes the
+// background and the HEAD text colour (dark in dark theme, white in light) goes on top.
+const SOLID: Partial<Record<RefPill['kind'], string>> = {
+  main: 'bg-(--ref-main-fg) text-(--ref-head-fg)',
+  feature: 'bg-(--ref-feature-fg) text-(--ref-head-fg)',
+  project: 'bg-(--ref-project-fg) text-(--ref-head-fg)'
+}
 const PILL =
   'inline-flex h-5 min-w-0 items-center gap-1 rounded-(--radius-xs) border border-transparent px-1.5 text-[11.5px] leading-4 whitespace-nowrap'
 // Below this column width a pill keeps only its icons.
@@ -54,7 +61,7 @@ export function RefPills({ pills, host, ci, onMenu, onActivate }: RefPillsProps)
         <span
           className={cn(
             PILL,
-            first.current ? REF_KINDS.head : REF_KINDS[first.kind],
+            first.current ? (SOLID[first.kind] ?? REF_KINDS[first.kind]) : REF_KINDS[first.kind],
             first.current ? 'font-bold' : 'font-medium'
           )}
           title={first.title}

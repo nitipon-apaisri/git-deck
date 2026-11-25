@@ -624,7 +624,7 @@ Asked by the user after Phase 34, from two GitKraken screenshots. Settled with t
 
 - **Branch, not a phase:** a follow-up on its own branch.
 - **Check mark:** the checked-out branch has it again (first icon); a detached HEAD keeps it. This reverses the Phase 34 "HEAD only" line.
-- **Solid fill:** only the checked-out branch, using the existing `--ref-head-bg/fg` tokens. That is blue, not the teal in the screenshot; there is no teal token and none was added.
+- **Solid fill:** only the checked-out branch, in its own kind's colour (`main`, `feature` or `project`) filled solid: background `--ref-<kind>-fg`, text `--ref-head-fg`. Both themes work with existing tokens, so no new colours. A teal `--ref-current-*` pair and plain `--ref-head-*` blue were tried first and dropped: blue read like `main`, and teal made a colour that matches nothing else.
 - **"+n":** hover, focus or click opens a card under it listing the other refs as pills; Esc or leaving closes it. It replaces the `Menu`.
 - **Checkout:** a single click on a card entry checks it out; the main pill keeps double-click. Tags show in the card but are not clickable (tooltip says why).
 - **Size:** pills stay 20px, `ROW_HEIGHT` unchanged, no connector line to the commit node.
