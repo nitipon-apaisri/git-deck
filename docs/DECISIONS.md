@@ -651,3 +651,11 @@ Asked by the user after trying the Phase 38 look ("add those to their own action
 - **Left inside their dialogs:** the errors of Create and Rename branch, which show beside the field (a toast behind a modal would be worse).
 - **Git's live line:** now the tooltip of the running button. One hidden status line announces the label once, not every output line.
 - **Known limits:** Clone (HTTPS) and Clone (SSH) both spin, because the hook does not record which one started. A write without a button (merge) shows a toast on failure but no icon.
+
+## 2026-11-26, Phase 40 header overflow menu
+
+Settled with the user:
+
+- **Where:** the buttons live in `LocalActions`, not `RepoHeader`, so the change is there. Tags, Remotes and Unlink moved into a "…" menu (`Menu`, no new component). Unlink is a `danger` entry, hidden for local-account repos as before.
+- **Kept visible:** Stash (its count shows at a glance) and, while no folder is linked, Clone and Link existing folder (the primary actions of that state).
+- **Not checked:** the row was not run in a window, so the look in Split View's narrow pane is unchecked. Unlink has no confirm step, as before.
