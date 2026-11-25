@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { errorMessage } from '../lib/errors'
+import { activityDone } from '../lib/operationView'
 import type { CloneProtocol, GitProgress } from '@shared/api'
 import type { BisectMark, CheckoutTarget, PullMode, ResetMode } from '@shared/types'
+
+/** How long the confirmation of a finished write stays. */
+const DONE_MS = 4000
 
 export type LocalBusy = 'clone' | 'link' | 'fetch' | 'pull' | 'push' | 'branch' | null
 
@@ -10,6 +14,8 @@ export interface LocalActions {
   /** Latest line of a clone, pull or push for this repository only, while it runs. */
   progress: GitProgress | null
   error: string | null
+  /** The confirmation of the write that just ended, until it fades. `id` restarts the fade. */
+  done: { id: number; text: string } | null
   /** Changes after a fetch, a clone or a link, so tabs that read the folder reload. */
   reloadToken: number
   /** Changes when files or refs change on disk: status, branches and stashes reload. */
@@ -68,6 +74,7 @@ export function useLocalActions(
   const [busy, setBusy] = useState<LocalBusy>(null)
   const [progress, setProgress] = useState<GitProgress | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [done, setDone] = useState<{ id: number; text: string } | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
   // Bumped when files or refs change on disk. Separate from `reloadToken` so a plain edit
   // refreshes status and branches without resetting the graph's pages and scroll.
@@ -112,24 +119,39 @@ export function useLocalActions(
     [repoKey]
   )
 
-  const run = useCallback(async (kind: LocalBusy, work: () => Promise<void>): Promise<void> => {
-    setBusy(kind)
-    setError(null)
-    try {
-      await work()
-    } catch (err) {
-      setError(errorMessage(err))
-    } finally {
-      setBusy(null)
-      setProgress(null)
-    }
-  }, [])
+  // The confirmation shows for a few seconds, then goes. The next write replaces it at once.
+  useEffect(() => {
+    if (!done) return
+    const timer = setTimeout(() => setDone(null), DONE_MS)
+    return () => clearTimeout(timer)
+  }, [done])
+
+  /** `work` resolves `false` when the user declined or cancelled: that is no result to confirm. */
+  const run = useCallback(
+    async (kind: LocalBusy, work: () => Promise<boolean | void>): Promise<void> => {
+      setBusy(kind)
+      setError(null)
+      setDone(null)
+      try {
+        const result = await work()
+        if (kind !== null && result !== false) {
+          setDone({ id: Date.now(), text: activityDone(kind) })
+        }
+      } catch (err) {
+        setError(errorMessage(err))
+      } finally {
+        setBusy(null)
+        setProgress(null)
+      }
+    },
+    []
+  )
 
   const clone = useCallback(
     (protocol: CloneProtocol) =>
       void run('clone', async () => {
         const path = await window.api.local.clone(repoKey, protocol)
-        if (path === null) return // the folder picker was cancelled
+        if (path === null) return false // the folder picker was cancelled
         onLinksChanged()
         setReloadToken((n) => n + 1)
       }),
@@ -140,7 +162,7 @@ export function useLocalActions(
     () =>
       void run('link', async () => {
         const path = await window.api.local.link(repoKey)
-        if (path === null) return
+        if (path === null) return false
         onLinksChanged()
         setReloadToken((n) => n + 1)
       }),
@@ -191,8 +213,9 @@ export function useLocalActions(
     (force: boolean) => {
       if (!linkedPath) return
       void run('push', async () => {
-        await window.api.local.push(linkedPath, force) // false: the user declined the confirm
+        const pushed = await window.api.local.push(linkedPath, force) // false: the user declined
         setReloadToken((n) => n + 1)
+        return pushed
       })
     },
     [run, linkedPath]
@@ -357,6 +380,7 @@ export function useLocalActions(
     busy,
     progress,
     error,
+    done,
     reloadToken,
     watchToken,
     clone,

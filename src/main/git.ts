@@ -1111,17 +1111,40 @@ async function rebaseDir(cwd: string): Promise<string | null> {
   return null
 }
 
+/** "3 of 7" from the two counter files of a rebase, or `null` when either is missing. */
+function readRebaseStep(dir: string): { current: number; total: number } | null {
+  const read = (names: string[]): number | null => {
+    for (const name of names) {
+      try {
+        const n = Number.parseInt(readFileSync(resolve(dir, name), 'utf8').trim(), 10)
+        if (Number.isInteger(n) && n > 0) return n
+      } catch {
+        // Try the other backend's file name.
+      }
+    }
+    return null
+  }
+  // rebase-merge counts with msgnum and end, rebase-apply with next and last.
+  const current = read(['msgnum', 'next'])
+  const total = read(['end', 'last'])
+  return current && total && current <= total ? { current, total } : null
+}
+
 /** The kind of the merge, cherry-pick, revert or rebase waiting for the user, and its target. */
-async function findOperation(
-  cwd: string
-): Promise<{ kind: OperationKind; target: string | null } | null> {
+async function findOperation(cwd: string): Promise<{
+  kind: OperationKind
+  target: string | null
+  step: { current: number; total: number } | null
+} | null> {
   let kind: OperationKind | null = null
   let file: string | null = null
+  let step: { current: number; total: number } | null = null
   // A rebase replays commits one by one and may leave CHERRY_PICK_HEAD too: it wins.
   const dir = await rebaseDir(cwd)
   if (dir) {
     kind = 'rebase'
     file = resolve(dir, 'onto')
+    step = readRebaseStep(dir)
   }
   for (const [name, candidate] of kind ? [] : OPERATION_FILES) {
     file = await gitPathExists(cwd, name)
@@ -1138,7 +1161,7 @@ async function findOperation(
   } catch {
     target = null
   }
-  return { kind, target }
+  return { kind, target, step }
 }
 
 /** The merge, cherry-pick, revert or rebase waiting for the user, or `null`. */

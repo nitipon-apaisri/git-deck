@@ -63,6 +63,15 @@
   --animate-pane-in: pane-in 260ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   --animate-pane-in-left: pane-in-left 260ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   --animate-banner-in: banner-in 240ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  /* A finished write's confirmation: settles in, holds, then fades in the last 300 ms of 4 s. */
+  --animate-activity-done:
+    banner-in 240ms cubic-bezier(0.16, 1, 0.3, 1) backwards,
+    activity-out 300ms ease-in 3.7s forwards;
+  @keyframes activity-out {
+    to {
+      opacity: 0;
+    }
+  }
   @keyframes rise {
     from {
       opacity: 0;

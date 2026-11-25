@@ -1,10 +1,14 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
+  activityDone,
+  activityLabel,
+  activityWaitTitle,
   bisectHint,
   bisectTitle,
   conflictPreview,
   operationHint,
+  operationStepText,
   operationTitle,
   stashButtonLabel,
   stashTitle
@@ -16,6 +20,7 @@ const state = (extra: Partial<OperationState> = {}): OperationState => ({
   target: 'abc1234',
   conflicted: ['a.txt'],
   conflictKinds: { 'a.txt': 'both-modified' },
+  step: null,
   ...extra
 })
 
@@ -34,7 +39,7 @@ test('operationHint counts the files left and says when none are', () => {
     /^2 files have conflicts\. Resolve each one/
   )
   assert.match(
-    operationHint(state({ conflicted: [], conflictKinds: {} })),
+    operationHint(state({ conflicted: [], conflictKinds: {}, step: null })),
     /Every conflict is resolved/
   )
 })
@@ -54,14 +59,26 @@ test('stash labels', () => {
 
 test('a revert reads as "Revert in progress"', () => {
   assert.equal(
-    operationTitle({ kind: 'revert', target: 'abc1234', conflicted: [], conflictKinds: {} }),
+    operationTitle({
+      kind: 'revert',
+      target: 'abc1234',
+      conflicted: [],
+      conflictKinds: {},
+      step: null
+    }),
     'Revert in progress (abc1234)'
   )
 })
 
 test('a rebase with every conflict fixed says it will replay the next commit', () => {
   assert.match(
-    operationHint({ kind: 'rebase', target: 'abc1234', conflicted: [], conflictKinds: {} }),
+    operationHint({
+      kind: 'rebase',
+      target: 'abc1234',
+      conflicted: [],
+      conflictKinds: {},
+      step: null
+    }),
     /replay the next commit, skip this one/
   )
   assert.match(
@@ -69,7 +86,8 @@ test('a rebase with every conflict fixed says it will replay the next commit', (
       kind: 'rebase',
       target: null,
       conflicted: ['a.txt'],
-      conflictKinds: { 'a.txt': 'both-modified' }
+      conflictKinds: { 'a.txt': 'both-modified' },
+      step: null
     }),
     /^1 file has conflicts/
   )
@@ -88,4 +106,18 @@ test('bisect title and hint', () => {
   const done = { ...s, result: { hash: 'd'.repeat(40), subject: 'break it' } }
   assert.equal(bisectTitle(done), 'Bisect found the first bad commit (ddddddd)')
   assert.match(bisectHint(done), /break it/)
+})
+
+test('operationStepText counts only a rebase that reported steps', () => {
+  assert.equal(operationStepText(state()), null)
+  assert.equal(
+    operationStepText(state({ kind: 'rebase', step: { current: 3, total: 7 } })),
+    'Step 3 of 7'
+  )
+})
+
+test('activity words say what runs, what ended and why a button waits', () => {
+  assert.equal(activityLabel('fetch'), 'Fetching…')
+  assert.equal(activityDone('push'), 'Push complete')
+  assert.equal(activityWaitTitle('pull'), 'Pulling… Wait for it to finish.')
 })

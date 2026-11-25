@@ -267,6 +267,8 @@ export interface OperationState {
   conflicted: string[]
   /** How each of those paths conflicts. */
   conflictKinds: Record<string, ConflictKind>
+  /** Rebase only: the commit it stopped on and how many it replays. `null` otherwise. */
+  step: { current: number; total: number } | null
 }
 
 export type ResetMode = 'soft' | 'mixed' | 'hard'

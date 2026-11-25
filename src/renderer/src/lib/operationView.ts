@@ -19,6 +19,38 @@ export function operationHint(state: OperationState): string {
   return `${files}. Resolve ${n === 1 ? 'it' : 'each one'} here or in your editor, then continue. Aborting undoes everything.`
 }
 
+/** "Step 3 of 7" for a rebase, `null` for the others. */
+export function operationStepText(state: OperationState): string | null {
+  return state.step ? `Step ${state.step.current} of ${state.step.total}` : null
+}
+
+/** The kinds of write the activity indicator names. */
+export type ActivityKind = 'clone' | 'link' | 'fetch' | 'pull' | 'push' | 'branch'
+
+const ACTIVITY: Record<ActivityKind, { doing: string; done: string }> = {
+  clone: { doing: 'Cloning…', done: 'Clone complete' },
+  link: { doing: 'Linking the folder…', done: 'Folder linked' },
+  fetch: { doing: 'Fetching…', done: 'Fetch complete' },
+  pull: { doing: 'Pulling…', done: 'Pull complete' },
+  push: { doing: 'Pushing…', done: 'Push complete' },
+  branch: { doing: 'Switching branch…', done: 'Branch switched' }
+}
+
+/** What is running, for the indicator and the tooltip on the disabled buttons. */
+export function activityLabel(kind: ActivityKind): string {
+  return ACTIVITY[kind].doing
+}
+
+/** The short confirmation after the write ended without an error. */
+export function activityDone(kind: ActivityKind): string {
+  return ACTIVITY[kind].done
+}
+
+/** The tooltip on a button that waits: names the running write. */
+export function activityWaitTitle(kind: ActivityKind): string {
+  return `${ACTIVITY[kind].doing} Wait for it to finish.`
+}
+
 /** Paths for the banner, capped so a huge merge does not fill the screen. */
 export function conflictPreview(paths: string[], max = 5): { shown: string[]; more: number } {
   return { shown: paths.slice(0, max), more: Math.max(0, paths.length - max) }

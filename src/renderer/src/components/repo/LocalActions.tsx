@@ -9,9 +9,10 @@ import {
   type RefAction
 } from '../../lib/branchView'
 import { refMenuEntries } from '../../lib/refMenu'
-import { stashButtonLabel } from '../../lib/operationView'
+import { activityWaitTitle, stashButtonLabel } from '../../lib/operationView'
 import type { LocalActions as Actions } from '../../state/useLocalActions'
-import { Button, Icon, IconButton, Menu, ProgressBar, Spinner, type MenuEntry } from '../ui'
+import { Button, Icon, IconButton, Menu, type MenuEntry } from '../ui'
+import { ActivityIndicator } from './ActivityIndicator'
 
 interface LocalActionsProps {
   repo: Repo
@@ -42,8 +43,6 @@ const SEGMENT = 'h-full rounded-none border-0 pr-1.5 pl-3'
 const DIVIDER = 'border-l border-border'
 const SEGMENT_ICON = 'h-full w-8 rounded-none'
 const SEGMENT_CARET = 'h-full w-7 rounded-none'
-
-const PROGRESS_LABEL = { clone: 'Cloning…', pull: 'Pulling…', push: 'Pushing…' } as const
 
 /** Which edges of a sideways-scrolling element have more content hidden past them. */
 function useScrollFade(el: HTMLElement | null): { start: boolean; end: boolean } {
@@ -88,21 +87,11 @@ export function LocalActions({
 }: LocalActionsProps) {
   const { busy } = actions
   const working = busy !== null
+  // A disabled button says what it waits for instead of going silent.
+  const waitTitle = busy ? activityWaitTitle(busy) : undefined
   const [menu, setMenu] = useState<OpenMenu | null>(null)
   const [row, setRow] = useState<HTMLDivElement | null>(null)
   const fade = useScrollFade(row)
-
-  if (busy === 'clone' || busy === 'pull' || busy === 'push') {
-    const label = `${busy[0].toUpperCase()}${busy.slice(1)} progress`
-    return (
-      <div className="flex max-w-120 flex-col gap-1.5" role="group" aria-label={label}>
-        <ProgressBar percent={actions.progress?.percent ?? null} label={label} />
-        <p className="m-0 text-[12px] leading-4 text-muted-foreground wrap-anywhere">
-          {actions.progress?.line ?? PROGRESS_LABEL[busy]}
-        </p>
-      </div>
-    )
-  }
 
   if (linkedPath) {
     const state = remoteState(branches)
@@ -258,7 +247,7 @@ export function LocalActions({
           aria-label="Sync"
         >
           <IconButton
-            label={busy === 'fetch' ? 'Fetching…' : 'Fetch'}
+            label={working ? (waitTitle ?? 'Fetch') : 'Fetch'}
             icon="refresh"
             disabled={working}
             className={SEGMENT_ICON}
@@ -267,7 +256,7 @@ export function LocalActions({
           <Button
             icon="arrow-down"
             disabled={working || !state.pull.enabled}
-            title={state.pull.title}
+            title={waitTitle ?? state.pull.title}
             className={cn(SEGMENT, DIVIDER)}
             onClick={() => actions.pull('ff-only')}
           >
@@ -286,7 +275,7 @@ export function LocalActions({
           <Button
             icon="arrow-up"
             disabled={working || !state.push.enabled}
-            title={state.push.title}
+            title={waitTitle ?? state.push.title}
             className={cn(SEGMENT, DIVIDER)}
             onClick={() => actions.push(false)}
           >
@@ -314,9 +303,7 @@ export function LocalActions({
             {b.label}
           </Button>
         ))}
-        {busy === 'fetch' || busy === 'branch' ? (
-          <Spinner label={busy === 'fetch' ? 'Fetching' : 'Switching branches'} />
-        ) : null}
+        <ActivityIndicator busy={busy} progress={actions.progress} done={actions.done} />
         {repo.accountId === 'local' ? null : (
           <Button
             variant="ghost"
@@ -375,8 +362,9 @@ export function LocalActions({
         </Button>
       ) : null}
       <Button icon="link" disabled={working} onClick={actions.link}>
-        {busy === 'link' ? 'Linking…' : 'Link existing folder'}
+        Link existing folder
       </Button>
+      <ActivityIndicator busy={busy} progress={actions.progress} done={actions.done} />
     </div>
   )
 }
