@@ -64,7 +64,7 @@ Rules that came out of the migration:
 ## Activity and stopped operations
 
 - **Button activity:** a button that runs a git write (Fetch, Pull, Push, the branch button, Clone, Link) swaps its own icon: a spinner in `--accent` while it runs (static with reduced motion), a `--success` check for 4 s, a `--danger` cross for 6 s. Only the icon takes the colour; the button stays outlined. The tooltip carries git's latest line while it runs, and one visually hidden status line tells screen readers.
-- **Toast:** an error from a local write shows bottom-right, newest on top, at most 3, on `bg-card` with a 3 px `--danger` stripe, `shadow-menu`, Copy details and Dismiss; Esc dismisses the newest (not while a dialog or menu is open); it sits above dialogs. It stays until dismissed and names the repository, so Split View is clear.
+- **Toast:** an error from a local write shows top-right (below the title bar), newest on top, at most 3, on `bg-card` with `shadow-menu` and a `--danger` alert icon (no side stripe), Copy details and Dismiss; Esc dismisses the newest (not while a dialog or menu is open); it sits above dialogs. It stays until dismissed and names the repository, so Split View is clear.
 - **Stopped operation** (merge, cherry-pick, revert, rebase, bisect): a block on `--warning-bg` with a 3 px left stripe in `--warning-text`, the step as a warning `Badge`, conflict kinds as neutral `Badge`s. Abort is `danger`. It is not an island: it sits inside one.
 
 ## Projects

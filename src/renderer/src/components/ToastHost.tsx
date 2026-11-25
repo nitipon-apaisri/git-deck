@@ -37,7 +37,7 @@ function ToastHost({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: num
   if (toasts.length === 0) return null
   // In a portal above the dialog layer (z-50), and clickable while a modal dialog is open.
   return createPortal(
-    <div className="pointer-events-auto fixed right-4 bottom-4 z-60 flex w-96 max-w-[calc(100vw-2rem)] flex-col gap-2">
+    <div className="pointer-events-auto fixed top-12 right-4 z-60 flex w-96 max-w-[calc(100vw-2rem)] flex-col gap-2">
       {toasts.map((t) => (
         <ToastItem key={t.id} toast={t} onDismiss={() => onDismiss(t.id)} />
       ))}
@@ -50,7 +50,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
   return (
     <div
       role="alert"
-      className="relative flex animate-banner-in items-start gap-2 rounded-lg border-l-[3px] border-(--danger) bg-card px-3 py-2.5 text-foreground shadow-(--shadow-menu) motion-reduce:animate-none"
+      className="relative flex animate-banner-in items-start gap-2 rounded-lg bg-card px-3 py-2.5 text-foreground shadow-(--shadow-menu) motion-reduce:animate-none"
     >
       <span className="mt-0.5 flex-none text-(--danger)">
         <Icon name="alert" size="sm" />
