@@ -306,7 +306,6 @@ export function LocalActions({
         {(
           [
             { id: 'stash', label: stashButtonLabel(stashCount), icon: 'layers', onClick: onStash },
-            { id: 'branches', label: 'Branches', icon: 'git-branch', onClick: onBranches },
             { id: 'tags', label: 'Tags', icon: 'tag', onClick: onTags },
             { id: 'remotes', label: 'Remotes', icon: 'globe', onClick: onRemotes }
           ] as const
