@@ -152,8 +152,20 @@ export function LocalActions({
       }
       if (id === 'more') {
         const list: MenuEntry[] = [
-          { kind: 'item', id: 'tags', label: 'Tags…', onSelect: onTags },
-          { kind: 'item', id: 'remotes', label: 'Remotes…', onSelect: onRemotes }
+          {
+            kind: 'item',
+            id: 'tags',
+            label: 'Tags',
+            leading: <Icon name="tag" size="sm" />,
+            onSelect: onTags
+          },
+          {
+            kind: 'item',
+            id: 'remotes',
+            label: 'Remotes',
+            leading: <Icon name="globe" size="sm" />,
+            onSelect: onRemotes
+          }
         ]
         if (repo.accountId !== 'local') {
           list.push(
@@ -162,6 +174,7 @@ export function LocalActions({
               kind: 'item',
               id: 'unlink',
               label: 'Unlink folder',
+              leading: <Icon name="link" size="sm" />,
               trailing: 'nothing is deleted',
               danger: true,
               disabled: working,
