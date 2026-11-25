@@ -76,11 +76,16 @@ export function RefPills({ pills, host, ci, onMenu, onActivate }: RefPillsProps)
       {rest.length > 0 ? (
         <button
           type="button"
-          className="flex-none cursor-pointer text-[12px] text-muted-foreground hover:text-foreground"
+          className="flex-none cursor-pointer rounded-(--radius-xs) px-1 text-[12px] text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
           title={rest.map((p) => p.title).join('\n')}
+          aria-label={`${rest.length} more branches and tags`}
+          aria-haspopup="menu"
+          aria-expanded={more !== null}
           onClick={(event) => {
             event.stopPropagation()
-            setMore({ x: event.clientX, y: event.clientY })
+            // The button's corner, not the pointer: Enter and Space have no pointer position.
+            const box = event.currentTarget.getBoundingClientRect()
+            setMore({ x: box.left, y: box.bottom })
           }}
         >
           +{rest.length}
