@@ -264,6 +264,9 @@ export function badgeCheckoutTarget(badge: BadgeView): CheckoutTarget | null {
   return null
 }
 
+/** Branches and remote branches can be checked out from a pill; HEAD and tags cannot. */
+export const pillClickable = (pill: RefPill): boolean => badgeCheckoutTarget(pill.badge) !== null
+
 /** HEAD is drawn as a ring. A detached HEAD is a `head` ref with no branch beside it. */
 /** Hash of the "// WIP" row: uncommitted changes drawn as a commit on top of HEAD. */
 export const WIP_HASH = 'WIP'

@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { cn } from '@/lib/cn'
 import type { AccountType } from '@shared/types'
-import type { BadgeView, BranchCheck, RefPill } from '../../lib/graphView'
-import { Icon, Menu, REF_KINDS } from '../ui'
+import { pillClickable, type BadgeView, type BranchCheck, type RefPill } from '../../lib/graphView'
+import { Icon, REF_KINDS } from '../ui'
 import { BrandLogo } from '../ui/BrandLogo'
 import { CheckDot } from '../ui/CheckDot'
 
@@ -47,12 +48,15 @@ function Marks({ pill, host }: { pill: RefPill; host: AccountType | null }) {
 /** The first pill (name cut with "…") and a "+n" for the rest. The column is a container. */
 export function RefPills({ pills, host, ci, onMenu, onActivate }: RefPillsProps) {
   const [first, ...rest] = pills
-  const [more, setMore] = useState<{ x: number; y: number } | null>(null)
   return (
     <span className="@container flex w-(--col-refs) flex-none items-center gap-1 overflow-hidden">
       {first ? (
         <span
-          className={cn(PILL, REF_KINDS[first.kind], first.current ? 'font-bold' : 'font-medium')}
+          className={cn(
+            PILL,
+            first.current ? REF_KINDS.head : REF_KINDS[first.kind],
+            first.current ? 'font-bold' : 'font-medium'
+          )}
           title={first.title}
           onContextMenu={onMenu ? (event) => onMenu(event, first.badge) : undefined}
           onDoubleClick={
@@ -67,45 +71,113 @@ export function RefPills({ pills, host, ci, onMenu, onActivate }: RefPillsProps)
           {first.current && ci && ci.branch === first.name && ci.state !== 'none' ? (
             <CheckDot state={ci.state} />
           ) : null}
-          {first.kind === 'head' ? <Icon name="check" size="xs" /> : null}
+          {first.current || first.kind === 'head' ? <Icon name="check" size="xs" /> : null}
           {first.tag ? <Icon name="tag" size="xs" /> : null}
           <span className={NAME}>{first.name}</span>
           <Marks pill={first} host={host} />
         </span>
       ) : null}
       {rest.length > 0 ? (
-        <button
-          type="button"
-          className="flex-none cursor-pointer rounded-(--radius-xs) px-1 text-[12px] text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-          title={rest.map((p) => p.title).join('\n')}
-          aria-label={`${rest.length} more branches and tags`}
-          aria-haspopup="menu"
-          aria-expanded={more !== null}
-          onClick={(event) => {
-            event.stopPropagation()
-            // The button's corner, not the pointer: Enter and Space have no pointer position.
-            const box = event.currentTarget.getBoundingClientRect()
-            setMore({ x: box.left, y: box.bottom })
-          }}
-        >
-          +{rest.length}
-        </button>
-      ) : null}
-      {more ? (
-        <Menu
-          label="More branches and tags"
-          at={more}
-          onClose={() => setMore(null)}
-          entries={rest.map((p) => ({
-            kind: 'item' as const,
-            id: p.key,
-            label: p.name,
-            leading: p.tag ? <Icon name="tag" size="xs" /> : <Marks pill={p} host={host} />,
-            disabled: !onActivate || p.badge.refKind === 'head' || p.badge.refKind === 'tag',
-            onSelect: () => onActivate?.(p.badge)
-          }))}
-        />
+        <MoreRefs rest={rest} host={host} onActivate={onActivate} onMenu={onMenu} />
       ) : null}
     </span>
+  )
+}
+
+/** "+n": hover, focus or click opens a card under it with the other refs; a click on one checks it out. */
+function MoreRefs({
+  rest,
+  host,
+  onActivate,
+  onMenu
+}: {
+  rest: readonly RefPill[]
+  host: AccountType | null
+  onActivate?: (badge: BadgeView) => void
+  onMenu?: (event: React.MouseEvent, badge: BadgeView) => void
+}) {
+  const [at, setAt] = useState<{ x: number; y: number } | null>(null)
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const open = (el: HTMLElement) => {
+    clearTimeout(timer.current)
+    const box = el.getBoundingClientRect()
+    setAt({ x: box.left, y: box.bottom + 2 })
+  }
+  // A short delay lets the pointer cross the gap between the chip and the card.
+  const later = () => {
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => setAt(null), 150)
+  }
+  useEffect(() => () => clearTimeout(timer.current), [])
+  return (
+    <>
+      <button
+        type="button"
+        className="flex-none cursor-pointer rounded-(--radius-xs) px-1 text-[12px] text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+        aria-label={`${rest.length} more branches and tags`}
+        aria-haspopup="true"
+        aria-expanded={at !== null}
+        onMouseEnter={(event) => open(event.currentTarget)}
+        onMouseLeave={later}
+        onFocus={(event) => open(event.currentTarget)}
+        onBlur={later}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') setAt(null)
+        }}
+        onClick={(event) => {
+          event.stopPropagation()
+          if (at) setAt(null)
+          else open(event.currentTarget)
+        }}
+      >
+        +{rest.length}
+      </button>
+      {at
+        ? createPortal(
+            <div
+              role="group"
+              aria-label="More branches and tags"
+              className="fixed z-50 flex max-w-95 min-w-40 flex-col gap-1 rounded-lg bg-popover p-1.5 text-popover-foreground shadow-(--shadow-menu)"
+              style={{ left: at.x, top: at.y }}
+              onMouseEnter={() => clearTimeout(timer.current)}
+              onMouseLeave={later}
+            >
+              {rest.map((p) => {
+                const clickable = pillClickable(p) && onActivate !== undefined
+                return (
+                  <button
+                    key={p.key}
+                    type="button"
+                    disabled={!clickable}
+                    title={
+                      clickable
+                        ? `Check out ${p.name}`
+                        : p.tag
+                          ? "Tags can't be checked out here"
+                          : p.title
+                    }
+                    className={cn(
+                      PILL,
+                      REF_KINDS[p.kind],
+                      'w-full justify-between disabled:cursor-default',
+                      clickable && 'cursor-pointer hover:brightness-110'
+                    )}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      setAt(null)
+                      onActivate?.(p.badge)
+                    }}
+                    onContextMenu={onMenu ? (event) => onMenu(event, p.badge) : undefined}
+                  >
+                    <span className="min-w-0 truncate">{p.name}</span>
+                    {p.tag ? <Icon name="tag" size="xs" /> : <Marks pill={p} host={host} />}
+                  </button>
+                )
+              })}
+            </div>,
+            document.body
+          )
+        : null}
+    </>
   )
 }

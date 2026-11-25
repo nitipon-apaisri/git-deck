@@ -18,6 +18,7 @@ import {
   authorLabel,
   badgeCheckoutTarget,
   badgeViews,
+  pillClickable,
   bodyText,
   commitDateText,
   deletionsText,
@@ -452,4 +453,20 @@ test('badgeCheckoutTarget maps a badge to what a double-click checks out', () =>
     'main'
   )
   assert.deepEqual(badgeCheckoutTarget(pill.badge), { kind: 'branch', name: 'topic' })
+})
+
+test('pillClickable allows branches and remote branches, not tags or HEAD', () => {
+  const pills = refPills(
+    [
+      { name: 'topic', kind: 'branch' },
+      { name: 'origin/other', kind: 'remote' },
+      { name: 'v1', kind: 'tag' }
+    ],
+    'main'
+  )
+  assert.deepEqual(
+    pills.map((p) => pillClickable(p)),
+    [true, true, false]
+  )
+  assert.equal(pillClickable(refPills([{ name: 'HEAD', kind: 'head' }], 'main')[0]), false)
 })

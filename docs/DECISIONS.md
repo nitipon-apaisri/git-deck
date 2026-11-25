@@ -617,3 +617,14 @@ Requested by the user; every recommendation below was accepted. Written into `PL
 - **Empty circle:** it is the CI dot with state `none` on the checked-out pill. The pill now draws the dot only for success, failure or pending. The lane graph's HEAD ring is unchanged.
 - **"+n":** opens a menu of the remaining pills; picking one checks it out (tags and HEAD are disabled).
 - **Design QA leftovers (left as is):** one pill plus "+n" (column width), end truncation of names, `px-1.5` padding, native `title` tooltips and no keyboard route to double-click on the first pill (right-click menu and the "+n" list still work).
+
+## 2026-11-25, GitKraken-style pills (`feat/graph-pills-gitkraken`)
+
+Asked by the user after Phase 34, from two GitKraken screenshots. Settled with the user:
+
+- **Branch, not a phase:** a follow-up on its own branch.
+- **Check mark:** the checked-out branch has it again (first icon); a detached HEAD keeps it. This reverses the Phase 34 "HEAD only" line.
+- **Solid fill:** only the checked-out branch, using the existing `--ref-head-bg/fg` tokens. That is blue, not the teal in the screenshot; there is no teal token and none was added.
+- **"+n":** hover, focus or click opens a card under it listing the other refs as pills; Esc or leaving closes it. It replaces the `Menu`.
+- **Checkout:** a single click on a card entry checks it out; the main pill keeps double-click. Tags show in the card but are not clickable (tooltip says why).
+- **Size:** pills stay 20px, `ROW_HEIGHT` unchanged, no connector line to the commit node.
