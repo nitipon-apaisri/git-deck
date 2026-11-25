@@ -191,5 +191,5 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 33: Graph commit order (date order)
 - [x] Phase 34: Branch badge and double-click checkout
 - [x] Phase 35: Notification bell
-- [ ] Phase 36: Branch management
+- [x] Phase 36: Branch management
 - [ ] Phase 37: Easier notification setup

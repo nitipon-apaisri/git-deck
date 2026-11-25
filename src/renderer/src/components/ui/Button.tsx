@@ -14,6 +14,8 @@ const buttonVariants = cva(
           'border-border bg-transparent text-foreground hover:bg-accent disabled:hover:bg-transparent',
         primary:
           'border-primary bg-primary font-medium text-primary-foreground hover:brightness-110 disabled:hover:brightness-100',
+        danger:
+          'border-destructive bg-destructive font-medium text-(--window) hover:brightness-110 disabled:hover:brightness-100',
         ghost: 'border-transparent bg-transparent px-3 text-(--accent-text) hover:bg-accent'
       }
     },

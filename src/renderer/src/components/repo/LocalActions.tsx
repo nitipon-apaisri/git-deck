@@ -26,6 +26,7 @@ interface LocalActionsProps {
   stashCount: number
   onStash: () => void
   onTags: () => void
+  onBranches: () => void
   onRemotes: () => void
   terminalOpen: boolean
   onToggleTerminal: () => void
@@ -79,6 +80,7 @@ export function LocalActions({
   stashCount,
   onStash,
   onTags,
+  onBranches,
   onRemotes,
   terminalOpen,
   onToggleTerminal,
@@ -185,7 +187,8 @@ export function LocalActions({
     function pinnedFor(id: OpenMenu['id']): MenuEntry[] {
       if (id !== 'branch') return []
       const list: MenuEntry[] = [
-        { kind: 'item', id: 'new', label: 'New branch…', onSelect: onNewBranch }
+        { kind: 'item', id: 'new', label: 'New branch…', onSelect: onNewBranch },
+        { kind: 'item', id: 'manage', label: 'Manage branches…', onSelect: onBranches }
       ]
       return list
     }
@@ -202,6 +205,10 @@ export function LocalActions({
           return actions.deleteBranch(action.name)
         case 'delete-remote-branch':
           return actions.deleteRemoteBranch(action.name)
+        case 'push-branch':
+          return actions.pushBranch(action.name)
+        case 'fast-forward-branch':
+          return actions.fastForwardBranch(action.name)
         case 'merge':
           return actions.merge(action.branch, action.noFf)
         case 'rebase':

@@ -16,6 +16,7 @@ import {
 } from '../shared/projects'
 import type {
   Account,
+  BranchDeleteResult,
   AccountInput,
   Cached,
   CheckoutTarget,
@@ -95,6 +96,10 @@ export type GitOps = Pick<
   | 'renameBranch'
   | 'deleteBranch'
   | 'deleteRemoteBranch'
+  | 'getBranchTarget'
+  | 'getDefaultBranch'
+  | 'pushBranch'
+  | 'fastForwardBranch'
   | 'getRemoteBranchTarget'
   | 'getRemoteTarget'
   | 'pull'
@@ -1103,6 +1108,80 @@ export function createService(deps: ServiceDeps): {
           (cwd) => git.getRemoteBranchTarget(cwd, ref)
         )
         return true
+      }),
+      deleteBranches: guard(async (path, items, force) => {
+        linkedRepoKey(path)
+        if (!Array.isArray(items) || items.length === 0 || items.length > 500) {
+          throw new Error('Choose between 1 and 500 branches')
+        }
+        if (typeof force !== 'boolean') throw new Error('Force must be true or false')
+        const picked = items.map((i: { name?: unknown; remote?: unknown }) => {
+          if (typeof i !== 'object' || i === null || typeof i.remote !== 'boolean') {
+            throw new Error('Invalid branch list')
+          }
+          return { name: checkBranchName(i.name), remote: i.remote }
+        })
+        const remoteCount = picked.filter((i) => i.remote).length
+        if (remoteCount > 0) {
+          const ok = await ui.confirm({
+            message: `Delete ${remoteCount} ${remoteCount === 1 ? 'branch' : 'branches'} on the remote?`,
+            detail:
+              'Anyone who already fetched them keeps their copy. Local branches with the same names are not touched.',
+            confirmLabel: 'Delete on remote'
+          })
+          if (!ok) return null
+        }
+        const results: BranchDeleteResult[] = []
+        for (const item of picked) {
+          try {
+            const info = await git.listBranches(path)
+            const bare = item.remote ? item.name.slice(item.name.indexOf('/') + 1) : item.name
+            if (!item.remote && item.name === info.current) {
+              throw new Error('This is the checked-out branch. Switch to another one first.')
+            }
+            if (bare === info.defaultBranch) throw new Error('This is the default branch.')
+            if (item.remote) {
+              await withRemote(
+                path,
+                'push',
+                (env, onLine) => git.deleteRemoteBranch(path, item.name, env, onLine),
+                (cwd) => git.getRemoteBranchTarget(cwd, item.name)
+              )
+            } else {
+              await serial(path, () => git.deleteBranch(path, item.name, force))
+            }
+            results.push({ ...item, ok: true })
+          } catch (err) {
+            results.push({
+              ...item,
+              ok: false,
+              error: err instanceof Error ? err.message : String(err)
+            })
+          }
+        }
+        return results
+      }),
+      pushBranch: guard(async (path, name) => {
+        linkedRepoKey(path)
+        const branch = checkBranchName(name)
+        await withRemote(
+          path,
+          'push',
+          (env, onLine) => git.pushBranch(path, branch, env, onLine),
+          (cwd) => git.getBranchTarget(cwd, branch)
+        )
+      }),
+      fastForwardBranch: guard(async (path, name) => {
+        linkedRepoKey(path)
+        const branch = checkBranchName(name)
+        await serial(path, () =>
+          withRemote(
+            path,
+            'pull',
+            (env, onLine) => git.fastForwardBranch(path, branch, env, onLine),
+            (cwd) => git.getBranchTarget(cwd, branch)
+          )
+        )
       }),
       pull: guard(async (path, mode) => {
         linkedRepoKey(path)

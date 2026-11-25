@@ -24,6 +24,8 @@ export interface LocalActions {
   checkout: (target: CheckoutTarget) => void
   deleteBranch: (name: string) => void
   deleteRemoteBranch: (name: string) => void
+  pushBranch: (name: string) => void
+  fastForwardBranch: (name: string) => void
   /** These two resolve with the problem, so a dialog can show it beside the field. */
   createBranch: (
     name: string,
@@ -232,6 +234,34 @@ export function useLocalActions(
     [run, linkedPath]
   )
 
+  const pushBranch = useCallback(
+    (name: string) => {
+      if (!linkedPath) return
+      void run('push', async () => {
+        try {
+          await window.api.local.pushBranch(linkedPath, name)
+        } finally {
+          setReloadToken((n) => n + 1)
+        }
+      })
+    },
+    [run, linkedPath]
+  )
+
+  const fastForwardBranch = useCallback(
+    (name: string) => {
+      if (!linkedPath) return
+      void run('branch', async () => {
+        try {
+          await window.api.local.fastForwardBranch(linkedPath, name)
+        } finally {
+          setReloadToken((n) => n + 1)
+        }
+      })
+    },
+    [run, linkedPath]
+  )
+
   // Merge, cherry-pick, revert and rebase may stop on conflicts, which is a result, not an error.
   const operate = useCallback(
     (work: (path: string) => Promise<unknown>) => {
@@ -338,6 +368,8 @@ export function useLocalActions(
     checkout,
     deleteBranch,
     deleteRemoteBranch,
+    pushBranch,
+    fastForwardBranch,
     createBranch,
     renameBranch,
     openFolder,

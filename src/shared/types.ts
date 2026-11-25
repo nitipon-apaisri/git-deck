@@ -220,6 +220,20 @@ export interface BranchList {
   /** `origin/feature`, without the symbolic `origin/HEAD`. */
   remote: string[]
   remotes: string[]
+  /** The remote's HEAD, else `main` or `master`; `null` when none exists. */
+  defaultBranch: string | null
+}
+
+export interface BranchDeleteItem {
+  /** Local `topic`, or remote `origin/topic`. */
+  name: string
+  remote: boolean
+}
+
+export interface BranchDeleteResult extends BranchDeleteItem {
+  ok: boolean
+  /** Why it was kept, when `ok` is false. */
+  error?: string
 }
 
 export type CheckoutTarget =

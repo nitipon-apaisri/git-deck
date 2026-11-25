@@ -5,6 +5,8 @@ import type {
   UpdateCheck,
   AccountInput,
   Account,
+  BranchDeleteItem,
+  BranchDeleteResult,
   BranchList,
   Cached,
   CheckoutTarget,
@@ -144,6 +146,20 @@ export interface Api {
     deleteBranch(path: string, name: string): Promise<boolean>
     /** `origin/topic`. Asks first; `false` when declined. */
     deleteRemoteBranch(path: string, name: string): Promise<boolean>
+    /**
+     * Deletes one branch at a time and returns a result for each, so one failure stops nothing.
+     * `force` applies to local branches. Never the checked-out or default branch. Remote deletes
+     * ask first with the count; `null` when declined.
+     */
+    deleteBranches(
+      path: string,
+      items: BranchDeleteItem[],
+      force: boolean
+    ): Promise<BranchDeleteResult[] | null>
+    /** Pushes a local branch to its upstream, setting the upstream when it has none. */
+    pushBranch(path: string, name: string): Promise<void>
+    /** Moves a local branch up to its upstream without checking it out. Refused unless it fast-forwards. */
+    fastForwardBranch(path: string, name: string): Promise<void>
     pull(path: string, mode: PullMode): Promise<void>
     /** Sets the upstream when there is none. A forced push asks first: `false` when declined. */
     push(path: string, force: boolean): Promise<boolean>
@@ -319,6 +335,9 @@ export const IPC = {
   localRenameBranch: 'local:renameBranch',
   localDeleteBranch: 'local:deleteBranch',
   localDeleteRemoteBranch: 'local:deleteRemoteBranch',
+  localDeleteBranches: 'local:deleteBranches',
+  localPushBranch: 'local:pushBranch',
+  localFastForwardBranch: 'local:fastForwardBranch',
   localPull: 'local:pull',
   localPush: 'local:push',
   localSuggestCommitMessage: 'local:suggestCommitMessage',

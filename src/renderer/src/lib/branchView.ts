@@ -106,6 +106,8 @@ export type RefAction =
   | { type: 'rename-branch'; name: string }
   | { type: 'delete-branch'; name: string }
   | { type: 'delete-remote-branch'; name: string }
+  | { type: 'push-branch'; name: string }
+  | { type: 'fast-forward-branch'; name: string }
   | { type: 'merge'; branch: string; noFf: boolean }
   | { type: 'cherry-pick'; hash: string }
   | { type: 'create-tag'; hash: string }
@@ -173,6 +175,20 @@ export function refActions(
         label: 'Delete…',
         action: { type: 'delete-branch', name: ref.name },
         danger: true,
+        group: 'ref'
+      })
+    }
+    items.push({
+      id: 'push',
+      label: 'Push to remote',
+      action: { type: 'push-branch', name: ref.name },
+      group: 'ref'
+    })
+    if (!ref.current) {
+      items.push({
+        id: 'fast-forward',
+        label: 'Fast-forward from remote',
+        action: { type: 'fast-forward-branch', name: ref.name },
         group: 'ref'
       })
     }

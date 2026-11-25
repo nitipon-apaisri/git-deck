@@ -766,10 +766,10 @@ Runs on `phase/35-notification-bell`. Builds on Phase 32; no new event types.
 
 Runs on `phase/36-branch-management`.
 
-- [ ] A Branches dialog (same pattern as `TagsDialog`) opened from the repo header and the graph menu: Local and Remote sections, search, checkboxes, "Delete selected". The current and default branches cannot be selected. Local uses `-d` with a "force" option for unmerged branches; remote delete (`push --delete`) confirms with the count first.
-- [ ] Bulk delete runs one branch at a time and returns a result per branch, so one failure does not stop the rest.
-- [ ] "Update remote branch": per-branch Push (to its upstream, setting it when missing) and Fast-forward (a local branch from its remote without checking it out, refused when it cannot fast-forward). A new `fastForwardBranch` in `git.ts`. Both are also in the badge menu (`lib/refMenu.ts`).
-- [ ] New IPC channels in `src/shared/api.ts`, `ipcTable.ts` and the preload, validated in main. No token in any URL or error.
+- [x] A Branches dialog (same pattern as `TagsDialog`) opened from the repo header and the graph menu: Local and Remote sections, search, checkboxes, "Delete selected". The current and default branches cannot be selected. Local uses `-d` with a "force" option for unmerged branches; remote delete (`push --delete`) confirms with the count first.
+- [x] Bulk delete runs one branch at a time and returns a result per branch, so one failure does not stop the rest.
+- [x] "Update remote branch": per-branch Push (to its upstream, setting it when missing) and Fast-forward (a local branch from its remote without checking it out, refused when it cannot fast-forward). A new `fastForwardBranch` in `git.ts`. Both are also in the badge menu (`lib/refMenu.ts`).
+- [x] New IPC channels in `src/shared/api.ts`, `ipcTable.ts` and the preload, validated in main. No token in any URL or error.
 
 **Verify:** temp-repo tests (fast-forward ok, fast-forward refused, bulk delete with one failure, current and default branch rejected, force delete). Manual: the dialog in a window, with a real remote.
 

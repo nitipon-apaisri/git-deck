@@ -75,6 +75,7 @@ Format: `{emoji} ({type}): {imperative, concise message}`. One logical change an
 
 - Style with shadcn/ui components and Tailwind classes. Colours come only from the tokens in `tokens.css` (`var(--island)`, `var(--text)` and so on, or the shadcn names mapped onto them in `shadcn.css`). No hex values in components. Theme is `data-theme` on `<html>`.
 - Theme is `data-theme` on `<html>`, set before first paint.
+- A button's colour matches its action: destructive actions (delete, discard, force) use `<Button variant="danger">` or a `danger` menu entry, never `primary`.
 - Reuse the components in `src/renderer/src/components/ui/`. Status uses a word or icon as well as colour. Icon-only buttons have `aria-label`.
 
 ## Security
