@@ -347,21 +347,21 @@ export function LocalActions({
         <Button icon="layers" onClick={onStash}>
           {stashButtonLabel(stashCount)}
         </Button>
-        <span className="sr-only" role="status">
-          {status}
-        </span>
         <IconButton
           label="More repository actions"
           icon="more"
-          className="ml-auto size-9"
+          className="size-9"
           aria-haspopup="menu"
           aria-expanded={menu?.id === 'more'}
           onClick={(e) => open('more', e.currentTarget)}
         />
+        <span className="sr-only" role="status">
+          {status}
+        </span>
         <IconButton
           label="Terminal (Ctrl+`)"
           icon="terminal"
-          className="size-9"
+          className="ml-auto size-9"
           active={terminalOpen}
           aria-pressed={terminalOpen}
           onClick={onToggleTerminal}
