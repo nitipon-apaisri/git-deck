@@ -193,3 +193,4 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 35: Notification bell
 - [x] Phase 36: Branch management
 - [x] Phase 37: Easier notification setup
+- [x] Phase 38: Git activity UI

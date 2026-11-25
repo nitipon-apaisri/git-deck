@@ -297,15 +297,7 @@ export function RepoPane({
             </Button>
           </section>
         ) : null}
-        {problem ? (
-          <p
-            className="m-0 flex items-start gap-2 rounded-md bg-(--warning-bg) px-3 py-2 text-warning wrap-anywhere [&_svg]:mt-0.5 [&_svg]:flex-none"
-            role="alert"
-          >
-            <Icon name="alert" size="sm" />
-            {problem}
-          </p>
-        ) : null}
+        {problem ? <ErrorBanner copyText={problem}>{problem}</ErrorBanner> : null}
       </div>
 
       <div className="mx-6 mt-3">

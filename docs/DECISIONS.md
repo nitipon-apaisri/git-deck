@@ -630,3 +630,14 @@ Asked by the user after Phase 34, from two GitKraken screenshots. Settled with t
 - **Size:** pills stay 20px, `ROW_HEIGHT` unchanged, no connector line to the commit node.
 - **"+n" card, design-qa fixes:** Tab or Down from the chip moves focus into the card; Up/Down move between entries; Tab leaves it; Escape closes from anywhere and returns focus to the chip; a click outside, a scroll or a resize closes it; a click pins it open (hover-away no longer closes it, a second click does); the card flips above the chip or is pulled in at the window edge; tags use `aria-disabled` so they stay focusable with their tooltip.
 - **Design-qa points left as they are:** one pill plus "+n" (column width), hand-rolled card instead of a shadcn Popover, `rounded-lg`/`z-50` literals, `hover:brightness-110`, `px-1.5` against `RefBadge`'s `px-2`, standalone `RefBadge` still only bolds `current`. None of this is run in the app; the keyboard flow is untested beyond typecheck and lint.
+
+## 2026-11-25, Phase 38 git activity UI
+
+Asked by the user ("better UI/UX for the git processing section"). Settled with the user:
+
+- **Scope:** the busy and progress feedback while git runs, and the stopped-operation banners. Inside each `RepoPane` (Split View keeps two independent states), tokens only.
+- **One indicator:** replaces the early return that hid the whole action row during clone, pull and push, plus the lone fetch and branch spinner. Buttons stay in place and disabled, with a tooltip naming the running write.
+- **Confirmation:** a generic text per write ("Push complete"), 4 s, then it fades (no fade with reduced motion). A count such as "Pushed 3 commits" was left out: the hook gets no counts back from main. A declined confirm (force push) or a cancelled folder picker shows nothing. Errors stay until the next write.
+- **UI-only rule loosened once:** `OperationState.step` (rebase only) is read in main from `msgnum`/`end` (`rebase-merge`) or `next`/`last` (`rebase-apply`), `null` when unreadable.
+- **Cards, not `Island`:** an island is one level only and the banner sits inside the pane's island, so the banner is a plain rounded block with a left stripe in `--warning-text`. Abort and Abort bisect use `variant="danger"`.
+- **Left as they are:** dialogs and the conflict editor keep their own busy states. Stash, tags and remotes buttons stay enabled while a write runs (as before).

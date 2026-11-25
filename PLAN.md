@@ -728,7 +728,7 @@ Runs on `phase/32-notifications`. A desktop app has no public URL, so real webho
 
 **Verify:** differ tests (new, merged, closed, reopened, no change, first load emits nothing). Mock-server polling tests (interval, backoff on 429, stop on 401). Manual: a notification on a real PR/MR, which cannot be checked without one.
 
-## Phases 33 to 37 — Roadmap 3
+## Phases 33 to 38 — Roadmap 3
 
 Requested and settled with the user on 2026-11-25 (questions and answers in `docs/DECISIONS.md`, 2026-11-25, Roadmap 3). Same rules as Phases 20 to 32: one branch per phase from `develop`, pure logic gets `tsx` tests (no `electron` import), UI gets a manual Verify list, say plainly what was not checked visually, run `design-qa` after UI phases, tick `PLAN.md` and `README.md`, commit locally, never push. Nothing here is started. Colours only from tokens.
 
@@ -781,6 +781,17 @@ Runs on `phase/37-notification-setup`, after Phase 35. Notification enablement i
 - [x] A new project follows the app-wide switch in Settings > Notifications, which stays the master off.
 
 **Verify:** tests for the all-events toggle (on, off, partial). Manual: set up notifications for a project in two clicks.
+
+## Phase 38 — Git activity UI
+
+Runs on `phase/38-git-activity-ui`, after Phase 37. Settled with the user on 2026-11-25 (see `docs/DECISIONS.md`). Colours only from tokens.
+
+- [x] One activity indicator per `RepoPane` for everything in `actions.busy` (clone, link, fetch, pull, push, branch): the label, a bar, git's live line when there is one, then a confirmation that fades after 4 s. The header buttons stay in place, disabled, with a tooltip naming what runs.
+- [x] The merge, cherry-pick, revert, rebase and bisect banners become cards with a warning accent stripe, `Badge` conflict kinds and a `danger` Abort.
+- [x] Rebase shows "Step 3 of 7": an optional `OperationState.step`, read in main from the rebase directory (the one non-UI change).
+- [x] A repo error shows in `ErrorBanner` with a Copy details button.
+
+**Verify:** tests for `operationStepText`, the activity words and the rebase `step` (a rebase stopped twice, a merge with none). Manual: fetch, push and a stopped rebase in dark and light.
 
 ---
 

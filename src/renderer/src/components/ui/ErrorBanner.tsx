@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 import { Button } from './Button'
+import { CopyButton } from './CopyButton'
 import { Icon } from './Icon'
 
 interface ErrorBannerProps {
@@ -12,6 +13,8 @@ interface ErrorBannerProps {
   retrying?: boolean
   /** A dismiss button, for a notice about something that already finished. */
   onDismiss?: () => void
+  /** Adds a Copy details button for the full text, to paste into a report. */
+  copyText?: string
   className?: string
 }
 
@@ -21,13 +24,14 @@ export function ErrorBanner({
   onRetry,
   retrying = false,
   onDismiss,
+  copyText,
   className
 }: ErrorBannerProps) {
   return (
     <div
       role="alert"
       className={cn(
-        'flex animate-banner-in items-center gap-2 rounded-md bg-(--warning-bg) px-3 py-2 text-(--warning-text) motion-reduce:animate-none [&>svg]:flex-none',
+        'relative flex animate-banner-in items-center gap-2 rounded-md bg-(--warning-bg) px-3 py-2 text-(--warning-text) motion-reduce:animate-none [&>svg]:flex-none',
         className
       )}
     >
@@ -38,6 +42,7 @@ export function ErrorBanner({
           Retry
         </Button>
       ) : null}
+      {copyText ? <CopyButton text={copyText} what="details" /> : null}
       {onDismiss ? (
         <Button variant="ghost" onClick={onDismiss}>
           Dismiss

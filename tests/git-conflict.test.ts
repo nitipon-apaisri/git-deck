@@ -76,6 +76,7 @@ test('a merge conflict comes back as regions with labels, actions and a fingerpr
 
   const file = await getConflictFile(dir, 'shared.txt')
   assert.deepEqual((await getOperation(dir))?.conflictKinds, { 'shared.txt': 'both-modified' })
+  assert.equal((await getOperation(dir))?.step, null) // only a rebase counts steps
   assert.equal(file.kind, 'both-modified')
   assert.equal(file.unsupported, null)
   assert.equal(file.operation, 'merge')
@@ -549,6 +550,8 @@ test('in a rebase the sides swap, and Continue walks through each stop', async (
   git(dir, 'checkout', '-q', 'feature')
 
   assert.deepEqual(await rebase(dir, 'main'), { conflicted: true })
+  // Two commits replay: it stops on the first, then on the second.
+  assert.deepEqual((await getOperation(dir))?.step, { current: 1, total: 2 })
   const file = await getConflictFile(dir, 'shared.txt')
   assert.equal(file.operation, 'rebase')
   assert.deepEqual(file.labels, { ours: 'Upstream', theirs: 'Your commit' })
@@ -565,6 +568,7 @@ test('in a rebase the sides swap, and Continue walks through each stop', async (
   await continueOperation(dir)
   const next = await getOperation(dir)
   assert.equal(next?.kind, 'rebase')
+  assert.deepEqual(next?.step, { current: 2, total: 2 })
   assert.deepEqual(next?.conflicted, ['shared.txt'])
   const second = await getConflictFile(dir, 'shared.txt')
   assert.equal(second.operation, 'rebase')
