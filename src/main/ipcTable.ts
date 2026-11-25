@@ -53,8 +53,13 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     localUnlink: ([key]) => api.local.unlink(key as string),
     localClone: ([key, protocol]) => api.local.clone(key as string, protocol as CloneProtocol),
     localInfo: ([path]) => api.local.info(path as string),
-    localGraph: ([path, skip, limit]) =>
-      api.local.graph(path as string, skip as number, limit as number),
+    localGraph: ([path, skip, limit, hidden]) =>
+      api.local.graph(
+        path as string,
+        skip as number,
+        limit as number,
+        hidden as string[] | undefined
+      ),
     localCommit: ([path, hash]) => api.local.commit(path as string, hash as string),
     localFetch: ([path]) => api.local.fetch(path as string),
     localWatch: ([path]) => api.local.watch(path as string),

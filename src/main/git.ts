@@ -28,6 +28,7 @@ import {
 } from '../shared/conflict'
 import { parseBlame } from '../shared/blame'
 import { parseBisectLog } from '../shared/bisect'
+import { refArgs, visibleRefs } from '../shared/hiddenRefs'
 import { hunkFingerprint, linePatch, parseUnifiedDiff, splitPatch } from '../shared/diff'
 import type {
   BranchList,
@@ -186,15 +187,19 @@ export function parseDecorations(raw: string): GraphRef[] {
   return refs
 }
 
-export async function getGraph(cwd: string, skip: number, limit: number): Promise<GraphCommit[]> {
+export async function getGraph(
+  cwd: string,
+  skip: number,
+  limit: number,
+  /** Full names of refs to leave out, with the commits only they reach. */
+  hidden: string[] = []
+): Promise<GraphCommit[]> {
   const format = ['%H', '%P', '%an', '%ae', '%at', '%D', '%s'].join('%x1f') + '%x1e'
   let out: string
   try {
     out = await run(cwd, [
       'log',
-      '--branches',
-      '--remotes',
-      '--tags',
+      ...refArgs(hidden),
       '--date-order',
       '--decorate=full',
       `--format=${format}`,
@@ -209,6 +214,7 @@ export async function getGraph(cwd: string, skip: number, limit: number): Promis
       return []
     throw err
   }
+  const hiddenSet = new Set(hidden)
   const commits: GraphCommit[] = []
   for (const record of out.split(RS)) {
     const rec = record.replace(/^\n/, '')
@@ -220,7 +226,8 @@ export async function getGraph(cwd: string, skip: number, limit: number): Promis
       author,
       email,
       date: Number(date),
-      refs: parseDecorations(deco ?? ''),
+      // A hidden ref can still decorate a commit that a visible ref reaches.
+      refs: visibleRefs(parseDecorations(deco ?? ''), hiddenSet),
       subject: subject.join(FS)
     })
   }

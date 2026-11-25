@@ -170,6 +170,7 @@ export interface ServiceDeps {
 }
 
 const MAX_GRAPH_PAGE = 2000
+const MAX_HIDDEN_REFS = 5000
 const MAX_TOKEN_LENGTH = 512
 const MAX_FILES_PER_CALL = 5000
 const MAX_PATH_LENGTH = 4096
@@ -973,13 +974,23 @@ export function createService(deps: ServiceDeps): {
         linkedRepoKey(path)
         return git.getLocalInfo(path)
       }),
-      graph: guard(async (path, skip, limit) => {
+      graph: guard(async (path, skip, limit, hidden = []) => {
         linkedRepoKey(path)
         if (!Number.isInteger(skip) || skip < 0) throw new Error('Invalid graph offset')
         if (!Number.isInteger(limit) || limit < 1 || limit > MAX_GRAPH_PAGE) {
           throw new Error(`Graph page size must be between 1 and ${MAX_GRAPH_PAGE}`)
         }
-        return git.getGraph(path, skip, limit)
+        // Each name becomes one `--exclude=` argument, so it needs no escaping, only a sane shape.
+        if (
+          !Array.isArray(hidden) ||
+          hidden.length > MAX_HIDDEN_REFS ||
+          hidden.some(
+            (h) => typeof h !== 'string' || !/^refs\/(heads|remotes|tags)\/[^\s*?[\\]+$/.test(h)
+          )
+        ) {
+          throw new Error('Invalid hidden refs')
+        }
+        return git.getGraph(path, skip, limit, hidden)
       }),
       commit: guard(async (path, hash) => {
         linkedRepoKey(path)

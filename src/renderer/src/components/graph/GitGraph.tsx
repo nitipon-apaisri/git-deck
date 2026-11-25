@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { refFullName } from '@shared/hiddenRefs'
+import { useHiddenRefs } from '../../state/hiddenRefs'
 import type { KeyboardEvent } from 'react'
 import { useCommitDetail, useGraph } from '../../state/graphData'
 import { useNow } from '../../state/useNow'
@@ -132,7 +134,8 @@ export function GitGraph({
   const { status } = statusState
   // Uncommitted changes sit on top of HEAD as a "// WIP" row. No commits yet: no row.
   const wipHead = status && status.entries.length > 0 ? status.head : null
-  const graph = useGraph(path, reloadToken, wipHead, status?.head ?? null)
+  const hidden = useHiddenRefs(path)
+  const graph = useGraph(path, reloadToken, wipHead, status?.head ?? null, hidden.active)
   const { rows, loading, done, error, loadMore, reload } = graph
 
   const viewport = useRef<HTMLDivElement>(null)
@@ -319,13 +322,28 @@ export function GitGraph({
         bisectBad: menuOps.bisectBad
       }
     )
-    return refMenuEntries(
+    const entries: MenuEntry[] = refMenuEntries(
       items,
       menuOps?.currentBranch ?? null,
       !!menuOps?.busy,
       (action) => runAction(action, commit),
       ref?.name
     )
+    // The checked-out branch and HEAD stay: hiding them would hide where you are.
+    const full = ref && !ref.current ? refFullName(ref.refKind, ref.name) : null
+    if (full) {
+      entries.push(
+        { kind: 'separator', id: 'hide-sep' },
+        {
+          kind: 'item',
+          id: 'hide-ref',
+          label: 'Hide',
+          leading: <Icon name="eye-off" size="sm" />,
+          onSelect: () => hidden.setRef(full, true)
+        }
+      )
+    }
+    return entries
   }
 
   function onScroll(): void {

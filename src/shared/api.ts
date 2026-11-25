@@ -114,7 +114,8 @@ export interface Api {
     /** Folder picker for the parent. `null` when cancelled. */
     clone(repoKey: string, protocol: CloneProtocol): Promise<string | null>
     info(path: string): Promise<LocalInfo>
-    graph(path: string, skip: number, limit: number): Promise<GraphCommit[]>
+    /** `hidden`: full names of refs left out of the graph. */
+    graph(path: string, skip: number, limit: number, hidden?: string[]): Promise<GraphCommit[]>
     commit(path: string, hash: string): Promise<CommitDetail>
     /** Commits that touched a file, following renames. `page` is 0-based. */
     fileHistory(path: string, file: string, page: number): Promise<FileHistoryPage>

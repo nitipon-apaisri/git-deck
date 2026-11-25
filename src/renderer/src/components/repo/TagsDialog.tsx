@@ -1,4 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react'
+import { cn } from '@/lib/cn'
+import { useHiddenRefs } from '../../state/hiddenRefs'
 import type { TagEntry } from '@shared/types'
 import { errorMessage } from '../../lib/errors'
 import { timeAgo } from '../../lib/format'
@@ -223,6 +225,7 @@ export function TagsDialog({ path, startHash, onChanged, onClose }: TagsDialogPr
   ]
 
   const needle = filter.trim().toLowerCase()
+  const hidden = useHiddenRefs(path)
   const shown = (tags ?? []).filter((t) => t.name.toLowerCase().includes(needle))
 
   return (
@@ -307,45 +310,61 @@ export function TagsDialog({ path, startHash, onChanged, onClose }: TagsDialogPr
             <p className="m-0 text-muted-foreground">No tag matches.</p>
           ) : (
             <ul className="m-0 flex max-h-80 list-none flex-col gap-1 overflow-auto p-0">
-              {shown.map((tag) => (
-                <li
-                  key={tag.name}
-                  className="flex items-start gap-1 rounded-md bg-secondary py-2 pr-2 pl-3"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="m-0 flex flex-wrap items-baseline gap-x-2 font-medium [overflow-wrap:anywhere]">
-                      {tag.name}
-                      <span className="text-[12px] font-normal text-muted-foreground">
-                        {tagKind(tag)}
-                      </span>
-                    </p>
-                    <p className="m-0 text-[12px] text-muted-foreground">
-                      {tag.hash.slice(0, 7)} · {timeAgo(tag.createdAt * 1000, now)}
-                    </p>
-                    {tag.message ? <TagMessage text={tag.message} /> : null}
-                  </div>
-                  <IconButton
-                    label="Push this tag to the remote"
-                    icon="arrow-up"
-                    disabled={busy}
-                    onClick={() =>
-                      void act(
-                        () => window.api.local.pushTag(path, tag.name),
-                        `Pushed ${tag.name}.`
-                      )
-                    }
-                  />
-                  <IconButton
-                    label={`More actions for ${tag.name}`}
-                    icon="more"
-                    disabled={busy}
-                    onClick={(e) => {
-                      const r = e.currentTarget.getBoundingClientRect()
-                      setMenu({ tag, x: r.left, y: r.bottom + 4 })
-                    }}
-                  />
-                </li>
-              ))}
+              {shown.map((tag) => {
+                const full = `refs/tags/${tag.name}`
+                const isHidden = hidden.all.includes(full)
+                return (
+                  <li
+                    key={tag.name}
+                    className={cn(
+                      'flex items-start gap-1 rounded-md bg-secondary py-2 pr-2 pl-3',
+                      isHidden && 'opacity-60'
+                    )}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="m-0 flex flex-wrap items-baseline gap-x-2 font-medium [overflow-wrap:anywhere]">
+                        {tag.name}
+                        <span className="text-[12px] font-normal text-muted-foreground">
+                          {tagKind(tag)}
+                        </span>
+                      </p>
+                      <p className="m-0 text-[12px] text-muted-foreground">
+                        {tag.hash.slice(0, 7)} · {timeAgo(tag.createdAt * 1000, now)}
+                      </p>
+                      {tag.message ? <TagMessage text={tag.message} /> : null}
+                    </div>
+                    <IconButton
+                      label={
+                        isHidden
+                          ? `Show ${tag.name} in the graph`
+                          : `Hide ${tag.name} from the graph`
+                      }
+                      icon={isHidden ? 'eye-off' : 'eye'}
+                      onClick={() => hidden.setRef(full, !isHidden)}
+                    />
+                    <IconButton
+                      label="Push this tag to the remote"
+                      icon="arrow-up"
+                      disabled={busy}
+                      onClick={() =>
+                        void act(
+                          () => window.api.local.pushTag(path, tag.name),
+                          `Pushed ${tag.name}.`
+                        )
+                      }
+                    />
+                    <IconButton
+                      label={`More actions for ${tag.name}`}
+                      icon="more"
+                      disabled={busy}
+                      onClick={(e) => {
+                        const r = e.currentTarget.getBoundingClientRect()
+                        setMenu({ tag, x: r.left, y: r.bottom + 4 })
+                      }}
+                    />
+                  </li>
+                )
+              })}
             </ul>
           )}
         </section>
