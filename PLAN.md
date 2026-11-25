@@ -752,9 +752,19 @@ Runs on `phase/34-badge-checkout`.
 
 **Verify:** tests for pill merging and the badge-to-checkout-target mapping. Manual: double-click local, remote-only and tag badges on a clean and a dirty tree; read the new pill in both themes.
 
-## Phase 35 — Branch management
+## Phase 35 — Notification bell
 
-Runs on `phase/35-branch-management`.
+Runs on `phase/35-notification-bell`. Builds on Phase 32; no new event types.
+
+- [ ] An inbox in main: every poller notice is also appended, kept across restarts in the user data folder, capped at 100, holding title, body, repository, link and time only (no token, no diff). Pure store logic, no `electron` import. List, mark read and mark all read through IPC.
+- [ ] A bell in the top bar with the unread count and a list. Clicking an item opens that repository's PR/MR tab (the existing notification click path) and marks it read; "Mark all read".
+- [ ] The OS notification stays as it is.
+
+**Verify:** store tests (append, cap at 100, mark read, mark all, survives a reload). Manual: the bell count and list after a real PR event, and after a restart.
+
+## Phase 36 — Branch management
+
+Runs on `phase/36-branch-management`.
 
 - [ ] A Branches dialog (same pattern as `TagsDialog`) opened from the repo header and the graph menu: Local and Remote sections, search, checkboxes, "Delete selected". The current and default branches cannot be selected. Local uses `-d` with a "force" option for unmerged branches; remote delete (`push --delete`) confirms with the count first.
 - [ ] Bulk delete runs one branch at a time and returns a result per branch, so one failure does not stop the rest.
@@ -763,19 +773,9 @@ Runs on `phase/35-branch-management`.
 
 **Verify:** temp-repo tests (fast-forward ok, fast-forward refused, bulk delete with one failure, current and default branch rejected, force delete). Manual: the dialog in a window, with a real remote.
 
-## Phase 36 — Notification bell
-
-Runs on `phase/36-notification-bell`. Builds on Phase 32; no new event types.
-
-- [ ] An inbox in main: every poller notice is also appended, kept across restarts in the user data folder, capped at 100, holding title, body, repository, link and time only (no token, no diff). Pure store logic, no `electron` import. List, mark read and mark all read through IPC.
-- [ ] A bell in the top bar with the unread count and a list. Clicking an item opens that repository's PR/MR tab (the existing notification click path) and marks it read; "Mark all read".
-- [ ] The OS notification stays as it is.
-
-**Verify:** store tests (append, cap at 100, mark read, mark all, survives a reload). Manual: the bell count and list after a real PR event, and after a restart.
-
 ## Phase 37 — Easier notification setup
 
-Runs on `phase/37-notification-setup`, after Phase 36. Notification enablement is per project (`Project.notify`), not per repository, so these controls act on the owning project.
+Runs on `phase/37-notification-setup`, after Phase 35. Notification enablement is per project (`Project.notify`), not per repository, so these controls act on the owning project.
 
 - [ ] Edit project: an "Enable all events" switch above the per-event checkboxes.
 - [ ] Repo header: a bell toggle that turns all events on or off for the repository's project; the tooltip names the project. A repository in several projects shows the union.
