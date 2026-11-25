@@ -805,25 +805,17 @@ Runs on `phase/39-button-activity`, after Phase 38. Settled with the user on 202
 
 ---
 
-## Phase 40 — Remembered sidebar state
+## Phase 40 — Repo header overflow menu
 
-Runs on `phase/40-sidebar-memory`. Planned 2026-11-25.
-
-- [ ] Every collapsible part of the sidebar (project groups, provider groups, later the worktree and Home sections) and the sidebar itself remember collapsed or expanded across restarts, in the existing local UI store. New items default to expanded.
-
-**Verify:** a test for the store (default expanded, set, restore). Manual: collapse groups, restart, same state.
-
-## Phase 41 — Repo header overflow menu
-
-Runs on `phase/41-header-overflow`.
+Runs on `phase/40-header-overflow`.
 
 - [ ] In `RepoHeader`, Tags, Remote and Link/Unlink move into one always-visible "…" popover. Fetch, Pull, Push, the branch button and the repo name stay. Unlink is a `danger` entry. Button activity icons (Phase 39) keep working for Link.
 
 **Verify:** keyboard open/close/Esc, each entry opens its dialog, Unlink is red. Check Split View width.
 
-## Phase 42 — Hide branches and tags
+## Phase 41 — Hide branches and tags
 
-Runs on `phase/42-hide-refs`.
+Runs on `phase/41-hide-refs`.
 
 - [ ] Hiding is a per-repo view filter keyed by repo path, kept in the local UI store; git is never touched. HEAD cannot be hidden.
 - [ ] A hidden ref loses its pill and its list entry; commits reachable only from hidden refs drop out of the graph (pass the visible refs, not `--all`). A "Show hidden (n)" toggle brings them back.
@@ -831,23 +823,25 @@ Runs on `phase/42-hide-refs`.
 
 **Verify:** temp-repo test that the graph omits hidden-only commits and keeps shared ones; manual hide and unhide of a branch and a tag.
 
-## Phase 43 — Git worktrees
+## Phase 42 — Git worktrees
 
-Runs on `phase/43-worktrees`.
+Runs on `phase/42-worktrees`.
 
 - [ ] Main: `git worktree list --porcelain` parser (shared, tested), add (new or existing branch, folder picker), remove (`danger`, force when dirty), lock/unlock, prune. IPC added to the contract.
 - [ ] Sidebar: worktrees nest under their parent repo; click opens a normal `RepoPane` tab (own graph, changes, scroll). The terminal opens in the worktree path.
-- [ ] Out of scope: moving a worktree.
+- Out of scope: moving a worktree.
+- [ ] Sidebar collapse memory: the "Unavailable" section becomes collapsible, and worktree rows use the same `gitdeck.collapsed` key pattern. Groups and the sidebar open state are already remembered.
 
 **Verify:** temp-repo tests for list/add/remove/prune and the parser; manual open of two worktrees in Split View.
 
-## Phase 44 — Home profile
+## Phase 43 — Home profile
 
-Runs on `phase/44-home-profile`. Largest phase, so last.
+Runs on `phase/43-home-profile`. Largest phase, so last.
 
 - [ ] "Home" is a fixed entry above the repo list, shown when no repo is selected (replacing the "All Repositories" empty state) and at startup when no tabs are restored. Selecting a repo leaves Home; clicking Home returns without closing tabs.
 - [ ] One account at a time with a switcher. Shows avatar, name, bio, followers/following, orgs, recent or pinned repos, recent activity and, for GitHub, a contribution heatmap (GraphQL). GitLab shows what its API gives (events).
 - [ ] Provider methods are mock-server tested; tokens stay in `safeStorage`.
+- [ ] The Home section follows the `gitdeck.collapsed` key pattern.
 
 **Verify:** provider tests with mock servers; manual account switch and the empty-state replacement.
 

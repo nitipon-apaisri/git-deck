@@ -195,8 +195,7 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 37: Easier notification setup
 - [x] Phase 38: Git activity UI
 - [x] Phase 39: Button activity and toasts
-- [ ] Phase 40: Remembered sidebar state
-- [ ] Phase 41: Repo header overflow menu
-- [ ] Phase 42: Hide branches and tags
-- [ ] Phase 43: Git worktrees
-- [ ] Phase 44: Home profile
+- [ ] Phase 40: Repo header overflow menu
+- [ ] Phase 41: Hide branches and tags
+- [ ] Phase 42: Git worktrees
+- [ ] Phase 43: Home profile
