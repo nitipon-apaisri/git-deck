@@ -155,14 +155,14 @@ export function LocalActions({
           {
             kind: 'item',
             id: 'tags',
-            label: 'Tags…',
+            label: 'Tags',
             leading: <Icon name="tag" size="sm" />,
             onSelect: onTags
           },
           {
             kind: 'item',
             id: 'remotes',
-            label: 'Remotes…',
+            label: 'Remotes',
             leading: <Icon name="globe" size="sm" />,
             onSelect: onRemotes
           }
