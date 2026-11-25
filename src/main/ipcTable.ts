@@ -22,7 +22,7 @@ export type Handler = (args: unknown[]) => Promise<unknown>
 
 export type RequestChannel = Exclude<
   keyof typeof IPC,
-  'gitProgress' | 'repoChanged' | 'terminalData' | 'terminalExit' | 'notifyOpen'
+  'gitProgress' | 'repoChanged' | 'terminalData' | 'terminalExit' | 'notifyOpen' | 'inboxChanged'
 >
 
 // The casts mark the trust boundary: the service validates every argument at runtime.
@@ -157,6 +157,9 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     notifyEnabled: () => api.notify.enabled(),
     notifySetEnabled: ([on]) => api.notify.setEnabled(on as boolean),
     notifyTest: () => api.notify.test(),
+    inboxList: () => api.inbox.list(),
+    inboxMarkRead: ([id]) => api.inbox.markRead(id as string),
+    inboxMarkAllRead: () => api.inbox.markAllRead(),
     projectsList: () => api.projects.list(),
     projectsCreate: ([input]) => api.projects.create(input as ProjectCreateInput),
     projectsUpdate: ([id, patch]) => api.projects.update(id as string, patch as ProjectPatchInput),

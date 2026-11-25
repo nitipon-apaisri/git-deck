@@ -149,6 +149,18 @@ const api: Api = {
     setEnabled: (on) => call(IPC.notifySetEnabled, on),
     test: () => call(IPC.notifyTest)
   },
+  inbox: {
+    list: () => call(IPC.inboxList),
+    markRead: (id) => call(IPC.inboxMarkRead, id),
+    markAllRead: () => call(IPC.inboxMarkAllRead),
+    onChanged: (cb) => {
+      const listener = (): void => cb()
+      ipcRenderer.on(IPC.inboxChanged, listener)
+      return () => {
+        ipcRenderer.removeListener(IPC.inboxChanged, listener)
+      }
+    }
+  },
   projects: {
     list: () => call(IPC.projectsList),
     create: (input) => call(IPC.projectsCreate, input),

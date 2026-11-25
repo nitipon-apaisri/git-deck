@@ -120,19 +120,19 @@ export function App() {
   }
   // A clicked notification: switch to its project if the current scope lacks the repository.
   const { open: openPaneTab, clear: clearPanes } = split
-  useEffect(
-    () =>
-      window.api.projects.onNotifyOpen(({ repoKey, projectId }) => {
-        if (scope && !scope.repoKeys.includes(repoKey)) {
-          clearPanes()
-          setScopeId(projectId)
-          writeStored(SCOPE_KEY, projectId)
-        }
-        setOverviewOn(false)
-        openPaneTab(repoKey, 'pulls')
-      }),
+  const openNotification = useCallback(
+    ({ repoKey, projectId }: { repoKey: string; projectId: string }) => {
+      if (scope && !scope.repoKeys.includes(repoKey)) {
+        clearPanes()
+        setScopeId(projectId)
+        writeStored(SCOPE_KEY, projectId)
+      }
+      setOverviewOn(false)
+      openPaneTab(repoKey, 'pulls')
+    },
     [scope, openPaneTab, clearPanes]
   )
+  useEffect(() => window.api.projects.onNotifyOpen(openNotification), [openNotification])
   function openRepoInSplit(key: string): void {
     setOverviewOn(false)
     split.openInSplit(key)
@@ -249,6 +249,7 @@ export function App() {
         onNewProject={() => setForm({ editId: null, repoKeys: [] })}
         onManage={() => setDialog('projects')}
         onOpenPreferences={() => openSettings('appearance')}
+        onOpenNotification={openNotification}
       />
       <div className="flex min-h-0 flex-1 gap-1.5 px-1.5 pb-1.5">
         {sidebarOpen ? (

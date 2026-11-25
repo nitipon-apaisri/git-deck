@@ -3,6 +3,7 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { pruneAccount, removeRepos } from '../shared/projects'
+import type { InboxItem } from '../shared/inbox'
 import type { Account, Cached, Project, Repo, RepoSummary } from '../shared/types'
 
 export interface TokenCrypto {
@@ -39,6 +40,10 @@ const emptyConfig = (): Config => ({
   localRepos: [],
   aiKeys: {}
 })
+interface InboxFile {
+  items: InboxItem[]
+}
+const emptyInbox = (): InboxFile => ({ items: [] })
 const emptyCache = (): CacheFile => ({ repos: {}, summaries: {} })
 
 async function readJson<T>(path: string, fallback: () => T): Promise<T> {
@@ -59,6 +64,7 @@ async function writeAtomic(path: string, data: unknown): Promise<void> {
 export class Store {
   private config: Config = emptyConfig()
   private cache: CacheFile = emptyCache()
+  private inbox: InboxFile = emptyInbox()
   private queue: Promise<void> = Promise.resolve()
 
   constructor(
@@ -73,10 +79,29 @@ export class Store {
     return join(this.dir, 'cache.json')
   }
 
+  private get inboxPath(): string {
+    return join(this.dir, 'inbox.json')
+  }
+
   async load(): Promise<void> {
     await mkdir(this.dir, { recursive: true })
     this.config = await readJson(this.configPath, emptyConfig)
     this.cache = await readJson(this.cachePath, emptyCache)
+    this.inbox = await readJson(this.inboxPath, emptyInbox)
+    if (!Array.isArray(this.inbox.items)) this.inbox = emptyInbox()
+  }
+
+  // Notification inbox
+
+  inboxList(): InboxItem[] {
+    return structuredClone(this.inbox.items)
+  }
+
+  async inboxUpdate(change: (items: InboxItem[]) => InboxItem[]): Promise<void> {
+    this.inbox.items = change(this.inbox.items)
+    const next = this.queue.then(() => writeAtomic(this.inboxPath, this.inbox))
+    this.queue = next.catch(() => {})
+    return next
   }
 
   // Serialise writes so concurrent callers cannot interleave file replacements.
