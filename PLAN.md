@@ -809,7 +809,7 @@ Runs on `phase/39-button-activity`, after Phase 38. Settled with the user on 202
 
 Runs on `phase/40-header-overflow`.
 
-- [ ] In `RepoHeader`, Tags, Remote and Link/Unlink move into one always-visible "…" popover. Fetch, Pull, Push, the branch button and the repo name stay. Unlink is a `danger` entry. Button activity icons (Phase 39) keep working for Link.
+- [x] In `LocalActions` (the header's action row), Tags, Remotes and Unlink move into one always-visible "…" popover. Fetch, Pull, Push, the branch button and the repo name stay. Unlink is a `danger` entry. Stash stays a visible button (its count is useful at a glance) and Link existing folder stays visible beside Clone while no folder is linked.
 
 **Verify:** keyboard open/close/Esc, each entry opens its dialog, Unlink is red. Check Split View width.
 

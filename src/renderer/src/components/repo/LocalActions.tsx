@@ -42,7 +42,7 @@ interface LocalActionsProps {
   compact?: boolean
 }
 
-type OpenMenu = { id: 'branch' | 'pull' | 'push'; x: number; y: number }
+type OpenMenu = { id: 'branch' | 'pull' | 'push' | 'more'; x: number; y: number }
 type BranchRef = { kind: 'branch' | 'remote'; name: string; current: boolean }
 
 /** Buttons inside the joined Fetch / Pull / Push strip: the strip draws the border. */
@@ -149,6 +149,27 @@ export function LocalActions({
             onSelect: () => actions.pull('merge')
           }
         ]
+      }
+      if (id === 'more') {
+        const list: MenuEntry[] = [
+          { kind: 'item', id: 'tags', label: 'Tags…', onSelect: onTags },
+          { kind: 'item', id: 'remotes', label: 'Remotes…', onSelect: onRemotes }
+        ]
+        if (repo.accountId !== 'local') {
+          list.push(
+            { kind: 'separator', id: 's-unlink' },
+            {
+              kind: 'item',
+              id: 'unlink',
+              label: 'Unlink folder',
+              trailing: 'nothing is deleted',
+              danger: true,
+              disabled: working,
+              onSelect: actions.unlink
+            }
+          )
+        }
+        return list
       }
       if (id === 'push') {
         return [
@@ -323,34 +344,24 @@ export function LocalActions({
             onClick={(e) => open('push', e.currentTarget)}
           />
         </div>
-        {(
-          [
-            { id: 'stash', label: stashButtonLabel(stashCount), icon: 'layers', onClick: onStash },
-            { id: 'tags', label: 'Tags', icon: 'tag', onClick: onTags },
-            { id: 'remotes', label: 'Remotes', icon: 'globe', onClick: onRemotes }
-          ] as const
-        ).map((b) => (
-          <Button key={b.id} icon={b.icon} onClick={b.onClick}>
-            {b.label}
-          </Button>
-        ))}
+        <Button icon="layers" onClick={onStash}>
+          {stashButtonLabel(stashCount)}
+        </Button>
         <span className="sr-only" role="status">
           {status}
         </span>
-        {repo.accountId === 'local' ? null : (
-          <Button
-            variant="ghost"
-            disabled={working}
-            onClick={actions.unlink}
-            title="Forget this folder. Nothing is deleted from disk."
-          >
-            Unlink
-          </Button>
-        )}
+        <IconButton
+          label="More repository actions"
+          icon="more"
+          className="ml-auto size-9"
+          aria-haspopup="menu"
+          aria-expanded={menu?.id === 'more'}
+          onClick={(e) => open('more', e.currentTarget)}
+        />
         <IconButton
           label="Terminal (Ctrl+`)"
           icon="terminal"
-          className="ml-auto size-9"
+          className="size-9"
           active={terminalOpen}
           aria-pressed={terminalOpen}
           onClick={onToggleTerminal}
@@ -364,7 +375,9 @@ export function LocalActions({
         />
         {menu ? (
           <Menu
-            label={menu.id === 'branch' ? 'Branches' : menu.id === 'pull' ? 'Pull' : 'Push'}
+            label={
+              { branch: 'Branches', pull: 'Pull', push: 'Push', more: 'More actions' }[menu.id]
+            }
             at={{ x: menu.x, y: menu.y }}
             entries={entriesFor(menu.id)}
             pinned={pinnedFor(menu.id)}
