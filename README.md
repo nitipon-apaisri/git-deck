@@ -188,7 +188,7 @@ Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 - [x] Phase 30: Change log detail
 - [x] Phase 31: Interactive rebase
 - [x] Phase 32: Project event notifications
-- [ ] Phase 33: Graph commit order (date order)
+- [x] Phase 33: Graph commit order (date order)
 - [ ] Phase 34: Branch badge and double-click checkout
 - [ ] Phase 35: Notification bell
 - [ ] Phase 36: Branch management

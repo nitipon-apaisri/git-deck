@@ -195,7 +195,7 @@ export async function getGraph(cwd: string, skip: number, limit: number): Promis
       '--branches',
       '--remotes',
       '--tags',
-      '--topo-order',
+      '--date-order',
       '--decorate=full',
       `--format=${format}`,
       '--skip',
