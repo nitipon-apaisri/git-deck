@@ -596,3 +596,17 @@ The 2px focus ring looked heavy on text inputs (palette, filters, forms). Text i
 - **Verified by hand (2026-11-24, `pnpm dev` on macOS):** the test notification, the Allow notifications switch (the test button is disabled while off), and real "opened" and "closed" notifications for a GitHub PR (#2 on nitipon-apaisri/git-deck).
 - **Verified by hand in the packaged 0.2.0-rc.1 (2026-11-24):** the build itself, the test notification, PR opened and closed notifications, and clicking one to open the Pull requests tab.
 - **Not verified:** the merged, reviewer requested and checks failed events against a real host, GitLab notifications, and the Intel (x64) build.
+
+## 2026-11-25: Roadmap 3 (Phases 33 to 37)
+
+Requested by the user; every recommendation below was accepted. Written into `PLAN.md` and the `README.md` progress list. Nothing is built yet.
+
+- **Order:** 33 graph date order, 34 badge and double-click, 35 branch management, 36 bell, 37 notification setup. 33 is smallest; 37 follows 36 so both share one bell icon.
+- **Graph order:** `--date-order` replaces `--topo-order` for everyone, no setting. Parents still come after children, so the lane algorithm is unchanged. Reason: with topo order a merged branch's old commits can sit above another branch's newer ones.
+- **Badge:** one pill per branch; local and remote at the same commit merge; monitor icon = local, provider logo = remote, with tooltips; check mark = HEAD only; empty circle removed. The exact visuals are the author's guess at what confused the user (no detail given beyond the screenshot); review with `design-qa`.
+- **Double-click:** local checks out; remote-only checks out or creates a tracking branch; tags do nothing; dirty tree shows git's error, no auto-stash.
+- **Branch management:** one dialog, Local and Remote sections, bulk delete with a per-branch result; current and default branch protected; remote delete confirms with the count.
+- **"Update remote branch" means:** push to upstream (sets it when missing) and fast-forward a local branch from its remote without checkout. Fetching one remote's refs and renaming a remote branch were left out (fetch already exists).
+- **Bell:** an in-app inbox of the existing Phase 32 PR/MR events, persisted, capped at 100, no secrets stored. No new event types.
+- **Setup is per project:** `Project.notify` is per project, so the repo-header toggle acts on the owning project (union when a repository is in several). The earlier idea of a per-repository setting was dropped for that reason.
+- **Open:** where the bell popover sits and what an item click targets beyond opening the PR/MR tab (assumed: top bar, PR/MR tab).

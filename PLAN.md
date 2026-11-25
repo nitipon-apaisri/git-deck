@@ -728,6 +728,61 @@ Runs on `phase/32-notifications`. A desktop app has no public URL, so real webho
 
 **Verify:** differ tests (new, merged, closed, reopened, no change, first load emits nothing). Mock-server polling tests (interval, backoff on 429, stop on 401). Manual: a notification on a real PR/MR, which cannot be checked without one.
 
+## Phases 33 to 37 — Roadmap 3
+
+Requested and settled with the user on 2026-11-25 (questions and answers in `docs/DECISIONS.md`, 2026-11-25, Roadmap 3). Same rules as Phases 20 to 32: one branch per phase from `develop`, pure logic gets `tsx` tests (no `electron` import), UI gets a manual Verify list, say plainly what was not checked visually, run `design-qa` after UI phases, tick `PLAN.md` and `README.md`, commit locally, never push. Nothing here is started. Colours only from tokens.
+
+## Phase 33 — Graph commit order (date order)
+
+Runs on `fix/graph-date-order`. Today `getGraph` uses `--topo-order`, so a merged branch's older commits can appear above or between newer commits of another branch, which reads as "old commits over newer ones".
+
+- [ ] `git.ts` `getGraph`: `--topo-order` becomes `--date-order` (parents still follow their children, rows follow commit time as far as the graph allows). No setting.
+- [ ] `src/shared/graph-layout.ts` needs no new rule: it only needs parents after children. Update the "in topo order" wording in the algorithm section below.
+- [ ] Paging (`--skip`, `-n`) stays stable because the order is deterministic; a test proves two pages join with no gap or repeat.
+
+**Verify:** temp-repo test with a merged branch whose commits are older than a sibling's (row order follows commit time, every parent below its children, pages join). Manual: the history in the user's screenshot reads newest to oldest.
+
+## Phase 34 — Branch badge and double-click checkout
+
+Runs on `phase/34-badge-checkout`.
+
+- [ ] `lib/graphView.ts`: one pill per branch name. A local and a remote ref at the same commit merge into one pill; ahead/behind shows only when they differ. Pure, tested.
+- [ ] `RefPills.tsx`: monitor icon means local, the provider logo means remote, each with a tooltip; the check mark means HEAD only; the empty circle is removed. The "+n" entries are interactive too.
+- [ ] Double-click a badge (new `onActivate` prop, threaded through `GraphRowView` to `GitGraph`): local branch checks it out; remote-only checks out the existing local branch of that name or creates a tracking branch; a tag does nothing. A dirty tree shows git's error, with no auto-stash. Reuses `menuOps.checkout` and the existing checkout IPC.
+
+**Verify:** tests for pill merging and the badge-to-checkout-target mapping. Manual: double-click local, remote-only and tag badges on a clean and a dirty tree; read the new pill in both themes.
+
+## Phase 35 — Branch management
+
+Runs on `phase/35-branch-management`.
+
+- [ ] A Branches dialog (same pattern as `TagsDialog`) opened from the repo header and the graph menu: Local and Remote sections, search, checkboxes, "Delete selected". The current and default branches cannot be selected. Local uses `-d` with a "force" option for unmerged branches; remote delete (`push --delete`) confirms with the count first.
+- [ ] Bulk delete runs one branch at a time and returns a result per branch, so one failure does not stop the rest.
+- [ ] "Update remote branch": per-branch Push (to its upstream, setting it when missing) and Fast-forward (a local branch from its remote without checking it out, refused when it cannot fast-forward). A new `fastForwardBranch` in `git.ts`. Both are also in the badge menu (`lib/refMenu.ts`).
+- [ ] New IPC channels in `src/shared/api.ts`, `ipcTable.ts` and the preload, validated in main. No token in any URL or error.
+
+**Verify:** temp-repo tests (fast-forward ok, fast-forward refused, bulk delete with one failure, current and default branch rejected, force delete). Manual: the dialog in a window, with a real remote.
+
+## Phase 36 — Notification bell
+
+Runs on `phase/36-notification-bell`. Builds on Phase 32; no new event types.
+
+- [ ] An inbox in main: every poller notice is also appended, kept across restarts in the user data folder, capped at 100, holding title, body, repository, link and time only (no token, no diff). Pure store logic, no `electron` import. List, mark read and mark all read through IPC.
+- [ ] A bell in the top bar with the unread count and a list. Clicking an item opens that repository's PR/MR tab (the existing notification click path) and marks it read; "Mark all read".
+- [ ] The OS notification stays as it is.
+
+**Verify:** store tests (append, cap at 100, mark read, mark all, survives a reload). Manual: the bell count and list after a real PR event, and after a restart.
+
+## Phase 37 — Easier notification setup
+
+Runs on `phase/37-notification-setup`, after Phase 36. Notification enablement is per project (`Project.notify`), not per repository, so these controls act on the owning project.
+
+- [ ] Edit project: an "Enable all events" switch above the per-event checkboxes.
+- [ ] Repo header: a bell toggle that turns all events on or off for the repository's project; the tooltip names the project. A repository in several projects shows the union.
+- [ ] A new project follows the app-wide switch in Settings > Notifications, which stays the master off.
+
+**Verify:** tests for the all-events toggle (on, off, union across two projects). Manual: set up notifications for a project in two clicks.
+
 ---
 
 ## Graph algorithm (src/shared/graph-layout.ts)
@@ -738,7 +793,7 @@ Stateful class so pages can be appended. Keep:
 - `laneColor: number[]`
 - a colour counter modulo the palette size
 
-For each commit, in topo order:
+For each commit, in the order `git log` gives (parents always after their children; `--date-order` from Phase 33, `--topo-order` before):
 
 1. `incoming` = every lane index whose entry equals this commit's hash.
 2. If `incoming` is non-empty: `lane = incoming[0]`, colour is that lane's colour. Otherwise allocate the first free lane (new branch tip) and take a new colour.
