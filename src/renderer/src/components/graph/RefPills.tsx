@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/cn'
 import type { AccountType } from '@shared/types'
@@ -103,38 +103,91 @@ function MoreRefs({
   onActivate?: (badge: BadgeView) => void
   onMenu?: (event: React.MouseEvent, badge: BadgeView) => void
 }) {
-  const [at, setAt] = useState<{ x: number; y: number } | null>(null)
+  const [at, setAt] = useState<{ x: number; y: number; top: number } | null>(null)
+  // Opened by a click (or the keyboard): hovering away no longer closes it.
+  const pinned = useRef(false)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const open = (el: HTMLElement) => {
+  const trigger = useRef<HTMLButtonElement>(null)
+  const card = useRef<HTMLDivElement>(null)
+  const id = useId()
+  const close = () => {
     clearTimeout(timer.current)
-    const box = el.getBoundingClientRect()
-    setAt({ x: box.left, y: box.bottom + 2 })
+    pinned.current = false
+    setAt(null)
+  }
+  const open = () => {
+    clearTimeout(timer.current)
+    const box = trigger.current?.getBoundingClientRect()
+    if (box) setAt({ x: box.left, y: box.bottom + 2, top: box.top - 2 })
   }
   // A short delay lets the pointer cross the gap between the chip and the card.
   const later = () => {
     clearTimeout(timer.current)
-    timer.current = setTimeout(() => setAt(null), 150)
+    if (!pinned.current) timer.current = setTimeout(() => setAt(null), 150)
   }
+  const items = () => Array.from(card.current?.querySelectorAll<HTMLButtonElement>('button') ?? [])
+  const inside = (node: EventTarget | null) =>
+    node instanceof Node && (card.current?.contains(node) || trigger.current?.contains(node))
   useEffect(() => () => clearTimeout(timer.current), [])
+  // Keep the card on screen: flip above the chip near the bottom edge, pull in from the right.
+  useLayoutEffect(() => {
+    const el = card.current
+    if (!at || !el) return
+    const { width, height } = el.getBoundingClientRect()
+    el.style.left = `${Math.max(8, Math.min(at.x, window.innerWidth - width - 8))}px`
+    el.style.top = `${at.y + height > window.innerHeight - 8 ? Math.max(8, at.top - height) : at.y}px`
+  }, [at])
+  // Escape from anywhere, a click outside, a scroll or a resize close it.
+  const isOpen = at !== null
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      if (card.current?.contains(document.activeElement)) trigger.current?.focus()
+      close()
+    }
+    const onDown = (event: PointerEvent) => {
+      if (!inside(event.target)) close()
+    }
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('pointerdown', onDown)
+    window.addEventListener('resize', close)
+    window.addEventListener('scroll', close, true)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('pointerdown', onDown)
+      window.removeEventListener('resize', close)
+      window.removeEventListener('scroll', close, true)
+    }
+  }, [isOpen])
   return (
     <>
       <button
+        ref={trigger}
         type="button"
         className="flex-none cursor-pointer rounded-(--radius-xs) px-1 text-[12px] text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
         aria-label={`${rest.length} more branches and tags`}
-        aria-haspopup="true"
-        aria-expanded={at !== null}
-        onMouseEnter={(event) => open(event.currentTarget)}
+        aria-expanded={isOpen}
+        aria-controls={isOpen ? id : undefined}
+        onMouseEnter={open}
         onMouseLeave={later}
-        onFocus={(event) => open(event.currentTarget)}
-        onBlur={later}
+        onFocus={open}
+        onBlur={(event) => {
+          if (!inside(event.relatedTarget)) later()
+        }}
         onKeyDown={(event) => {
-          if (event.key === 'Escape') setAt(null)
+          // Tab or Down moves into the card, which is outside this button's place in the DOM.
+          if (isOpen && (event.key === 'ArrowDown' || (event.key === 'Tab' && !event.shiftKey))) {
+            event.preventDefault()
+            pinned.current = true
+            items()[0]?.focus()
+          }
         }}
         onClick={(event) => {
           event.stopPropagation()
-          if (at) setAt(null)
-          else open(event.currentTarget)
+          if (isOpen && pinned.current) return close()
+          pinned.current = true
+          open()
         }}
       >
         +{rest.length}
@@ -142,12 +195,31 @@ function MoreRefs({
       {at
         ? createPortal(
             <div
+              ref={card}
+              id={id}
               role="group"
               aria-label="More branches and tags"
               className="fixed z-50 flex max-w-95 min-w-40 flex-col gap-1 rounded-lg bg-popover p-1.5 text-popover-foreground shadow-(--shadow-menu)"
               style={{ left: at.x, top: at.y }}
               onMouseEnter={() => clearTimeout(timer.current)}
               onMouseLeave={later}
+              onBlur={(event) => {
+                if (!inside(event.relatedTarget)) close()
+              }}
+              onKeyDown={(event) => {
+                const list = items()
+                const cur = list.indexOf(document.activeElement as HTMLButtonElement)
+                if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                  event.preventDefault()
+                  const step = event.key === 'ArrowDown' ? 1 : -1
+                  list[(cur + step + list.length) % list.length]?.focus()
+                } else if (event.key === 'Tab') {
+                  // Leave the card and go on from the chip.
+                  event.preventDefault()
+                  trigger.current?.focus()
+                  close()
+                }
+              }}
             >
               {rest.map((p) => {
                 const clickable = pillClickable(p) && onActivate !== undefined
@@ -155,7 +227,8 @@ function MoreRefs({
                   <button
                     key={p.key}
                     type="button"
-                    disabled={!clickable}
+                    // aria-disabled, not disabled: a tag stays focusable, so its tooltip and name reach the keyboard.
+                    aria-disabled={!clickable}
                     title={
                       clickable
                         ? `Check out ${p.name}`
@@ -166,12 +239,13 @@ function MoreRefs({
                     className={cn(
                       PILL,
                       REF_KINDS[p.kind],
-                      'w-full justify-between disabled:cursor-default',
-                      clickable && 'cursor-pointer hover:brightness-110'
+                      'w-full justify-between focus-visible:outline-2 focus-visible:outline-ring',
+                      clickable ? 'cursor-pointer hover:brightness-110' : 'cursor-default'
                     )}
                     onClick={(event) => {
                       event.stopPropagation()
-                      setAt(null)
+                      if (!clickable) return
+                      close()
                       onActivate?.(p.badge)
                     }}
                     onContextMenu={onMenu ? (event) => onMenu(event, p.badge) : undefined}
