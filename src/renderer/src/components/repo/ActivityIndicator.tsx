@@ -16,15 +16,21 @@ export function ActivityIndicator({ busy, progress, done }: ActivityIndicatorPro
   if (busy !== null) {
     const label = activityLabel(busy)
     return (
-      <div
-        className="flex min-h-9 w-56 min-w-0 flex-col justify-center gap-1 rounded-md bg-(--neutral) px-3 py-1.5"
-        role="status"
-        aria-live="polite"
-      >
-        <p className="m-0 truncate text-[12px] leading-4 text-(--text)" title={progress?.line}>
+      <div className="flex min-h-9 w-56 min-w-0 flex-col justify-center gap-1 rounded-md bg-(--neutral) px-3 py-1.5">
+        {/* Screen readers hear the label once, not every output line git prints. */}
+        <span className="sr-only" role="status">
+          {label}
+        </span>
+        <p
+          className="m-0 truncate text-[12px] leading-4 text-(--text)"
+          title={progress?.line}
+          aria-hidden="true"
+        >
           {progress?.line ?? label}
         </p>
-        <ProgressBar percent={progress?.percent ?? null} label={label} />
+        <div aria-hidden="true">
+          <ProgressBar percent={progress?.percent ?? null} label={label} />
+        </div>
       </div>
     )
   }
@@ -35,7 +41,6 @@ export function ActivityIndicator({ busy, progress, done }: ActivityIndicatorPro
         key={done.id}
         className="flex min-h-9 animate-activity-done items-center gap-2 rounded-md bg-(--success-bg) px-3 text-(--success-text) motion-reduce:animate-none"
         role="status"
-        aria-live="polite"
       >
         <Icon name="check" size="sm" />
         <span className="truncate">{done.text}</span>

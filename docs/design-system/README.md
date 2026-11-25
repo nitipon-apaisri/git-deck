@@ -61,6 +61,11 @@ Rules that came out of the migration:
 - Split View: two panes side by side, each an island, joined by a `divider-width` (12px) draggable grip in `border-strong`. The active pane has a 1px `accent` outline and a numbered `neutral` marker. Below two times `pane-min-width` the panes stack. In Split View the commit detail and Changes panels open under the graph, not beside it.
 - Shadows only on floating layers: `shadow-menu` for menus and popovers, `shadow-dialog` for dialogs. Resting islands use `shadow-island` (none in dark).
 
+## Activity and stopped operations
+
+- **Activity indicator** (`ActivityIndicator`): one per repo pane, in the action row. Busy: a `--neutral` block, 224 px wide (`w-56`), git's latest line (12 px) over a `ProgressBar`. Done: a `--success-bg` block with a check and a short text, gone after 4 s. Screen readers hear the label once, not each output line.
+- **Stopped operation** (merge, cherry-pick, revert, rebase, bisect): a block on `--warning-bg` with a 3 px left stripe in `--warning-text`, the step as a warning `Badge`, conflict kinds as neutral `Badge`s. Abort is `danger`. It is not an island: it sits inside one.
+
 ## Projects
 
 - A project is a name, an icon and a color. The icon sits in a `radius-lg` tile filled with the project color at 20% and a glyph in the full `proj-*` color. Offer the eight `proj-*` colors and a grid of glyphs; do not allow free-form hex.
