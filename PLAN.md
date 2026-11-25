@@ -817,9 +817,9 @@ Runs on `phase/40-header-overflow`.
 
 Runs on `phase/41-hide-refs`.
 
-- [ ] Hiding is a per-repo view filter keyed by repo path, kept in the local UI store; git is never touched. HEAD cannot be hidden.
-- [ ] A hidden ref loses its pill and its list entry; commits reachable only from hidden refs drop out of the graph (pass the visible refs, not `--all`). A "Show hidden (n)" toggle brings them back.
-- [ ] Entry points: pill context menu "Hide", an eye icon in the Branches and Tags dialogs, and a "Hidden refs" section to unhide. Glob patterns (`dependabot/*`) are a later phase.
+- [x] Hiding is a per-repo view filter keyed by repo path, kept in the local UI store; git is never touched. HEAD cannot be hidden.
+- [x] A hidden ref loses its pill and its list entry; commits reachable only from hidden refs drop out of the graph (pass the visible refs, not `--all`). A "Show hidden (n)" toggle brings them back.
+- [x] Entry points: pill context menu "Hide", an eye icon in the Branches and Tags dialogs, and an "Unhide" eye in the same dialogs (hidden rows stay listed, dimmed) and a "Show hidden (n)" entry in the repo "…" menu. Glob patterns (`dependabot/*`) are a later phase.
 
 **Verify:** temp-repo test that the graph omits hidden-only commits and keeps shared ones; manual hide and unhide of a branch and a tag.
 

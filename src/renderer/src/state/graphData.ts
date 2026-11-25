@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { GraphLayout } from '@shared/graph-layout'
 import type { CommitDetail } from '@shared/types'
 import { errorMessage } from '../lib/errors'
@@ -29,7 +29,9 @@ export function useGraph(
   /** Hash of HEAD while there are uncommitted changes: a "// WIP" row goes on top. */
   wipHead: string | null = null,
   /** Hash of HEAD now. A commit or checkout made elsewhere changes it and reloads the graph. */
-  head: string | null = null
+  head: string | null = null,
+  /** Full names of refs to leave out. A change reloads the graph. */
+  hidden: readonly string[] = []
 ): GraphState {
   const [paging, dispatch] = useReducer(pagingReducer, undefined, emptyPaging)
   const [nonce, setNonce] = useState(0)
@@ -38,14 +40,16 @@ export function useGraph(
   const layout = useRef(new GraphLayout())
   const fetched = useRef(0)
   const inflight = useRef(false)
+  const hiddenKey = hidden.join('\n')
+  const hiddenList = useMemo(() => (hiddenKey ? hiddenKey.split('\n') : []), [hiddenKey])
 
   const loadPage = useCallback(
-    async (folder: string, gen: number, wip: string | null): Promise<void> => {
+    async (folder: string, gen: number, wip: string | null, skipRefs: string[]): Promise<void> => {
       if (inflight.current) return
       inflight.current = true
       dispatch({ type: 'loading', gen })
       try {
-        const commits = await window.api.local.graph(folder, fetched.current, PAGE_SIZE)
+        const commits = await window.api.local.graph(folder, fetched.current, PAGE_SIZE, skipRefs)
         if (gen !== generation.current) return
         fetched.current += commits.length
         // The WIP row is not a commit: it only ever leads the first page.
@@ -69,12 +73,12 @@ export function useGraph(
     fetched.current = 0
     inflight.current = false
     dispatch({ type: 'reset', gen, path })
-    if (path !== null) void loadPage(path, gen, wipHead)
-  }, [path, reloadToken, nonce, wipHead, head, loadPage])
+    if (path !== null) void loadPage(path, gen, wipHead, hiddenList)
+  }, [path, reloadToken, nonce, wipHead, head, hiddenKey, hiddenList, loadPage])
 
   const loadMore = useCallback(() => {
-    if (path !== null) void loadPage(path, generation.current, null)
-  }, [path, loadPage])
+    if (path !== null) void loadPage(path, generation.current, null, hiddenList)
+  }, [path, hiddenList, loadPage])
   const reload = useCallback(() => setNonce((n) => n + 1), [])
 
   // For one render after the path changes, `paging` still belongs to the old folder.

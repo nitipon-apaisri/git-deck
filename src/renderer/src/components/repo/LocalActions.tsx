@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useHiddenRefs } from '../../state/hiddenRefs'
 import { cn } from '@/lib/cn'
 import type { BranchList, Repo } from '@shared/types'
 import {
@@ -93,6 +94,7 @@ export function LocalActions({
   compact = false
 }: LocalActionsProps) {
   const { busy } = actions
+  const hidden = useHiddenRefs(linkedPath ?? null)
   const working = busy !== null
   // A disabled button says what it waits for instead of going silent.
   const waitTitle = busy ? activityWaitTitle(busy) : undefined
@@ -167,6 +169,17 @@ export function LocalActions({
             onSelect: onRemotes
           }
         ]
+        if (hidden.all.length > 0) {
+          list.push({
+            kind: 'item',
+            id: 'show-hidden',
+            label: `Show hidden (${hidden.all.length})`,
+            leading: <Icon name={hidden.showHidden ? 'eye' : 'eye-off'} size="sm" />,
+            checked: hidden.showHidden,
+            keepOpen: true,
+            onSelect: () => hidden.setShowHidden(!hidden.showHidden)
+          })
+        }
         if (repo.accountId !== 'local') {
           list.push(
             { kind: 'separator', id: 's-unlink' },

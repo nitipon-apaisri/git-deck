@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { cn } from '@/lib/cn'
+import { useHiddenRefs } from '../../state/hiddenRefs'
 import type { BranchDeleteResult, BranchList } from '@shared/types'
 import { errorMessage } from '../../lib/errors'
 import { trackingText } from '../../lib/branchView'
@@ -63,6 +65,7 @@ function rowsOf(list: BranchList): { local: Row[]; remote: Row[] } {
 /** Delete many branches at once, and bring one up to date with its remote. */
 export function BranchesDialog({ path, onChanged, onClose }: BranchesDialogProps) {
   const [list, setList] = useState<BranchList | null>(null)
+  const hidden = useHiddenRefs(path)
   const [picked, setPicked] = useState<Set<string>>(new Set())
   const [filter, setFilter] = useState('')
   const [force, setForce] = useState(false)
@@ -147,56 +150,72 @@ export function BranchesDialog({ path, onChanged, onClose }: BranchesDialogProps
         <p className="m-0 text-muted-foreground">None.</p>
       ) : (
         <ul className="m-0 flex max-h-56 list-none flex-col gap-1 overflow-auto p-0">
-          {shown.map((r) => (
-            <li
-              key={r.key}
-              className="flex items-center gap-1 rounded-md bg-secondary py-1.5 pr-2 pl-3"
-            >
-              <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2">
-                <input
-                  type="checkbox"
-                  className="size-3.5 accent-(--accent)"
-                  checked={picked.has(r.key)}
-                  disabled={busy || r.locked !== null}
-                  onChange={(e) =>
-                    setPicked((prev) => {
-                      const next = new Set(prev)
-                      if (e.target.checked) next.add(r.key)
-                      else next.delete(r.key)
-                      return next
-                    })
-                  }
+          {shown.map((r) => {
+            const full = `${r.remote ? 'refs/remotes/' : 'refs/heads/'}${r.name}`
+            const isHidden = hidden.all.includes(full)
+            return (
+              <li
+                key={r.key}
+                className={cn(
+                  'flex items-center gap-1 rounded-md bg-secondary py-1.5 pr-2 pl-3',
+                  isHidden && 'opacity-60'
+                )}
+              >
+                <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    className="size-3.5 accent-(--accent)"
+                    checked={picked.has(r.key)}
+                    disabled={busy || r.locked !== null}
+                    onChange={(e) =>
+                      setPicked((prev) => {
+                        const next = new Set(prev)
+                        if (e.target.checked) next.add(r.key)
+                        else next.delete(r.key)
+                        return next
+                      })
+                    }
+                  />
+                  <span className="min-w-0 flex-1 truncate font-medium">{r.name}</span>
+                  {r.note ? (
+                    <span className="text-[12px] text-muted-foreground">{r.note}</span>
+                  ) : null}
+                </label>
+                <IconButton
+                  label={isHidden ? `Show ${r.name} in the graph` : `Hide ${r.name} from the graph`}
+                  icon={isHidden ? 'eye-off' : 'eye'}
+                  disabled={r.locked === 'Checked out'}
+                  onClick={() => hidden.setRef(full, !isHidden)}
                 />
-                <span className="min-w-0 flex-1 truncate font-medium">{r.name}</span>
-                {r.note ? (
-                  <span className="text-[12px] text-muted-foreground">{r.note}</span>
-                ) : null}
-              </label>
-              {r.remote ? null : (
-                <>
-                  <IconButton
-                    label={`Push ${r.name}`}
-                    icon="arrow-up"
-                    disabled={busy}
-                    onClick={() =>
-                      void act(() => window.api.local.pushBranch(path, r.name), `Pushed ${r.name}.`)
-                    }
-                  />
-                  <IconButton
-                    label={`Fast-forward ${r.name} from its remote`}
-                    icon="arrow-down"
-                    disabled={busy || r.locked === 'Checked out' || !r.upstream || !r.behind}
-                    onClick={() =>
-                      void act(
-                        () => window.api.local.fastForwardBranch(path, r.name),
-                        `Fast-forwarded ${r.name}.`
-                      )
-                    }
-                  />
-                </>
-              )}
-            </li>
-          ))}
+                {r.remote ? null : (
+                  <>
+                    <IconButton
+                      label={`Push ${r.name}`}
+                      icon="arrow-up"
+                      disabled={busy}
+                      onClick={() =>
+                        void act(
+                          () => window.api.local.pushBranch(path, r.name),
+                          `Pushed ${r.name}.`
+                        )
+                      }
+                    />
+                    <IconButton
+                      label={`Fast-forward ${r.name} from its remote`}
+                      icon="arrow-down"
+                      disabled={busy || r.locked === 'Checked out' || !r.upstream || !r.behind}
+                      onClick={() =>
+                        void act(
+                          () => window.api.local.fastForwardBranch(path, r.name),
+                          `Fast-forwarded ${r.name}.`
+                        )
+                      }
+                    />
+                  </>
+                )}
+              </li>
+            )
+          })}
         </ul>
       )}
     </section>
