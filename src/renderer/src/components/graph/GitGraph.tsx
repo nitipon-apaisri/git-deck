@@ -357,7 +357,7 @@ export function GitGraph({
 
   if (path === null) {
     return (
-      <div className={EMPTY}>
+      <div className={cn(EMPTY, 'flex-1')}>
         <Icon name="git-branch" />
         <p>Not cloned on this computer. Use Clone or Link existing folder above.</p>
       </div>
