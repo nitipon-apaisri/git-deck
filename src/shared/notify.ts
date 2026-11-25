@@ -61,3 +61,9 @@ const VERB: Record<NotifyEvent, string> = {
 export function noticeBody(kind: NotifyEvent, cr: Pick<ChangeRequest, 'number' | 'title'>): string {
   return `#${cr.number} ${VERB[kind]}: ${cr.title}`
 }
+
+export const ALL_NOTIFY_EVENTS: NotifyEvent[] = NOTIFY_EVENTS.map((e) => e.id)
+
+export function allNotifyOn(events: readonly NotifyEvent[] | undefined): boolean {
+  return ALL_NOTIFY_EVENTS.every((id) => events?.includes(id))
+}

@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import type { Account, NotifyEvent, Project, Repo } from '@shared/types'
-import { NOTIFY_EVENTS } from '@shared/notify'
+import { ALL_NOTIFY_EVENTS, NOTIFY_EVENTS, allNotifyOn } from '@shared/notify'
 import { DEFAULT_ICON, PROJECT_COLORS } from '@shared/projects'
 import { cn } from '@/lib/cn'
 import { LOCAL_ACCOUNT_ID } from '../../lib/localRepos'
@@ -21,7 +21,20 @@ import {
   type PickerRow,
   type ProjectFormValue
 } from '../../lib/projectForm'
-import { Button, Dialog, Field, HostTile, Icon, ProjectIcon, TextInput, isIconName } from '../ui'
+import {
+  Button,
+  Dialog,
+  Field,
+  HostTile,
+  Icon,
+  ProjectIcon,
+  SwitchOption,
+  Tabs,
+  TextInput,
+  isIconName,
+  panelId,
+  tabId
+} from '../ui'
 
 interface ProjectFormDialogProps {
   projects: Project[]
@@ -73,6 +86,8 @@ export function ProjectFormDialog({
   )
   const [notify, setNotify] = useState<NotifyEvent[]>(editing?.notify ?? [])
   const [notifyOff, setNotifyOff] = useState(false)
+  const [tab, setTab] = useState<'general' | 'notifications'>('general')
+  const tabPrefix = useId()
   useEffect(() => {
     window.api.notify.enabled().then(
       (on) => setNotifyOff(!on),
@@ -217,183 +232,218 @@ export function ProjectFormDialog({
         </>
       }
     >
-      <form id={formId} className="flex flex-col gap-4" onSubmit={(e) => void submit(e)} noValidate>
-        <Field
-          label="Name"
-          error={problem}
-          hint={
-            <span className="flex justify-between gap-3">
-              <span className="inline-flex items-center gap-1 text-(--success-text)">
-                {nameOk ? (
-                  <>
-                    <Icon name="check" size="xs" />
-                    Name is available
-                  </>
-                ) : null}
-              </span>
-              <span>
-                {[...name.trim()].length} / {NAME_LIMIT}
-              </span>
-            </span>
-          }
-        >
-          {(control) => (
-            <TextInput
-              {...control}
-              data-autofocus
-              value={name}
-              autoComplete="off"
-              onChange={(e) => setName(e.target.value)}
-              onBlur={() => setTouched(true)}
-            />
-          )}
-        </Field>
-
-        <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
-          <legend className="mb-2 p-0 font-medium">Icon</legend>
-          <div className="flex items-center gap-2">
-            <label className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border border-(--border-strong) px-2.5 text-muted-foreground focus-within:border-(--accent-text)">
-              <Icon name="search" size="sm" />
-              <input
-                type="search"
-                className="min-w-0 flex-1 border-0 bg-transparent text-foreground outline-0 placeholder:text-muted-foreground"
-                aria-label="Search icons"
-                placeholder="Search icons"
-                value={iconQuery}
-                onChange={(e) => setIconQuery(e.target.value)}
-              />
-            </label>
-            <TextInput
-              className="h-8 w-37.5"
-              aria-label="Or paste an emoji"
-              aria-invalid={emojiBad ? true : undefined}
-              placeholder="Or paste an emoji"
-              value={emojiText}
-              onChange={(e) => onEmoji(e.target.value)}
-            />
-          </div>
-          {emojiBad ? (
-            <span
-              role="alert"
-              className="flex items-start gap-2 text-[12px] leading-4 text-destructive"
-            >
-              <Icon name="alert" size="sm" />
-              Use one emoji, or pick an icon below.
-            </span>
-          ) : null}
-          <div className="grid grid-cols-8 gap-1.5">
-            {icons.map((id) => (
-              <button
-                key={id}
-                type="button"
-                className="grid h-11 cursor-pointer place-items-center rounded-lg border border-border bg-transparent text-foreground hover:bg-accent aria-pressed:border-(--accent) aria-pressed:bg-(--selection) aria-pressed:text-(--accent-text)"
-                aria-label={iconLabel(id)}
-                aria-pressed={icon === id}
-                title={iconLabel(id)}
-                onClick={() => pickBuiltIn(id)}
-              >
-                {isIconName(id) ? <Icon name={id} /> : null}
-              </button>
-            ))}
-            {icons.length === 0 ? (
-              <p className="col-span-full m-0 py-2 text-muted-foreground">
-                No icon matches “{iconQuery.trim()}”.
-              </p>
-            ) : null}
-          </div>
-        </fieldset>
-
-        <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
-          <legend className="mb-2 p-0 font-medium">Color</legend>
-          <div className="flex flex-wrap gap-2.5">
-            {PROJECT_COLORS.map((id) => (
-              <button
-                key={id}
-                type="button"
-                className={cn(
-                  'grid size-7 cursor-pointer place-items-center rounded-full border-2 border-transparent bg-(--swatch) p-0 text-(--island) shadow-[inset_0_0_0_2px_var(--island)] aria-pressed:border-foreground',
-                  SWATCHES[id]
-                )}
-                aria-label={COLOR_LABELS[id]}
-                aria-pressed={color === id}
-                title={COLOR_LABELS[id]}
-                onClick={() => setColor(id)}
-              >
-                {color === id ? <Icon name="check" size="sm" /> : null}
-              </button>
-            ))}
-          </div>
-        </fieldset>
-
+      {editing ? (
+        <Tabs
+          tabs={[
+            { id: 'general', label: 'General' },
+            { id: 'notifications', label: 'Notifications' }
+          ]}
+          value={tab}
+          onChange={(id) => setTab(id === 'notifications' ? 'notifications' : 'general')}
+          label="Project sections"
+          idPrefix={tabPrefix}
+        />
+      ) : null}
+      <form
+        id={formId}
+        className="mt-4 flex flex-col gap-4"
+        onSubmit={(e) => void submit(e)}
+        noValidate
+      >
         <div
-          className="flex items-center gap-3 rounded-xl bg-secondary px-3.5 py-3"
-          aria-label="Preview"
+          role="tabpanel"
+          id={panelId(tabPrefix, 'general')}
+          aria-labelledby={tabId(tabPrefix, 'general')}
+          hidden={tab !== 'general'}
+          className="flex flex-col gap-4"
         >
-          <ProjectIcon icon={icon} color={color} size="lg" />
-          <div className="flex min-w-0 flex-col">
-            <span className="truncate text-[14px] font-semibold">
-              {name.trim() || 'Untitled project'}
-            </span>
-            <span className="text-[12px] text-muted-foreground">
-              Preview · {chosen.size} {chosen.size === 1 ? 'repository' : 'repositories'}
-            </span>
-          </div>
-        </div>
-
-        <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
-          <legend className="mb-2 p-0 font-medium">
-            Repositories <span className="font-normal text-muted-foreground">(optional)</span>
-          </legend>
-          <div className="flex items-center gap-2">
-            <label className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border border-(--border-strong) px-2.5 text-muted-foreground focus-within:border-(--accent-text)">
-              <Icon name="search" size="sm" />
-              <input
-                type="search"
-                className="min-w-0 flex-1 border-0 bg-transparent text-foreground outline-0 placeholder:text-muted-foreground"
-                aria-label="Filter repositories to add"
-                placeholder="Filter repositories"
-                value={repoQuery}
-                onChange={(e) => setRepoQuery(e.target.value)}
+          <Field
+            label="Name"
+            error={problem}
+            hint={
+              <span className="flex justify-between gap-3">
+                <span className="inline-flex items-center gap-1 text-(--success-text)">
+                  {nameOk ? (
+                    <>
+                      <Icon name="check" size="xs" />
+                      Name is available
+                    </>
+                  ) : null}
+                </span>
+                <span>
+                  {[...name.trim()].length} / {NAME_LIMIT}
+                </span>
+              </span>
+            }
+          >
+            {(control) => (
+              <TextInput
+                {...control}
+                data-autofocus
+                value={name}
+                autoComplete="off"
+                onChange={(e) => setName(e.target.value)}
+                onBlur={() => setTouched(true)}
               />
-            </label>
-            <span className="flex-none text-[12px] text-muted-foreground" aria-live="polite">
-              {chosen.size} selected
-            </span>
-          </div>
-          <div ref={pickerRef} className="max-h-60 overflow-y-auto rounded-lg border border-border">
-            <div
-              role="list"
-              aria-label="Repositories"
-              className="relative w-full"
-              style={{ height: picker.getTotalSize() }}
-            >
-              {picker.getVirtualItems().map((item) => (
-                <div
-                  key={item.key}
-                  role="listitem"
-                  className="absolute top-0 left-0 w-full"
-                  style={{ height: item.size, transform: `translateY(${item.start}px)` }}
+            )}
+          </Field>
+
+          <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
+            <legend className="mb-2 p-0 font-medium">Icon</legend>
+            <div className="flex items-center gap-2">
+              <label className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border border-(--border-strong) px-2.5 text-muted-foreground focus-within:border-(--accent-text)">
+                <Icon name="search" size="sm" />
+                <input
+                  type="search"
+                  className="min-w-0 flex-1 border-0 bg-transparent text-foreground outline-0 placeholder:text-muted-foreground"
+                  aria-label="Search icons"
+                  placeholder="Search icons"
+                  value={iconQuery}
+                  onChange={(e) => setIconQuery(e.target.value)}
+                />
+              </label>
+              <TextInput
+                className="h-8 w-37.5"
+                aria-label="Or paste an emoji"
+                aria-invalid={emojiBad ? true : undefined}
+                placeholder="Or paste an emoji"
+                value={emojiText}
+                onChange={(e) => onEmoji(e.target.value)}
+              />
+            </div>
+            {emojiBad ? (
+              <span
+                role="alert"
+                className="flex items-start gap-2 text-[12px] leading-4 text-destructive"
+              >
+                <Icon name="alert" size="sm" />
+                Use one emoji, or pick an icon below.
+              </span>
+            ) : null}
+            <div className="grid grid-cols-8 gap-1.5">
+              {icons.map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  className="grid h-11 cursor-pointer place-items-center rounded-lg border border-border bg-transparent text-foreground hover:bg-accent aria-pressed:border-(--accent) aria-pressed:bg-(--selection) aria-pressed:text-(--accent-text)"
+                  aria-label={iconLabel(id)}
+                  aria-pressed={icon === id}
+                  title={iconLabel(id)}
+                  onClick={() => pickBuiltIn(id)}
                 >
-                  {renderPickerRow(pickerRows[item.index])}
-                </div>
+                  {isIconName(id) ? <Icon name={id} /> : null}
+                </button>
+              ))}
+              {icons.length === 0 ? (
+                <p className="col-span-full m-0 py-2 text-muted-foreground">
+                  No icon matches “{iconQuery.trim()}”.
+                </p>
+              ) : null}
+            </div>
+          </fieldset>
+
+          <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
+            <legend className="mb-2 p-0 font-medium">Color</legend>
+            <div className="flex flex-wrap gap-2.5">
+              {PROJECT_COLORS.map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={cn(
+                    'grid size-7 cursor-pointer place-items-center rounded-full border-2 border-transparent bg-(--swatch) p-0 text-(--island) shadow-[inset_0_0_0_2px_var(--island)] aria-pressed:border-foreground',
+                    SWATCHES[id]
+                  )}
+                  aria-label={COLOR_LABELS[id]}
+                  aria-pressed={color === id}
+                  title={COLOR_LABELS[id]}
+                  onClick={() => setColor(id)}
+                >
+                  {color === id ? <Icon name="check" size="sm" /> : null}
+                </button>
               ))}
             </div>
-            {groups.length === 0 && missing.length === 0 ? (
-              <p className="m-0 p-3 text-muted-foreground">
-                {repoQuery.trim() !== ''
-                  ? `No repositories match “${repoQuery.trim()}”.`
-                  : 'No repositories loaded yet. Connect an account first.'}
-              </p>
-            ) : null}
-          </div>
-        </fieldset>
+          </fieldset>
 
-        {editing ? (
+          <div
+            className="flex items-center gap-3 rounded-xl bg-secondary px-3.5 py-3"
+            aria-label="Preview"
+          >
+            <ProjectIcon icon={icon} color={color} size="lg" />
+            <div className="flex min-w-0 flex-col">
+              <span className="truncate text-[14px] font-semibold">
+                {name.trim() || 'Untitled project'}
+              </span>
+              <span className="text-[12px] text-muted-foreground">
+                Preview · {chosen.size} {chosen.size === 1 ? 'repository' : 'repositories'}
+              </span>
+            </div>
+          </div>
+
           <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
             <legend className="mb-2 p-0 font-medium">
-              Notifications{' '}
-              <span className="font-normal text-muted-foreground">(off by default)</span>
+              Repositories <span className="font-normal text-muted-foreground">(optional)</span>
             </legend>
+            <div className="flex items-center gap-2">
+              <label className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border border-(--border-strong) px-2.5 text-muted-foreground focus-within:border-(--accent-text)">
+                <Icon name="search" size="sm" />
+                <input
+                  type="search"
+                  className="min-w-0 flex-1 border-0 bg-transparent text-foreground outline-0 placeholder:text-muted-foreground"
+                  aria-label="Filter repositories to add"
+                  placeholder="Filter repositories"
+                  value={repoQuery}
+                  onChange={(e) => setRepoQuery(e.target.value)}
+                />
+              </label>
+              <span className="flex-none text-[12px] text-muted-foreground" aria-live="polite">
+                {chosen.size} selected
+              </span>
+            </div>
+            <div
+              ref={pickerRef}
+              className="max-h-60 overflow-y-auto rounded-lg border border-border"
+            >
+              <div
+                role="list"
+                aria-label="Repositories"
+                className="relative w-full"
+                style={{ height: picker.getTotalSize() }}
+              >
+                {picker.getVirtualItems().map((item) => (
+                  <div
+                    key={item.key}
+                    role="listitem"
+                    className="absolute top-0 left-0 w-full"
+                    style={{ height: item.size, transform: `translateY(${item.start}px)` }}
+                  >
+                    {renderPickerRow(pickerRows[item.index])}
+                  </div>
+                ))}
+              </div>
+              {groups.length === 0 && missing.length === 0 ? (
+                <p className="m-0 p-3 text-muted-foreground">
+                  {repoQuery.trim() !== ''
+                    ? `No repositories match “${repoQuery.trim()}”.`
+                    : 'No repositories loaded yet. Connect an account first.'}
+                </p>
+              ) : null}
+            </div>
+          </fieldset>
+        </div>
+
+        {editing ? (
+          <div
+            role="tabpanel"
+            id={panelId(tabPrefix, 'notifications')}
+            aria-labelledby={tabId(tabPrefix, 'notifications')}
+            hidden={tab !== 'notifications'}
+            className="flex flex-col gap-2"
+          >
+            <SwitchOption
+              label="Enable all events"
+              checked={allNotifyOn(notify)}
+              onChange={(on) => setNotify(on ? [...ALL_NOTIFY_EVENTS] : [])}
+            />
             <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
               {NOTIFY_EVENTS.map(({ id, label }) => (
                 <label key={id} className="flex cursor-pointer items-center gap-2.5">
@@ -415,7 +465,7 @@ export function ProjectFormDialog({
               Checks this project&apos;s hosted repositories every 2 minutes while GitDeck is open.
               {notifyOff ? ' Turned off in Settings > Notifications.' : ''}
             </span>
-          </fieldset>
+          </div>
         ) : null}
 
         {saveError ? (

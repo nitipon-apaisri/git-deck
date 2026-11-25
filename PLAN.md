@@ -777,11 +777,10 @@ Runs on `phase/36-branch-management`.
 
 Runs on `phase/37-notification-setup`, after Phase 35. Notification enablement is per project (`Project.notify`), not per repository, so these controls act on the owning project.
 
-- [ ] Edit project: an "Enable all events" switch above the per-event checkboxes.
-- [ ] Repo header: a bell toggle that turns all events on or off for the repository's project; the tooltip names the project. A repository in several projects shows the union.
-- [ ] A new project follows the app-wide switch in Settings > Notifications, which stays the master off.
+- [x] Edit project: a Notifications tab with an "Enable all events" switch above the per-event checkboxes.
+- [x] A new project follows the app-wide switch in Settings > Notifications, which stays the master off.
 
-**Verify:** tests for the all-events toggle (on, off, union across two projects). Manual: set up notifications for a project in two clicks.
+**Verify:** tests for the all-events toggle (on, off, partial). Manual: set up notifications for a project in two clicks.
 
 ---
 

@@ -4,7 +4,12 @@ import type { AddressInfo } from 'node:net'
 import { after, before, test } from 'node:test'
 import { createPoller, MAX_BACKOFF_MS, POLL_MS, type Notice } from '../src/main/notifyPoller'
 import { GitHubProvider } from '../src/main/providers/github'
-import { diffChangeRequests, noticeBody } from '../src/shared/notify'
+import {
+  ALL_NOTIFY_EVENTS,
+  allNotifyOn,
+  diffChangeRequests,
+  noticeBody
+} from '../src/shared/notify'
 import type { ChangeRequest, ChecksInfo, NotifyEvent, Project, Repo } from '../src/shared/types'
 
 const cr = (number: number, over: Partial<ChangeRequest> = {}): ChangeRequest => ({
@@ -233,4 +238,12 @@ test('poller: checks failed only on a move to failure, and finished checks are n
   assert.ok(!hits.some((h) => h.includes('sha2')), 'a finished head is not asked again')
   await poller.tick()
   assert.deepEqual(summary(notices), ['checksFailed #1'], 'still failing: no repeat')
+})
+
+// Phase 37: the all-events switch.
+test('all events: on, off, partial', () => {
+  assert.equal(allNotifyOn(ALL_NOTIFY_EVENTS), true)
+  assert.equal(allNotifyOn([]), false)
+  assert.equal(allNotifyOn(undefined), false)
+  assert.equal(allNotifyOn(['merged']), false)
 })
