@@ -246,14 +246,6 @@ export function BranchesDialog({ path, onChanged, onClose }: BranchesDialogProps
           </ul>
         ) : null}
         <div className="flex flex-wrap items-center gap-4">
-          <Button
-            variant="danger"
-            icon="trash"
-            disabled={busy || count === 0}
-            onClick={() => void deleteSelected(all)}
-          >
-            {count > 0 ? `Delete selected (${count})` : 'Delete selected'}
-          </Button>
           <label className="flex cursor-pointer items-center gap-2 text-[13px]">
             <input
               type="checkbox"
@@ -264,6 +256,15 @@ export function BranchesDialog({ path, onChanged, onClose }: BranchesDialogProps
             />
             Force delete unmerged local branches
           </label>
+          <Button
+            className="ml-auto"
+            variant="danger"
+            icon="trash"
+            disabled={busy || count === 0}
+            onClick={() => void deleteSelected(all)}
+          >
+            {count > 0 ? `Delete selected (${count})` : 'Delete selected'}
+          </Button>
         </div>
       </div>
     </Dialog>
