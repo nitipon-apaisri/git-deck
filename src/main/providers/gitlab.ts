@@ -6,6 +6,7 @@ import type {
   Contributor,
   CreateChangeRequestInput,
   LanguageShare,
+  ProfileInfo,
   Repo,
   RepoSummary,
   Visibility
@@ -14,8 +15,30 @@ import { MAX_CONTRIBUTORS, MAX_LANGUAGES, type GitProvider, type VerifiedUser } 
 import { ok, required, sameOrigin, throwIfAllFailed } from './util'
 
 interface GlUser {
+  id: number
   username: string
   avatar_url?: string | null
+  name?: string | null
+  bio?: string | null
+  web_url?: string
+  followers?: number
+  following?: number
+}
+
+interface GlEvent {
+  action_name: string
+  target_type?: string | null
+  target_title?: string | null
+  created_at: string
+  push_data?: { commit_count?: number; ref?: string } | null
+}
+
+/** One short line for a user event. GitLab events carry no project name, only a target. */
+export function glEventText(e: GlEvent): string {
+  const verb = e.action_name.replace(/\b\w/, (c) => c.toUpperCase())
+  if (e.push_data?.ref) return `${verb} ${e.push_data.ref}`
+  const target = [e.target_type?.toLowerCase(), e.target_title].filter(Boolean).join(' ')
+  return target ? `${verb} ${target}` : verb
 }
 
 interface GlProject {
@@ -131,6 +154,49 @@ export class GitLabProvider implements GitProvider {
   async verify(): Promise<VerifiedUser> {
     const user = required(await getJson<GlUser>(`${this.root}/user`, this.headers), 'GitLab')
     return { username: user.username, avatarUrl: this.absolute(user.avatar_url) }
+  }
+
+  async getProfile(): Promise<ProfileInfo> {
+    const h = this.headers
+    const user = required(await getJson<GlUser>(`${this.root}/user`, h), 'GitLab')
+    const settled = await Promise.allSettled([
+      getJson<{ full_path: string; avatar_url?: string | null }[]>(
+        `${this.root}/groups?min_access_level=10&per_page=30`,
+        h
+      ),
+      getJson<GlEvent[]>(`${this.root}/users/${user.id}/events?per_page=30`, h),
+      getJson<GlProject[]>(
+        `${this.root}/projects?membership=true&order_by=last_activity_at&sort=desc&per_page=6`,
+        h
+      )
+    ])
+    throwIfAllFailed(settled)
+    const [groups, events, projects] = settled
+    return {
+      username: user.username,
+      name: user.name ?? '',
+      bio: user.bio ?? '',
+      avatarUrl: this.absolute(user.avatar_url) ?? '',
+      webUrl: user.web_url ?? '',
+      followers: typeof user.followers === 'number' ? user.followers : null,
+      following: typeof user.following === 'number' ? user.following : null,
+      orgs: (ok(groups, null) ?? []).map((g) => ({
+        name: g.full_path,
+        avatarUrl: this.absolute(g.avatar_url) ?? ''
+      })),
+      repoKind: 'recent',
+      repos: (ok(projects, null) ?? []).map((p) => ({
+        fullName: p.path_with_namespace,
+        description: p.description ?? '',
+        language: '',
+        updatedAt: p.last_activity_at,
+        webUrl: p.web_url
+      })),
+      events: (ok(events, null) ?? [])
+        .slice(0, 10)
+        .map((e) => ({ text: glEventText(e), at: e.created_at })),
+      heatmap: null
+    }
   }
 
   async listRepos(): Promise<Repo[]> {

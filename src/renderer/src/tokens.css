@@ -35,6 +35,10 @@
   --lane-4: #e9b05a;
   --lane-5: #f58a8e;
   --lane-6: #6fcb8b;
+  --heat-1: #5b93f840;
+  --heat-2: #5b93f873;
+  --heat-3: #5b93f8b0;
+  --heat-4: #5b93f8;
   --ref-head-bg: #9dbbff;
   --ref-head-fg: #0e1a33;
   --ref-main-fg: #b8ccff;
@@ -99,6 +103,10 @@
   --lane-4: #b87408;
   --lane-5: #d94c54;
   --lane-6: #2fa05a;
+  --heat-1: #2e69dc33;
+  --heat-2: #2e69dc66;
+  --heat-3: #2e69dca6;
+  --heat-4: #2e69dc;
   --ref-head-bg: #2e69dc;
   --ref-head-fg: #ffffff;
   --ref-main-fg: #1f4fb0;

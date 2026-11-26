@@ -44,6 +44,7 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     reposFetch: ([id]) => api.repos.fetch(id as string),
     summaryCached: ([key]) => api.summary.cached(key as string),
     summaryFetch: ([key]) => api.summary.fetch(key as string),
+    profileGet: ([id]) => api.profile.get(id as string),
     changesList: ([key]) => api.changes.list(key as string),
     changesChecks: ([key, ref]) => api.changes.checks(key as string, ref as string),
     changesCreate: ([key, input]) =>

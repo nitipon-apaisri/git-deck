@@ -7,6 +7,7 @@ import { ManageProjectsDialog } from './components/projects/ManageProjectsDialog
 import { ProjectFormDialog } from './components/projects/ProjectFormDialog'
 import { ProjectOverview } from './components/projects/ProjectOverview'
 import { Sidebar } from './components/Sidebar'
+import { HomeProfile } from './components/home/HomeProfile'
 import { Toolbar } from './components/Toolbar'
 import { hasInsetTitleBar } from './lib/platform'
 import type { PaneCommands } from './lib/paletteItems'
@@ -47,6 +48,8 @@ export function App() {
   const projectsApi = useProjects()
   const [scopeId, setScopeId] = useState(() => parseScope(readStored(SCOPE_KEY)))
   const [overviewOn, setOverviewOn] = useState(false)
+  // Home: shown on request, and whenever "All repositories" has nothing selected.
+  const [homeOn, setHomeOn] = useState(false)
   const [form, setForm] = useState<{ editId: string | null; repoKeys: string[] } | null>(null)
   const [projectError, setProjectError] = useState<string | null>(null)
   const { setting, setSetting } = useTheme()
@@ -91,8 +94,10 @@ export function App() {
     loads[LOCAL_ACCOUNT_ID] = { settled: state.byAccount[LOCAL_ACCOUNT_ID]?.fetchedAt != null }
     return projectView(scope, reposByAccount, loads, state.ready)
   }, [scope, reposByAccount, state.accounts, state.byAccount, state.ready])
+  const homeVisible =
+    homeOn || (projectsReady && scope === null && !layout.enabled && selectedKey === null)
   const overviewVisible =
-    scope !== null && (overviewOn || (!layout.enabled && selectedKey === null))
+    !homeVisible && scope !== null && (overviewOn || (!layout.enabled && selectedKey === null))
   // Summaries load only while the overview is on screen, but stay held for the next visit.
   const summaries = useProjectSummaries(
     overviewVisible && scope ? scope.repoKeys : [],
@@ -106,6 +111,7 @@ export function App() {
     setScopeId(next)
     writeStored(SCOPE_KEY, next)
     setOverviewOn(id !== null)
+    setHomeOn(false)
   }
   // A deleted project resolves to "all" above. Drop the stale id so it is not kept.
   useEffect(() => {
@@ -116,6 +122,7 @@ export function App() {
 
   function selectRepo(key: string): void {
     setOverviewOn(false)
+    setHomeOn(false)
     split.select(key)
   }
   // A clicked notification: switch to its project if the current scope lacks the repository.
@@ -128,6 +135,7 @@ export function App() {
         writeStored(SCOPE_KEY, projectId)
       }
       setOverviewOn(false)
+      setHomeOn(false)
       openPaneTab(repoKey, 'pulls')
     },
     [scope, openPaneTab, clearPanes]
@@ -269,6 +277,7 @@ export function App() {
             onRemoveLocal={(key) => void removeLocalRepo(key)}
             onRefresh={(id) => void refresh(id)}
             onRefreshAll={() => void refreshAll()}
+            home={{ active: homeVisible, onOpen: () => setHomeOn(true) }}
             projects={{
               projects,
               scope,
@@ -280,7 +289,10 @@ export function App() {
               onDismissError: () => setProjectError(null),
               onNewProject: (repoKeys = []) => setForm({ editId: null, repoKeys }),
               onEditScope: () => scope && setForm({ editId: scope.id, repoKeys: [] }),
-              onOverview: () => setOverviewOn(true),
+              onOverview: () => {
+                setHomeOn(false)
+                setOverviewOn(true)
+              },
               onToggleMember: (projectId, repoKey, member) =>
                 void guarded(
                   member
@@ -299,8 +311,16 @@ export function App() {
           links={state.links}
           loading={anyLoading}
           onLinksChanged={() => void refreshLinks()}
+          overviewLabel={homeVisible ? 'Home' : undefined}
           overview={
-            overviewVisible && scope && view ? (
+            homeVisible ? (
+              <HomeProfile
+                accounts={state.accounts}
+                reposByAccount={reposByAccount}
+                onOpenRepo={selectRepo}
+                onConnect={() => openSettings('integrations')}
+              />
+            ) : overviewVisible && scope && view ? (
               <ProjectOverview
                 project={scope}
                 accounts={state.accounts}

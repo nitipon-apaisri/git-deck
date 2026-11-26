@@ -6,13 +6,14 @@ interface AvatarProps {
   /** Image URL. When it is missing or fails to load, coloured initials show instead. */
   src?: string
   name: string
-  size?: 24 | 28 | 32
+  size?: 24 | 28 | 32 | 56
 }
 
 const SIZES = {
   24: 'size-6 text-[10px]',
   28: 'size-7 text-[11px]',
-  32: 'size-8 text-[12px]'
+  32: 'size-8 text-[12px]',
+  56: 'size-14 text-[18px]'
 } as const
 const TONES = ['bg-(--avatar-1)', 'bg-(--avatar-2)', 'bg-(--avatar-3)', 'bg-(--avatar-4)'] as const
 

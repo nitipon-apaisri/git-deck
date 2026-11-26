@@ -3,6 +3,7 @@
 import type { InboxItem } from './inbox'
 import type {
   UpdateCheck,
+  ProfileInfo,
   AccountInput,
   Account,
   BranchDeleteItem,
@@ -99,6 +100,10 @@ export interface Api {
   summary: {
     cached(repoKey: string): Promise<Cached<RepoSummary> | null>
     fetch(repoKey: string): Promise<Cached<RepoSummary>>
+  }
+  /** The Home profile of one account, read with its token. Nothing is cached. */
+  profile: {
+    get(accountId: string): Promise<ProfileInfo>
   }
   /** Read-only pull/merge requests and CI. Empty for a local-only repository. */
   changes: {
@@ -319,6 +324,7 @@ export const IPC = {
   reposFetch: 'repos:fetch',
   summaryCached: 'summary:cached',
   summaryFetch: 'summary:fetch',
+  profileGet: 'profile:get',
   changesList: 'changes:list',
   changesChecks: 'changes:checks',
   changesCreate: 'changes:create',

@@ -943,6 +943,12 @@ export function createService(deps: ServiceDeps): {
       }),
       fetch: guard(async (repoKey) => fetchSummary(repoKey))
     },
+    profile: {
+      get: guard(async (accountId) => {
+        const account = requireAccount(accountId)
+        return makeProvider(account, requireToken(account)).getProfile()
+      })
+    },
     changes: {
       list: guard((repoKey) => withProvider(repoKey, [], (p, r) => p.listChangeRequests(r))),
       create: guard(async (repoKey, input) => {

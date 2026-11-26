@@ -6,6 +6,7 @@ import type {
   ChecksInfo,
   Contributor,
   LanguageShare,
+  ProfileInfo,
   Repo,
   RepoSummary,
   Visibility
@@ -16,6 +17,75 @@ import { encodePath, ok, percent, required, sameOrigin, throwIfAllFailed } from 
 interface GhUser {
   login: string
   avatar_url?: string
+  name?: string | null
+  bio?: string | null
+  html_url?: string
+  followers?: number
+  following?: number
+}
+
+interface GhEvent {
+  type: string
+  created_at: string
+  repo?: { name: string }
+  payload?: { size?: number; action?: string; ref_type?: string }
+}
+
+interface GhGraphql {
+  data?: {
+    viewer?: {
+      pinnedItems?: {
+        nodes: ({
+          nameWithOwner: string
+          description: string | null
+          url: string
+          updatedAt: string
+          primaryLanguage: { name: string } | null
+        } | null)[]
+      }
+      contributionsCollection?: {
+        contributionCalendar: {
+          totalContributions: number
+          weeks: { contributionDays: { date: string; contributionCount: number }[] }[]
+        }
+      }
+    }
+  }
+}
+
+const PROFILE_QUERY = `query {
+  viewer {
+    pinnedItems(first: 6, types: REPOSITORY) { nodes { ... on Repository {
+      nameWithOwner description url updatedAt primaryLanguage { name } } } }
+    contributionsCollection { contributionCalendar { totalContributions
+      weeks { contributionDays { date contributionCount } } } }
+  }
+}`
+
+/** One short line for a public event. */
+export function eventText(e: GhEvent): string {
+  const repo = e.repo?.name ?? ''
+  const n = e.payload?.size
+  switch (e.type) {
+    case 'PushEvent':
+      return `Pushed ${n && n > 1 ? `${n} commits` : 'a commit'} to ${repo}`
+    case 'PullRequestEvent':
+      return `${cap(e.payload?.action)} a pull request in ${repo}`
+    case 'IssuesEvent':
+      return `${cap(e.payload?.action)} an issue in ${repo}`
+    case 'WatchEvent':
+      return `Starred ${repo}`
+    case 'CreateEvent':
+      return `Created a ${e.payload?.ref_type ?? 'ref'} in ${repo}`
+    case 'ForkEvent':
+      return `Forked ${repo}`
+    default:
+      return `${e.type.replace(/Event$/, '')} in ${repo}`
+  }
+}
+
+function cap(s: string | undefined): string {
+  return s ? s[0].toUpperCase() + s.slice(1) : 'Updated'
 }
 
 interface GhRepo {
@@ -156,6 +226,67 @@ export class GitHubProvider implements GitProvider {
   async verify(): Promise<VerifiedUser> {
     const user = required(await getJson<GhUser>(`${this.root}/user`, this.headers), 'GitHub')
     return { username: user.login, avatarUrl: user.avatar_url }
+  }
+
+  async getProfile(): Promise<ProfileInfo> {
+    const h = this.headers
+    const user = required(await getJson<GhUser>(`${this.root}/user`, h), 'GitHub')
+    // github.com: api.github.com/graphql; Enterprise: <origin>/api/graphql (root is .../api/v3).
+    const graphql = `${this.root.replace(/\/v3$/, '')}/graphql`
+    const settled = await Promise.allSettled([
+      getJson<{ login: string; avatar_url?: string }[]>(`${this.root}/user/orgs?per_page=30`, h),
+      getJson<GhEvent[]>(
+        `${this.root}/users/${encodeURIComponent(user.login)}/events?per_page=30`,
+        h
+      ),
+      postJson<GhGraphql>(graphql, h, { query: PROFILE_QUERY }),
+      getJson<GhRepo[]>(`${this.root}/user/repos?per_page=6&sort=pushed`, h)
+    ])
+    throwIfAllFailed(settled)
+    const [orgs, events, gql, recent] = settled
+
+    const viewer = ok(gql, null)?.data?.viewer
+    const pinned = (viewer?.pinnedItems?.nodes ?? []).filter((n) => n !== null)
+    const weeks = viewer?.contributionsCollection?.contributionCalendar
+    const recentRepos = ok(recent, null)
+    return {
+      username: user.login,
+      name: user.name ?? '',
+      bio: user.bio ?? '',
+      avatarUrl: user.avatar_url ?? '',
+      webUrl: user.html_url ?? '',
+      followers: typeof user.followers === 'number' ? user.followers : null,
+      following: typeof user.following === 'number' ? user.following : null,
+      orgs: (ok(orgs, null) ?? []).map((o) => ({ name: o.login, avatarUrl: o.avatar_url ?? '' })),
+      repoKind: pinned.length > 0 ? 'pinned' : 'recent',
+      repos:
+        pinned.length > 0
+          ? pinned.map((r) => ({
+              fullName: r.nameWithOwner,
+              description: r.description ?? '',
+              language: r.primaryLanguage?.name ?? '',
+              updatedAt: r.updatedAt,
+              webUrl: r.url
+            }))
+          : (Array.isArray(recentRepos) ? recentRepos : []).map((r) => ({
+              fullName: r.full_name,
+              description: r.description ?? '',
+              language: '',
+              updatedAt: r.pushed_at ?? r.updated_at,
+              webUrl: r.html_url
+            })),
+      events: (ok(events, null) ?? [])
+        .slice(0, 10)
+        .map((e) => ({ text: eventText(e), at: e.created_at })),
+      heatmap: weeks
+        ? {
+            total: weeks.totalContributions,
+            days: weeks.weeks.flatMap((w) =>
+              w.contributionDays.map((d) => ({ date: d.date, count: d.contributionCount }))
+            )
+          }
+        : null
+    }
   }
 
   async listRepos(): Promise<Repo[]> {

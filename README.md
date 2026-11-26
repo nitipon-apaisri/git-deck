@@ -254,6 +254,6 @@ Most of the total is cache reads, which are billed at a much lower rate, so the 
 - [x] Phase 40: Repo header overflow menu
 - [x] Phase 41: Hide branches and tags
 - [x] Phase 42: Git worktrees
-- [ ] Phase 43: Home profile
+- [x] Phase 43: Home profile
 
 </details>

@@ -18,6 +18,8 @@ interface MainPaneProps {
   onLinksChanged: () => void
   /** The project overview. It replaces the panes while it shows. */
   overview: ReactNode
+  /** Names the overview region for assistive tech: the project overview, or Home. */
+  overviewLabel?: string
 }
 
 /**
@@ -31,7 +33,8 @@ export function MainPane({
   links,
   loading,
   onLinksChanged,
-  overview
+  overview,
+  overviewLabel = 'Project overview'
 }: MainPaneProps) {
   const { state } = split
 
@@ -73,7 +76,7 @@ export function MainPane({
 
   if (overview) {
     return (
-      <main className="flex min-h-0 min-w-0 flex-1" aria-label="Project overview">
+      <main className="flex min-h-0 min-w-0 flex-1" aria-label={overviewLabel}>
         <Island className="flex-1">{overview}</Island>
       </main>
     )

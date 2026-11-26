@@ -52,7 +52,25 @@ function github(url: URL, send: Send): void {
   switch (p) {
     case '/user':
       return send(200, { login: 'octo', avatar_url: 'https://gh.example/octo.png' })
+    case '/user/orgs':
+      return send(200, [{ login: 'acme', avatar_url: 'https://gh.example/acme.png' }])
+    case '/users/octo/events':
+      return send(200, [
+        {
+          type: 'PushEvent',
+          created_at: '2026-03-01T00:00:00Z',
+          repo: { name: 'octo/hello' },
+          payload: { size: 3 }
+        },
+        {
+          type: 'WatchEvent',
+          created_at: '2026-02-28T00:00:00Z',
+          repo: { name: 'acme/kit' },
+          payload: {}
+        }
+      ])
     case '/user/repos':
+      if (perPage === '6') return send(200, [ghRepo(1, 'octo/hello')])
       return url.searchParams.get('page') === '2'
         ? send(200, [ghRepo(3, 'octo/third', { private: false, visibility: 'public' })])
         : send(200, [ghRepo(1, 'octo/hello'), ghRepo(2, 'octo/empty')], {
@@ -95,6 +113,45 @@ function github(url: URL, send: Send): void {
   }
 }
 
+let pins = true
+let graphqlDown = false
+
+function graphql(send: Send): void {
+  if (graphqlDown) return send(502, { message: 'bad gateway' })
+  send(200, {
+    data: {
+      viewer: {
+        pinnedItems: {
+          nodes: pins
+            ? [
+                {
+                  nameWithOwner: 'octo/hello',
+                  description: 'Hi',
+                  url: 'https://gh.example/octo/hello',
+                  updatedAt: '2026-03-01T00:00:00Z',
+                  primaryLanguage: { name: 'TypeScript' }
+                }
+              ]
+            : []
+        },
+        contributionsCollection: {
+          contributionCalendar: {
+            totalContributions: 5,
+            weeks: [
+              {
+                contributionDays: [
+                  { date: '2026-03-01', contributionCount: 2 },
+                  { date: '2026-03-02', contributionCount: 3 }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  })
+}
+
 function gitlab(url: URL, send: Send): void {
   const p = url.pathname.replace('/gitlab/api/v4', '')
   const glProject = (id: number, path: string, extra: Record<string, unknown> = {}): unknown => ({
@@ -118,8 +175,34 @@ function gitlab(url: URL, send: Send): void {
   })
   switch (p) {
     case '/user':
-      return send(200, { username: 'gl', avatar_url: '/gitlab/uploads/a.png' })
+      return send(200, {
+        id: 7,
+        username: 'gl',
+        name: 'Gil Lab',
+        bio: 'Ops',
+        web_url: 'https://gl.example/gl',
+        followers: 4,
+        following: 2,
+        avatar_url: '/gitlab/uploads/a.png'
+      })
+    case '/groups':
+      return send(200, [{ full_path: 'team', avatar_url: null }])
+    case '/users/7/events':
+      return send(200, [
+        {
+          action_name: 'pushed to',
+          created_at: '2026-03-01T00:00:00Z',
+          push_data: { ref: 'main' }
+        },
+        {
+          action_name: 'opened',
+          target_type: 'MergeRequest',
+          target_title: 'Fix CI',
+          created_at: '2026-02-28T00:00:00Z'
+        }
+      ])
     case '/projects':
+      if (url.searchParams.get('per_page') === '6') return send(200, [glProject(10, 'team/full')])
       // Relative next link on a path-prefixed install.
       return url.searchParams.get('page') === '2'
         ? send(200, [glProject(12, 'team/sub/locked', { forked_from_project: { id: 1 } })])
@@ -173,6 +256,7 @@ before(async () => {
       ? req.headers['private-token'] !== TOKEN
       : req.headers['authorization'] !== `Bearer ${TOKEN}`
     if (wrongAuth) return send(401, { message: 'bad credentials' })
+    if (url.pathname === '/api/graphql') return graphql(send)
     if (url.pathname.startsWith('/api/v3/')) return github(url, send)
     if (url.pathname.startsWith('/gitlab/api/v4/')) return gitlab(url, send)
     return send(404, {})
@@ -412,4 +496,69 @@ test('the token is only ever sent in a header, and never appears in an error', a
   await new GitHubProvider('a', base, TOKEN).listRepos()
   await new GitLabProvider('a', `${base}/gitlab`, TOKEN).listRepos()
   assert.ok(seen.every((r) => !r.url.includes(TOKEN) && !r.url.includes(bad)))
+})
+
+test('GitHub: getProfile reads pins and the contribution calendar through GraphQL', async () => {
+  pins = true
+  graphqlDown = false
+  const p = await new GitHubProvider('acc', base, TOKEN).getProfile()
+  assert.equal(p.username, 'octo')
+  assert.deepEqual(p.orgs, [{ name: 'acme', avatarUrl: 'https://gh.example/acme.png' }])
+  assert.equal(p.repoKind, 'pinned')
+  assert.equal(p.repos[0].language, 'TypeScript')
+  assert.deepEqual(p.heatmap, {
+    total: 5,
+    days: [
+      { date: '2026-03-01', count: 2 },
+      { date: '2026-03-02', count: 3 }
+    ]
+  })
+  assert.deepEqual(
+    p.events.map((e) => e.text),
+    ['Pushed 3 commits to octo/hello', 'Starred acme/kit']
+  )
+})
+
+test('GitHub: without pins the profile lists recent repos, and a GraphQL outage only drops the heatmap', async () => {
+  pins = false
+  graphqlDown = true
+  const p = await new GitHubProvider('acc', base, TOKEN).getProfile()
+  graphqlDown = false
+  pins = true
+  assert.equal(p.heatmap, null)
+  assert.equal(p.repoKind, 'recent')
+  assert.equal(p.repos[0].fullName, 'octo/hello')
+  assert.equal(p.orgs.length, 1)
+})
+
+test('GitLab: getProfile gives events and recent projects, no heatmap, and absolute avatars', async () => {
+  const p = await new GitLabProvider('acc', `${base}/gitlab`, TOKEN).getProfile()
+  assert.equal(p.name, 'Gil Lab')
+  assert.equal(p.followers, 4)
+  assert.equal(p.avatarUrl, `${base}/gitlab/uploads/a.png`)
+  assert.equal(p.heatmap, null)
+  assert.equal(p.repoKind, 'recent')
+  assert.deepEqual(p.orgs, [{ name: 'team', avatarUrl: '' }])
+  assert.deepEqual(
+    p.events.map((e) => e.text),
+    ['Pushed to main', 'Opened mergerequest Fix CI']
+  )
+})
+
+test('getProfile: a refused token rejects without leaking it, and sends it only in a header', async () => {
+  const bad = 'wrong-token-xyz'
+  for (const provider of [
+    new GitHubProvider('a', base, bad),
+    new GitLabProvider('a', `${base}/gitlab`, bad)
+  ]) {
+    await assert.rejects(provider.getProfile(), (err: unknown) => {
+      assert.ok(err instanceof HttpError && err.status === 401)
+      assert.ok(!err.message.includes(bad))
+      return true
+    })
+  }
+  seen = []
+  await new GitHubProvider('a', base, TOKEN).getProfile()
+  await new GitLabProvider('a', `${base}/gitlab`, TOKEN).getProfile()
+  assert.ok(seen.every((r) => !r.url.includes(TOKEN)))
 })

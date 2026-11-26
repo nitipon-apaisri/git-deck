@@ -2,6 +2,7 @@ import type {
   ChangeRequest,
   ChecksInfo,
   CreateChangeRequestInput,
+  ProfileInfo,
   Repo,
   RepoSummary,
   VerifiedUser
@@ -13,6 +14,8 @@ export interface GitProvider {
   /** Checks the token and returns who it belongs to. Throws `HttpError` on failure. */
   verify(): Promise<VerifiedUser>
   listRepos(): Promise<Repo[]>
+  /** The Home profile. Never throws for a single failed piece; throws when every piece failed. */
+  getProfile(): Promise<ProfileInfo>
   /** Never throws for a single failed piece: it becomes null or empty. */
   getSummary(repo: Repo): Promise<RepoSummary>
   /** The most recently updated pull/merge requests, any state. */

@@ -668,3 +668,16 @@ Settled with the user:
 - **Remove:** always confirms. A worktree with changes is refused first; the dialog then offers "Remove anyway" (`--force`), which confirms again. A locked or missing one is disabled (unlock, or prune).
 - **Collapse keys:** worktrees use `wt:<parentKey>` and the Unavailable heading uses `\u0000unavailable`, both in `gitdeck.collapsed`.
 - **Not checked:** the dialog and the nested rows were not run in a window.
+
+## 2026-11-26, Phase 43 Home profile
+
+Layout follows `docs/ui-boards/HomeProfile.dc.html`.
+
+- **Where Home shows:** a fixed "Home" button above the repo filter. It also shows by itself when "All repositories" has no repository selected (it replaces the "No repository selected" pane) and at startup before any pane is picked. Inside a project the project overview stays the empty state, but the Home button still opens Home. Opening a repo, or switching project, leaves Home.
+- **Tabs:** the app has panes, not tabs. Home replaces the panes while it shows, like the project overview does; the pane state (which repo, its inner tab) is kept, so clicking a repo returns to it. A pane's graph and scroll are rebuilt on return, as they are after the project overview.
+- **"Home section follows `gitdeck.collapsed`":** read as the Home page sections (repositories, activity). Their keys are `home:repos` and `home:activity`. The sidebar and Home now share `state/collapsed.ts`, which re-reads storage before each toggle so neither screen overwrites the other's keys. The Home button itself is not collapsible.
+- **One IPC call:** `profile.get(accountId)`. Main reads with the account's token; nothing is cached. The shown account is stored under `gitdeck.homeAccount`.
+- **GitHub:** `/user`, `/user/orgs`, `/users/:login/events` and one GraphQL query (pins and contribution calendar). The GraphQL URL is `api.github.com/graphql`, or `<origin>/api/graphql` on Enterprise. If it fails, the heatmap is dropped and recent repos replace pins. Followers and following come from `/user`.
+- **GitLab:** `/user`, `/groups`, `/users/:id/events` and recent projects. No heatmap, and the screen says so. Followers and following show "Unavailable" when `/user` does not return them.
+- **Tokens:** `--heat-1` to `--heat-4` added to `src/renderer/src/tokens.css` for the heatmap. `docs/design-system/tokens.*` were already behind the app's file and were not touched.
+- **Not checked:** the screen was not run in a window. The GraphQL query was tested against a mock server only, not against a live GitHub.
