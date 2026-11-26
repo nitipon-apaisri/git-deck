@@ -31,6 +31,7 @@ Browse every repository you can reach, read its commit graph, group repositories
 - **Repository overview.** Commits, contributors, branches, tags, open pull or merge requests, languages and top contributors. Saved data shows first and refreshes in the background. If a refresh fails, the saved data stays and a banner offers Retry.
 - **Local clones.** Fetch, open the folder, and read local branch, ahead/behind and working tree state.
 - **History operations.** Tags (create, annotate, push, delete here or on the remote), revert, reset (soft, mixed or hard, with a confirm for hard), remotes (add, rename, remove), rebase onto a branch or commit, and interactive rebase from a graph row (reorder, reword, squash, fixup, drop). Revert and rebase reuse the conflict banner, and a rebase can skip the commit it stopped on. URLs never carry a token.
+- **Worktrees.** The Worktrees dialog in the repository's `…` menu adds (on a new or existing branch, in a folder you pick), opens, locks, unlocks, removes and prunes worktrees. A worktree with changes is refused unless you confirm a forced remove. Worktrees nest under their repository in the sidebar, and each opens in its own tab.
 - **Bisect.** Start from a graph row. A banner shows the commit under test with Good, Bad, Skip and Abort, then the result.
 - **Pull and merge requests, CI.** A tab with state, author, reviewers, labels and checks, plus a status dot beside the branch in the graph. "Create PR/MR" opens the host's compare page.
 - **Notifications.** Off by default. In Edit project, pick the events to watch: new, merged, closed, reviewer requested, checks failed. GitDeck checks the project's hosted repositories every 2 minutes while it is open (no webhooks, nothing leaves your machine but the usual API reads). Clicking a notification opens the PR/MR tab. Settings > Notifications turns them all off and sends a test notification.
@@ -176,6 +177,7 @@ docs           Design system, UI boards, DECISIONS.md.
 - Only the first 25 contributors of each repository are read, so contributor totals are approximate.
 - Split View has two panes at most.
 - The graph shows the history that `git log` reports for the linked folder. Detached HEAD and graphs with more than about ten lanes at once were not checked.
+- Worktrees were tested against temporary repositories. The Worktrees dialog and the nested sidebar rows were not run in a window. Moving a worktree is not supported.
 
 Not planned for this version: a full-file three-way editor, OAuth sign-in (tokens only), a SQLite cache, silent auto-update, signing and notarisation, more than two panes, drag-and-drop between projects, and cloning every repository of a project at once.
 
@@ -203,7 +205,7 @@ Most of the total is cache reads, which are billed at a much lower rate, so the 
 
 ## Progress
 
-**43 of 45 phases done.** Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
+**44 of 45 phases done.** Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 
 <details>
 <summary>Phase checklist</summary>
