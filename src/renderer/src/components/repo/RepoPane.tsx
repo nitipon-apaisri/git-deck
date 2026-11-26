@@ -34,6 +34,7 @@ import { useChecks } from '../../state/changeData'
 import type { BranchCheck } from '../../lib/graphView'
 import { RepoHeader } from './RepoHeader'
 import { RemotesDialog } from './RemotesDialog'
+import { WorktreesDialog } from './WorktreesDialog'
 import { RebaseDialog } from './RebaseDialog'
 import { StashDialog } from './StashDialog'
 import { BranchesDialog } from './BranchesDialog'
@@ -195,6 +196,7 @@ export function RepoPane({
   const [branchesOpen, setBranchesOpen] = useState(false)
   const [tagsRequest, setTagsRequest] = useState<{ hash: string | null } | null>(null)
   const [remotesOpen, setRemotesOpen] = useState(false)
+  const [worktreesOpen, setWorktreesOpen] = useState(false)
   // The conflicted file open in the editor. It lives here, so each pane has its own.
   const [conflictFile, setConflictFile] = useState<string | null>(null)
   const [nameRequest, setNameRequest] = useState<BranchNameRequest | null>(null)
@@ -262,6 +264,7 @@ export function RepoPane({
             onTags={() => setTagsRequest({ hash: null })}
             onBranches={() => setBranchesOpen(true)}
             onRemotes={() => setRemotesOpen(true)}
+            onWorktrees={() => setWorktreesOpen(true)}
             terminalOpen={terminalOpen}
             onToggleTerminal={toggleTerminal}
           />
@@ -516,6 +519,17 @@ export function RepoPane({
           path={linkedPath}
           onChanged={actions.refresh}
           onClose={() => setRemotesOpen(false)}
+        />
+      ) : null}
+      {worktreesOpen && linkedPath ? (
+        <WorktreesDialog
+          path={linkedPath}
+          branches={branches}
+          onChanged={() => {
+            actions.refresh()
+            onLinksChanged()
+          }}
+          onClose={() => setWorktreesOpen(false)}
         />
       ) : null}
       {conflictFile && linkedPath ? (

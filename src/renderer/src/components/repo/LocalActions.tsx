@@ -37,6 +37,7 @@ interface LocalActionsProps {
   onTags: () => void
   onBranches: () => void
   onRemotes: () => void
+  onWorktrees: () => void
   terminalOpen: boolean
   onToggleTerminal: () => void
   /** A narrow pane: Open folder, Fetch, Pull and Push show only their icon. */
@@ -89,6 +90,7 @@ export function LocalActions({
   onTags,
   onBranches,
   onRemotes,
+  onWorktrees,
   terminalOpen,
   onToggleTerminal,
   compact = false
@@ -167,6 +169,13 @@ export function LocalActions({
             label: 'Remotes',
             leading: <Icon name="globe" size="sm" />,
             onSelect: onRemotes
+          },
+          {
+            kind: 'item',
+            id: 'worktrees',
+            label: 'Worktrees',
+            leading: <Icon name="folder" size="sm" />,
+            onSelect: onWorktrees
           }
         ]
         if (hidden.all.length > 0) {

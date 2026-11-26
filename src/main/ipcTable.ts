@@ -100,6 +100,15 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     localPush: ([path, force]) => api.local.push(path as string, force as boolean),
     localSuggestCommitMessage: ([path, config]) =>
       api.local.suggestCommitMessage(path as string, config as AiConfig),
+    localWorktrees: ([path]) => api.local.worktrees(path as string),
+    localWorktreeAdd: ([path, branch, create]) =>
+      api.local.worktreeAdd(path as string, branch as string, create as boolean),
+    localWorktreeOpen: ([path, folder]) => api.local.worktreeOpen(path as string, folder as string),
+    localWorktreeRemove: ([path, folder, force]) =>
+      api.local.worktreeRemove(path as string, folder as string, force as boolean),
+    localWorktreeLock: ([path, folder, lock]) =>
+      api.local.worktreeLock(path as string, folder as string, lock as boolean),
+    localWorktreePrune: ([path]) => api.local.worktreePrune(path as string),
     localStashes: ([path]) => api.local.stashes(path as string),
     localStashPush: ([path, message, untracked]) =>
       api.local.stashPush(path as string, message as string, untracked as boolean),

@@ -659,3 +659,12 @@ Settled with the user:
 - **Where:** the buttons live in `LocalActions`, not `RepoHeader`, so the change is there. Tags, Remotes and Unlink moved into a "…" menu (`Menu`, no new component). Unlink is a `danger` entry, hidden for local-account repos as before.
 - **Kept visible:** Stash (its count shows at a glance) and, while no folder is linked, Clone and Link existing folder (the primary actions of that state).
 - **Not checked:** the row was not run in a window, so the look in Split View's narrow pane is unchecked. Unlink has no confirm step, as before.
+
+## 2026-11-26, Phase 42 git worktrees
+
+- **Identity:** a linked worktree is its own local `Repo` entry (key from the sha1 of its root, the same as "Open folder", so the same folder never appears twice). `Repo.parentKey` is set when the app adds or opens it, and the sidebar nests by it. A worktree opened by hand with "Open folder" has no parent and stays top level. A worktree whose parent entry is gone also stands alone.
+- **Why not a worktree list inside the pane:** each entry then gets its own `RepoPane` (graph, changes, scroll, terminal cwd, watcher) with no new pane code.
+- **Add:** the folder is picked in main (`ui.pickFolder`), so the renderer never sends an arbitrary path. Open, remove and lock only act on a path that `git worktree list` reports for that repository.
+- **Remove:** always confirms. A worktree with changes is refused first; the dialog then offers "Remove anyway" (`--force`), which confirms again. A locked or missing one is disabled (unlock, or prune).
+- **Collapse keys:** worktrees use `wt:<parentKey>` and the Unavailable heading uses `\u0000unavailable`, both in `gitdeck.collapsed`.
+- **Not checked:** the dialog and the nested rows were not run in a window.

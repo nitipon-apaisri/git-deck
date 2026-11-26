@@ -21,12 +21,22 @@ export type TreeRow =
   | { kind: 'host'; key: string; node: AccountNode; expanded: boolean }
   | { kind: 'namespace'; key: string; node: NamespaceNode; expanded: boolean }
   /** `flat` repositories sit straight under their host, with no group row between. */
-  | { kind: 'repo'; key: string; repo: Repo; flat: boolean }
+  | {
+      kind: 'repo'
+      key: string
+      repo: Repo
+      flat: boolean
+      /** A worktree listed under the repository it was added from. */
+      nested: boolean
+      /** How many worktrees hang under this repository, and whether they are shown. */
+      children: number
+      childrenOpen: boolean
+    }
 
 /** Project keys no loaded list has: a heading, then one row each. */
 export type ListRow =
   | TreeRow
-  | { kind: 'unavailable-header'; key: string; count: number }
+  | { kind: 'unavailable-header'; key: string; count: number; expanded: boolean }
   | { kind: 'unavailable'; key: string; repoKey: string }
 
 const byName = (a: string, b: string): number =>
@@ -45,6 +55,11 @@ export function matchesQuery(repo: Repo, query: string): boolean {
 /** A local repository keeps its folder path in `description`; group by the folder it lives in. */
 const parentFolder = (path: string): string => path.replace(/[\\/]+[^\\/]*[\\/]*$/, '') || path
 const folderName = (path: string): string => path.split(/[\\/]/).filter(Boolean).pop() ?? path
+
+/** Collapse key of the worktrees under one repository (`gitdeck.collapsed`). */
+export const worktreesKey = (repoKey: string): string => `wt:${repoKey}`
+
+export const UNAVAILABLE_KEY = '\u0000unavailable'
 
 export const namespaceKey = (accountId: string, namespace: string): string =>
   `${accountId}\u0000${namespace}`
@@ -102,14 +117,57 @@ export function flattenTree(
     if (node.account.id === LOCAL_ACCOUNT_ID) {
       // Local repositories are listed by name alone: their parent folder is no group.
       const repos = node.namespaces.flatMap((ns) => ns.repos).sort((a, b) => byName(a.name, b.name))
-      for (const repo of repos) rows.push({ kind: 'repo', key: repo.key, repo, flat: true })
+      const shown = new Set(repos.map((r) => r.key))
+      // A worktree whose parent is not in the list (removed, or filtered out) stands alone.
+      const childrenOf = new Map<string, Repo[]>()
+      const top: Repo[] = []
+      for (const repo of repos) {
+        if (repo.parentKey && repo.parentKey !== repo.key && shown.has(repo.parentKey)) {
+          childrenOf.set(repo.parentKey, [...(childrenOf.get(repo.parentKey) ?? []), repo])
+        } else top.push(repo)
+      }
+      for (const repo of top) {
+        const kids = childrenOf.get(repo.key) ?? []
+        const open = searching || !collapsed.has(worktreesKey(repo.key))
+        rows.push({
+          kind: 'repo',
+          key: repo.key,
+          repo,
+          flat: true,
+          nested: false,
+          children: kids.length,
+          childrenOpen: open
+        })
+        if (!open) continue
+        for (const kid of kids) {
+          rows.push({
+            kind: 'repo',
+            key: kid.key,
+            repo: kid,
+            flat: true,
+            nested: true,
+            children: 0,
+            childrenOpen: false
+          })
+        }
+      }
       continue
     }
     for (const ns of node.namespaces) {
       const nsOpen = searching || !collapsed.has(ns.key)
       rows.push({ kind: 'namespace', key: ns.key, node: ns, expanded: nsOpen })
       if (!nsOpen) continue
-      for (const repo of ns.repos) rows.push({ kind: 'repo', key: repo.key, repo, flat: false })
+      for (const repo of ns.repos) {
+        rows.push({
+          kind: 'repo',
+          key: repo.key,
+          repo,
+          flat: false,
+          nested: false,
+          children: 0,
+          childrenOpen: false
+        })
+      }
     }
   }
   return rows
@@ -124,7 +182,14 @@ export function flattenRows(
 ): ListRow[] {
   const rows: ListRow[] = flattenTree(nodes, collapsed, searching)
   if (unavailable.length === 0) return rows
-  rows.push({ kind: 'unavailable-header', key: '\u0000unavailable', count: unavailable.length })
+  const expanded = searching || !collapsed.has(UNAVAILABLE_KEY)
+  rows.push({
+    kind: 'unavailable-header',
+    key: UNAVAILABLE_KEY,
+    count: unavailable.length,
+    expanded
+  })
+  if (!expanded) return rows
   for (const key of unavailable)
     rows.push({ kind: 'unavailable', key: `\u0000u${key}`, repoKey: key })
   return rows

@@ -104,6 +104,12 @@ export type GitOps = Pick<
   | 'getRemoteTarget'
   | 'pull'
   | 'push'
+  | 'listWorktrees'
+  | 'addWorktree'
+  | 'removeWorktree'
+  | 'lockWorktree'
+  | 'pruneWorktrees'
+  | 'worktreeDirty'
   | 'listStashes'
   | 'stashPush'
   | 'stashApply'
@@ -742,9 +748,7 @@ export function createService(deps: ServiceDeps): {
     return root
   }
 
-  async function openLocal(): Promise<Repo | null> {
-    const picked = await ui.pickFolder('Select a Git repository to open')
-    if (!picked) return null
+  async function registerLocal(picked: string, parentKey?: string): Promise<Repo> {
     const root = await git.repoRoot(picked)
     if (!root) throw new Error('That folder is not a Git repository')
     const id = createHash('sha1').update(root).digest('hex').slice(0, 12)
@@ -768,10 +772,24 @@ export function createService(deps: ServiceDeps): {
       openIssues: 0,
       updatedAt: info.lastCommitAt ? new Date(info.lastCommitAt * 1000).toISOString() : '',
       archived: false,
-      fork: false
+      fork: false,
+      ...(parentKey ? { parentKey } : {})
     }
     await store.addLocalRepo(repo, root)
     return repo
+  }
+
+  async function openLocal(): Promise<Repo | null> {
+    const picked = await ui.pickFolder('Select a Git repository to open')
+    return picked ? registerLocal(picked) : null
+  }
+
+  /** The folder must be one of this repository's own worktrees, as git lists them. */
+  async function worktreeOf(path: string, folder: unknown): Promise<string> {
+    if (typeof folder !== 'string' || !folder) throw new Error('Invalid worktree')
+    const found = (await git.listWorktrees(path)).find((w) => w.path === folder)
+    if (!found || found.isMain) throw new Error('That is not a linked worktree of this repository')
+    return found.path
   }
 
   async function cloneInto(repoKey: string, protocol: CloneProtocol): Promise<string | null> {
@@ -1225,6 +1243,58 @@ export function createService(deps: ServiceDeps): {
         const { stat, diff } = await git.getStagedDiff(path)
         if (!diff.trim()) throw new Error('Stage some changes first')
         return askAi(config, buildPrompt(stat, diff))
+      }),
+      worktrees: guard(async (path) => {
+        const key = linkedRepoKey(path)
+        const open = new Map(
+          store.getLocalRepos().map((r) => [store.getLinks()[r.key], r.key] as const)
+        )
+        return (await git.listWorktrees(path)).map((w) => ({
+          ...w,
+          repoKey: w.isMain ? key : (open.get(w.path) ?? null)
+        }))
+      }),
+      worktreeAdd: guard(async (path, branch, create) => {
+        const parentKey = linkedRepoKey(path)
+        if (typeof branch !== 'string' || !branch.trim()) throw new Error('Choose a branch')
+        if (typeof create !== 'boolean') throw new Error('Create must be true or false')
+        const folder = await ui.pickFolder('Select an empty folder for the worktree')
+        if (!folder) return null
+        await serial(path, () => git.addWorktree(path, folder, branch.trim(), create))
+        return registerLocal(folder, parentKey)
+      }),
+      worktreeOpen: guard(async (path, folder) => {
+        const parentKey = linkedRepoKey(path)
+        return registerLocal(await worktreeOf(path, folder), parentKey)
+      }),
+      worktreeRemove: guard(async (path, folder, force) => {
+        linkedRepoKey(path)
+        if (typeof force !== 'boolean') throw new Error('Force must be true or false')
+        const target = await worktreeOf(path, folder)
+        const dirty = await git.worktreeDirty(target)
+        if (dirty && !force) throw new Error('This worktree has changes. Use force to remove it.')
+        const ok = await ui.confirm({
+          message: dirty
+            ? 'Remove this worktree and its uncommitted changes?'
+            : 'Remove this worktree?',
+          detail: `The folder ${target} is deleted. The branch stays.`,
+          confirmLabel: 'Remove'
+        })
+        if (!ok) return false
+        await serial(path, () => git.removeWorktree(path, target, force))
+        const entry = store.getLocalRepos().find((r) => store.getLinks()[r.key] === target)
+        if (entry) await store.removeLocalRepo(entry.key)
+        return true
+      }),
+      worktreeLock: guard(async (path, folder, lock) => {
+        linkedRepoKey(path)
+        if (typeof lock !== 'boolean') throw new Error('Lock must be true or false')
+        const target = await worktreeOf(path, folder)
+        return serial(path, () => git.lockWorktree(path, target, lock))
+      }),
+      worktreePrune: guard(async (path) => {
+        linkedRepoKey(path)
+        return serial(path, () => git.pruneWorktrees(path))
       }),
       stashes: guard(async (path) => {
         linkedRepoKey(path)

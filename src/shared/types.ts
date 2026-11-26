@@ -46,6 +46,8 @@ export interface Repo {
   updatedAt: string
   archived: boolean
   fork: boolean
+  /** Local worktree entries only: the key of the repository it was added from. */
+  parentKey?: string
 }
 
 export interface Contributor {
@@ -243,6 +245,24 @@ export type CheckoutTarget =
   | { kind: 'commit'; hash: string }
 
 export type PullMode = 'ff-only' | 'merge'
+
+/** One record of `git worktree list --porcelain`. */
+export interface WorktreeEntry {
+  path: string
+  head: string
+  /** Short branch name, null when detached or bare. */
+  branch: string | null
+  detached: boolean
+  bare: boolean
+  /** The lock reason ('' when none was given), null when not locked. */
+  locked: string | null
+  /** Why git would prune it (its folder is gone), null when it is fine. */
+  prunable: string | null
+  /** The first record: the main working tree. */
+  isMain: boolean
+  /** Key of the sidebar entry for this folder, when it is open in the app. */
+  repoKey: string | null
+}
 
 export interface StashEntry {
   /** Position in the stash list, 0 is the newest. */

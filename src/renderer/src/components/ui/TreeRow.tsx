@@ -3,7 +3,7 @@ import { cn } from '@/lib/cn'
 
 interface TreeRowProps {
   /** `host` and `repo` rows are 30px; a `namespace` row is the quiet group label. */
-  level: 'host' | 'namespace' | 'repo' | 'repo-flat'
+  level: 'host' | 'namespace' | 'repo' | 'repo-flat' | 'repo-nested'
   selected?: boolean
   /** Set on rows that open and close. */
   expanded?: boolean
@@ -50,7 +50,8 @@ export function TreeRow({
           'flex min-h-(--tree-row-height) min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent py-0 pr-0 pl-2 text-left text-[13px] text-inherit',
           quiet && 'min-h-6.5 pl-6 text-[12px]',
           level === 'repo' && 'pl-11',
-          level === 'repo-flat' && 'pl-10'
+          level === 'repo-flat' && 'pl-10',
+          level === 'repo-nested' && 'pl-14'
         )}
         onClick={onClick}
         aria-expanded={expanded}

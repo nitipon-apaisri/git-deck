@@ -21,7 +21,9 @@ import {
   flattenTree,
   matchesQuery,
   namespaceKey,
-  rowHeight
+  rowHeight,
+  UNAVAILABLE_KEY,
+  worktreesKey
 } from '../src/renderer/src/lib/sidebarTree'
 import {
   parseThemeSetting,
@@ -343,6 +345,28 @@ test('flattenRows: appends the unavailable heading and rows, and sizes every row
   assert.deepEqual(flattenRows([], new Set(), false, []), [])
   assert.deepEqual(rows.map(rowHeight), [30, 40, 30, 30])
   assert.equal(rowHeight(flattenRows(nodes, new Set(), false, [])[1]), 26)
+})
+
+test('flattenRows: worktrees nest under their parent and collapse; Unavailable collapses', () => {
+  const rows = (collapsed: string[], unavailable: string[] = []) =>
+    flattenRows(nodes, new Set(collapsed), false, unavailable)
+  const main = repo(LOCAL_GROUP.id, 'm', 'local', 'main', { description: '/p/main' })
+  const wt = repo(LOCAL_GROUP.id, 'w', 'local', 'aaa-wt', {
+    description: '/p/aaa-wt',
+    parentKey: main.key
+  })
+  const orphan = repo(LOCAL_GROUP.id, 'o', 'local', 'orphan', {
+    description: '/p/orphan',
+    parentKey: 'local:gone'
+  })
+  const nodes = buildTree([LOCAL_GROUP], { [LOCAL_GROUP.id]: [wt, main, orphan] }, '')
+  const keys = (r: ReturnType<typeof rows>) => r.map((x) => x.key)
+  assert.deepEqual(keys(rows([])), [LOCAL_GROUP.id, main.key, wt.key, orphan.key])
+  const parent = rows([])[1]
+  assert.ok(parent.kind === 'repo' && parent.children === 1 && !parent.nested)
+  assert.deepEqual(keys(rows([worktreesKey(main.key)])), [LOCAL_GROUP.id, main.key, orphan.key])
+  assert.equal(rows([UNAVAILABLE_KEY], ['a:1']).at(-1)?.kind, 'unavailable-header')
+  assert.equal(rows([], ['a:1']).at(-1)?.kind, 'unavailable')
 })
 
 // workspace reducer

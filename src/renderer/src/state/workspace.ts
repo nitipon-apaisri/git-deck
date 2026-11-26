@@ -98,6 +98,13 @@ export function useWorkspace(): Workspace {
 
   const refreshLinks = useCallback(async () => {
     try {
+      // The local list too: adding or removing a worktree changes it.
+      dispatch({
+        type: 'repos',
+        accountId: LOCAL_ACCOUNT_ID,
+        repos: await window.api.local.repos(),
+        fetchedAt: Date.now()
+      })
       dispatch({ type: 'links', links: await window.api.local.links() })
     } catch {
       // Keep the links we have: the sidebar dot is a hint, not something to fail on.
