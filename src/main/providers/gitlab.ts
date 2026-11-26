@@ -33,6 +33,27 @@ interface GlEvent {
   push_data?: { commit_count?: number; ref?: string } | null
 }
 
+/** Events per day over the 365 days up to `today` (UTC), oldest first. */
+export function eventHeatmap(
+  events: readonly { created_at: string }[],
+  today: Date
+): NonNullable<ProfileInfo['heatmap']> {
+  const counts = new Map<string, number>()
+  for (const e of events) {
+    const day = e.created_at.slice(0, 10)
+    counts.set(day, (counts.get(day) ?? 0) + 1)
+  }
+  const end = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())
+  const days = Array.from({ length: 365 }, (_, i) => {
+    const date = new Date(end - (364 - i) * 86_400_000).toISOString().slice(0, 10)
+    return { date, count: counts.get(date) ?? 0 }
+  })
+  return { source: 'events', total: days.reduce((n, d) => n + d.count, 0), days }
+}
+
+// 100 per page, 10 pages: a busier year than 1000 events is undercounted at its start.
+const EVENT_PAGES = 10
+
 /** One short line for a user event. GitLab events carry no project name, only a target. */
 export function glEventText(e: GlEvent): string {
   const verb = e.action_name.replace(/\b\w/, (c) => c.toUpperCase())
@@ -164,7 +185,11 @@ export class GitLabProvider implements GitProvider {
         `${this.root}/groups?min_access_level=10&per_page=30`,
         h
       ),
-      getJson<GlEvent[]>(`${this.root}/users/${user.id}/events?per_page=30`, h),
+      paginate<GlEvent>(
+        `${this.root}/users/${user.id}/events?per_page=100&after=${new Date(Date.now() - 366 * 86_400_000).toISOString().slice(0, 10)}`,
+        h,
+        EVENT_PAGES
+      ),
       getJson<GlProject[]>(
         `${this.root}/projects?membership=true&order_by=last_activity_at&sort=desc&per_page=6`,
         h
@@ -195,7 +220,7 @@ export class GitLabProvider implements GitProvider {
       events: (ok(events, null) ?? [])
         .slice(0, 10)
         .map((e) => ({ text: glEventText(e), at: e.created_at })),
-      heatmap: null
+      heatmap: ok(events, null) ? eventHeatmap(ok(events, null) ?? [], new Date()) : null
     }
   }
 

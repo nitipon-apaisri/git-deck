@@ -280,6 +280,7 @@ export class GitHubProvider implements GitProvider {
         .map((e) => ({ text: eventText(e), at: e.created_at })),
       heatmap: weeks
         ? {
+            source: 'calendar' as const,
             total: weeks.totalContributions,
             days: weeks.weeks.flatMap((w) =>
               w.contributionDays.map((d) => ({ date: d.date, count: d.contributionCount }))

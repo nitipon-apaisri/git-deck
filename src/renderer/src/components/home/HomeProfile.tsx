@@ -146,7 +146,9 @@ function ProfileBody({
         <StatCard value={profile.orgs.length} label="Organizations" />
         <StatCard
           value={profile.heatmap ? profile.heatmap.total : null}
-          label="Contributions, 12 months"
+          label={
+            profile.heatmap?.source === 'events' ? 'Events, 12 months' : 'Contributions, 12 months'
+          }
         />
         <StatCard value={profile.events.length} label="Recent events" />
       </div>
@@ -155,12 +157,19 @@ function ProfileBody({
         aria-label="Contributions"
         className="flex flex-col gap-3 rounded-xl bg-(--island-raised) p-4"
       >
-        <h2 className="m-0 text-[15px] leading-5.5 font-semibold">Contributions</h2>
+        <h2 className="m-0 text-[15px] leading-5.5 font-semibold">
+          Contributions
+          {profile.heatmap?.source === 'events' ? (
+            <span className="ml-2 text-[12px] leading-4 font-normal text-muted-foreground">
+              Counted from events
+            </span>
+          ) : null}
+        </h2>
         {profile.heatmap ? (
           <div className="overflow-x-auto pb-1">
             <div
               role="img"
-              aria-label={`${profile.heatmap.total} contributions in the last 12 months`}
+              aria-label={`${profile.heatmap.total} ${profile.heatmap.source === 'events' ? 'events' : 'contributions'} in the last 12 months`}
               className="grid w-max auto-cols-[11px] grid-flow-col grid-rows-[repeat(7,11px)] gap-0.75"
             >
               {cells.map((c, i) =>
@@ -179,9 +188,7 @@ function ProfileBody({
         ) : (
           <div className="flex items-center gap-2 rounded-md bg-(--warning-bg) px-3 py-2 text-(--warning-text)">
             <Icon name="alert" size="sm" />
-            {account.type === 'github'
-              ? 'Unavailable. The host did not return a contribution calendar. Recent events are shown instead.'
-              : 'Unavailable. GitLab has no contribution calendar in its API. Recent events are shown instead.'}
+            Unavailable. The host did not return a contribution calendar or events.
           </div>
         )}
       </section>

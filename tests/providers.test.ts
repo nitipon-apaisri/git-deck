@@ -5,7 +5,7 @@ import { after, before, beforeEach, test } from 'node:test'
 import { HttpError } from '../src/main/http'
 import { createProvider, normalizeBaseUrl } from '../src/main/providers'
 import { GitHubProvider, githubApiRoot } from '../src/main/providers/github'
-import { GitLabProvider } from '../src/main/providers/gitlab'
+import { GitLabProvider, eventHeatmap } from '../src/main/providers/gitlab'
 
 const TOKEN = 'test-token-abc'
 let server: Server
@@ -191,14 +191,14 @@ function gitlab(url: URL, send: Send): void {
       return send(200, [
         {
           action_name: 'pushed to',
-          created_at: '2026-03-01T00:00:00Z',
+          created_at: new Date().toISOString(),
           push_data: { ref: 'main' }
         },
         {
           action_name: 'opened',
           target_type: 'MergeRequest',
           target_title: 'Fix CI',
-          created_at: '2026-02-28T00:00:00Z'
+          created_at: new Date().toISOString()
         }
       ])
     case '/projects':
@@ -507,6 +507,7 @@ test('GitHub: getProfile reads pins and the contribution calendar through GraphQ
   assert.equal(p.repoKind, 'pinned')
   assert.equal(p.repos[0].language, 'TypeScript')
   assert.deepEqual(p.heatmap, {
+    source: 'calendar',
     total: 5,
     days: [
       { date: '2026-03-01', count: 2 },
@@ -531,12 +532,14 @@ test('GitHub: without pins the profile lists recent repos, and a GraphQL outage 
   assert.equal(p.orgs.length, 1)
 })
 
-test('GitLab: getProfile gives events and recent projects, no heatmap, and absolute avatars', async () => {
+test('GitLab: getProfile counts events into a heatmap, lists recent projects and makes avatars absolute', async () => {
   const p = await new GitLabProvider('acc', `${base}/gitlab`, TOKEN).getProfile()
   assert.equal(p.name, 'Gil Lab')
   assert.equal(p.followers, 4)
   assert.equal(p.avatarUrl, `${base}/gitlab/uploads/a.png`)
-  assert.equal(p.heatmap, null)
+  assert.equal(p.heatmap?.source, 'events')
+  assert.equal(p.heatmap?.days.length, 365)
+  assert.equal(p.heatmap?.total, 2)
   assert.equal(p.repoKind, 'recent')
   assert.deepEqual(p.orgs, [{ name: 'team', avatarUrl: '' }])
   assert.deepEqual(
@@ -561,4 +564,19 @@ test('getProfile: a refused token rejects without leaking it, and sends it only 
   await new GitHubProvider('a', base, TOKEN).getProfile()
   await new GitLabProvider('a', `${base}/gitlab`, TOKEN).getProfile()
   assert.ok(seen.every((r) => !r.url.includes(TOKEN)))
+})
+
+test('eventHeatmap: 365 days ending today, events counted by UTC day', () => {
+  const h = eventHeatmap(
+    [
+      { created_at: '2026-03-10T23:59:00Z' },
+      { created_at: '2026-03-10T01:00:00Z' },
+      { created_at: '2020-01-01T00:00:00Z' }
+    ],
+    new Date('2026-03-10T12:00:00Z')
+  )
+  assert.equal(h.days.length, 365)
+  assert.deepEqual(h.days[364], { date: '2026-03-10', count: 2 })
+  assert.equal(h.days[0].date, '2025-03-11')
+  assert.equal(h.total, 2)
 })

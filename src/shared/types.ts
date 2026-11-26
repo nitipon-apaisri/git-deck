@@ -47,7 +47,12 @@ export interface ProfileInfo {
   }[]
   events: { text: string; at: string }[]
   /** GitHub only (GraphQL). Null when the host has no calendar or the call failed. */
-  heatmap: { total: number; days: { date: string; count: number }[] } | null
+  heatmap: {
+    total: number
+    days: { date: string; count: number }[]
+    /** `events`: counted from the user's events, so an estimate (GitLab has no calendar API). */
+    source: 'calendar' | 'events'
+  } | null
 }
 
 export interface Repo {
