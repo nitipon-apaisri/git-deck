@@ -681,3 +681,14 @@ Layout follows `docs/ui-boards/HomeProfile.dc.html`.
 - **GitLab:** `/user`, `/groups`, `/users/:id/events` and recent projects. GitLab has no calendar in its REST API, so the heatmap is counted from the user's events of the last 365 days, read in 12 date windows of 31 days fetched in parallel (100 per page, 10 pages per window, so only a window busier than 1000 events is undercounted; a single newest-first read of 1000 events covered about 3 weeks for a busy account). It is labelled "Counted from events" and the stat reads "Events, 12 months". Followers and following are hidden when `/user` does not return them.
 - **Tokens:** `--heat-1` to `--heat-4` added to `src/renderer/src/tokens.css` for the heatmap. `docs/design-system/tokens.*` were already behind the app's file and were not touched.
 - **Not checked:** the screen was not run in a window. The GraphQL query was tested against a mock server only, not against a live GitHub.
+
+## 2026-11-26, Borderless controls
+
+- **Question:** should buttons, badges, text fields, search boxes and selects keep their 1px edge, and how does focus show on a text field now.
+- **Decision and why:**
+  - No edges on buttons, badges, text fields, search and select. They are filled with `bg-secondary` (`island-raised`) or a token colour. Reads as one flat surface, as the JetBrains look in `docs/design-system/README.md` asks.
+  - Text fields and textareas show focus with a 2px `accent-text` outline and no offset. This replaces the earlier tinted border. Other focusable elements keep the 2px `focus-ring` outline.
+  - The Fetch, Pull and Push strip is one filled piece. Its dividers use the `card` colour, not a border.
+  - Design-system lines that still described an edge on these controls were changed to match the code: `docs/design-system/README.md` (focus, edges, button colour, activity), `components/Button/README.md` (default variant) and `components/Field/README.md` (input edge and focus). Previews (`preview.html`) still draw borders and were not changed.
+  - The older "Focus ring on text fields" entry above is kept as history. This entry supersedes its border part.
+- **Not verified:** no display here, so the look, the contrast of the fills in both themes and the focus outline were not checked by eye. The `border-strong` 3:1 rule was not re-measured against the new fills.

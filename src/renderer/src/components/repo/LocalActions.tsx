@@ -47,11 +47,11 @@ interface LocalActionsProps {
 type OpenMenu = { id: 'branch' | 'pull' | 'push' | 'more'; x: number; y: number }
 type BranchRef = { kind: 'branch' | 'remote'; name: string; current: boolean }
 
-/** Buttons inside the joined Fetch / Pull / Push strip: the strip draws the border. */
-const SEGMENT = 'h-full rounded-none border-0 pr-1.5 pl-3'
-const DIVIDER = 'border-l border-border'
-const SEGMENT_ICON = 'h-full w-8 rounded-none'
-const SEGMENT_CARET = 'h-full w-7 rounded-none'
+/** Buttons inside the joined Fetch / Pull / Push strip: the strip draws the fill. */
+const SEGMENT = 'h-full rounded-none bg-transparent pr-1.5 pl-3'
+const DIVIDER = 'border-l border-card'
+const SEGMENT_ICON = 'h-full w-8 rounded-none bg-transparent'
+const SEGMENT_CARET = 'h-full w-7 rounded-none bg-transparent'
 
 /** Which edges of a sideways-scrolling element have more content hidden past them. */
 function useScrollFade(el: HTMLElement | null): { start: boolean; end: boolean } {
@@ -324,7 +324,7 @@ export function LocalActions({
           <Icon name="chevron-down" size="xs" />
         </Button>
         <div
-          className="inline-flex h-9 items-center overflow-hidden rounded-md border border-border"
+          className="inline-flex h-9 items-center overflow-hidden rounded-md bg-secondary"
           role="group"
           aria-label="Sync"
         >

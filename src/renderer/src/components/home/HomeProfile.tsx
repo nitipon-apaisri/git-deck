@@ -283,8 +283,7 @@ function ProfileBody({
                     </span>
                   </>
                 )
-                const cls =
-                  'flex min-w-0 flex-col gap-1 rounded-md border border-(--border-strong) p-3 text-left'
+                const cls = 'flex min-w-0 flex-col gap-1 rounded-md bg-secondary p-3 text-left'
                 return key ? (
                   <button
                     key={r.fullName}

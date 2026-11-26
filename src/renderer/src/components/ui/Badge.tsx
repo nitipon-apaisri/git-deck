@@ -2,11 +2,11 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 
 const TONE = {
-  neutral: 'border-border text-muted-foreground',
-  warning: 'border-transparent bg-(--warning-bg) text-(--warning-text)',
-  success: 'border-transparent bg-(--success-bg) text-(--success-text)',
-  danger: 'border-transparent bg-(--danger-bg) text-(--danger-text)',
-  merged: 'border-transparent bg-(--merged-bg) text-(--merged-text)'
+  neutral: 'bg-secondary text-muted-foreground',
+  warning: 'bg-(--warning-bg) text-(--warning-text)',
+  success: 'bg-(--success-bg) text-(--success-text)',
+  danger: 'bg-(--danger-bg) text-(--danger-text)',
+  merged: 'bg-(--merged-bg) text-(--merged-text)'
 } as const
 
 interface BadgeProps {
@@ -20,7 +20,7 @@ export function Badge({ tone = 'neutral', children }: BadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-(--radius-xs) border px-2 text-[11.5px] leading-4.5 font-medium whitespace-nowrap',
+        'inline-flex items-center gap-1 rounded-(--radius-xs) px-2 text-[11.5px] leading-4.5 font-medium whitespace-nowrap',
         TONE[tone]
       )}
     >

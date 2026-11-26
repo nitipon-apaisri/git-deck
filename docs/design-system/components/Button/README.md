@@ -2,8 +2,8 @@ Buttons trigger actions; use one primary button per screen and ghost buttons for
 
 **Variants**
 - Primary: `primary` fill, `on-primary` text, weight 500. The single affirmative action ("Add account").
-- Default: transparent with a `line` edge, `text` label. Secondary actions ("Cancel", "Test connection").
-- Ghost: no edge, `accent-text` label. Inline actions beside a field ("Create token").
+- Default: `island-raised` fill with no edge, `text` label. Secondary actions ("Cancel", "Test connection").
+- Ghost: no fill, no edge, `accent-text` label. Inline actions beside a field ("Create token").
 - Icon button: 32px square, `radius-md`, `text-muted` glyph that becomes `text` on `hover`. Needs an `aria-label`.
 
 Size is 34px high, 16px side padding, `radius-md`, `body` type. A leading icon is `icon-size-sm` with a 7px gap.

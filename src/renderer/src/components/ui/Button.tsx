@@ -41,17 +41,16 @@ function ActivityIcon({
 }
 
 const buttonVariants = cva(
-  'inline-flex h-9 cursor-pointer items-center justify-center gap-[7px] whitespace-nowrap rounded-md border px-4 text-[13px] leading-4.5 transition-[background-color,color,border-color,transform] duration-(--motion-fast) ease-(--ease-out) active:scale-[0.97] disabled:cursor-default disabled:opacity-45 disabled:active:scale-100',
+  'inline-flex h-9 cursor-pointer items-center justify-center gap-[7px] whitespace-nowrap rounded-md px-4 text-[13px] leading-4.5 transition-[background-color,color,transform] duration-(--motion-fast) ease-(--ease-out) active:scale-[0.97] disabled:cursor-default disabled:opacity-45 disabled:active:scale-100',
   {
     variants: {
       variant: {
-        default:
-          'border-border bg-transparent text-foreground hover:bg-accent disabled:hover:bg-transparent',
+        default: 'bg-secondary text-foreground hover:bg-accent disabled:hover:bg-secondary',
         primary:
-          'border-primary bg-primary font-medium text-primary-foreground hover:brightness-110 disabled:hover:brightness-100',
+          'bg-primary font-medium text-primary-foreground hover:brightness-110 disabled:hover:brightness-100',
         danger:
-          'border-destructive bg-destructive font-medium text-(--window) hover:brightness-110 disabled:hover:brightness-100',
-        ghost: 'border-transparent bg-transparent px-3 text-(--accent-text) hover:bg-accent'
+          'bg-destructive font-medium text-(--window) hover:brightness-110 disabled:hover:brightness-100',
+        ghost: 'bg-transparent px-3 text-(--accent-text) hover:bg-accent'
       }
     },
     defaultVariants: { variant: 'default' }
@@ -117,7 +116,7 @@ export function IconButton({
     <button
       type={type}
       className={cn(
-        'inline-grid flex-none cursor-pointer place-items-center border-0 p-0 transition-[background-color,color,border-color,transform] duration-(--motion-fast) ease-(--ease-out) active:scale-[0.97] disabled:cursor-default disabled:opacity-45 disabled:active:scale-100',
+        'inline-grid flex-none cursor-pointer place-items-center border-0 p-0 transition-[background-color,color,transform] duration-(--motion-fast) ease-(--ease-out) active:scale-[0.97] disabled:cursor-default disabled:opacity-45 disabled:active:scale-100',
         size === 'rail' ? 'size-9 rounded-lg' : 'size-8 rounded-md',
         active
           ? 'bg-card text-(--accent)'

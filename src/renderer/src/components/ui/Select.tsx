@@ -38,7 +38,7 @@ export function Select({ options, value, onChange, id, disabled }: SelectProps) 
         aria-haspopup="menu"
         aria-expanded={at !== null}
         onClick={open}
-        className="flex h-10 w-full min-w-0 cursor-pointer items-center gap-2 rounded-md border border-(--border-strong) bg-secondary pr-3 pl-3 text-left text-[13px] text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex h-10 w-full min-w-0 cursor-pointer items-center gap-2 rounded-md bg-secondary pr-3 pl-3 text-left text-[13px] text-foreground disabled:cursor-not-allowed disabled:opacity-60"
       >
         {current?.leading}
         <span className="min-w-0 flex-1 truncate">{current?.label ?? ''}</span>
