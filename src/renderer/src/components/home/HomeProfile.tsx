@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Account, ProfileInfo, Repo } from '@shared/types'
-import { heatCells } from '../../lib/profileView'
+import { heatCells, heatTip, monthLabels } from '../../lib/profileView'
 import { timeAgo } from '../../lib/format'
 import { hostTileOf } from '../../lib/presets'
 import { readStored, writeStored } from '../../state/storage'
@@ -101,6 +101,9 @@ function ProfileBody({
   const [collapsed, setCollapsed] = useState(readCollapsed)
   const toggle = (key: string): void => setCollapsed(toggleCollapsed(key))
   const cells = useMemo(() => (profile.heatmap ? heatCells(profile.heatmap.days) : []), [profile])
+  const months = useMemo(() => monthLabels(cells), [cells])
+  const [tip, setTip] = useState<{ text: string; x: number; y: number } | null>(null)
+  const noun = profile.heatmap?.source === 'events' ? 'event' : 'contribution'
   const byFullName = useMemo(() => new Map(repos.map((r) => [r.fullName, r.key])), [repos])
   const ago = (iso: string): string => {
     const t = Date.parse(iso)
@@ -167,23 +170,77 @@ function ProfileBody({
         </h2>
         {profile.heatmap ? (
           <div className="overflow-x-auto pb-1">
-            <div
-              role="img"
-              aria-label={`${profile.heatmap.total} ${profile.heatmap.source === 'events' ? 'events' : 'contributions'} in the last 12 months`}
-              className="grid w-max auto-cols-[11px] grid-flow-col grid-rows-[repeat(7,11px)] gap-0.75"
-            >
-              {cells.map((c, i) =>
-                c ? (
-                  <div
-                    key={c.date}
-                    title={`${c.count} on ${c.date}`}
-                    className={cn('size-2.75 rounded-xs', HEAT[c.level])}
-                  />
-                ) : (
-                  <div key={`pad-${i}`} className="size-2.75" />
-                )
-              )}
+            <div className="flex w-max gap-2">
+              <div
+                aria-hidden="true"
+                className="grid grid-rows-[11px_repeat(7,11px)] gap-0.75 pr-1 text-[10px] leading-2.75 text-muted-foreground"
+              >
+                <span />
+                <span />
+                <span>Mon</span>
+                <span />
+                <span>Wed</span>
+                <span />
+                <span>Fri</span>
+                <span />
+              </div>
+              <div className="flex flex-col gap-0.75">
+                <div
+                  aria-hidden="true"
+                  className="grid h-2.75 auto-cols-[11px] grid-flow-col gap-0.75 text-[10px] leading-2.75 text-muted-foreground"
+                >
+                  {months.map((m) => (
+                    <span key={m.col} style={{ gridColumnStart: m.col + 1 }}>
+                      {m.label}
+                    </span>
+                  ))}
+                </div>
+                <div
+                  role="img"
+                  aria-label={`${profile.heatmap.total} ${noun}s in the last 12 months`}
+                  className="grid w-max auto-cols-[11px] grid-flow-col grid-rows-[repeat(7,11px)] gap-0.75"
+                >
+                  {cells.map((c, i) =>
+                    c ? (
+                      <div
+                        key={c.date}
+                        onMouseEnter={(e) => {
+                          const r = e.currentTarget.getBoundingClientRect()
+                          setTip({
+                            text: heatTip(c.count, c.date, noun),
+                            x: r.left + r.width / 2,
+                            y: r.top
+                          })
+                        }}
+                        onMouseLeave={() => setTip(null)}
+                        className={cn('size-2.75 rounded-xs', HEAT[c.level])}
+                      />
+                    ) : (
+                      <div key={`pad-${i}`} className="size-2.75" />
+                    )
+                  )}
+                </div>
+              </div>
             </div>
+            <div
+              aria-hidden="true"
+              className="mt-2 flex items-center justify-end gap-1 text-[11px] text-muted-foreground"
+            >
+              Less
+              {HEAT.map((h) => (
+                <span key={h} className={cn('size-2.75 rounded-xs', h)} />
+              ))}
+              More
+            </div>
+            {tip ? (
+              <div
+                role="tooltip"
+                style={{ left: tip.x, top: tip.y - 6 }}
+                className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full rounded-md bg-(--island-raised) px-2 py-1 text-[12px] leading-4 whitespace-nowrap text-foreground shadow-(--shadow-menu)"
+              >
+                {tip.text}
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="flex items-center gap-2 rounded-md bg-(--warning-bg) px-3 py-2 text-(--warning-text)">

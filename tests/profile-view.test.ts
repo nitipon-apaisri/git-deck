@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { heatCells, heatLevel } from '../src/renderer/src/lib/profileView'
+import { heatCells, heatLevel, heatTip, monthLabels } from '../src/renderer/src/lib/profileView'
 
 test('heatLevel: zero is empty, the busiest day is the top level', () => {
   assert.equal(heatLevel(0, 10), 0)
@@ -21,4 +21,22 @@ test('heatCells: pads the first week to its weekday and keeps the order', () => 
   assert.equal(cells[3]?.level, 4)
   assert.equal(cells[4]?.level, 0)
   assert.deepEqual(heatCells([]), [])
+})
+
+test('monthLabels: one label per month, skipping a short first month', () => {
+  const day = (date: string) => ({ date, count: 0, level: 0 as const })
+  // Sat Nov 29, then Dec 1..: Nov is one column, so it is dropped
+  const cells = [
+    ...Array(6).fill(null),
+    day('2026-11-28'),
+    ...['01', '02', '03', '04', '05', '06', '07'].map((d) => day(`2026-12-${d}`))
+  ]
+  assert.deepEqual(monthLabels(cells), [{ col: 1, label: 'Dec' }])
+  assert.deepEqual(monthLabels([]), [])
+})
+
+test('heatTip: zero, one and many', () => {
+  assert.equal(heatTip(0, '2026-11-12', 'contribution'), 'No contributions on November 12')
+  assert.equal(heatTip(1, '2026-11-02', 'event'), '1 event on November 2')
+  assert.equal(heatTip(3, '2026-11-12', 'event'), '3 events on November 12')
 })
