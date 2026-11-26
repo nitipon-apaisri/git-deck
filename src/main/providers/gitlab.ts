@@ -51,8 +51,11 @@ export function eventHeatmap(
   return { source: 'events', total: days.reduce((n, d) => n + d.count, 0), days }
 }
 
-// 100 per page, 10 pages: a busier year than 1000 events is undercounted at its start.
+// The year is read in 12 date windows, each 100 per page and 10 pages: only a window busier than
+// 1000 events is undercounted (at its start).
 const EVENT_PAGES = 10
+const EVENT_WINDOWS = 12
+const WINDOW_DAYS = 31
 
 /** One short line for a user event. GitLab events carry no project name, only a target. */
 export function glEventText(e: GlEvent): string {
@@ -177,6 +180,23 @@ export class GitLabProvider implements GitProvider {
     return { username: user.username, avatarUrl: this.absolute(user.avatar_url) }
   }
 
+  /** The user's events for the last year, newest first: one request chain per date window, all in parallel. */
+  private async events(userId: number): Promise<GlEvent[]> {
+    const day = (offset: number): string =>
+      new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10)
+    const windows = Array.from({ length: EVENT_WINDOWS }, (_, i) => {
+      // after/before are exclusive dates: window i holds days (-i*31 - 30) .. (-i*31), no overlap.
+      const before = day(1 - i * WINDOW_DAYS)
+      const after = day(-(i + 1) * WINDOW_DAYS)
+      return paginate<GlEvent>(
+        `${this.root}/users/${userId}/events?per_page=100&after=${after}&before=${before}`,
+        this.headers,
+        EVENT_PAGES
+      )
+    })
+    return (await Promise.all(windows)).flat()
+  }
+
   async getProfile(): Promise<ProfileInfo> {
     const h = this.headers
     const user = required(await getJson<GlUser>(`${this.root}/user`, h), 'GitLab')
@@ -185,11 +205,7 @@ export class GitLabProvider implements GitProvider {
         `${this.root}/groups?min_access_level=10&per_page=30`,
         h
       ),
-      paginate<GlEvent>(
-        `${this.root}/users/${user.id}/events?per_page=100&after=${new Date(Date.now() - 366 * 86_400_000).toISOString().slice(0, 10)}`,
-        h,
-        EVENT_PAGES
-      ),
+      this.events(user.id),
       getJson<GlProject[]>(
         `${this.root}/projects?membership=true&order_by=last_activity_at&sort=desc&per_page=6`,
         h

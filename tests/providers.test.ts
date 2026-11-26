@@ -187,20 +187,25 @@ function gitlab(url: URL, send: Send): void {
       })
     case '/groups':
       return send(200, [{ full_path: 'team', avatar_url: null }])
-    case '/users/7/events':
-      return send(200, [
-        {
-          action_name: 'pushed to',
-          created_at: new Date().toISOString(),
-          push_data: { ref: 'main' }
-        },
-        {
-          action_name: 'opened',
-          target_type: 'MergeRequest',
-          target_title: 'Fix CI',
-          created_at: new Date().toISOString()
-        }
-      ])
+    case '/users/7/events': {
+      // Honour the date window: today's events in the newest window, one 100 days ago in the fourth.
+      const before = url.searchParams.get('before') ?? ''
+      const at = (offset: number): string =>
+        new Date(Date.now() + offset * 86_400_000).toISOString()
+      if (before === at(1).slice(0, 10))
+        return send(200, [
+          { action_name: 'pushed to', created_at: at(0), push_data: { ref: 'main' } },
+          {
+            action_name: 'opened',
+            target_type: 'MergeRequest',
+            target_title: 'Fix CI',
+            created_at: at(0)
+          }
+        ])
+      if (before === at(1 - 3 * 31).slice(0, 10))
+        return send(200, [{ action_name: 'commented on', created_at: at(-100) }])
+      return send(200, [])
+    }
     case '/projects':
       if (url.searchParams.get('per_page') === '6') return send(200, [glProject(10, 'team/full')])
       // Relative next link on a path-prefixed install.
@@ -539,12 +544,12 @@ test('GitLab: getProfile counts events into a heatmap, lists recent projects and
   assert.equal(p.avatarUrl, `${base}/gitlab/uploads/a.png`)
   assert.equal(p.heatmap?.source, 'events')
   assert.equal(p.heatmap?.days.length, 365)
-  assert.equal(p.heatmap?.total, 2)
+  assert.equal(p.heatmap?.total, 3) // two today, one 100 days ago from another window
   assert.equal(p.repoKind, 'recent')
   assert.deepEqual(p.orgs, [{ name: 'team', avatarUrl: '' }])
   assert.deepEqual(
     p.events.map((e) => e.text),
-    ['Pushed to main', 'Opened mergerequest Fix CI']
+    ['Pushed to main', 'Opened mergerequest Fix CI', 'Commented on']
   )
 })
 
