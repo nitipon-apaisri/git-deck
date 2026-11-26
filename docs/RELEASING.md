@@ -7,7 +7,8 @@ Branches: `main` is released code only, `develop` is where features and fixes la
 1. Start from a clean `main`. Run `pnpm typecheck` and `pnpm test`.
 2. Write one notes file with three sections: **Fixes**, **Contents**, **Known limits**. The commit, the merge and the tag all use it, so the same text appears everywhere.
    Add the same notes to the top of `CHANGELOG.md` as a `## X.Y.Z` entry (sections `### Fixes`, `### Contents`, `### Known limits`, one `- ` line per item) in the release commit. The app bundles that file and shows it in Settings > About; `tests/changelog.test.ts` fails if the top entry is not the `package.json` version.
-3. `git switch -c chore/release-X.Y.Z`, change `"version"` in `package.json`, commit `🔖 (release): X.Y.Z` with the notes as the body.
+3. README sync first: `README.md` Features, Install, Known limits and Progress must match the notes (run the `doc-writer` subagent; its change is committed as `📝 (docs): sync README` before the release branch).
+   `git switch -c chore/release-X.Y.Z`, change `"version"` in `package.json`, commit `🔖 (release): X.Y.Z` with the notes as the body.
 4. `git switch main && git merge --no-ff chore/release-X.Y.Z`, message `🔀 (merge): release X.Y.Z` with the same notes.
 5. `git tag -a vX.Y.Z -F <notes file>` on the merge commit. Check that `git rev-parse 'vX.Y.Z^{commit}' HEAD` prints the same hash twice.
 6. End every commit with the attribution line the session gives. Never `--no-verify`.
