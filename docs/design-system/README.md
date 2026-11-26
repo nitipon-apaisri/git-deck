@@ -34,9 +34,9 @@ Rules that came out of the migration:
 
 - Ground: `window` behind everything, `island` for panels, `island-raised` for inputs and stat cards placed on an island, `hover` for hover fills. Rows are never striped.
 - Text: `text` for primary copy, `text-muted` for counts, column headers and hints. Links and ghost buttons use `accent-text`. Do not set text in `accent`; it is for marks only (active tab underline, active rail icon, active pane outline, progress).
-- The one `primary` button on a screen is `primary` with `on-primary` text. Every other button is a ghost button with a `line` edge.
-- Selection is the `selection` fill under a `text` label. Hover is `hover`. Focus is a solid 2px `focus-ring` outline with a 2px offset on every focusable element except text fields, which tint their border to `accent-text` instead.
-- Edges: `line` for hairline dividers. A control's own edge (text input, checkbox, divider grip) uses `border-strong`, which holds 3:1.
+- The one `primary` button on a screen is `primary` with `on-primary` text. Every other button is a default button filled with `island-raised`, or a ghost button with no fill.
+- Selection is the `selection` fill under a `text` label. Hover is `hover`. Focus is a solid 2px `focus-ring` outline with a 2px offset on every focusable element except text fields, which show a solid 2px `accent-text` outline with no offset instead.
+- Edges: `line` for hairline dividers. A control's own edge (checkbox, divider grip) uses `border-strong`, which holds 3:1. Buttons, badges and text fields have no edge; they are filled with `island-raised` or a token colour.
 - Status always carries a word or icon: **Cloned** with a `success` dot, **Partial** and **Unavailable** with `warning-text` and the alert icon, deletions with `danger` and a minus sign. Never use red against green alone.
 - Hosts: GitHub `host-github` tile with "GH", GitLab `host-gitlab` with "GL", self-hosted GitLab and GitHub Enterprise `host-selfhosted` with "SH" or "GE". The label is `text`.
 
@@ -63,7 +63,7 @@ Rules that came out of the migration:
 
 ## Activity and stopped operations
 
-- **Button activity:** a button that runs a git write (Fetch, Pull, Push, the branch button, Clone, Link) swaps its own icon: a spinner in `--accent` while it runs (static with reduced motion), a `--success` check for 4 s, a `--danger` cross for 6 s. Only the icon takes the colour; the button stays outlined. The tooltip carries git's latest line while it runs, and one visually hidden status line tells screen readers.
+- **Button activity:** a button that runs a git write (Fetch, Pull, Push, the branch button, Clone, Link) swaps its own icon: a spinner in `--accent` while it runs (static with reduced motion), a `--success` check for 4 s, a `--danger` cross for 6 s. Only the icon takes the colour; the button keeps its fill. The tooltip carries git's latest line while it runs, and one visually hidden status line tells screen readers.
 - **Toast:** an error from a local write shows top-right (below the title bar), newest on top, at most 3, on `bg-card` with `shadow-menu` and a `--danger` alert icon (no side stripe), Copy details and Dismiss; Esc dismisses the newest (not while a dialog or menu is open); it sits above dialogs. It stays until dismissed and names the repository, so Split View is clear.
 - **Stopped operation** (merge, cherry-pick, revert, rebase, bisect): a block on `--warning-bg` with a 3 px left stripe in `--warning-text`, the step as a warning `Badge`, conflict kinds as neutral `Badge`s. Abort is `danger`. It is not an island: it sits inside one.
 
