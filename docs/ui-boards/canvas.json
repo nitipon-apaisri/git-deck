@@ -121,6 +121,22 @@
       "h": 900,
       "title": "Conflict editor (light)",
       "expand": "fill"
+    },
+    "HomeProfile.dc.html": {
+      "x": 0,
+      "y": 7800,
+      "w": 1440,
+      "h": 900,
+      "title": "Home profile",
+      "is_interactive": true
+    },
+    "HomeProfileLight.dc.html": {
+      "x": 1520,
+      "y": 7800,
+      "w": 1440,
+      "h": 900,
+      "title": "Home profile (light)",
+      "is_interactive": true
     }
   },
   "order": [
@@ -137,7 +153,9 @@
     "Changes.dc.html",
     "Conflict.dc.html",
     "ChangesLight.dc.html",
-    "ConflictLight.dc.html"
+    "ConflictLight.dc.html",
+    "HomeProfile.dc.html",
+    "HomeProfileLight.dc.html"
   ],
   "notes": {
     "t1": {
@@ -179,6 +197,13 @@
       "x": 0,
       "y": 6040,
       "text": "Light: changes, diff and conflict editor",
+      "kind": "title1",
+      "maxW": 2960
+    },
+    "t7": {
+      "x": 0,
+      "y": 7560,
+      "text": "Home profile: dark and light",
       "kind": "title1",
       "maxW": 2960
     }
