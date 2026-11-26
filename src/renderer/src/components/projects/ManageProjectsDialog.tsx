@@ -98,7 +98,7 @@ export function ManageProjectsDialog({
                       Cancel
                     </Button>
                     <Button
-                      className="border-destructive text-destructive"
+                      variant="danger"
                       onClick={() => void confirmDelete(p.id)}
                       disabled={busy}
                     >

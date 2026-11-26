@@ -62,7 +62,7 @@ export function TextInput({ className, ...rest }: InputHTMLAttributes<HTMLInputE
   return (
     <input
       className={cn(
-        'h-9 min-w-0 rounded-md border border-(--border-strong) bg-secondary px-3 text-[13px] text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60',
+        'h-9 min-w-0 rounded-md bg-secondary px-3 text-[13px] text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60',
         className
       )}
       {...rest}
@@ -82,7 +82,7 @@ interface CheckOptionProps {
 export function SwitchOption({ label, checked, onChange }: Omit<CheckOptionProps, 'warning'>) {
   const id = useId()
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-secondary p-3">
+    <div className="flex items-center justify-between gap-3 rounded-lg bg-secondary p-3">
       <label htmlFor={id} className="cursor-pointer font-medium">
         {label}
       </label>
@@ -112,7 +112,7 @@ export function SwitchOption({ label, checked, onChange }: Omit<CheckOptionProps
 export function CheckOption({ label, checked, onChange, warning }: CheckOptionProps) {
   const id = useId()
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-border bg-secondary p-3">
+    <div className="flex flex-col gap-2 rounded-lg bg-secondary p-3">
       <label htmlFor={id} className="flex cursor-pointer items-center gap-2.5 font-medium">
         <Checkbox.Root
           id={id}

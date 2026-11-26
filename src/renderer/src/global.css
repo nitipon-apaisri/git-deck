@@ -43,11 +43,11 @@ body {
     outline-offset: 2px;
   }
 
-  /* The caret already shows focus in a text field; a tinted border is the quiet cue. */
+  /* Fields have no border, so a text field shows focus with a flush ring instead of an offset one. */
   input:focus-visible,
   textarea:focus-visible {
-    outline: none;
-    border-color: var(--accent-text);
+    outline: 2px solid var(--accent-text);
+    outline-offset: 0;
   }
 
   a {

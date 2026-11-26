@@ -324,7 +324,7 @@ export function LocalActions({
           <Icon name="chevron-down" size="xs" />
         </Button>
         <div
-          className="inline-flex h-9 items-center overflow-hidden rounded-md border border-border"
+          className="inline-flex h-9 items-center overflow-hidden rounded-md"
           role="group"
           aria-label="Sync"
         >
