@@ -187,6 +187,20 @@ Not planned for this version: a full-file three-way editor, OAuth sign-in (token
 
 `main` is released code only, `develop` is where features and fixes land, and `stage` holds the release candidate. Branch from `develop` and merge with `--no-ff`. A `vX.Y.Z-rc.N` tag on `stage` publishes a GitHub pre-release to test; `vX.Y.Z` on `main` is the release, built by `.github/workflows/release.yml`.
 
+## Built with Claude Code
+
+GitDeck was written with Claude Code. Token use for this repository, read from the local Claude Code transcripts on 2026-11-26 (68 sessions and 38 subagent runs since 2026-11-05):
+
+| Tokens      |   Amount |
+| ----------- | -------: |
+| Output      |    2.74M |
+| Fresh input |     8.4K |
+| Cache write |    10.0M |
+| Cache read  |     448M |
+| **Total**   | **461M** |
+
+Most of the total is cache reads, which are billed at a much lower rate, so the total is not a measure of cost. This is a snapshot and is not updated automatically.
+
 ## Progress
 
 **43 of 45 phases done.** Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
