@@ -170,67 +170,69 @@ function ProfileBody({
         </h2>
         {profile.heatmap ? (
           <div className="overflow-x-auto pb-1">
-            <div className="flex w-max gap-2">
-              <div
-                aria-hidden="true"
-                className="grid grid-rows-[11px_repeat(7,11px)] gap-0.75 pr-1 text-[10px] leading-2.75 text-muted-foreground"
-              >
-                <span />
-                <span />
-                <span>Mon</span>
-                <span />
-                <span>Wed</span>
-                <span />
-                <span>Fri</span>
-                <span />
-              </div>
-              <div className="flex flex-col gap-0.75">
+            <div className="w-max">
+              <div className="flex w-max gap-2">
                 <div
                   aria-hidden="true"
-                  className="grid h-2.75 auto-cols-[11px] grid-flow-col gap-0.75 text-[10px] leading-2.75 text-muted-foreground"
+                  className="grid grid-rows-[11px_repeat(7,11px)] gap-0.75 pr-1 text-[10px] leading-2.75 text-muted-foreground"
                 >
-                  {months.map((m) => (
-                    <span key={m.col} style={{ gridColumnStart: m.col + 1 }}>
-                      {m.label}
-                    </span>
-                  ))}
+                  <span />
+                  <span />
+                  <span>Mon</span>
+                  <span />
+                  <span>Wed</span>
+                  <span />
+                  <span>Fri</span>
+                  <span />
                 </div>
-                <div
-                  role="img"
-                  aria-label={`${profile.heatmap.total} ${noun}s in the last 12 months`}
-                  className="grid w-max auto-cols-[11px] grid-flow-col grid-rows-[repeat(7,11px)] gap-0.75"
-                >
-                  {cells.map((c, i) =>
-                    c ? (
-                      <div
-                        key={c.date}
-                        onMouseEnter={(e) => {
-                          const r = e.currentTarget.getBoundingClientRect()
-                          setTip({
-                            text: heatTip(c.count, c.date, noun),
-                            x: r.left + r.width / 2,
-                            y: r.top
-                          })
-                        }}
-                        onMouseLeave={() => setTip(null)}
-                        className={cn('size-2.75 rounded-xs', HEAT[c.level])}
-                      />
-                    ) : (
-                      <div key={`pad-${i}`} className="size-2.75" />
-                    )
-                  )}
+                <div className="flex flex-col gap-0.75">
+                  <div
+                    aria-hidden="true"
+                    className="grid h-2.75 auto-cols-[11px] grid-flow-col gap-0.75 text-[10px] leading-2.75 text-muted-foreground"
+                  >
+                    {months.map((m) => (
+                      <span key={m.col} style={{ gridColumnStart: m.col + 1 }}>
+                        {m.label}
+                      </span>
+                    ))}
+                  </div>
+                  <div
+                    role="img"
+                    aria-label={`${profile.heatmap.total} ${noun}s in the last 12 months`}
+                    className="grid w-max auto-cols-[11px] grid-flow-col grid-rows-[repeat(7,11px)] gap-0.75"
+                  >
+                    {cells.map((c, i) =>
+                      c ? (
+                        <div
+                          key={c.date}
+                          onMouseEnter={(e) => {
+                            const r = e.currentTarget.getBoundingClientRect()
+                            setTip({
+                              text: heatTip(c.count, c.date, noun),
+                              x: r.left + r.width / 2,
+                              y: r.top
+                            })
+                          }}
+                          onMouseLeave={() => setTip(null)}
+                          className={cn('size-2.75 rounded-[2px]', HEAT[c.level])}
+                        />
+                      ) : (
+                        <div key={`pad-${i}`} className="size-2.75" />
+                      )
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div
-              aria-hidden="true"
-              className="mt-2 flex items-center justify-end gap-1 text-[11px] text-muted-foreground"
-            >
-              Less
-              {HEAT.map((h) => (
-                <span key={h} className={cn('size-2.75 rounded-xs', h)} />
-              ))}
-              More
+              <div
+                aria-hidden="true"
+                className="mt-2 flex items-center justify-end gap-1 text-[11px] text-muted-foreground"
+              >
+                Less
+                {HEAT.map((h) => (
+                  <span key={h} className={cn('size-2.75 rounded-[2px]', h)} />
+                ))}
+                More
+              </div>
             </div>
             {tip ? (
               <div
