@@ -28,6 +28,7 @@ import {
 } from '../shared/conflict'
 import { parseBlame } from '../shared/blame'
 import { parseBisectLog } from '../shared/bisect'
+import { parseWorktrees, type ParsedWorktree } from '../shared/worktrees'
 import { refArgs, visibleRefs } from '../shared/hiddenRefs'
 import { hunkFingerprint, linePatch, parseUnifiedDiff, splitPatch } from '../shared/diff'
 import type {
@@ -1015,6 +1016,48 @@ export async function createCommit(cwd: string, message: string, amend: boolean)
   else args.push('--no-edit')
   // The message goes in on stdin, so it never appears in a process list.
   await exec(cwd, args, { stdin: text ? `${text}\n` : undefined })
+}
+
+// Linked worktrees
+
+export async function listWorktrees(cwd: string): Promise<ParsedWorktree[]> {
+  return parseWorktrees((await tryRun(cwd, ['worktree', 'list', '--porcelain'])) ?? '')
+}
+
+/** `create` makes `branch` from HEAD, otherwise `branch` must already exist and be free. */
+export async function addWorktree(
+  cwd: string,
+  folder: string,
+  branch: string,
+  create: boolean
+): Promise<void> {
+  await assertBranchName(cwd, branch)
+  const exists = await refExists(cwd, `refs/heads/${branch}`)
+  if (create && exists) throw new Error(`A branch named "${branch}" already exists`)
+  if (!create && !exists) throw new Error(`There is no branch named "${branch}"`)
+  await exec(
+    cwd,
+    create
+      ? ['worktree', 'add', '-b', branch, '--', folder]
+      : ['worktree', 'add', '--', folder, branch]
+  )
+}
+
+export async function removeWorktree(cwd: string, folder: string, force: boolean): Promise<void> {
+  await exec(cwd, ['worktree', 'remove', ...(force ? ['--force'] : []), '--', folder])
+}
+
+export async function lockWorktree(cwd: string, folder: string, lock: boolean): Promise<void> {
+  await exec(cwd, ['worktree', lock ? 'lock' : 'unlock', '--', folder])
+}
+
+export async function pruneWorktrees(cwd: string): Promise<void> {
+  await exec(cwd, ['worktree', 'prune'])
+}
+
+/** True when the worktree has changes or untracked files that a plain remove would refuse. */
+export async function worktreeDirty(folder: string): Promise<boolean> {
+  return ((await tryRun(folder, ['status', '--porcelain'])) ?? '').length > 0
 }
 
 // Stash, cherry-pick and merge

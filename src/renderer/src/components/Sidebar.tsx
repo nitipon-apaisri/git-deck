@@ -9,6 +9,7 @@ import type { ProjectView } from '../lib/projectScope'
 import {
   buildTree,
   flattenRows,
+  worktreesKey,
   rowHeight,
   type AccountNode,
   type ListRow as Row
@@ -354,10 +355,15 @@ function SidebarRow({
 }: SidebarRowProps) {
   if (row.kind === 'unavailable-header') {
     return (
-      <div className="flex h-full items-center gap-2 px-3 pt-2.5 text-[12px] font-medium text-warning">
-        <Icon name="alert" size="sm" />
+      <button
+        type="button"
+        className="flex h-full w-full cursor-pointer items-center gap-2 border-0 bg-transparent px-3 pt-2.5 text-left text-[12px] font-medium text-warning"
+        aria-expanded={row.expanded}
+        onClick={() => onToggle(row.key)}
+      >
+        <Icon name={row.expanded ? 'chevron-down' : 'chevron-right'} size="sm" />
         Unavailable ({row.count})
-      </div>
+      </button>
     )
   }
   if (row.kind === 'unavailable') {
@@ -410,7 +416,7 @@ function SidebarRow({
   const local = isLocalRepo(repo)
   return (
     <TreeRow
-      level={row.flat ? 'repo-flat' : 'repo'}
+      level={row.nested ? 'repo-nested' : row.flat ? 'repo-flat' : 'repo'}
       selected={repo.key === selectedKey}
       onClick={() => onSelect(repo.key)}
       leading={<Icon name={local ? 'folder' : 'repo'} size="sm" />}
@@ -449,6 +455,15 @@ function SidebarRow({
       }
       trailing={
         <>
+          {row.children > 0 ? (
+            <IconButton
+              label={`${row.childrenOpen ? 'Hide' : 'Show'} worktrees of ${repo.name}`}
+              icon={row.childrenOpen ? 'chevron-down' : 'chevron-right'}
+              className="size-6"
+              aria-expanded={row.childrenOpen}
+              onClick={() => onToggle(worktreesKey(repo.key))}
+            />
+          ) : null}
           {mark ? (
             <span
               className="grid size-4 place-items-center rounded-xs bg-primary text-[11px] leading-none font-semibold text-primary-foreground"

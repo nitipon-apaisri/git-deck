@@ -827,10 +827,10 @@ Runs on `phase/41-hide-refs`.
 
 Runs on `phase/42-worktrees`.
 
-- [ ] Main: `git worktree list --porcelain` parser (shared, tested), add (new or existing branch, folder picker), remove (`danger`, force when dirty), lock/unlock, prune. IPC added to the contract.
-- [ ] Sidebar: worktrees nest under their parent repo; click opens a normal `RepoPane` tab (own graph, changes, scroll). The terminal opens in the worktree path.
+- [x] Main: `git worktree list --porcelain` parser (shared, tested), add (new or existing branch, folder picker), remove (`danger`, force when dirty), lock/unlock, prune. IPC added to the contract.
+- [x] Sidebar: worktrees nest under their parent repo; click opens a normal `RepoPane` tab (own graph, changes, scroll). The terminal opens in the worktree path.
 - Out of scope: moving a worktree.
-- [ ] Sidebar collapse memory: the "Unavailable" section becomes collapsible, and worktree rows use the same `gitdeck.collapsed` key pattern. Groups and the sidebar open state are already remembered.
+- [x] Sidebar collapse memory: the "Unavailable" section becomes collapsible, and worktree rows use the same `gitdeck.collapsed` key pattern. Groups and the sidebar open state are already remembered.
 
 **Verify:** temp-repo tests for list/add/remove/prune and the parser; manual open of two worktrees in Split View.
 

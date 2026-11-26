@@ -16,14 +16,14 @@ Browse every repository you can reach, read its commit graph, group repositories
 
 ## Features
 
-|              |                                                                                                                                                                      |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Connect**  | GitHub.com, GitHub Enterprise, GitLab.com and self-hosted GitLab, any number of accounts. Open any local folder, clone over HTTPS or SSH, or link an existing clone. |
-| **Read**     | Lane graph of the whole history (500 commits per page, virtualised), repository overview, file history and blame, pull and merge requests with CI status.            |
-| **Change**   | Stage by file, hunk or line. Commit, branches, push and pull, stash, cherry-pick, merge, tags, revert, reset, remotes, rebase (also interactive) and bisect.         |
-| **Resolve**  | Merge conflicts resolved in the app, region by region.                                                                                                               |
-| **Organise** | Projects (named groups of repositories from any host), Split View (two repositories at once), a command palette, hide branches and tags per repository.              |
-| **Extras**   | Optional AI commit messages, an integrated terminal, PR/MR notifications, light and dark themes with five accents.                                                   |
+|              |                                                                                                                                                                         |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Connect**  | GitHub.com, GitHub Enterprise, GitLab.com and self-hosted GitLab, any number of accounts. Open any local folder, clone over HTTPS or SSH, or link an existing clone.    |
+| **Read**     | Lane graph of the whole history (500 commits per page, virtualised), repository overview, file history and blame, pull and merge requests with CI status.               |
+| **Change**   | Stage by file, hunk or line. Commit, branches, push and pull, stash, cherry-pick, merge, tags, revert, reset, remotes, worktrees, rebase (also interactive) and bisect. |
+| **Resolve**  | Merge conflicts resolved in the app, region by region.                                                                                                                  |
+| **Organise** | Projects (named groups of repositories from any host), Split View (two repositories at once), a command palette, hide branches and tags per repository.                 |
+| **Extras**   | Optional AI commit messages, an integrated terminal, PR/MR notifications, light and dark themes with five accents.                                                      |
 
 <details>
 <summary>More detail</summary>
@@ -251,7 +251,7 @@ Most of the total is cache reads, which are billed at a much lower rate, so the 
 - [x] Phase 39: Button activity and toasts
 - [x] Phase 40: Repo header overflow menu
 - [x] Phase 41: Hide branches and tags
-- [ ] Phase 42: Git worktrees
+- [x] Phase 42: Git worktrees
 - [ ] Phase 43: Home profile
 
 </details>

@@ -40,6 +40,7 @@ import type {
   ChecksInfo,
   ResetMode,
   StashEntry,
+  WorktreeEntry,
   TagEntry,
   ReleaseNote,
   VerifiedUser
@@ -166,6 +167,15 @@ export interface Api {
     push(path: string, force: boolean): Promise<boolean>
     /** Asks the chosen AI provider for a message for the staged changes. Never commits. */
     suggestCommitMessage(path: string, config: AiConfig): Promise<string>
+    worktrees(path: string): Promise<WorktreeEntry[]>
+    /** Asks for a folder. `create` makes `branch` new, otherwise it must exist. Null when cancelled. */
+    worktreeAdd(path: string, branch: string, create: boolean): Promise<Repo | null>
+    /** Adds an existing worktree folder to the sidebar under this repository. */
+    worktreeOpen(path: string, folder: string): Promise<Repo>
+    /** Asks first (and again with `force` for a dirty one). `false` when declined. */
+    worktreeRemove(path: string, folder: string, force: boolean): Promise<boolean>
+    worktreeLock(path: string, folder: string, lock: boolean): Promise<void>
+    worktreePrune(path: string): Promise<void>
     stashes(path: string): Promise<StashEntry[]>
     stashPush(path: string, message: string, includeUntracked: boolean): Promise<void>
     /** `hash` is the entry's hash, so a list that changed since it was read is refused. */
@@ -342,6 +352,12 @@ export const IPC = {
   localPull: 'local:pull',
   localPush: 'local:push',
   localSuggestCommitMessage: 'local:suggestCommitMessage',
+  localWorktrees: 'local:worktrees',
+  localWorktreeAdd: 'local:worktreeAdd',
+  localWorktreeOpen: 'local:worktreeOpen',
+  localWorktreeRemove: 'local:worktreeRemove',
+  localWorktreeLock: 'local:worktreeLock',
+  localWorktreePrune: 'local:worktreePrune',
   localStashes: 'local:stashes',
   localStashPush: 'local:stashPush',
   localStashApply: 'local:stashApply',
