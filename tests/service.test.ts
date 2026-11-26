@@ -17,7 +17,7 @@ import {
 } from '../src/main/service'
 import { Store, type TokenCrypto } from '../src/main/store'
 import { setInsecureHosts, verifyResultFor } from '../src/main/tls'
-import type { Account, AccountInput, Repo, RepoSummary } from '../src/shared/types'
+import type { Account, AccountInput, ProfileInfo, Repo, RepoSummary } from '../src/shared/types'
 import { branchyRepo, emptyRepo, git, tempDir } from './helpers'
 
 // The service runs real git, which needs an identity and no user config.
@@ -66,6 +66,21 @@ const repo = (id: string, name: string, extra: Partial<Repo> = {}): Repo => ({
   fork: false,
   ...extra
 })
+
+const profile: ProfileInfo = {
+  username: 'octo',
+  name: '',
+  bio: '',
+  avatarUrl: '',
+  webUrl: '',
+  followers: null,
+  following: null,
+  orgs: [],
+  repoKind: 'recent',
+  repos: [],
+  events: [],
+  heatmap: null
+}
 
 const emptySummary: RepoSummary = {
   commitCount: 1,
@@ -141,7 +156,8 @@ async function rig(opts: { seed?: boolean } = { seed: true }): Promise<Rig> {
     createChangeRequest: async () => {
       throw new Error('unused')
     },
-    getChecks: async () => ({ state: 'none', items: [] })
+    getChecks: async () => ({ state: 'none', items: [] }),
+    getProfile: async () => profile
   }
   const ui: Ui = {
     pickFolder: async () => r.picks.shift() ?? null,
@@ -261,7 +277,8 @@ test('accounts.add refuses when secure storage is unavailable', async () => {
       createChangeRequest: async () => {
         throw new Error('unused')
       },
-      getChecks: async () => ({ state: 'none', items: [] })
+      getChecks: async () => ({ state: 'none', items: [] }),
+      getProfile: async () => profile
     })
   })
   await assert.rejects(api.accounts.add(input()), /Secure storage is unavailable/)

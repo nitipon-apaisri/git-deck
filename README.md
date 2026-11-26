@@ -18,6 +18,7 @@ Browse every repository you can reach, read its commit graph, group repositories
 
 |              |                                                                                                                                                                         |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Home**     | Account switcher and a profile: avatar, bio, followers, orgs, recent repos and activity, and a 12-month contribution heatmap.                                           |
 | **Connect**  | GitHub.com, GitHub Enterprise, GitLab.com and self-hosted GitLab, any number of accounts. Open any local folder, clone over HTTPS or SSH, or link an existing clone.    |
 | **Read**     | Lane graph of the whole history (500 commits per page, virtualised), repository overview, file history and blame, pull and merge requests with CI status.               |
 | **Change**   | Stage by file, hunk or line. Commit, branches, push and pull, stash, cherry-pick, merge, tags, revert, reset, remotes, worktrees, rebase (also interactive) and bisect. |
@@ -28,6 +29,7 @@ Browse every repository you can reach, read its commit graph, group repositories
 <details>
 <summary>More detail</summary>
 
+- **Home.** Shown when no repository is selected, and at startup when no tabs are restored. Clicking Home returns without closing tabs. One account at a time, picked in the switcher. The GitHub heatmap is the contribution calendar (GraphQL). On GitLab, the heatmap is counted from the account's events, with month labels and a hover tooltip on each day.
 - **Repository overview.** Commits, contributors, branches, tags, open pull or merge requests, languages and top contributors. Saved data shows first and refreshes in the background. If a refresh fails, the saved data stays and a banner offers Retry.
 - **Local clones.** Fetch, open the folder, and read local branch, ahead/behind and working tree state.
 - **History operations.** Tags (create, annotate, push, delete here or on the remote), revert, reset (soft, mixed or hard, with a confirm for hard), remotes (add, rename, remove), rebase onto a branch or commit, and interactive rebase from a graph row (reorder, reword, squash, fixup, drop). Revert and rebase reuse the conflict banner, and a rebase can skip the commit it stopped on. URLs never carry a token.
@@ -178,6 +180,8 @@ docs           Design system, UI boards, DECISIONS.md.
 - Split View has two panes at most.
 - The graph shows the history that `git log` reports for the linked folder. Detached HEAD and graphs with more than about ten lanes at once were not checked.
 - Worktrees were tested against temporary repositories. The Worktrees dialog and the nested sidebar rows were not run in a window. Moving a worktree is not supported.
+- The GitLab heatmap is an estimate counted from events. It reads the last 12 months in 31-day windows, each capped at 1000 events, so a window busier than that is undercounted.
+- On GitLab, followers and following may show Unavailable when the host does not return them.
 
 Not planned for this version: a full-file three-way editor, OAuth sign-in (tokens only), a SQLite cache, silent auto-update, signing and notarisation, more than two panes, drag-and-drop between projects, and cloning every repository of a project at once.
 
@@ -205,7 +209,7 @@ Most of the total is cache reads, which are billed at a much lower rate, so the 
 
 ## Progress
 
-**44 of 45 phases done.** Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
+**45 of 45 phases done.** Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 
 <details>
 <summary>Phase checklist</summary>
@@ -254,6 +258,6 @@ Most of the total is cache reads, which are billed at a much lower rate, so the 
 - [x] Phase 40: Repo header overflow menu
 - [x] Phase 41: Hide branches and tags
 - [x] Phase 42: Git worktrees
-- [ ] Phase 43: Home profile
+- [x] Phase 43: Home profile
 
 </details>

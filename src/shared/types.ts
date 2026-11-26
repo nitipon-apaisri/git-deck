@@ -26,6 +26,35 @@ export interface VerifiedUser {
   avatarUrl?: string
 }
 
+/** One account's profile for the Home screen. A piece the host would not give is null or empty. */
+export interface ProfileInfo {
+  username: string
+  name: string
+  bio: string
+  avatarUrl: string
+  webUrl: string
+  followers: number | null
+  following: number | null
+  orgs: { name: string; avatarUrl: string }[]
+  /** `pinned` when the host has pins (GitHub), else the most recently active. */
+  repoKind: 'pinned' | 'recent'
+  repos: {
+    fullName: string
+    description: string
+    language: string
+    updatedAt: string
+    webUrl: string
+  }[]
+  events: { text: string; at: string }[]
+  /** GitHub only (GraphQL). Null when the host has no calendar or the call failed. */
+  heatmap: {
+    total: number
+    days: { date: string; count: number }[]
+    /** `events`: counted from the user's events, so an estimate (GitLab has no calendar API). */
+    source: 'calendar' | 'events'
+  } | null
+}
+
 export interface Repo {
   /** `accountId:remoteId` */
   key: string

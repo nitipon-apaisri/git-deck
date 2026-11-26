@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GitDeck Home profile (light)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+button{font-family:inherit;font-size:13px;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.row:hover{background:var(--hover)}
+.mono{font-family:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace}
+</style>
+</helmet>
+<div style="{{rootVars}}width:1440px;height:900px;box-sizing:border-box;background:var(--window);color:var(--text);font-family:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;font-size:13px;line-height:18px;display:flex;flex-direction:column;overflow:hidden">
+
+  <!-- toolbar -->
+  <div style="height:48px;flex:none;display:flex;align-items:center;gap:12px;padding:0 12px">
+    <div style="width:28px;height:28px;border-radius:8px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:var(--on-primary)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="9" r="2"/><path d="M6 7v10M18 11c0 4-6 3-12 6"/></svg>
+    </div>
+    <span style="font-size:15px;line-height:22px;font-weight:600">GitDeck</span>
+    <div style="margin-left:16px;display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;border-radius:8px;background:var(--island-raised);color:var(--text-muted);width:360px;box-sizing:border-box">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+      <span>Search repositories and commands</span>
+    </div>
+    <span style="flex-grow:1"></span>
+    <button aria-label="Settings" style="width:32px;height:32px;border:0;background:transparent;border-radius:8px;color:var(--text-muted);display:flex;align-items:center;justify-content:center">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>
+    </button>
+  </div>
+
+  <div style="flex-grow:1;min-height:0;display:flex;gap:6px;padding:0 6px 6px 6px">
+
+    <!-- rail -->
+    <div style="width:40px;flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:4px">
+      <button aria-label="Repositories" style="width:32px;height:32px;border:0;background:var(--hover);border-radius:10px;color:var(--accent);display:flex;align-items:center;justify-content:center">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+      </button>
+      <button aria-label="Split view" style="width:32px;height:32px;border:0;background:transparent;border-radius:10px;color:var(--text-muted);display:flex;align-items:center;justify-content:center">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg>
+      </button>
+    </div>
+
+    <!-- sidebar -->
+    <div style="width:300px;flex:none;box-sizing:border-box;background:var(--island);border-radius:12px;padding:12px 8px;display:flex;flex-direction:column;gap:4px;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;margin:0 4px 8px;border-radius:8px;background:var(--island-raised);color:var(--text-muted)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+        <span>Filter repositories</span>
+      </div>
+
+      <!-- fixed Home entry -->
+      <button onClick="{{goHome}}" aria-current="{{homeCurrent}}" class="row" style="{{homeRowStyle}}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-7 8 7v8a1 1 0 01-1 1h-4v-6H9v6H5a1 1 0 01-1-1z"/></svg>
+        <span style="font-weight:500;flex-grow:1;text-align:left">Home</span>
+        <span style="font-size:12px;line-height:16px;color:var(--text-muted)">{{accountHandle}}</span>
+      </button>
+      <div style="height:1px;background:var(--line);margin:6px 12px"></div>
+
+      <div style="display:flex;align-items:center;gap:8px;padding:4px 12px;color:var(--text-muted);font-size:12px;line-height:16px">
+        <span style="flex-grow:1">Repositories</span><span>{{repoCountLabel}}</span>
+      </div>
+      <sc-for list="{{sidebarRepos}}" as="r" hint-placeholder-count="6">
+        <button onClick="{{r.open}}" class="row" style="{{r.style}}">
+          <span style="width:20px;height:20px;border-radius:6px;background:var(--host-github);display:flex;align-items:center;justify-content:center;font-size:10px;line-height:12px;font-weight:600;flex:none">{{r.host}}</span>
+          <span style="flex-grow:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{r.name}}</span>
+          <sc-if value="{{r.cloned}}" hint-placeholder-val="{{ true }}"><span title="Cloned" style="width:7px;height:7px;border-radius:50%;background:var(--success);flex:none"></span></sc-if>
+        </button>
+      </sc-for>
+    </div>
+
+    <!-- main island -->
+    <div style="flex-grow:1;min-width:0;background:var(--island);border-radius:12px;display:flex;flex-direction:column;overflow:hidden">
+
+      <!-- tab strip: tabs survive leaving and returning to Home -->
+      <div style="height:38px;flex:none;display:flex;align-items:flex-end;gap:2px;padding:0 12px;border-bottom:1px solid var(--line)">
+        <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+          <button onClick="{{t.open}}" style="{{t.style}}">
+            <span>{{t.name}}</span>
+          </button>
+        </sc-for>
+      </div>
+
+      <!-- HOME -->
+      <sc-if value="{{showHome}}" hint-placeholder-val="{{ true }}">
+        <div style="flex-grow:1;min-height:0;overflow:auto;padding:24px;display:flex;flex-direction:column;gap:20px">
+
+          <!-- account switcher -->
+          <div role="tablist" aria-label="Account" style="display:flex;gap:8px;flex-wrap:wrap">
+            <sc-for list="{{accounts}}" as="a" hint-placeholder-count="3">
+              <button role="tab" aria-selected="{{a.selected}}" onClick="{{a.pick}}" style="{{a.style}}">
+                <span style="width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;line-height:12px;font-weight:600;flex:none;{{a.tile}}">{{a.badge}}</span>
+                <span>{{a.label}}</span>
+              </button>
+            </sc-for>
+          </div>
+
+          <!-- identity -->
+          <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+            <div style="width:84px;height:84px;border-radius:50%;background:var(--avatar-1);color:var(--avatar-ink);display:flex;align-items:center;justify-content:center;font-size:30px;line-height:36px;font-weight:600;flex:none" role="img" aria-label="Avatar">{{initials}}</div>
+            <div style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:4px">
+              <div style="font-size:22px;line-height:28px;font-weight:600">{{displayName}}</div>
+              <div class="mono" style="font-size:12px;line-height:16px;color:var(--text-muted)">{{handleLine}}</div>
+              <div style="color:var(--text);max-width:560px">{{bio}}</div>
+              <div style="display:flex;gap:16px;color:var(--text-muted);margin-top:4px">
+                <span><b style="color:var(--text);font-weight:600">{{followers}}</b> followers</span>
+                <span><b style="color:var(--text);font-weight:600">{{following}}</b> following</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <sc-for list="{{orgs}}" as="o" hint-placeholder-count="3">
+                <span style="display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:6px;background:var(--island-raised)">
+                  <span style="width:16px;height:16px;border-radius:5px;background:var(--neutral);display:flex;align-items:center;justify-content:center;font-size:9px;line-height:10px;font-weight:600">{{o.initial}}</span>{{o.name}}
+                </span>
+              </sc-for>
+            </div>
+          </div>
+
+          <!-- stat cards -->
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
+            <sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+              <div style="background:var(--island-raised);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:2px">
+                <span style="font-size:24px;line-height:30px;font-weight:600">{{s.value}}</span>
+                <span style="font-size:12px;line-height:16px;color:var(--text-muted)">{{s.label}}</span>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- heatmap (GitHub) / events note (GitLab) -->
+          <div style="background:var(--island-raised);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:15px;line-height:22px;font-weight:600;flex-grow:1">{{heatTitle}}</span>
+              <span style="font-size:12px;line-height:16px;color:var(--text-muted)">{{heatSub}}</span>
+            </div>
+            <sc-if value="{{hasHeatmap}}" hint-placeholder-val="{{ true }}">
+              <div style="overflow-x:auto;padding-bottom:4px">
+                <div style="display:grid;grid-template-rows:repeat(7,11px);grid-auto-flow:column;grid-auto-columns:11px;gap:3px;width:max-content" role="img" aria-label="Contribution heatmap, last 53 weeks">
+                  <sc-for list="{{cells}}" as="c" hint-placeholder-count="20">
+                    <div title="{{c.title}}" style="{{c.style}}"></div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:var(--text-muted)">
+                <span>Less</span>
+                <sc-for list="{{legend}}" as="l" hint-placeholder-count="5"><div style="{{l.style}}"></div></sc-for>
+                <span>More</span>
+              </div>
+            </sc-if>
+            <sc-if value="{{noHeatmap}}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;gap:8px;color:var(--warning-text);background:var(--warning-bg);border-radius:8px;padding:8px 12px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/></svg>
+                <span>Unavailable. GitLab has no contribution calendar in its API. Recent events are shown instead.</span>
+              </div>
+            </sc-if>
+          </div>
+
+          <!-- two columns: repos + activity -->
+          <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+            <div style="flex:1 1 440px;min-width:0;display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:15px;line-height:22px;font-weight:600">{{repoHeading}}</div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+                <sc-for list="{{homeRepos}}" as="r" hint-placeholder-count="4">
+                  <button onClick="{{r.open}}" class="row" style="text-align:left;border:1px solid var(--border-strong);background:transparent;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:4px;min-width:0">
+                    <span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{r.name}}</span>
+                    <span style="font-size:12px;line-height:16px;color:var(--text-muted)">{{r.desc}}</span>
+                    <span style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:var(--text-muted)">
+                      <span style="width:8px;height:8px;border-radius:50%;{{r.langDot}}"></span>{{r.lang}}
+                      <span style="flex-grow:1"></span>{{r.updated}}
+                    </span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="flex:1 1 360px;min-width:0;display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:15px;line-height:22px;font-weight:600">Recent activity</div>
+              <div style="display:flex;flex-direction:column">
+                <sc-for list="{{events}}" as="e" hint-placeholder-count="5">
+                  <div class="row" style="display:flex;gap:12px;align-items:center;padding:8px 12px;border-radius:8px">
+                    <span style="width:8px;height:8px;border-radius:50%;flex:none;{{e.dot}}"></span>
+                    <span style="flex-grow:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{e.text}}</span>
+                    <span style="font-size:12px;line-height:16px;color:var(--text-muted);flex:none">{{e.when}}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+
+          <div style="font-size:12px;line-height:16px;color:var(--text-muted)">Profile data is read with your account token, which stays encrypted in your OS keychain.</div>
+        </div>
+      </sc-if>
+
+      <!-- REPO (selecting a repo leaves Home) -->
+      <sc-if value="{{showRepo}}" hint-placeholder-val="{{ false }}">
+        <div style="flex-grow:1;min-height:0;overflow:auto;padding:24px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="font-size:20px;line-height:26px;font-weight:600;flex-grow:1">{{openRepoName}}</div>
+            <button onClick="{{goHome}}" style="height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--border-strong);background:transparent;color:var(--accent-text)">Back to Home</button>
+          </div>
+          <div style="color:var(--text-muted)">Tabs stay open when you return to Home. Selecting a repository from the sidebar or from Home leaves it again.</div>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{graphRows}}" as="g" hint-placeholder-count="6">
+              <div class="row" style="height:28px;display:flex;align-items:center;gap:12px;padding:0 12px;border-radius:8px">
+                <span style="width:48px;display:flex;align-items:center;justify-content:{{g.just}}"><span style="width:10px;height:10px;border-radius:50%;{{g.dot}}"></span></span>
+                <span style="flex-grow:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{g.msg}}</span>
+                <span class="mono" style="font-size:12px;line-height:16px;color:var(--text-muted)">{{g.hash}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"light"}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { account: 0, view: 'home', tab: 'home', tabs: ['gitdeck-app', 'infra-notes'] };
+  }
+
+  accountsData() {
+    return [
+      {
+        id: 'github', badge: 'GH', label: 'GitHub', handle: '@sample-dev', tile: 'var(--host-github)',
+        name: 'Sample Developer', initials: 'SD', bio: 'Builds desktop tools. Mostly TypeScript and Rust.',
+        followers: '1,284', following: '96', heat: true,
+        orgs: ['Acme Labs', 'Open Tools'],
+        stats: [['Repositories', '42'], ['Pull requests open', '5'], ['Stars received', '318'], ['Contributions, 12 months', '1,926']],
+        repoHeading: 'Pinned repositories',
+        repos: [
+          ['gitdeck-app', 'Desktop Git client for GitHub and GitLab.', 'TypeScript', 'lane-1', 'Updated today'],
+          ['infra-notes', 'Runbooks and deploy notes.', 'Markdown', 'lane-4', 'Updated 2 days ago'],
+          ['rust-diff', 'Fast tree diff library.', 'Rust', 'lane-5', 'Updated 5 days ago'],
+          ['pty-bridge', 'Terminal bridge for Electron apps.', 'C++', 'lane-3', 'Updated 3 weeks ago']
+        ],
+        events: [
+          ['Pushed 3 commits to gitdeck-app', 'lane-1', '2 h ago'], ['Opened pull request #214 in gitdeck-app', 'lane-2', 'yesterday'],
+          ['Starred acme-labs/graph-kit', 'lane-4', '2 days ago'], ['Pushed 1 commit to rust-diff', 'lane-1', '5 days ago'],
+          ['Merged pull request #209 in infra-notes', 'lane-3', '6 days ago']
+        ]
+      },
+      {
+        id: 'gitlab', badge: 'GL', label: 'GitLab.com', handle: '@sample.dev', tile: 'var(--host-gitlab)',
+        name: 'Sample Developer', initials: 'SD', bio: 'Platform and release tooling.',
+        followers: '58', following: '31', heat: false,
+        orgs: ['sample-group'],
+        stats: [['Projects', '17'], ['Merge requests open', '2'], ['Groups', '1'], ['Events, 30 days', '73']],
+        repoHeading: 'Recent projects',
+        repos: [
+          ['release-bot', 'Tags and changelog automation.', 'Go', 'lane-2', 'Updated today'],
+          ['ci-templates', 'Shared pipeline includes.', 'YAML', 'lane-4', 'Updated 4 days ago'],
+          ['docs-site', 'Internal documentation.', 'Markdown', 'lane-3', 'Updated 2 weeks ago'],
+          ['deploy-tools', 'Helm charts and scripts.', 'Shell', 'lane-6', 'Updated 3 weeks ago']
+        ],
+        events: [
+          ['Pushed to release-bot', 'lane-1', '1 h ago'], ['Accepted merge request !41 in ci-templates', 'lane-3', '4 days ago'],
+          ['Commented on issue #12 in docs-site', 'lane-4', '6 days ago'], ['Created branch fix/helm-values in deploy-tools', 'lane-2', '8 days ago']
+        ]
+      },
+      {
+        id: 'self', badge: 'SH', label: 'gitlab.acme.dev', handle: '@sdeveloper', tile: 'var(--host-selfhosted)',
+        name: 'Sample Developer', initials: 'SD', bio: 'Work account.',
+        followers: '9', following: '14', heat: false,
+        orgs: ['platform', 'security'],
+        stats: [['Projects', '29'], ['Merge requests open', '4'], ['Groups', '2'], ['Events, 30 days', '151']],
+        repoHeading: 'Recent projects',
+        repos: [
+          ['platform/gateway', 'API gateway service.', 'Java', 'lane-5', 'Updated today'],
+          ['platform/auth', 'Token service.', 'Kotlin', 'lane-3', 'Updated yesterday'],
+          ['security/scanner', 'Dependency scan runner.', 'Python', 'lane-2', 'Updated 6 days ago'],
+          ['platform/charts', 'Helm charts.', 'YAML', 'lane-4', 'Updated 2 weeks ago']
+        ],
+        events: [
+          ['Pushed to platform/gateway', 'lane-1', '30 min ago'], ['Opened merge request !88 in platform/auth', 'lane-2', 'yesterday'],
+          ['Pushed to security/scanner', 'lane-1', '6 days ago']
+        ]
+      }
+    ];
+  }
+
+  themeVars(theme) {
+    const d = {
+      window: '#141517', island: '#1e1f22', 'island-raised': '#26282c', hover: '#2b2d31', line: '#303338',
+      'border-strong': '#727783', text: '#dfe1e5', 'text-muted': '#9498a2', accent: '#5b93f8', 'accent-text': '#7fa6fa',
+      primary: '#2e69dc', 'on-primary': '#ffffff', selection: '#5b93f838', 'focus-ring': '#8fb3ff', success: '#6fcb8b',
+      'warning-text': '#f0c27a', 'warning-bg': '#e9b05a29', neutral: '#3a3d44', 'host-github': '#2c2f34',
+      'host-gitlab': '#3a2f2a', 'host-selfhosted': '#2a3440', 'lane-1': '#5b93f8', 'lane-2': '#3fbfa8', 'lane-3': '#a57af0',
+      'lane-4': '#e9b05a', 'lane-5': '#f58a8e', 'lane-6': '#6fcb8b', 'avatar-1': '#8fb3ff', 'avatar-ink': '#12131a'
+    };
+    const l = {
+      window: '#e9ebf0', island: '#ffffff', 'island-raised': '#f3f4f7', hover: '#ebedf2', line: '#dde0e6',
+      'border-strong': '#858b97', text: '#1f2329', 'text-muted': '#5f6672', accent: '#2e69dc', 'accent-text': '#2658c2',
+      primary: '#2e69dc', 'on-primary': '#ffffff', selection: '#2e69dc1f', 'focus-ring': '#1f4fb0', success: '#2fa05a',
+      'warning-text': '#7a4e00', 'warning-bg': '#c4821424', neutral: '#e3e5ea', 'host-github': '#e3e5ea',
+      'host-gitlab': '#fbe3d6', 'host-selfhosted': '#dce7f7', 'lane-1': '#3574f0', 'lane-2': '#12a38a', 'lane-3': '#8b5cf6',
+      'lane-4': '#b87408', 'lane-5': '#d94c54', 'lane-6': '#2fa05a', 'avatar-1': '#8fb3ff', 'avatar-ink': '#12131a'
+    };
+    const t = theme === 'light' ? l : d;
+    return Object.keys(t).map((k) => '--' + k + ':' + t[k] + ';').join('');
+  }
+
+  renderVals() {
+    const s = this.state;
+    const all = this.accountsData();
+    const A = all[s.account];
+    const home = s.view === 'home';
+    const repoNames = ['gitdeck-app', 'infra-notes', 'rust-diff', 'pty-bridge', 'release-bot', 'ci-templates'];
+    const rowBase = 'display:flex;align-items:center;gap:8px;height:30px;padding:0 12px;border:0;border-radius:8px;width:100%;box-sizing:border-box;';
+    const open = (name) => () => this.setState({ view: 'repo', tab: name, tabs: this.state.tabs.includes(name) ? this.state.tabs : this.state.tabs.concat([name]) });
+
+    const tabs = [{ name: 'Home', key: 'home' }].concat(s.tabs.map((n) => ({ name: n, key: n }))).map((t) => {
+      const active = (t.key === 'home' && home) || (t.key !== 'home' && !home && s.tab === t.key);
+      return {
+        name: t.name,
+        open: t.key === 'home' ? () => this.setState({ view: 'home' }) : () => this.setState({ view: 'repo', tab: t.key }),
+        style: 'height:36px;padding:0 12px;border:0;border-bottom:2px solid ' + (active ? 'var(--accent)' : 'transparent') + ';background:transparent;color:' + (active ? 'var(--text)' : 'var(--text-muted)') + ';font-weight:' + (active ? 500 : 400)
+      };
+    });
+
+    const accounts = all.map((a, i) => ({
+      badge: a.badge, label: a.label, tile: 'background:' + a.tile + ';color:var(--text)', selected: i === s.account,
+      pick: () => this.setState({ account: i }),
+      style: 'display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;border-radius:8px;color:var(--text);cursor:pointer;border:' + (i === s.account ? '0;background:var(--selection)' : '1px solid var(--border-strong);background:transparent')
+    }));
+
+    // deterministic sample calendar: 53 weeks x 7 days
+    const shades = ['var(--island)', '#5b93f840', '#5b93f873', '#5b93f8b0', 'var(--accent)'];
+    const cells = [];
+    let seed = 7;
+    for (let i = 0; i < 53 * 7; i++) {
+      seed = (seed * 1103515245 + 12345) % 2147483648;
+      const r = (seed >> 8) % 100;
+      const wk = Math.floor(i / 7);
+      const lvl = r < 38 ? 0 : r < 62 ? 1 : r < 80 ? 2 : r < 92 ? 3 : 4;
+      const lv = wk < 3 ? 0 : lvl;
+      cells.push({ title: lv + ' contribution level', style: 'width:11px;height:11px;border-radius:2px;background:' + (lv === 0 ? 'var(--hover)' : shades[lv]) });
+    }
+
+    const langDot = (lane) => 'background:var(--' + lane + ')';
+    const graphRows = [
+      ['Add worktree rows to the sidebar', 'lane-1', 'flex-start', 'd8c4a1f'], ['Merge phase/42-worktrees', 'lane-1', 'flex-start', '6bb428e'],
+      ['Sync README', 'lane-2', 'center', '2b8a0d0'], ['Add git worktrees', 'lane-2', 'center', 'de15072'],
+      ['Merge chore/readme-restyle', 'lane-1', 'flex-start', '63fce98'], ['Add token usage snapshot', 'lane-3', 'flex-end', 'fa9825d']
+    ].map((g) => ({ msg: g[0], dot: 'background:var(--' + g[1] + ')', just: g[2], hash: g[3] }));
+
+    return {
+      rootVars: this.themeVars(this.props.theme ?? 'light'),
+      goHome: () => this.setState({ view: 'home' }),
+      showHome: home,
+      showRepo: !home,
+      homeCurrent: home ? 'page' : 'false',
+      homeRowStyle: rowBase + 'background:' + (home ? 'var(--selection)' : 'transparent') + ';color:var(--text)',
+      accountHandle: A.handle,
+      repoCountLabel: String(repoNames.length),
+      sidebarRepos: repoNames.map((n, i) => ({
+        name: n, host: i < 4 ? 'GH' : 'GL', cloned: i % 2 === 0, open: open(n),
+        style: rowBase + 'background:' + (!home && s.tab === n ? 'var(--selection)' : 'transparent') + ';color:var(--text)'
+      })),
+      tabs,
+      accounts,
+      initials: A.initials, displayName: A.name, handleLine: A.handle + ' · ' + A.label, bio: A.bio,
+      followers: A.followers, following: A.following,
+      orgs: A.orgs.map((o) => ({ name: o, initial: o[0].toUpperCase() })),
+      stats: A.stats.map((x) => ({ label: x[0], value: x[1] })),
+      hasHeatmap: A.heat, noHeatmap: !A.heat,
+      heatTitle: A.heat ? 'Contributions' : 'Contribution calendar',
+      heatSub: A.heat ? 'Last 12 months' : 'GitLab.com and self-hosted',
+      cells,
+      legend: shades.map((c, i) => ({ style: 'width:11px;height:11px;border-radius:2px;background:' + (i === 0 ? 'var(--hover)' : c) })),
+      repoHeading: A.repoHeading,
+      homeRepos: A.repos.map((r) => ({ name: r[0], desc: r[1], lang: r[2], langDot: langDot(r[3]), updated: r[4], open: open(r[0]) })),
+      events: A.events.map((e) => ({ text: e[0], dot: 'background:var(--' + e[1] + ')', when: e[2] })),
+      openRepoName: s.tab,
+      graphRows
+    };
+  }
+}
+</script>
+</body>
+</html>

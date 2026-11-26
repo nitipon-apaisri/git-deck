@@ -15,7 +15,7 @@ import {
   type ListRow as Row
 } from '../lib/sidebarTree'
 import type { AccountRepos } from '../lib/workspaceReducer'
-import { readStored, writeStored } from '../state/storage'
+import { readCollapsed, toggleCollapsed } from '../state/collapsed'
 import { useNow } from '../state/useNow'
 import { BrandLogo } from './ui/BrandLogo'
 import { RepoFilter } from './RepoFilter'
@@ -31,17 +31,6 @@ import {
   Spinner,
   TreeRow
 } from './ui'
-
-const COLLAPSED_KEY = 'gitdeck.collapsed'
-
-function readCollapsed(): Set<string> {
-  try {
-    const parsed: unknown = JSON.parse(readStored(COLLAPSED_KEY) ?? '[]')
-    return new Set(Array.isArray(parsed) ? parsed.filter((v) => typeof v === 'string') : [])
-  } catch {
-    return new Set()
-  }
-}
 
 /** Everything the sidebar needs to know about projects. */
 export interface SidebarProjects {
@@ -87,6 +76,8 @@ interface SidebarProps {
   onRefresh: (accountId: string) => void
   onRefreshAll: () => void
   projects: SidebarProjects
+  /** The fixed Home entry above the list. */
+  home: { active: boolean; onOpen: () => void }
 }
 
 export function Sidebar({
@@ -105,7 +96,8 @@ export function Sidebar({
   onRemoveLocal,
   onRefresh,
   onRefreshAll,
-  projects: proj
+  projects: proj,
+  home
 }: SidebarProps) {
   const [query, setQuery] = useState('')
   const [menu, setMenu] = useState<{ repo: Repo; x: number; y: number } | null>(null)
@@ -155,13 +147,7 @@ export function Sidebar({
   }, [selectedKey])
 
   function toggle(key: string): void {
-    setCollapsed((current) => {
-      const next = new Set(current)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
-      writeStored(COLLAPSED_KEY, JSON.stringify([...next]))
-      return next
-    })
+    setCollapsed(toggleCollapsed(key))
   }
 
   const hosted = Object.entries(byAccount)
@@ -211,6 +197,15 @@ export function Sidebar({
       ) : (
         <>
           <div className="flex flex-col gap-2 px-2.5 pt-2.5 pb-2">
+            <button
+              type="button"
+              className="flex h-7.5 cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-2.5 text-left text-foreground transition-[background-color,color] duration-(--motion-fast) ease-out hover:bg-accent aria-pressed:bg-(--selection) aria-pressed:font-medium"
+              aria-pressed={home.active}
+              onClick={home.onOpen}
+            >
+              <Icon name="home" size="sm" />
+              Home
+            </button>
             <RepoFilter value={query} onChange={setQuery} scoped={scope !== null} />
             {proj.loadError ? (
               <ErrorBanner onRetry={proj.onRetryLoad}>

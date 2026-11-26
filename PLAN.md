@@ -838,10 +838,10 @@ Runs on `phase/42-worktrees`.
 
 Runs on `phase/43-home-profile`. Largest phase, so last.
 
-- [ ] "Home" is a fixed entry above the repo list, shown when no repo is selected (replacing the "All Repositories" empty state) and at startup when no tabs are restored. Selecting a repo leaves Home; clicking Home returns without closing tabs.
-- [ ] One account at a time with a switcher. Shows avatar, name, bio, followers/following, orgs, recent or pinned repos, recent activity and, for GitHub, a contribution heatmap (GraphQL). GitLab shows what its API gives (events).
-- [ ] Provider methods are mock-server tested; tokens stay in `safeStorage`.
-- [ ] The Home section follows the `gitdeck.collapsed` key pattern.
+- [x] "Home" is a fixed entry above the repo list, shown when no repo is selected (replacing the "All Repositories" empty state) and at startup when no tabs are restored. Selecting a repo leaves Home; clicking Home returns without closing tabs.
+- [x] One account at a time with a switcher. Shows avatar, name, bio, followers/following, orgs, recent or pinned repos, recent activity and, for GitHub, a contribution heatmap (GraphQL). GitLab shows what its API gives (events).
+- [x] Provider methods are mock-server tested; tokens stay in `safeStorage`.
+- [x] The Home section follows the `gitdeck.collapsed` key pattern.
 
 **Verify:** provider tests with mock servers; manual account switch and the empty-state replacement.
 

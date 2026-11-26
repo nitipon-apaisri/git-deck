@@ -5,7 +5,7 @@ import { after, before, beforeEach, test } from 'node:test'
 import { HttpError } from '../src/main/http'
 import { createProvider, normalizeBaseUrl } from '../src/main/providers'
 import { GitHubProvider, githubApiRoot } from '../src/main/providers/github'
-import { GitLabProvider } from '../src/main/providers/gitlab'
+import { GitLabProvider, eventHeatmap } from '../src/main/providers/gitlab'
 
 const TOKEN = 'test-token-abc'
 let server: Server
@@ -52,7 +52,25 @@ function github(url: URL, send: Send): void {
   switch (p) {
     case '/user':
       return send(200, { login: 'octo', avatar_url: 'https://gh.example/octo.png' })
+    case '/user/orgs':
+      return send(200, [{ login: 'acme', avatar_url: 'https://gh.example/acme.png' }])
+    case '/users/octo/events':
+      return send(200, [
+        {
+          type: 'PushEvent',
+          created_at: '2026-03-01T00:00:00Z',
+          repo: { name: 'octo/hello' },
+          payload: { size: 3 }
+        },
+        {
+          type: 'WatchEvent',
+          created_at: '2026-02-28T00:00:00Z',
+          repo: { name: 'acme/kit' },
+          payload: {}
+        }
+      ])
     case '/user/repos':
+      if (perPage === '6') return send(200, [ghRepo(1, 'octo/hello')])
       return url.searchParams.get('page') === '2'
         ? send(200, [ghRepo(3, 'octo/third', { private: false, visibility: 'public' })])
         : send(200, [ghRepo(1, 'octo/hello'), ghRepo(2, 'octo/empty')], {
@@ -95,6 +113,45 @@ function github(url: URL, send: Send): void {
   }
 }
 
+let pins = true
+let graphqlDown = false
+
+function graphql(send: Send): void {
+  if (graphqlDown) return send(502, { message: 'bad gateway' })
+  send(200, {
+    data: {
+      viewer: {
+        pinnedItems: {
+          nodes: pins
+            ? [
+                {
+                  nameWithOwner: 'octo/hello',
+                  description: 'Hi',
+                  url: 'https://gh.example/octo/hello',
+                  updatedAt: '2026-03-01T00:00:00Z',
+                  primaryLanguage: { name: 'TypeScript' }
+                }
+              ]
+            : []
+        },
+        contributionsCollection: {
+          contributionCalendar: {
+            totalContributions: 5,
+            weeks: [
+              {
+                contributionDays: [
+                  { date: '2026-03-01', contributionCount: 2 },
+                  { date: '2026-03-02', contributionCount: 3 }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  })
+}
+
 function gitlab(url: URL, send: Send): void {
   const p = url.pathname.replace('/gitlab/api/v4', '')
   const glProject = (id: number, path: string, extra: Record<string, unknown> = {}): unknown => ({
@@ -118,8 +175,39 @@ function gitlab(url: URL, send: Send): void {
   })
   switch (p) {
     case '/user':
-      return send(200, { username: 'gl', avatar_url: '/gitlab/uploads/a.png' })
+      return send(200, {
+        id: 7,
+        username: 'gl',
+        name: 'Gil Lab',
+        bio: 'Ops',
+        web_url: 'https://gl.example/gl',
+        followers: 4,
+        following: 2,
+        avatar_url: '/gitlab/uploads/a.png'
+      })
+    case '/groups':
+      return send(200, [{ full_path: 'team', avatar_url: null }])
+    case '/users/7/events': {
+      // Honour the date window: today's events in the newest window, one 100 days ago in the fourth.
+      const before = url.searchParams.get('before') ?? ''
+      const at = (offset: number): string =>
+        new Date(Date.now() + offset * 86_400_000).toISOString()
+      if (before === at(1).slice(0, 10))
+        return send(200, [
+          { action_name: 'pushed to', created_at: at(0), push_data: { ref: 'main' } },
+          {
+            action_name: 'opened',
+            target_type: 'MergeRequest',
+            target_title: 'Fix CI',
+            created_at: at(0)
+          }
+        ])
+      if (before === at(1 - 3 * 31).slice(0, 10))
+        return send(200, [{ action_name: 'commented on', created_at: at(-100) }])
+      return send(200, [])
+    }
     case '/projects':
+      if (url.searchParams.get('per_page') === '6') return send(200, [glProject(10, 'team/full')])
       // Relative next link on a path-prefixed install.
       return url.searchParams.get('page') === '2'
         ? send(200, [glProject(12, 'team/sub/locked', { forked_from_project: { id: 1 } })])
@@ -173,6 +261,7 @@ before(async () => {
       ? req.headers['private-token'] !== TOKEN
       : req.headers['authorization'] !== `Bearer ${TOKEN}`
     if (wrongAuth) return send(401, { message: 'bad credentials' })
+    if (url.pathname === '/api/graphql') return graphql(send)
     if (url.pathname.startsWith('/api/v3/')) return github(url, send)
     if (url.pathname.startsWith('/gitlab/api/v4/')) return gitlab(url, send)
     return send(404, {})
@@ -412,4 +501,87 @@ test('the token is only ever sent in a header, and never appears in an error', a
   await new GitHubProvider('a', base, TOKEN).listRepos()
   await new GitLabProvider('a', `${base}/gitlab`, TOKEN).listRepos()
   assert.ok(seen.every((r) => !r.url.includes(TOKEN) && !r.url.includes(bad)))
+})
+
+test('GitHub: getProfile reads pins and the contribution calendar through GraphQL', async () => {
+  pins = true
+  graphqlDown = false
+  const p = await new GitHubProvider('acc', base, TOKEN).getProfile()
+  assert.equal(p.username, 'octo')
+  assert.deepEqual(p.orgs, [{ name: 'acme', avatarUrl: 'https://gh.example/acme.png' }])
+  assert.equal(p.repoKind, 'pinned')
+  assert.equal(p.repos[0].language, 'TypeScript')
+  assert.deepEqual(p.heatmap, {
+    source: 'calendar',
+    total: 5,
+    days: [
+      { date: '2026-03-01', count: 2 },
+      { date: '2026-03-02', count: 3 }
+    ]
+  })
+  assert.deepEqual(
+    p.events.map((e) => e.text),
+    ['Pushed 3 commits to octo/hello', 'Starred acme/kit']
+  )
+})
+
+test('GitHub: without pins the profile lists recent repos, and a GraphQL outage only drops the heatmap', async () => {
+  pins = false
+  graphqlDown = true
+  const p = await new GitHubProvider('acc', base, TOKEN).getProfile()
+  graphqlDown = false
+  pins = true
+  assert.equal(p.heatmap, null)
+  assert.equal(p.repoKind, 'recent')
+  assert.equal(p.repos[0].fullName, 'octo/hello')
+  assert.equal(p.orgs.length, 1)
+})
+
+test('GitLab: getProfile counts events into a heatmap, lists recent projects and makes avatars absolute', async () => {
+  const p = await new GitLabProvider('acc', `${base}/gitlab`, TOKEN).getProfile()
+  assert.equal(p.name, 'Gil Lab')
+  assert.equal(p.followers, 4)
+  assert.equal(p.avatarUrl, `${base}/gitlab/uploads/a.png`)
+  assert.equal(p.heatmap?.source, 'events')
+  assert.equal(p.heatmap?.days.length, 365)
+  assert.equal(p.heatmap?.total, 3) // two today, one 100 days ago from another window
+  assert.equal(p.repoKind, 'recent')
+  assert.deepEqual(p.orgs, [{ name: 'team', avatarUrl: '' }])
+  assert.deepEqual(
+    p.events.map((e) => e.text),
+    ['Pushed to main', 'Opened mergerequest Fix CI', 'Commented on']
+  )
+})
+
+test('getProfile: a refused token rejects without leaking it, and sends it only in a header', async () => {
+  const bad = 'wrong-token-xyz'
+  for (const provider of [
+    new GitHubProvider('a', base, bad),
+    new GitLabProvider('a', `${base}/gitlab`, bad)
+  ]) {
+    await assert.rejects(provider.getProfile(), (err: unknown) => {
+      assert.ok(err instanceof HttpError && err.status === 401)
+      assert.ok(!err.message.includes(bad))
+      return true
+    })
+  }
+  seen = []
+  await new GitHubProvider('a', base, TOKEN).getProfile()
+  await new GitLabProvider('a', `${base}/gitlab`, TOKEN).getProfile()
+  assert.ok(seen.every((r) => !r.url.includes(TOKEN)))
+})
+
+test('eventHeatmap: 365 days ending today, events counted by UTC day', () => {
+  const h = eventHeatmap(
+    [
+      { created_at: '2026-03-10T23:59:00Z' },
+      { created_at: '2026-03-10T01:00:00Z' },
+      { created_at: '2020-01-01T00:00:00Z' }
+    ],
+    new Date('2026-03-10T12:00:00Z')
+  )
+  assert.equal(h.days.length, 365)
+  assert.deepEqual(h.days[364], { date: '2026-03-10', count: 2 })
+  assert.equal(h.days[0].date, '2025-03-11')
+  assert.equal(h.total, 2)
 })
