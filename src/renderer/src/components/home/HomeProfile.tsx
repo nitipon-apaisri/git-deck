@@ -121,16 +121,20 @@ function ProfileBody({
             @{profile.username} · {account.label}
           </div>
           {profile.bio ? <p className="m-0 max-w-140">{profile.bio}</p> : null}
-          <div className="mt-1 flex gap-4 text-muted-foreground">
-            <span>
-              <b className="font-semibold text-foreground">{profile.followers ?? 'Unavailable'}</b>{' '}
-              followers
-            </span>
-            <span>
-              <b className="font-semibold text-foreground">{profile.following ?? 'Unavailable'}</b>{' '}
-              following
-            </span>
-          </div>
+          {profile.followers !== null || profile.following !== null ? (
+            <div className="mt-1 flex gap-4 text-muted-foreground">
+              {profile.followers !== null ? (
+                <span>
+                  <b className="font-semibold text-foreground">{profile.followers}</b> followers
+                </span>
+              ) : null}
+              {profile.following !== null ? (
+                <span>
+                  <b className="font-semibold text-foreground">{profile.following}</b> following
+                </span>
+              ) : null}
+            </div>
+          ) : null}
         </div>
         <ul className="m-0 flex list-none flex-wrap gap-1.5 p-0" aria-label="Organizations">
           {profile.orgs.map((o) => (

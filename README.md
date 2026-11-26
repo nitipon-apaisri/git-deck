@@ -181,7 +181,6 @@ docs           Design system, UI boards, DECISIONS.md.
 - The graph shows the history that `git log` reports for the linked folder. Detached HEAD and graphs with more than about ten lanes at once were not checked.
 - Worktrees were tested against temporary repositories. The Worktrees dialog and the nested sidebar rows were not run in a window. Moving a worktree is not supported.
 - The GitLab heatmap is an estimate counted from events. It reads the last 12 months in 31-day windows, each capped at 1000 events, so a window busier than that is undercounted.
-- On GitLab, followers and following may show Unavailable when the host does not return them.
 
 Not planned for this version: a full-file three-way editor, OAuth sign-in (tokens only), a SQLite cache, silent auto-update, signing and notarisation, more than two panes, drag-and-drop between projects, and cloning every repository of a project at once.
 
