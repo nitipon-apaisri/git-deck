@@ -9,7 +9,7 @@ void _drawn
 interface ProjectIconProps {
   /** A glyph id or a single emoji, as stored on the project. */
   icon: string
-  /** One of the eight palette ids: blue, teal, violet, amber, rose, green, pink, gray. */
+  /** One of the eight palette ids: blue, teal, violet, amber, rose, green, pink, gray, or `primary` for the theme's primary. */
   color: string
   size?: 'lg' | 'md' | 'sm'
 }
@@ -23,7 +23,8 @@ const COLORS: Record<string, string> = {
   rose: '[--tile:var(--proj-rose)]',
   green: '[--tile:var(--proj-green)]',
   pink: '[--tile:var(--proj-pink)]',
-  gray: '[--tile:var(--proj-gray)]'
+  gray: '[--tile:var(--proj-gray)]',
+  primary: '[--tile:var(--primary)]'
 }
 
 /** The tile that names a project. Pair it with the name: colour alone never does. */
