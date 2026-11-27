@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { readFile, readdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { test } from 'node:test'
+import { isAppIconId } from '../src/shared/appIcon'
 import { createProject } from '../src/shared/projects'
 import { Store, type TokenCrypto } from '../src/main/store'
 import type { Account } from '../src/shared/types'
@@ -173,4 +174,15 @@ test('notifications are on by default and the switch survives a reload', async (
   const again = new Store(dir, fakeCrypto())
   await again.load()
   assert.equal(again.notificationsEnabled(), false)
+})
+
+test('app icon defaults, survives a reload and falls back on an unknown id', async () => {
+  const { store, dir } = await newStore()
+  assert.equal(store.getAppIcon(), 'default')
+  await store.setAppIcon('sunset')
+  const again = new Store(dir, fakeCrypto())
+  await again.load()
+  assert.equal(again.getAppIcon(), 'sunset')
+  assert.equal(isAppIconId('../etc/passwd'), false)
+  assert.equal(isAppIconId('ember'), true)
 })

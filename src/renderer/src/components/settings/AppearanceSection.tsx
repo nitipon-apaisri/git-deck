@@ -1,11 +1,30 @@
-import { useRef, type KeyboardEvent } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { APP_ICONS, DEFAULT_APP_ICON, type AppIconId } from '@shared/appIcon'
 import { ACCENTS, type Accent } from '../../lib/accent'
 import { FONTS, type FontId } from '../../lib/font'
+import { errorMessage } from '../../lib/errors'
 import type { ThemeSetting } from '../../lib/theme'
 import { useAccent, useFont } from '../../state/appearance'
 import { Icon } from '../ui'
 import { ThemePreview } from './ThemePreview'
 import { cn } from '@/lib/cn'
+import defaultIcon from '../../../../../build/icon.png'
+import ember from '../../../../../build/icons/ember.png'
+import honey from '../../../../../build/icons/honey.png'
+import lantern from '../../../../../build/icons/lantern.png'
+import night from '../../../../../build/icons/night.png'
+import sun from '../../../../../build/icons/sun.png'
+import sunset from '../../../../../build/icons/sunset.png'
+
+const ICON_SRC: Record<AppIconId, string> = {
+  default: defaultIcon,
+  ember,
+  honey,
+  lantern,
+  night,
+  sun,
+  sunset
+}
 
 // Shared by the pickers: a section, its title and hint, and a selectable card.
 const STACK = 'flex flex-col gap-6'
@@ -59,6 +78,26 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
   const accentKeys = useRadioKeys<Accent>(accentIds, accent, setAccent)
   const fontIds = FONTS.map((f) => f.id)
   const fontKeys = useRadioKeys<FontId>(fontIds, font, setFont)
+  const [appIcon, setAppIcon] = useState<AppIconId>(DEFAULT_APP_ICON)
+  const [iconError, setIconError] = useState<string | null>(null)
+  const iconKeys = useRadioKeys<AppIconId>(
+    APP_ICONS.map((i) => i.id),
+    appIcon,
+    (id) => void chooseIcon(id)
+  )
+  useEffect(() => {
+    window.api.appIcon.get().then(setAppIcon, (err: unknown) => setIconError(errorMessage(err)))
+  }, [])
+
+  async function chooseIcon(id: AppIconId): Promise<void> {
+    setIconError(null)
+    try {
+      await window.api.appIcon.set(id)
+      setAppIcon(id)
+    } catch (err) {
+      setIconError(errorMessage(err))
+    }
+  }
 
   return (
     <div className={STACK}>
@@ -145,6 +184,38 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
             </button>
           ))}
         </div>
+      </section>
+
+      <section className={BLOCK} aria-labelledby="set-icon">
+        <h3 id="set-icon" className={LABEL}>
+          App icon
+        </h3>
+        <p className={HINT}>
+          Changes the Dock and window icon while GitDeck runs. The icon in Finder stays the same.
+        </p>
+        <div role="radiogroup" aria-labelledby="set-icon" className={cn(GROUP, 'grid-cols-4')}>
+          {APP_ICONS.map((icon, index) => (
+            <button
+              key={icon.id}
+              ref={iconKeys.ref(index)}
+              type="button"
+              role="radio"
+              aria-checked={icon.id === appIcon}
+              tabIndex={iconKeys.tab(icon.id)}
+              className={cn(CARD, 'items-center')}
+              onClick={() => void chooseIcon(icon.id)}
+              onKeyDown={(e) => iconKeys.onKeyDown(e, index)}
+            >
+              <img className="size-12" src={ICON_SRC[icon.id]} alt="" aria-hidden="true" />
+              <span className="font-medium">{icon.label}</span>
+            </button>
+          ))}
+        </div>
+        {iconError ? (
+          <p role="alert" className="m-0 text-[12px] text-destructive">
+            {iconError}
+          </p>
+        ) : null}
       </section>
     </div>
   )

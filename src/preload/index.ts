@@ -161,6 +161,10 @@ const api: Api = {
   openExternal: (url) => call(IPC.openExternal, url),
   checkForUpdate: () => call(IPC.checkForUpdate),
   releaseNotes: () => call(IPC.releaseNotes),
+  appIcon: {
+    get: () => call(IPC.appIconGet),
+    set: (id) => call(IPC.appIconSet, id)
+  },
   notify: {
     enabled: () => call(IPC.notifyEnabled),
     setEnabled: (on) => call(IPC.notifySetEnabled, on),

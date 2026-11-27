@@ -17,6 +17,7 @@ import type {
   ResetMode,
   CreateChangeRequestInput
 } from '../shared/types'
+import type { AppIconId } from '../shared/appIcon'
 import type { AiConfig, AiProviderId } from '../shared/ai'
 import type { MainApi } from './service'
 
@@ -179,6 +180,8 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     aiRemoveKey: ([provider]) => api.ai.removeKey(provider as AiProviderId),
     aiHasKey: ([provider]) => api.ai.hasKey(provider as AiProviderId),
     aiTest: ([config]) => api.ai.test(config as AiConfig),
+    appIconGet: () => api.appIcon.get(),
+    appIconSet: ([id]) => api.appIcon.set(id as AppIconId),
     notifyEnabled: () => api.notify.enabled(),
     notifySetEnabled: ([on]) => api.notify.setEnabled(on as boolean),
     notifyTest: () => api.notify.test(),
