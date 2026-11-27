@@ -36,7 +36,7 @@ export function Heatmap({ days, noun, label }: HeatmapProps) {
     <div className="min-w-0">
       <div
         ref={scroller}
-        className="overflow-x-auto pb-1"
+        className="overflow-x-auto pb-3"
         // Focusable so a narrow heatmap scrolls with the arrow keys.
         tabIndex={0}
         role="region"

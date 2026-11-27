@@ -40,6 +40,7 @@ const TONES: Record<number, string> = {
   8: 'bg-(--proj-gray)'
 }
 const CHIP = 'rounded-md px-2 text-[12px] leading-5'
+const RECENT_MS = 30 * 86_400_000
 
 /** The repository dashboard: header, commit activity, README, About, Languages, Contributors. */
 export function OverviewTab({
@@ -163,7 +164,16 @@ function AboutCard({
       <dl className="m-0 flex flex-col gap-2">
         <Row label="License">{value(summary?.license ?? '—')}</Row>
         <Row label="Created">{value(isoDateText(summary?.createdAt ?? null))}</Row>
-        <Row label="Last activity">{value(Number.isNaN(lastAt) ? '—' : timeAgo(lastAt, now))}</Row>
+        <Row label="Last activity">
+          {value(
+            Number.isNaN(lastAt)
+              ? '—'
+              : // Relative only while it reads well; "2117 d ago" becomes a date.
+                now - lastAt < RECENT_MS
+                ? timeAgo(lastAt, now)
+                : isoDateText(last)
+          )}
+        </Row>
         <Row label="Default branch">
           {repo.defaultBranch ? (
             <span className="hash font-mono text-[12px]">{repo.defaultBranch}</span>
