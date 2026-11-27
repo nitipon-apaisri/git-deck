@@ -3,10 +3,14 @@ import { execFile, spawn } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
 import {
   chmodSync,
+  closeSync,
   existsSync,
   lstatSync,
   mkdtempSync,
+  openSync,
+  readdirSync,
   readFileSync,
+  readSync,
   realpathSync,
   renameSync,
   rmSync,
@@ -31,7 +35,15 @@ import { parseBisectLog } from '../shared/bisect'
 import { parseWorktrees, type ParsedWorktree } from '../shared/worktrees'
 import { refArgs, visibleRefs } from '../shared/hiddenRefs'
 import { hunkFingerprint, linePatch, parseUnifiedDiff, splitPatch } from '../shared/diff'
+import {
+  ACTIVITY_DAYS,
+  countDates,
+  fillDays,
+  localDate,
+  MAX_README_BYTES
+} from '../shared/overview'
 import type {
+  ActivityDay,
   BranchList,
   ChangeKind,
   CheckoutTarget,
@@ -1580,6 +1592,53 @@ async function assertCommit(cwd: string, hash: unknown): Promise<string> {
     throw new Error('That commit does not exist in this repository')
   }
   return hash
+}
+
+// Preferred first. Anything else is not shown as a README.
+const README_RE = /^readme(\.(md|markdown|mdown|txt|rst))?$/i
+const README_RANK = ['.md', '.markdown', '.mdown', '', '.txt', '.rst']
+
+/** The README at the top of a working tree, capped at `MAX_README_BYTES`. `null` when there is none. */
+export function readReadme(
+  cwd: string
+): { name: string; markdown: string; truncated: boolean } | null {
+  let names: string[]
+  try {
+    names = readdirSync(cwd).filter((n) => README_RE.test(n))
+  } catch {
+    return null
+  }
+  const ext = (n: string): string => (n.includes('.') ? n.slice(n.indexOf('.')).toLowerCase() : '')
+  names.sort((a, b) => README_RANK.indexOf(ext(a)) - README_RANK.indexOf(ext(b)))
+  for (const name of names) {
+    const file = join(cwd, name)
+    // A symlink could point anywhere on disk; only a plain file in the tree is read.
+    if (!lstatSync(file).isFile()) continue
+    const fd = openSync(file, 'r')
+    try {
+      const buf = Buffer.alloc(MAX_README_BYTES + 1)
+      const read = readSync(fd, buf, 0, buf.length, 0)
+      const truncated = read > MAX_README_BYTES
+      const text = new TextDecoder().decode(buf.subarray(0, Math.min(read, MAX_README_BYTES)))
+      return { name, markdown: text, truncated }
+    } finally {
+      closeSync(fd)
+    }
+  }
+  return null
+}
+
+/** Commits per day on HEAD for the last 12 months, every day present. An empty repository is all zeros. */
+export async function commitDays(cwd: string, now = new Date()): Promise<ActivityDay[]> {
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (ACTIVITY_DAYS - 1))
+  const out = await tryRun(cwd, [
+    'log',
+    `--since=${localDate(start)} 00:00`,
+    '--format=%as',
+    'HEAD',
+    '--'
+  ])
+  return fillDays(countDates(out ? out.split('\n') : []), now)
 }
 
 const MAX_TAG_MESSAGE = 5000

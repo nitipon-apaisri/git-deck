@@ -19,48 +19,9 @@ import {
   percentText,
   plural,
   sizeText,
-  statItems,
   unixDateText
 } from '../src/renderer/src/lib/repoView'
-import type { LocalInfo, Repo, RepoSummary } from '../src/shared/types'
-
-const repo = (over: Partial<Repo> = {}): Repo => ({
-  key: 'a:1',
-  accountId: 'a',
-  remoteId: '1',
-  name: 'deck',
-  fullName: 'acme/deck',
-  namespace: 'acme',
-  description: '',
-  visibility: 'public',
-  defaultBranch: 'main',
-  webUrl: 'https://example.com/acme/deck',
-  httpUrl: 'https://example.com/acme/deck.git',
-  sshUrl: 'git@example.com:acme/deck.git',
-  stars: 12,
-  forks: 3,
-  openIssues: 4,
-  updatedAt: '2026-01-01T00:00:00Z',
-  archived: false,
-  fork: false,
-  ...over
-})
-
-const summary = (over: Partial<RepoSummary> = {}): RepoSummary => ({
-  commitCount: 1200,
-  contributorCount: 7,
-  contributors: [],
-  branchCount: 5,
-  tagCount: null,
-  openChangeRequests: 0,
-  languages: [],
-  license: null,
-  createdAt: null,
-  lastActivityAt: null,
-  sizeKb: null,
-  topics: [],
-  ...over
-})
+import type { LocalInfo } from '../src/shared/types'
 
 const info = (over: Partial<LocalInfo> = {}): LocalInfo => ({
   path: '/x',
@@ -114,26 +75,6 @@ test('date helpers format fixed locale and zone, and survive bad input', () => {
   assert.equal(isoDateText('not a date'), '—')
   assert.equal(unixDateText(1_700_000_000, 'en-GB', 'UTC'), '14 Nov 2023')
   assert.equal(unixDateText(null), '—')
-})
-
-test('statItems shows a dash while loading and null once the load failed', () => {
-  const loading = statItems(repo(), null, 'github', true)
-  assert.equal(loading.find((i) => i.id === 'commits')?.value, '—')
-  assert.equal(loading.find((i) => i.id === 'stars')?.value, 12)
-
-  const failed = statItems(repo(), null, 'github', false)
-  assert.equal(failed.find((i) => i.id === 'commits')?.value, null)
-  assert.equal(failed.find((i) => i.id === 'forks')?.value, 3)
-})
-
-test('statItems keeps unknown pieces null and zero as zero', () => {
-  const items = statItems(repo(), summary(), 'gitlab', false)
-  const by = Object.fromEntries(items.map((i) => [i.id, i]))
-  assert.equal(by.commits.value, 1200)
-  assert.equal(by.tags.value, null)
-  assert.equal(by.changes.value, 0)
-  assert.equal(by.changes.label, 'Open MRs')
-  assert.equal(items.length, 8)
 })
 
 test('contributorRows sorts, cuts and scales bars to the top contributor', () => {

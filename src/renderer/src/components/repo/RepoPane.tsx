@@ -245,6 +245,7 @@ export function RepoPane({
           account={account}
           local={isLocal}
           compact={narrow}
+          hideDescription={tab === 'overview' && !showFile}
           onOpenWeb={() => void openWeb()}
           onClose={split ? onClose : undefined}
         >
@@ -459,9 +460,10 @@ export function RepoPane({
             {tab === 'overview' ? (
               <OverviewTab
                 repo={repo}
-                accountType={account?.type ?? 'github'}
+                account={account}
                 summary={summary}
                 loading={loading}
+                linkedPath={linkedPath}
                 narrow={narrow}
               />
             ) : (

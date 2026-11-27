@@ -699,3 +699,18 @@ Layout follows `docs/ui-boards/HomeProfile.dc.html`.
   - Design-system lines that still described an edge on these controls were changed to match the code: `docs/design-system/README.md` (focus, edges, button colour, activity), `components/Button/README.md` (default variant) and `components/Field/README.md` (input edge and focus). Previews (`preview.html`) still draw borders and were not changed.
   - The older "Focus ring on text fields" entry above is kept as history. This entry supersedes its border part.
 - **Not verified:** no display here, so the look, the contrast of the fills in both themes and the focus outline were not checked by eye. The `border-strong` 3:1 rule was not re-measured against the new fills.
+
+## 2026-11-27, Phase 44 Repo Overview dashboard
+
+Layout follows `docs/ui-boards/RepoOverview.dc.html` (wide) and `RepoOverviewNarrow.dc.html` (narrow).
+
+- **`marked` as a devDependency:** Vite bundles it into the renderer, so `dependencies` stays `react`, `react-dom` and `node-pty`. No HTML sanitizer library: `lib/markdown.ts` overrides marked's renderer so that raw HTML in a README is dropped (never parsed), links and images are kept only when they are absolute `https:`, relative images become an "Image: alt" placeholder, and a click on a link calls `openExternal`. Only tags marked itself writes can reach the page. The renderer CSP (`img-src https:`, no inline script) is a second line of defence.
+- **Raw HTML dropped:** README badges and centred logos written in HTML do not show. Escaping them as text looked broken; parsing them would need a DOM sanitizer.
+- **Sources:** README, commit activity and tags come from the linked clone when its folder is still a repository, else from the host API. The README is the top-level `README*` (any case, `.md` preferred, symlinks skipped), capped at 512 KB on both paths. GitHub reads `/readme` (base64) and GitLab the file named by the project's `readme_url` (else `README.md`) from `/repository/files/:path/raw` on the default branch.
+- **Local commit counts use HEAD**, the checked-out branch. GitHub's `/stats/commit_activity` counts the default branch, so the two can differ.
+- **Host activity:** GitHub's 202 ("computing") is retried once after 2 s, then the card shows a loading state with Try again; a "computing" answer is never cached. GitLab reads `commits?since=` in sequence, 10 pages of 100, and flags the card ("first 1,000 commits") when it hits that cap.
+- **Cache:** the three answers are kept in memory in main, per repo and linked path, so switching tabs or panes never refetches and linking a clone reads it at once. Not persisted like the summary: a README can be 512 KB, too much for the JSON store. Each card's retry skips the cache.
+- **Header:** the Overview header shows name, visibility, default branch, namespace, description and topics. `RepoHeader` hides its description on the Overview tab only, and there is no second "Open on GitHub" button: the header's globe button does it.
+- **Narrow:** under 760px the order is Commits, About, README, Languages, Contributors, and the stats sit above the heatmap, as on the narrow board. The heatmap keeps the full year and scrolls sideways, opening on the latest weeks.
+- **Removed:** the eight stat cards (`statItems`), as the plan says. Stars, forks and open issues are no longer shown in the repo pane; open PRs/MRs stay in the project overview and the PR/MR tab, local branch counts in Info.
+- **Heatmap:** the grid, tooltip and legend moved from `HomeProfile` into `ui/Heatmap.tsx`, shared by both screens.

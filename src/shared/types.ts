@@ -108,6 +108,40 @@ export interface RepoSummary {
   topics: string[]
 }
 
+/** Where an Overview card's data came from: the linked clone or the host API. */
+export type DataSource = 'local' | 'host'
+
+export interface RepoReadme {
+  /** File name as found, such as `README.md`. */
+  name: string
+  markdown: string
+  source: DataSource
+  /** Cut at the size cap. */
+  truncated: boolean
+}
+
+export interface ActivityDay {
+  /** `YYYY-MM-DD`. */
+  date: string
+  count: number
+}
+
+/** Commits per day for the last 12 months, oldest first, every day present. */
+export interface RepoActivity {
+  days: ActivityDay[]
+  source: DataSource
+  /** The host capped the commit list, so counts are a floor. */
+  truncated: boolean
+  /** GitHub is still computing its statistics (202): show a loading state. */
+  computing: boolean
+}
+
+export interface RepoTags {
+  /** Newest first, at most a handful. */
+  names: string[]
+  source: DataSource
+}
+
 export interface Cached<T> {
   data: T
   fetchedAt: number

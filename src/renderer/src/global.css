@@ -100,3 +100,109 @@ body {
 .scroll-fade[data-fade-end] {
   --fade-end: 28px;
 }
+
+/* A rendered README (lib/markdown.ts). The HTML comes from marked, so it is styled here, tokens only. */
+.markdown {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.markdown > :first-child {
+  margin-top: 0;
+}
+.markdown > :last-child {
+  margin-bottom: 0;
+}
+.markdown :is(h1, h2, h3, h4, h5, h6) {
+  margin: 1.4em 0 0.5em;
+  font-weight: 600;
+  line-height: 1.3;
+}
+/* Headings are one level down (see lib/markdown.ts): a README "#" is an h2 here. */
+.markdown h2 {
+  font-size: 22px;
+}
+.markdown h3 {
+  font-size: 17px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+.markdown h4 {
+  font-size: 15px;
+}
+.markdown :is(h5, h6) {
+  font-size: 13px;
+}
+.markdown :is(p, ul, ol, pre, table, blockquote) {
+  margin: 0 0 0.9em;
+}
+.markdown :is(ul, ol) {
+  padding-left: 1.5em;
+}
+.markdown ul {
+  list-style: disc;
+}
+.markdown ol {
+  list-style: decimal;
+}
+.markdown a {
+  color: var(--accent-text);
+  text-underline-offset: 2px;
+}
+.markdown a:hover {
+  text-decoration: underline;
+}
+.markdown :is(code, pre) {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-ligatures: none;
+}
+.markdown :not(pre) > code {
+  padding: 1px 5px;
+  border-radius: var(--radius-xs);
+  background: var(--neutral);
+}
+.markdown pre {
+  padding: 12px 14px;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  background: var(--hover);
+}
+.markdown table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+.markdown :is(th, td) {
+  padding: 6px 12px;
+  overflow-wrap: normal;
+  border: 1px solid var(--line);
+  text-align: left;
+}
+.markdown th {
+  font-weight: 600;
+  background: var(--hover);
+}
+.markdown blockquote {
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: var(--hover);
+  color: var(--text-muted);
+}
+.markdown img {
+  display: inline-block;
+  max-width: 100%;
+}
+.markdown hr {
+  margin: 1.4em 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+.markdown .md-image-placeholder {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  background: var(--neutral);
+  color: var(--text-muted);
+  font-size: 12px;
+}

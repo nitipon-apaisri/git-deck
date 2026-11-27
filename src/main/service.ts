@@ -28,7 +28,10 @@ import type {
   DiffRequest,
   PullMode,
   Repo,
+  RepoActivity,
+  RepoReadme,
   RepoSummary,
+  RepoTags,
   CreateChangeRequestInput
 } from '../shared/types'
 import {
@@ -43,6 +46,7 @@ import { TEST_PROMPT, buildPrompt, suggest as realSuggest, type SuggestOptions }
 import * as realGit from './git'
 import { NO_OPERATION } from './git'
 import { MAX_REGION_TEXT } from '../shared/conflict'
+import { MAX_TAGS } from '../shared/overview'
 import { gitAuthEnv } from './gitAuth'
 import { TerminalManager, type SpawnPty } from './terminal'
 import { watchRepo as realWatchRepo } from './watcher'
@@ -121,6 +125,8 @@ export type GitOps = Pick<
   | 'continueOperation'
   | 'abortOperation'
   | 'listTags'
+  | 'readReadme'
+  | 'commitDays'
   | 'createTag'
   | 'deleteTag'
   | 'getTagRemote'
@@ -714,6 +720,38 @@ export function createService(deps: ServiceDeps): {
     })
   }
 
+  // Overview cards, kept in memory only: a README can be 512 KB, too much for the JSON store.
+  const overviewCache = new Map<string, unknown>()
+
+  /**
+   * The linked clone when its folder is still a repository, else the host. Cached per repo
+   * and link, so linking a clone reads it at once; `refresh` skips the cache.
+   */
+  function overview<T>(
+    kind: string,
+    repoKey: unknown,
+    refresh: unknown,
+    empty: T,
+    fromClone: (path: string) => Promise<T>,
+    fromHost: (p: GitProvider, r: Repo) => Promise<T>,
+    keep: (value: T) => boolean = () => true
+  ): Promise<T> {
+    parseRepoKey(repoKey)
+    const path = store.getLinks()[repoKey as string]
+    const key = `${kind}:${repoKey as string}:${path ?? ''}`
+    if (refresh !== true && overviewCache.has(key)) {
+      return Promise.resolve(overviewCache.get(key) as T)
+    }
+    return once(key, async () => {
+      const linked = path ? (await git.repoRoot(path)) !== null : false
+      const value = linked
+        ? await fromClone(path as string)
+        : await withProvider(repoKey as string, empty, fromHost)
+      if (keep(value)) overviewCache.set(key, value)
+      return value
+    })
+  }
+
   /** Host-side data for one repo. A local-only repo has no host, so it gets `empty`. */
   async function withProvider<T>(
     repoKey: string,
@@ -942,6 +980,54 @@ export function createService(deps: ServiceDeps): {
         return store.getCachedSummary(repoKey)
       }),
       fetch: guard(async (repoKey) => fetchSummary(repoKey))
+    },
+    repo: {
+      readme: guard((repoKey, refresh) =>
+        overview<RepoReadme | null>(
+          'readme',
+          repoKey,
+          refresh,
+          null,
+          async (path) => {
+            const found = git.readReadme(path)
+            return found ? { ...found, source: 'local' } : null
+          },
+          async (p, r) => {
+            const found = await p.readme(r)
+            return found ? { ...found, source: 'host' } : null
+          }
+        )
+      ),
+      activity: guard((repoKey, refresh) =>
+        overview<RepoActivity>(
+          'activity',
+          repoKey,
+          refresh,
+          { days: [], source: 'local', truncated: false, computing: false },
+          async (path) => ({
+            days: await git.commitDays(path),
+            source: 'local',
+            truncated: false,
+            computing: false
+          }),
+          async (p, r) => ({ ...(await p.activity(r)), source: 'host' }),
+          // Never keep "still computing": the next open asks GitHub again.
+          (value) => !value.computing
+        )
+      ),
+      tags: guard((repoKey, refresh) =>
+        overview<RepoTags>(
+          'tags',
+          repoKey,
+          refresh,
+          { names: [], source: 'local' },
+          async (path) => ({
+            names: (await git.listTags(path)).slice(0, MAX_TAGS).map((t) => t.name),
+            source: 'local'
+          }),
+          async (p, r) => ({ names: await p.latestTags(r), source: 'host' })
+        )
+      )
     },
     profile: {
       get: guard(async (accountId) => {

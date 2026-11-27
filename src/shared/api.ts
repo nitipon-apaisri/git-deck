@@ -36,6 +36,9 @@ import type {
   Repo,
   RepoStatus,
   RepoSummary,
+  RepoActivity,
+  RepoReadme,
+  RepoTags,
   ChangeRequest,
   CreateChangeRequestInput,
   ChecksInfo,
@@ -100,6 +103,16 @@ export interface Api {
   summary: {
     cached(repoKey: string): Promise<Cached<RepoSummary> | null>
     fetch(repoKey: string): Promise<Cached<RepoSummary>>
+  }
+  /**
+   * Overview cards. Read from the linked clone when there is one, else the host API.
+   * Kept in memory per repository; `refresh` skips that cache.
+   */
+  repo: {
+    /** `null` when the repository has no README. */
+    readme(repoKey: string, refresh?: boolean): Promise<RepoReadme | null>
+    activity(repoKey: string, refresh?: boolean): Promise<RepoActivity>
+    tags(repoKey: string, refresh?: boolean): Promise<RepoTags>
   }
   /** The Home profile of one account, read with its token. Nothing is cached. */
   profile: {
@@ -324,6 +337,9 @@ export const IPC = {
   reposFetch: 'repos:fetch',
   summaryCached: 'summary:cached',
   summaryFetch: 'summary:fetch',
+  repoReadme: 'repo:readme',
+  repoActivity: 'repo:activity',
+  repoTags: 'repo:tags',
   profileGet: 'profile:get',
   changesList: 'changes:list',
   changesChecks: 'changes:checks',

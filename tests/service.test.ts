@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { realpathSync } from 'node:fs'
+import { realpathSync, writeFileSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { afterEach, test } from 'node:test'
@@ -157,7 +157,16 @@ async function rig(opts: { seed?: boolean } = { seed: true }): Promise<Rig> {
       throw new Error('unused')
     },
     getChecks: async () => ({ state: 'none', items: [] }),
-    getProfile: async () => profile
+    getProfile: async () => profile,
+    readme: async () => {
+      count('readme')
+      return { name: 'README.md', markdown: '# From host', truncated: false }
+    },
+    activity: async () => {
+      count('activity')
+      return { days: [], truncated: false, computing: false }
+    },
+    latestTags: async () => ['v9']
   }
   const ui: Ui = {
     pickFolder: async () => r.picks.shift() ?? null,
@@ -278,7 +287,10 @@ test('accounts.add refuses when secure storage is unavailable', async () => {
         throw new Error('unused')
       },
       getChecks: async () => ({ state: 'none', items: [] }),
-      getProfile: async () => profile
+      getProfile: async () => profile,
+      readme: async () => null,
+      activity: async () => ({ days: [], truncated: false, computing: false }),
+      latestTags: async () => []
     })
   })
   await assert.rejects(api.accounts.add(input()), /Secure storage is unavailable/)
@@ -363,6 +375,43 @@ test('summary.fetch needs a cached repo, dedupes and caches', async () => {
   assert.deepEqual(a, b)
   assert.equal((await r.api.summary.cached('acc1:1'))?.data.commitCount, 1)
   assert.equal(await r.api.summary.cached('acc1:2'), null)
+})
+
+test('repo overview: host fallback is cached per repo, refresh asks again, a linked clone wins', async () => {
+  const r = await rig()
+  await assert.rejects(r.api.repo.readme('nope'), /Invalid repository key/)
+  const host = await r.api.repo.readme('acc1:1')
+  assert.deepEqual(host, {
+    name: 'README.md',
+    markdown: '# From host',
+    truncated: false,
+    source: 'host'
+  })
+  await r.api.repo.readme('acc1:1')
+  assert.equal(r.provider.calls['readme'], 1)
+  await r.api.repo.readme('acc1:1', true)
+  assert.equal(r.provider.calls['readme'], 2)
+  assert.deepEqual(await r.api.repo.tags('acc1:1'), { names: ['v9'], source: 'host' })
+
+  const dir = branchyRepo()
+  writeFileSync(join(dir, 'readme.MD'), '# From clone\n')
+  git(dir, 'remote', 'add', 'origin', 'https://github.com/octo/hello.git')
+  r.picks.push(dir)
+  await r.api.local.link('acc1:1')
+  const local = await r.api.repo.readme('acc1:1', true)
+  assert.equal(local?.source, 'local')
+  assert.equal(local?.name, 'readme.MD')
+  const activity = await r.api.repo.activity('acc1:1', true)
+  assert.equal(activity.source, 'local')
+  assert.equal(activity.days.length, 365)
+  assert.equal(
+    activity.days.reduce((n, d) => n + d.count, 0),
+    5,
+    'every commit on HEAD from the last 12 months'
+  )
+  // Both tags carry the same second, so only the set is certain.
+  assert.deepEqual((await r.api.repo.tags('acc1:1', true)).names.sort(), ['v1.0', 'v2.0'])
+  assert.equal(r.provider.calls['activity'], undefined)
 })
 
 // Linking

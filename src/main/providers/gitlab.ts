@@ -1,4 +1,4 @@
-import { countItems, getJson, getPage, HttpError, paginate, postJson } from '../http'
+import { countItems, getJson, getPage, getText, HttpError, paginate, postJson } from '../http'
 import type {
   ChangeRequest,
   CheckState,
@@ -8,9 +8,19 @@ import type {
   LanguageShare,
   ProfileInfo,
   Repo,
+  RepoActivity,
+  RepoReadme,
   RepoSummary,
   Visibility
 } from '../../shared/types'
+import {
+  ACTIVITY_DAYS,
+  capReadme,
+  countDates,
+  fillDays,
+  localDate,
+  MAX_TAGS
+} from '../../shared/overview'
 import { MAX_CONTRIBUTORS, MAX_LANGUAGES, type GitProvider, type VerifiedUser } from './types'
 import { ok, required, sameOrigin, throwIfAllFailed } from './util'
 
@@ -87,7 +97,11 @@ interface GlProject {
   tag_list?: string[]
   license?: { nickname?: string | null; name?: string } | null
   statistics?: { commit_count?: number; repository_size?: number } | null
+  readme_url?: string | null
 }
+
+/** Commit pages read for the heatmap, one after another: 10 x 100 = 1,000 commits at most. */
+const ACTIVITY_PAGES = 10
 
 interface GlContributor {
   name: string
@@ -350,6 +364,47 @@ export class GitLabProvider implements GitProvider {
       }
       throw err
     }
+  }
+
+  async readme(repo: Repo): Promise<Omit<RepoReadme, 'source'> | null> {
+    const base = `${this.root}/projects/${encodeURIComponent(repo.remoteId)}`
+    const meta = await getJson<GlProject>(base, this.headers)
+    // `readme_url` is a web link ending in the file name; the README sits at the root.
+    const fromUrl = meta?.readme_url ? meta.readme_url.split('/').pop() : undefined
+    const name = fromUrl ? decodeURIComponent(fromUrl) : 'README.md'
+    const ref = repo.defaultBranch || meta?.default_branch || 'HEAD'
+    const url = `${base}/repository/files/${encodeURIComponent(name)}/raw?ref=${encodeURIComponent(ref)}`
+    try {
+      return { name, ...capReadme(await getText(url, this.headers)) }
+    } catch (err) {
+      if (err instanceof HttpError && err.status === 404) return null
+      throw err
+    }
+  }
+
+  async activity(repo: Repo): Promise<Omit<RepoActivity, 'source'>> {
+    const now = new Date()
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (ACTIVITY_DAYS - 1))
+    const url = `${this.root}/projects/${encodeURIComponent(repo.remoteId)}/repository/commits?since=${encodeURIComponent(`${localDate(start)}T00:00:00Z`)}&per_page=100`
+    // `paginate` reads pages in sequence, never in parallel, to stay inside rate limits.
+    const commits = await paginate<{ authored_date?: string; created_at?: string }>(
+      url,
+      this.headers,
+      ACTIVITY_PAGES
+    )
+    const dates = commits.map((c) => c.authored_date ?? c.created_at ?? '')
+    return {
+      days: fillDays(countDates(dates), now),
+      // shortcut: a full last page may also be the exact end; counting would cost another request.
+      truncated: commits.length >= ACTIVITY_PAGES * 100,
+      computing: false
+    }
+  }
+
+  async latestTags(repo: Repo): Promise<string[]> {
+    const url = `${this.root}/projects/${encodeURIComponent(repo.remoteId)}/repository/tags?order_by=updated&sort=desc&per_page=${MAX_TAGS}`
+    const tags = await getJson<{ name: string }[]>(url, this.headers)
+    return (Array.isArray(tags) ? tags : []).slice(0, MAX_TAGS).map((t) => t.name)
   }
 }
 
