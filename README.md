@@ -30,7 +30,7 @@ Browse every repository you can reach, read its commit graph, group repositories
 <summary>More detail</summary>
 
 - **Home.** Shown when no repository is selected, and at startup when no tabs are restored. Clicking Home returns without closing tabs. One account at a time, picked in the switcher. The GitHub heatmap is the contribution calendar (GraphQL). On GitLab, the heatmap is counted from the account's events, with month labels and a hover tooltip on each day.
-- **Repository overview.** Commits, contributors, branches, tags, open pull or merge requests, languages and top contributors. Saved data shows first and refreshes in the background. If a refresh fails, the saved data stays and a banner offers Retry.
+- **Repository overview.** A dashboard: header with visibility, default branch and topics; a 12-month commit heatmap with commits, active days, busiest day and current streak; the rendered README; an About panel with licence, dates, size and latest tags; languages; and the top 5 contributors. Counts come from the linked clone when there is one, else from the host. Saved data shows first and refreshes in the background. If a refresh fails, the saved data stays and a banner offers Retry.
 - **Local clones.** Fetch, open the folder, and read local branch, ahead/behind and working tree state.
 - **History operations.** Tags (create, annotate, push, delete here or on the remote), revert, reset (soft, mixed or hard, with a confirm for hard), remotes (add, rename, remove), rebase onto a branch or commit, and interactive rebase from a graph row (reorder, reword, squash, fixup, drop). Revert and rebase reuse the conflict banner, and a rebase can skip the commit it stopped on. URLs never carry a token.
 - **Worktrees.** The Worktrees dialog in the repository's `…` menu adds (on a new or existing branch, in a folder you pick), opens, locks, unlocks, removes and prunes worktrees. A worktree with changes is refused unless you confirm a forced remove. Worktrees nest under their repository in the sidebar, and each opens in its own tab.
@@ -181,6 +181,10 @@ docs           Design system, UI boards, DECISIONS.md.
 - The graph shows the history that `git log` reports for the linked folder. Detached HEAD and graphs with more than about ten lanes at once were not checked.
 - Worktrees were tested against temporary repositories. The Worktrees dialog and the nested sidebar rows were not run in a window. Moving a worktree is not supported.
 - The GitLab heatmap is an estimate counted from events. It reads the last 12 months in 31-day windows, each capped at 1000 events, so a window busier than that is undercounted.
+- The Overview README is rendered as Markdown. Raw HTML in a README (badges, centred logos) is not shown, and relative images show a placeholder.
+- Overview commit counts from the host (no linked clone) read at most 1,000 commits on GitLab, and the card says so.
+- Local commit counts use the checked-out branch (HEAD). GitHub's stats use the default branch, so the two can differ.
+- GitHub may still be computing commit stats on first open. The card shows a loading state and a Try again button.
 
 Not planned for this version: a full-file three-way editor, OAuth sign-in (tokens only), a SQLite cache, silent auto-update, signing and notarisation, more than two panes, drag-and-drop between projects, and cloning every repository of a project at once.
 
@@ -208,7 +212,7 @@ Most of the total is cache reads, which are billed at a much lower rate, so the 
 
 ## Progress
 
-**45 of 46 phases done.** Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
+**46 of 46 phases done.** Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 
 <details>
 <summary>Phase checklist</summary>
@@ -258,6 +262,6 @@ Most of the total is cache reads, which are billed at a much lower rate, so the 
 - [x] Phase 41: Hide branches and tags
 - [x] Phase 42: Git worktrees
 - [x] Phase 43: Home profile
-- [ ] Phase 44: Repo Overview dashboard
+- [x] Phase 44: Repo Overview dashboard
 
 </details>
