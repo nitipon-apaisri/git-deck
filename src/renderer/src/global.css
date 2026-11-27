@@ -13,7 +13,8 @@ body,
 :root[data-theme='dark'] {
   color-scheme: dark;
 }
-:root[data-theme='light'] {
+:root[data-theme='light'],
+:root[data-theme='warm'] {
   color-scheme: light;
 }
 

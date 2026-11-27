@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { APP_ICONS, DEFAULT_APP_ICON, type AppIconId } from '@shared/appIcon'
-import { ACCENTS, type Accent } from '../../lib/accent'
+import { ACCENTS, defaultAccent, type Accent } from '../../lib/accent'
 import { FONTS, type FontId } from '../../lib/font'
 import { errorMessage } from '../../lib/errors'
 import type { ThemeSetting } from '../../lib/theme'
@@ -36,9 +36,10 @@ const CARD =
 const THEME_LABELS: Record<ThemeSetting, { title: string; sub: string }> = {
   system: { title: 'System', sub: 'Follows your OS' },
   light: { title: 'Light', sub: 'Always light' },
+  warm: { title: 'Warm', sub: 'Soft sand tones' },
   dark: { title: 'Dark', sub: 'Always dark' }
 }
-const THEME_ORDER: readonly ThemeSetting[] = ['system', 'light', 'dark']
+const THEME_ORDER: readonly ThemeSetting[] = ['system', 'light', 'dark', 'warm']
 
 /** Arrow keys move the choice and the focus, like a native radio group. */
 function useRadioKeys<T extends string>(values: readonly T[], value: T, onChange: (v: T) => void) {
@@ -69,7 +70,8 @@ interface AppearanceSectionProps {
 }
 
 export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionProps) {
-  const { accent, setAccent } = useAccent()
+  const { accent: chosen, theme: shown, setAccent } = useAccent()
+  const accent = chosen ?? defaultAccent(shown)
   const { font, setFont } = useFont()
   const themeKeys = useRadioKeys<ThemeSetting>(THEME_ORDER, theme, onThemeChange)
   const accentIds = ACCENTS.map((a) => a.id)
@@ -104,7 +106,7 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
           Theme
         </h3>
         <p className={HINT}>System follows your OS appearance.</p>
-        <div role="radiogroup" aria-labelledby="set-theme" className={cn(GROUP, 'grid-cols-3')}>
+        <div role="radiogroup" aria-labelledby="set-theme" className={cn(GROUP, 'grid-cols-4')}>
           {THEME_ORDER.map((value, index) => (
             <button
               key={value}
@@ -128,9 +130,11 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
 
       <section className={BLOCK} aria-labelledby="set-accent">
         <h3 id="set-accent" className={LABEL}>
-          Accent colour
+          Accent colour ({shown})
         </h3>
-        <p className={HINT}>Used for the primary button, selection and focus ring.</p>
+        <p className={HINT}>
+          Used for the primary button, selection and focus ring. Each theme keeps its own.
+        </p>
         <div role="radiogroup" aria-labelledby="set-accent" className="flex items-center gap-3">
           {ACCENTS.map((a, index) => (
             <button

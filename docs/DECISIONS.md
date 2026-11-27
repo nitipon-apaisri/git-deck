@@ -8,6 +8,22 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-28: README sync for the four themes and per-theme accents
+
+- **Question:** branch `fix/dark-restore-blue` adds Warm, restores the original Light theme, sets the default accent per theme and keeps each theme's accent apart. Which README parts change?
+- **Options considered:** change the Features Extras row only; also change the Appearance bullet; also add a Known limits line; leave README as it is, since the branch is about colours.
+- **Decision and why:**
+  - Extras row: "four themes, five accents each", in place of "light and dark themes with five accents". The row keeps its width, so the table stays aligned without a formatter.
+  - Appearance bullet (More detail): the four settings, System picks Light or Dark (`resolveTheme` never returns Warm), five accents kept per theme, blue by default in Light and Dark and orange in Warm (`defaultAccent` in `lib/accent.ts`). The old "warm, dimmed" wording for Light is removed, because the commit `df84309` brings the original Light back.
+  - Known limits: the Light, Dark and Warm themes and the per-theme defaults were not checked in a running window. The branch's own entries say "no display here".
+  - Not changed: Install, the Architecture line on `data-theme` (still true), and Progress. Progress stays at 46 of 46 phases. PLAN.md has 222 ticked boxes and none open, and this is not a phase.
+- **Not verified:**
+  - The Light colours are taken from the commit subject and the task, not read from `tokens.css`. The Warm and Light colour values were not checked.
+  - Earlier entries on this branch (2026-11-28, "Dark theme is blue again" and "Accent is kept per theme") say "Light keeps the warm orange" and name the keys `gitdeck.accent.dark` and `gitdeck.accent.light`. The code uses `gitdeck.accent.<theme>` for all three themes, and Light is no longer warm. Those entries look out of date. They were left as written, because this log is kept as a record.
+  - The 2026-11-28 "Warm, dimmed light theme" entry describes the old Light palette. It is also a record and was not edited.
+  - Prettier was not run on README.md or this file. Table padding was kept by hand.
+  - No commit was made. The sync is left in the working tree for the caller.
+
 ## 2026-11-27: macOS installer window (DMG design E-1 Sunrise)
 
 - **Question:** how the DMG installer window is built, what is tied to what, and whether README must change.
@@ -783,3 +799,11 @@ Layout follows `docs/ui-boards/RepoOverview.dc.html` (wide) and `RepoOverviewNar
 In dark theme the ref pills (`--ref-main-*`, `--ref-head-*`) and the heatmap (`--heat-*`) use `var(--accent)`, and `--lane-1` (the mainline) too, so they follow the chosen accent. The other lanes and `--proj-*` are re-tuned to muted cool tones that stay clear of orange. Semantic green and red are unchanged. The light theme is untouched. Not checked visually: there is no display here, so the new lane hues need one look in the running app.
 
 The light theme keeps its blue `--lane-1`, `--ref-head-bg` and `--ref-main-*` on purpose for now: this change is dark only. The commit message box uses the `--island` fill with no resting edge, because `--line` is decorative and must not be the sole edge of an input.
+
+## Dark theme is blue again
+
+Dark goes back to the original blue palette (accent, pills, lanes, project colours, heatmap), restored from `origin/develop`. Warm (the sand and orange theme) and the original Light are separate themes. With no saved accent the theme picks the default: blue in dark, orange in light (`defaultAccent` in `lib/accent.ts`; `data-accent` is left off until someone chooses one). Every accent now has explicit dark and light rules in `appearance.css`. Choosing Orange in dark brings back the orange-with-blue-pills mix. Not checked visually: there is no display here.
+
+## Accent is kept per theme
+
+Each theme saves its own accent (`gitdeck.accent.dark`, `gitdeck.accent.light`). The old single `gitdeck.accent` still seeds both until a theme gets its own choice. `data-accent` follows the resolved theme: `initAppearance` watches `data-theme`, so a pick or an OS light/dark flip re-applies it. Settings edits the accent of the theme in use and says which. Not checked visually: there is no display here.
