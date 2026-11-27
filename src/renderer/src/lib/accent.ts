@@ -10,15 +10,15 @@ export interface AccentPreset {
 
 /** The first one is the default and has no overrides (`accents.css` only has the others). */
 export const ACCENTS = [
+  { id: 'orange', label: 'Orange' },
   { id: 'blue', label: 'Blue' },
   { id: 'violet', label: 'Violet' },
   { id: 'green', label: 'Green' },
-  { id: 'orange', label: 'Orange' },
   { id: 'rose', label: 'Rose' }
 ] as const satisfies readonly AccentPreset[]
 
 export type Accent = (typeof ACCENTS)[number]['id']
-export const DEFAULT_ACCENT: Accent = 'blue'
+export const DEFAULT_ACCENT: Accent = 'orange'
 
 export function parseAccent(value: string | null | undefined): Accent {
   const found = ACCENTS.find((a) => a.id === value)

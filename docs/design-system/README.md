@@ -1,4 +1,4 @@
-GitDeck is a desktop Git client for people who work across GitHub, GitLab.com and self-hosted GitLab. The interface follows the JetBrains Islands look: a dark or light **window**, with every working area lifted onto a rounded **island**. Dense, quiet, one blue accent.
+GitDeck is a desktop Git client for people who work across GitHub, GitLab.com and self-hosted GitLab. The interface follows the JetBrains Islands look: a dark or light **window**, with every working area lifted onto a rounded **island**. Dense, quiet, one accent: burnt orange by default, with blue, violet, green and rose in Settings.
 
 ## Principles
 
@@ -18,7 +18,7 @@ The app builds its components with shadcn/ui (Radix) and Tailwind v4. Tokens sta
 | `secondary`, `muted` | `island-raised` |
 | `muted-foreground` | `text-muted` |
 | `primary`, `primary-foreground` | `primary`, `on-primary` |
-| `accent` | `hover` (a fill, not the blue `accent` token) |
+| `accent` | `hover` (a fill, not the `accent` token) |
 | `border`, `input` | `line` |
 | `ring` | `focus-ring` |
 | `destructive` | `danger` |
@@ -32,6 +32,7 @@ Rules that came out of the migration:
 
 ## Color
 
+- Light theme is warm and dimmed on purpose: sand `window` (#efe0c8), cream `island` (#f7ebd7), brown `text` (#2a1a0e), with no pure white surface, so a full screen of it does not glare. Amber #f4ae52 is a highlight only (the tag badge), always under dark text. Dark theme surfaces are unchanged.
 - Ground: `window` behind everything, `island` for panels, `island-raised` for inputs and stat cards placed on an island, `hover` for hover fills. Rows are never striped.
 - Text: `text` for primary copy, `text-muted` for counts, column headers and hints. Links and ghost buttons use `accent-text`. Do not set text in `accent`; it is for marks only (active tab underline, active rail icon, active pane outline, progress).
 - The one `primary` button on a screen is `primary` with `on-primary` text. Every other button is a default button filled with `island-raised`, or a ghost button with no fill.

@@ -42,7 +42,7 @@ Browse every repository you can reach, read its commit graph, group repositories
 - **Terminal.** A shell per pane, opened with the Terminal button or Ctrl+\`, in the repository's folder.
 - **Command palette.** `Mod+Shift+P` jumps to repositories, branches and tags and runs actions such as fetch, pull and theme switch.
 - **Split View.** Each pane keeps its own tab, graph and scroll position, with a draggable divider.
-- **Appearance.** Light, dark or system theme, five accent colours and a choice of font. Accounts are connected in Settings too. The app icon picker has six built-in icons, with Sun as the default. The choice sets the Dock and window icon and is kept between launches.
+- **Appearance.** Light (warm, dimmed), dark or system theme, five accent colours (orange by default) and a choice of font. Accounts are connected in Settings too. The app icon picker has six built-in icons, with Sun as the default. The choice sets the Dock and window icon and is kept between launches.
 
 </details>
 

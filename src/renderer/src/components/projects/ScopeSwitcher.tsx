@@ -65,7 +65,7 @@ export function ScopeSwitcher({ projects, scope, onSelect, onNew, onManage }: Sc
       <button
         ref={button}
         type="button"
-        className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-lg border-0 bg-secondary pr-2.5 pl-1.5 text-left text-foreground hover:bg-accent [&_svg:last-child]:text-muted-foreground"
+        className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-lg border-0 bg-card pr-2.5 pl-1.5 text-left text-foreground hover:bg-accent aria-expanded:bg-(--selection) [&_svg:last-child]:text-muted-foreground aria-expanded:[&_svg:last-child]:text-primary"
         aria-haspopup="menu"
         aria-expanded={at !== null}
         aria-label={`Scope: ${scope ? scope.name : 'All repositories'}. Change scope`}
@@ -74,13 +74,15 @@ export function ScopeSwitcher({ projects, scope, onSelect, onNew, onManage }: Sc
         {scope ? (
           <ProjectIcon icon={scope.icon} color={scope.color} size="sm" />
         ) : (
-          <ProjectIcon icon="repo" color="gray" size="sm" />
+          <ProjectIcon icon="repo" color="primary" size="sm" />
         )}
         <span className="min-w-0 flex-1 truncate font-medium">
           {scope ? scope.name : 'All repositories'}
         </span>
         {scope ? (
-          <span className="text-[12px] text-muted-foreground">{scope.repoKeys.length}</span>
+          <span className="text-[12px] text-muted-foreground in-aria-expanded:text-primary">
+            {scope.repoKeys.length}
+          </span>
         ) : null}
         <Icon name="chevron-down" size="sm" />
       </button>

@@ -10,8 +10,8 @@
 <helmet>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#E9EBF0;--island:#FFFFFF;--island-2:#F3F4F7;--hover:#EBEDF2;--line:#DDE0E6;--text:#1F2329;--muted:#5F6672;--accent:#2E69DC;--green:#2FA05A;--green-text:#1E7A3C;--red:#C2373C;--neutral:#E3E5EA;--b-gh:#E3E5EA;--b-gl:#FBE3D6;--b-sh:#DCE7F7;--sel:rgba(46,105,220,.12);--blue-text:#1F4FB0}
-body{margin:0;background:#E9EBF0}
+:root{--bg:#EFE0C8;--island:#F7EBD7;--island-2:#F2E3CA;--hover:#EDDCC0;--line:#E0CBA8;--text:#2A1A0E;--muted:#5E4A3A;--accent:#B5501A;--green:#288A4E;--green-text:#17683A;--red:#B42318;--neutral:#E6D3B3;--b-gh:#E6D3B3;--b-gl:#F6D2B8;--b-sh:#D9DFE0;--sel:rgba(46,105,220,.12);--blue-text:#1F4FB0}
+body{margin:0;background:#EFE0C8}
 *{box-sizing:border-box}
 button,input{font-family:inherit;font-size:inherit;color:inherit}
 button{cursor:pointer}
@@ -51,7 +51,7 @@ button{cursor:pointer}
 
   <div style="display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 8px 12px 4px; flex-wrap: wrap">
     <div style="display: flex; align-items: center; gap: 10px; margin-right: 10px">
-      <div style="width: 26px; height: 26px; border-radius: 8px; background: #2E69DC; color: #fff; display: grid; place-items: center"><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-git-branch"></use></svg></div>
+      <div style="width: 26px; height: 26px; border-radius: 8px; background: #B5501A; color: #fff; display: grid; place-items: center"><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-git-branch"></use></svg></div>
       <span style="font-weight: 600; font-size: 14px">GitDeck</span>
     </div>
     <button class="chip" aria-label="Switch repository in pane 1"><span style="width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: 11px; font-weight: 600">1</span><span style="color: var(--muted)">nitipon-dev /</span><span style="font-weight: 500">gitdeck</span><svg class="ic s" viewBox="0 0 24 24" aria-hidden="true" style="color: var(--muted)"><use href="#i-chevron-down"></use></svg></button>
@@ -162,11 +162,11 @@ button{cursor:pointer}
           <svg width="72" height="532" viewBox="0 0 72 532" aria-hidden="true" style="position: absolute; left: 14px; top: 0; pointer-events: none">
             <path d="M14 14V518" stroke="#3574F0" stroke-width="2" fill="none"></path>
             <path d="M14 14C14 28 46 28 46 42V182C46 196 14 196 14 210" stroke="#8B5CF6" stroke-width="2" fill="none"></path>
-            <path d="M30 70V154C30 168 14 168 14 182" stroke="#12A38A" stroke-width="2" fill="none"></path>
+            <path d="M30 70V154C30 168 14 168 14 182" stroke="#0F8A75" stroke-width="2" fill="none"></path>
             <circle cx="14" cy="14" r="8" fill="none" stroke="#3574F0" stroke-width="1.5"></circle>
             <circle cx="14" cy="14" r="4.5" fill="#3574F0" stroke="#FFFFFF" stroke-width="2"></circle>
             <circle cx="14" cy="42" r="4.5" fill="#3574F0" stroke="#FFFFFF" stroke-width="2"></circle>
-            <circle cx="30" cy="70" r="4.5" fill="#12A38A" stroke="#FFFFFF" stroke-width="2"></circle>
+            <circle cx="30" cy="70" r="4.5" fill="#0F8A75" stroke="#FFFFFF" stroke-width="2"></circle>
             <circle cx="46" cy="98" r="4.5" fill="#8B5CF6" stroke="#FFFFFF" stroke-width="2"></circle>
             <circle cx="46" cy="126" r="4.5" fill="#8B5CF6" stroke="#FFFFFF" stroke-width="2"></circle>
             <circle cx="14" cy="154" r="4.5" fill="#3574F0" stroke="#FFFFFF" stroke-width="2"></circle>
@@ -254,7 +254,7 @@ button{cursor:pointer}
             <div style="display: flex; height: 8px; border-radius: 4px; overflow: hidden; gap: 2px">
               <span style="flex: 62; background: #8B5CF6"></span>
               <span style="flex: 21; background: #D9921A"></span>
-              <span style="flex: 9; background: #12A38A"></span>
+              <span style="flex: 9; background: #0F8A75"></span>
               <span style="flex: 5; background: #3574F0"></span>
               <span style="flex: 3; background: #8A909C"></span>
             </div>
@@ -279,7 +279,7 @@ button{cursor:pointer}
 class Component extends DCLogic {
   renderVals() {
     const st = {
-      head: { bg: '#2E69DC', fg: '#FFFFFF', bd: '#2E69DC' },
+      head: { bg: '#B5501A', fg: '#FFFFFF', bd: '#B5501A' },
       main: { bg: 'rgba(46,105,220,.10)', fg: '#1F4FB0', bd: 'rgba(46,105,220,.35)' },
       remote: { bg: 'transparent', fg: '#1F4FB0', bd: '#C9CDD6' },
       split: { bg: 'rgba(124,77,214,.10)', fg: '#5B30B0', bd: 'rgba(124,77,214,.35)' },
@@ -315,8 +315,8 @@ class Component extends DCLogic {
       isHost: false, isNs: false, isRepo: true, label, pad: 36,
       lock: !!o.lock, linked: !!o.linked,
       hasMark: !!o.mark, mark: o.mark || '',
-      markBg: o.mark === '1' ? '#2E69DC' : '#E3E5EA',
-      markFg: o.mark === '1' ? '#FFFFFF' : '#1F2329',
+      markBg: o.mark === '1' ? '#B5501A' : '#E6D3B3',
+      markFg: o.mark === '1' ? '#FFFFFF' : '#2A1A0E',
       bg: o.mark === '1' ? 'var(--sel)' : (o.mark === '2' ? 'rgba(31,35,41,.06)' : 'transparent')
     });
     const tree = [
