@@ -26,6 +26,8 @@ interface OverviewTabProps {
   linkedPath: string | undefined
   /** A narrow pane (under 760px): one column. */
   narrow?: boolean
+  /** No host: no languages or contributors, only what the clone holds. */
+  local?: boolean
 }
 
 // Palette colour per language tone (1 to 8), shared by the bar segments and the legend dots.
@@ -49,7 +51,8 @@ export function OverviewTab({
   summary,
   loading,
   linkedPath,
-  narrow = false
+  narrow = false,
+  local = false
 }: OverviewTabProps) {
   const host = account?.host ?? 'the host'
   const pending = loading && summary === null
@@ -58,8 +61,8 @@ export function OverviewTab({
   const about = (
     <AboutCard repo={repo} summary={summary} pending={pending} linkedPath={linkedPath} />
   )
-  const languages = <LanguagesCard summary={summary} pending={pending} />
-  const contributors = <ContributorsCard summary={summary} pending={pending} />
+  const languages = local ? null : <LanguagesCard summary={summary} pending={pending} />
+  const contributors = local ? null : <ContributorsCard summary={summary} pending={pending} />
   const readme = <ReadmeCard repoKey={repo.key} linkedPath={linkedPath} host={host} />
 
   return (
