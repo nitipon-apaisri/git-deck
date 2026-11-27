@@ -8,6 +8,13 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-27: README sync for the narrow pane threshold (640 to 760 px)
+
+- **Question:** `NARROW_PANE` in `src/renderer/src/lib/splitLayout.ts` moved from 640 to 760 px on `fix/split-header-narrow` (commit 2c48520), so panes under 760 px use the compact layout (no Author and Date columns, icon-only header buttons). Does README need to say so?
+- **Options considered:** add the new threshold to Features or Known limits; leave README unchanged because it never stated the number.
+- **Decision and why:** no README change. The README does not mention 640 px, the compact layout or the pane width threshold, so nothing in it is out of date. The Progress line stays at 45 of 45, matching the PLAN.md checkboxes. The 640 px figure still appears in PLAN.md (Phase 8 narrow panes) and in older entries of this file; those are historical records and were left as written.
+- **Not verified:** the compact layout at 700 to 760 px in a running window. This sync was done from the source diff and the README text only, with no app run.
+
 ## 2026-11-07: Phase 19 (integrated terminal)
 
 - **Question:** the user asked for a terminal inside the app. Phase 18 had ruled one out because it needs `node-pty`, a native module.
