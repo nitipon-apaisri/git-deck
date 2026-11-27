@@ -781,3 +781,5 @@ Layout follows `docs/ui-boards/RepoOverview.dc.html` (wide) and `RepoOverviewNar
 ## Dark palette follows the accent
 
 In dark theme the ref pills (`--ref-main-*`, `--ref-head-*`) and the heatmap (`--heat-*`) use `var(--accent)`, and `--lane-1` (the mainline) too, so they follow the chosen accent. The other lanes and `--proj-*` are re-tuned to muted cool tones that stay clear of orange. Semantic green and red are unchanged. The light theme is untouched. Not checked visually: there is no display here, so the new lane hues need one look in the running app.
+
+The light theme keeps its blue `--lane-1`, `--ref-head-bg` and `--ref-main-*` on purpose for now: this change is dark only. The commit message box uses the `--island` fill with no resting edge, because `--line` is decorative and must not be the sole edge of an input.
