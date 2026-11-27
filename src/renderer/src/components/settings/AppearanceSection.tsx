@@ -39,7 +39,7 @@ const THEME_LABELS: Record<ThemeSetting, { title: string; sub: string }> = {
   warm: { title: 'Warm', sub: 'Soft sand tones' },
   dark: { title: 'Dark', sub: 'Always dark' }
 }
-const THEME_ORDER: readonly ThemeSetting[] = ['system', 'light', 'warm', 'dark']
+const THEME_ORDER: readonly ThemeSetting[] = ['system', 'light', 'dark', 'warm']
 
 /** Arrow keys move the choice and the focus, like a native radio group. */
 function useRadioKeys<T extends string>(values: readonly T[], value: T, onChange: (v: T) => void) {
@@ -106,7 +106,7 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
           Theme
         </h3>
         <p className={HINT}>System follows your OS appearance.</p>
-        <div role="radiogroup" aria-labelledby="set-theme" className={cn(GROUP, 'grid-cols-2')}>
+        <div role="radiogroup" aria-labelledby="set-theme" className={cn(GROUP, 'grid-cols-4')}>
           {THEME_ORDER.map((value, index) => (
             <button
               key={value}
@@ -164,7 +164,7 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
           Font family
         </h3>
         <p className={HINT}>Applies to the whole app. Code and hashes stay monospaced.</p>
-        <div role="radiogroup" aria-labelledby="set-font" className={cn(GROUP, 'grid-cols-2')}>
+        <div role="radiogroup" aria-labelledby="set-font" className={cn(GROUP, 'grid-cols-4')}>
           {FONTS.map((f, index) => (
             <button
               key={f.id}
@@ -195,7 +195,7 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
         <p className={HINT}>
           Changes the Dock and window icon while GitDeck runs. The icon in Finder stays the same.
         </p>
-        <div role="radiogroup" aria-labelledby="set-icon" className={cn(GROUP, 'grid-cols-2')}>
+        <div role="radiogroup" aria-labelledby="set-icon" className={cn(GROUP, 'grid-cols-4')}>
           {APP_ICONS.map((icon, index) => (
             <button
               key={icon.id}
