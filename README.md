@@ -24,7 +24,7 @@ Browse every repository you can reach, read its commit graph, group repositories
 | **Change**   | Stage by file, hunk or line. Commit, branches, push and pull, stash, cherry-pick, merge, tags, revert, reset, remotes, worktrees, rebase (also interactive) and bisect. |
 | **Resolve**  | Merge conflicts resolved in the app, region by region.                                                                                                                  |
 | **Organise** | Projects (named groups of repositories from any host), Split View (two repositories at once), a command palette, hide branches and tags per repository.                 |
-| **Extras**   | Optional AI commit messages, an integrated terminal, PR/MR notifications, light and dark themes with five accents.                                                      |
+| **Extras**   | Optional AI commit messages, an integrated terminal, PR/MR notifications, four themes, five accents each.                                                               |
 
 <details>
 <summary>More detail</summary>
@@ -42,7 +42,7 @@ Browse every repository you can reach, read its commit graph, group repositories
 - **Terminal.** A shell per pane, opened with the Terminal button or Ctrl+\`, in the repository's folder.
 - **Command palette.** `Mod+Shift+P` jumps to repositories, branches and tags and runs actions such as fetch, pull and theme switch.
 - **Split View.** Each pane keeps its own tab, graph and scroll position, with a draggable divider.
-- **Appearance.** Light (warm, dimmed), dark or system theme, five accent colours (orange by default) and a choice of font. Accounts are connected in Settings too. The app icon picker has six built-in icons, with Sun as the default. The choice sets the Dock and window icon and is kept between launches.
+- **Appearance.** Four themes: System, Light, Dark and Warm (sand tones). System follows the OS and picks Light or Dark. Five accent colours, and each theme keeps its own (blue by default in Light and Dark, orange in Warm). A choice of font. Accounts are connected in Settings too. The app icon picker has six built-in icons, with Sun as the default. The choice sets the Dock and window icon and is kept between launches.
 
 </details>
 
@@ -178,6 +178,7 @@ docs           Design system, UI boards, DECISIONS.md.
 - Developed and checked on macOS, against mock GitHub Enterprise and GitLab servers, and used against a real self-hosted GitLab instance. Not run against github.com or gitlab.com, or on Windows or Linux.
 - A repository's summary can take a moment on a large repository: counts come from several API calls, and a host that rate-limits you may return partial counts. Partial totals are marked as such.
 - Only the first 25 contributors of each repository are read, so contributor totals are approximate.
+- The Light, Dark and Warm themes and the per-theme accent defaults were not checked in a running window.
 - Split View has two panes at most.
 - A squash merge that conflicts is undone and reported. Merge normally to resolve it; the in-app conflict editor does not cover squashes.
 - The app icon changes the Dock and window icon only while GitDeck runs. The Finder and `.app` icon is always the default, Sun (`build/icon.icns`). Windows and Linux are not packaged, so the icon is not checked there.
