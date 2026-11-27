@@ -44,4 +44,4 @@ export function capReadme(text: string): { markdown: string; truncated: boolean 
 }
 
 /** Latest tags shown on the About card. */
-export const MAX_TAGS = 6
+export const MAX_TAGS = 3

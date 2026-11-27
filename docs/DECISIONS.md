@@ -713,4 +713,5 @@ Layout follows `docs/ui-boards/RepoOverview.dc.html` (wide) and `RepoOverviewNar
 - **Header:** the Overview header shows name, visibility, default branch, namespace, description and topics. `RepoHeader` hides its description on the Overview tab only, and there is no second "Open on GitHub" button: the header's globe button does it.
 - **Narrow:** under 760px the order is Commits, About, README, Languages, Contributors, and the stats sit above the heatmap, as on the narrow board. The heatmap keeps the full year and scrolls sideways, opening on the latest weeks.
 - **Removed:** the eight stat cards (`statItems`), as the plan says. Stars, forks and open issues are no longer shown in the repo pane; open PRs/MRs stay in the project overview and the PR/MR tab, local branch counts in Info.
+- **Tags:** About shows the latest 3 tags (`MAX_TAGS`), then "+n" for the rest of the summary's tag count.
 - **Heatmap:** the grid, tooltip and legend moved from `HomeProfile` into `ui/Heatmap.tsx`, shared by both screens.

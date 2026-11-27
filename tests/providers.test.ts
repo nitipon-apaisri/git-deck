@@ -656,15 +656,16 @@ test('GitHub: activity retries a 202 once, then reports computing; weeks become 
   assert.ok(still.days.every((d) => d.count === 0))
 })
 
-test('GitHub: latestTags asks for a handful and keeps the names', async () => {
+test('GitHub: latestTags asks for three and keeps at most three names', async () => {
   const p = new GitHubProvider('acc', base, TOKEN)
   route = (url, send) => {
     if (url.pathname !== '/api/v3/repos/octo/hello/tags') return false
-    send(200, [{ name: 'v2' }, { name: 'v1' }])
+    // A host that ignores per_page still yields three.
+    send(200, [{ name: 'v4' }, { name: 'v3' }, { name: 'v2' }, { name: 'v1' }])
     return true
   }
-  assert.deepEqual(await p.latestTags(ghHello), ['v2', 'v1'])
-  assert.match(seen.at(-1)?.url ?? '', /per_page=6/)
+  assert.deepEqual(await p.latestTags(ghHello), ['v4', 'v3', 'v2'])
+  assert.match(seen.at(-1)?.url ?? '', /per_page=3/)
 })
 
 test('GitLab: readme follows readme_url to the raw file on the default branch; a 404 is no README', async () => {
