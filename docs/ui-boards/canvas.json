@@ -137,6 +137,20 @@
       "h": 900,
       "title": "Home profile (light)",
       "is_interactive": true
+    },
+    "RepoOverview.dc.html": {
+      "x": 0,
+      "y": 9320,
+      "w": 1120,
+      "h": 1080,
+      "title": "Repo overview, wide pane"
+    },
+    "RepoOverviewNarrow.dc.html": {
+      "x": 1200,
+      "y": 9320,
+      "w": 520,
+      "h": 1720,
+      "title": "Repo overview, narrow pane (Split View, under 760px)"
     }
   },
   "order": [
@@ -155,7 +169,9 @@
     "ChangesLight.dc.html",
     "ConflictLight.dc.html",
     "HomeProfile.dc.html",
-    "HomeProfileLight.dc.html"
+    "HomeProfileLight.dc.html",
+    "RepoOverview.dc.html",
+    "RepoOverviewNarrow.dc.html"
   ],
   "notes": {
     "t1": {
@@ -206,6 +222,13 @@
       "text": "Home profile: dark and light",
       "kind": "title1",
       "maxW": 2960
+    },
+    "t8": {
+      "x": 0,
+      "y": 9080,
+      "text": "Repo overview dashboard: wide and narrow (dark)",
+      "kind": "title1",
+      "maxW": 1720
     }
   },
   "designSystems": []

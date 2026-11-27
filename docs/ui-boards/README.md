@@ -12,5 +12,6 @@ Full-screen designs for GitDeck, in dark and light. They are `.dc.html` template
 | Changes panel and diff, with per-line staging | `Changes.dc.html` / `ChangesLight.dc.html` |
 | Conflict editor dialog | `Conflict.dc.html` / `ConflictLight.dc.html` |
 | Home profile: account switcher, contributions, pinned repos, activity | `HomeProfile.dc.html` / `HomeProfileLight.dc.html` |
+| Repo overview dashboard: commits heatmap, README, about, languages, contributors (dark only; wide pane and narrow Split View pane) | `RepoOverview.dc.html` / `RepoOverviewNarrow.dc.html` |
 
-`canvas.json` records the board sizes: windows are 1440 x 900, dialogs 560 x 740 and 520 x 680. The Changes and Conflict boards are static (no `sc-for`) and 1440 x 900, so they open in a browser as they are. The Home profile boards are 1440 x 900 and interactive (account tabs, opening a repo, back to Home).
+`canvas.json` records the board sizes: windows are 1440 x 900, dialogs 560 x 740 and 520 x 680. The Changes and Conflict boards are static (no `sc-for`) and 1440 x 900, so they open in a browser as they are. The Home profile boards are 1440 x 900 and interactive (account tabs, opening a repo, back to Home). The Repo overview boards are 1120 x 1080 (wide) and 520 x 1720 (narrow), dark only, with a generated commit heatmap (`sc-for`).
