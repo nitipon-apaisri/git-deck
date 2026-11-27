@@ -191,7 +191,7 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
         <p className={HINT}>
           Changes the Dock and window icon while GitDeck runs. The icon in Finder stays the same.
         </p>
-        <div role="radiogroup" aria-labelledby="set-icon" className={cn(GROUP, 'grid-cols-4')}>
+        <div role="radiogroup" aria-labelledby="set-icon" className={cn(GROUP, 'grid-cols-3')}>
           {APP_ICONS.map((icon, index) => (
             <button
               key={icon.id}

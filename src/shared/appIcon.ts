@@ -1,11 +1,12 @@
-// App icon choices. Pure: no electron, so a test can use it. Files are build/icons/<id>.png.
+// App icon choices: the default first, then by colour (yellow, orange, black). Files are
+// build/icons/<id>.png. Pure: no electron, so a test can use it.
 export const APP_ICONS = [
-  { id: 'ember', label: 'Ember' },
-  { id: 'honey', label: 'Honey' },
-  { id: 'lantern', label: 'Lantern' },
-  { id: 'night', label: 'Night' },
   { id: 'sun', label: 'Sun (default)' },
-  { id: 'sunset', label: 'Sunset' }
+  { id: 'honey', label: 'Honey' },
+  { id: 'ember', label: 'Ember' },
+  { id: 'sunset', label: 'Sunset' },
+  { id: 'lantern', label: 'Lantern' },
+  { id: 'night', label: 'Night' }
 ] as const
 
 export type AppIconId = (typeof APP_ICONS)[number]['id']
