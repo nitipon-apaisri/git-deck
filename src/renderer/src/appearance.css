@@ -1,7 +1,27 @@
 /* Appearance choices on <html>: data-accent and data-font.
-   Blue is the default and lives in tokens.css. Each other accent overrides only the five
-   accent tokens, per theme. The swatches in Settings and the theme previews reuse them. Contrast was checked against --island and --on-primary:
+   Orange is the default and lives in tokens.css. Each other accent overrides only the five
+   accent tokens, per theme. The swatches in Settings and the theme previews reuse them. Contrast was checked against --island,
+   --island-raised and --hover (light: the warm #f7ebd7 / #f2e3ca / #eddcc0) and --on-primary:
    primary >= 4.5:1 with white, accent text >= 4.5:1, accent and focus ring >= 3:1. */
+
+:root[data-accent='blue'][data-theme='dark'],
+:root[data-accent='blue'] [data-theme='dark'],
+[data-theme='dark'] [data-accent-dot='blue'] {
+  --primary: #2e69dc;
+  --accent: #5b93f8;
+  --accent-text: #7fa6fa;
+  --selection: #5b93f838;
+  --focus-ring: #8fb3ff;
+}
+:root[data-accent='blue'][data-theme='light'],
+:root[data-accent='blue'] [data-theme='light'],
+[data-theme='light'] [data-accent-dot='blue'] {
+  --primary: #2e69dc;
+  --accent: #2e69dc;
+  --accent-text: #2658c2;
+  --selection: #2e69dc1f;
+  --focus-ring: #1f4fb0;
+}
 
 :root[data-accent='violet'][data-theme='dark'],
 :root[data-accent='violet'] [data-theme='dark'],
@@ -41,25 +61,6 @@
   --focus-ring: #115c31;
 }
 
-:root[data-accent='orange'][data-theme='dark'],
-:root[data-accent='orange'] [data-theme='dark'],
-[data-theme='dark'] [data-accent-dot='orange'] {
-  --primary: #b4540a;
-  --accent: #f0903c;
-  --accent-text: #f5a560;
-  --selection: #f0903c38;
-  --focus-ring: #f8bb82;
-}
-:root[data-accent='orange'][data-theme='light'],
-:root[data-accent='orange'] [data-theme='light'],
-[data-theme='light'] [data-accent-dot='orange'] {
-  --primary: #b4540a;
-  --accent: #b4540a;
-  --accent-text: #9a4608;
-  --selection: #b4540a1f;
-  --focus-ring: #7f3a06;
-}
-
 :root[data-accent='rose'][data-theme='dark'],
 :root[data-accent='rose'] [data-theme='dark'],
 [data-theme='dark'] [data-accent-dot='rose'] {
@@ -90,9 +91,9 @@
 }
 
 /* The default accent has no root rule, but its swatch must not inherit another accent. */
-[data-theme='dark'] [data-accent-dot='blue'] {
-  --primary: #2e69dc;
+[data-theme='dark'] [data-accent-dot='orange'] {
+  --primary: #b4540a;
 }
-[data-theme='light'] [data-accent-dot='blue'] {
-  --primary: #2e69dc;
+[data-theme='light'] [data-accent-dot='orange'] {
+  --primary: #b5501a;
 }

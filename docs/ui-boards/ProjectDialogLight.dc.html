@@ -10,7 +10,7 @@
 <helmet>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--island:#FFFFFF;--island-2:#F3F4F7;--hover:#EBEDF2;--line:#DDE0E6;--text:#1F2329;--muted:#5F6672;--accent:#2E69DC;--green-text:#1E7A3C;--neutral:#E3E5EA;--b-gh:#E3E5EA;--b-gl:#FBE3D6;--b-sh:#DCE7F7;--teal-bg:rgba(18,163,138,.14);--teal-fg:#0A6B5A}
+:root{--island:#F7EBD7;--island-2:#F2E3CA;--hover:#EDDCC0;--line:#E0CBA8;--text:#2A1A0E;--muted:#5E4A3A;--accent:#B5501A;--green-text:#17683A;--neutral:#E6D3B3;--b-gh:#E6D3B3;--b-gl:#F6D2B8;--b-sh:#D9DFE0;--teal-bg:rgba(18,163,138,.14);--teal-fg:#0A6B5A}
 body{margin:0;background:#FFFFFF}
 *{box-sizing:border-box}
 button,input{font-family:inherit;font-size:inherit;color:inherit}
@@ -22,7 +22,7 @@ button{cursor:pointer}
 .btn{display:flex;align-items:center;gap:7px;height:34px;padding:0 16px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:13px}
 .btn:hover{background:var(--hover)}
 .ico:hover{background:var(--hover)}
-input[type=checkbox]{width:16px;height:16px;accent-color:#2E69DC;margin:0}
+input[type=checkbox]{width:16px;height:16px;accent-color:#B5501A;margin:0}
 </style>
 </helmet>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -122,7 +122,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2E69DC;margin:0}
 
   <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 14px 24px; border-top: 1px solid var(--line)">
     <button class="btn">Cancel</button>
-    <button class="btn" style="background: #2E69DC; border-color: #2E69DC; color: #fff; font-weight: 500">Create project</button>
+    <button class="btn" style="background: #B5501A; border-color: #B5501A; color: #fff; font-weight: 500">Create project</button>
   </div>
 </div>
 </x-dc>
@@ -136,17 +136,17 @@ class Component extends DCLogic {
         label: n.replace('-', ' '),
         href: '#i-' + n,
         on,
-        bd: on ? '#2E69DC' : '#DDE0E6',
+        bd: on ? '#B5501A' : '#E0CBA8',
         bg: on ? 'rgba(46,105,220,.12)' : 'transparent',
-        fg: on ? '#1F4FB0' : '#1F2329'
+        fg: on ? '#1F4FB0' : '#2A1A0E'
       };
     });
     const cs = [
       ['Blue', '#3574F0'], ['Teal', '#0E8F7A'], ['Violet', '#8B5CF6'], ['Amber', '#B87408'],
-      ['Rose', '#D94C54'], ['Green', '#2FA05A'], ['Pink', '#C9429A'], ['Gray', '#6B7280']
+      ['Rose', '#D94C54'], ['Green', '#288A4E'], ['Pink', '#C9429A'], ['Gray', '#6B7280']
     ];
     const colors = cs.map(([label, hex]) => ({
-      label, hex, on: label === 'Teal', ring: label === 'Teal' ? '#1F2329' : 'transparent'
+      label, hex, on: label === 'Teal', ring: label === 'Teal' ? '#2A1A0E' : 'transparent'
     }));
     const repos = [
       { name: 'payments-api', badge: 'SH', badgeBg: 'var(--b-sh)', where: 'gitlab.acme.dev · payments', on: true },

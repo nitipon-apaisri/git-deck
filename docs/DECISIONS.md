@@ -767,3 +767,13 @@ Layout follows `docs/ui-boards/RepoOverview.dc.html` (wide) and `RepoOverviewNar
 - **Commit:** `git merge --squash` only stages, so GitDeck commits at once as `🔀 (merge): Squash merge <branch>`. No message dialog. An already-merged branch stops with "Nothing to merge".
 - **Conflicts:** a squash leaves no `MERGE_HEAD`, so the operation banner cannot track it. A conflict is undone (`reset --merge`) and reported; the user merges normally to resolve it. Upgrade if users ask to resolve a squash in the app.
 - **Menu rules:** separators now fall between Check out / Delete, Push / Fast-forward, the merge and rebase entries, and the commit actions.
+
+## 2026-11-28, Warm, dimmed light theme
+
+- **Why:** the light theme was hard on the eyes. The white islands (#ffffff) and grey window (#e9ebf0) were the brightest surfaces on screen. Warmth alone would not fix it (the proposed #fef3e2 is brighter than the old window), so the surfaces were also lowered a step.
+- **Light surfaces:** window #efe0c8, island #f7ebd7, island-raised #f2e3ca, hover #eddcc0, line #e0cba8, border-strong #8c7358, text #2a1a0e, text-muted #5e4a3a. Host tiles, neutral and shadows were warmed to match.
+- **Default accent is Orange:** `DEFAULT_ACCENT` is now `orange` and Orange is first in Settings; its values live in `tokens.css`. Light: primary and accent #b5501a, accent-text #9a4414, focus ring #7f360f. Dark keeps the existing Orange preset values (#b4540a, #f0903c). Blue moved to `appearance.css` as an override with its old values, so anyone who picked Blue keeps it. Anyone who never picked an accent now sees orange, in dark too.
+- **Re-tuned for the cream island (light only):** success #288a4e, success-text #17683a, danger #b42318, danger-text #9a1e14, lane-2 and proj-teal #0f8a75, lane-6 and proj-green #288a4e, heat-* follow the orange primary. The tag badge uses amber #f4ae52 at 28% with #6b3f00 text. Refs and the other lanes stay as they were, so history colour is still independent of the accent.
+- **Contrast:** 120 pairs checked from the CSS files: text and text-muted on every ground, success/danger/warning/merged text, lanes, ref badges, and all five accents in both themes (white on primary 4.5:1, accent-text 4.5:1 on island, island-raised, hover and selection, accent and focus ring 3:1). All pass. Project icon glyphs on their 20% tile are about 2.3–3.3:1, as they were on white; they are decorative beside the project name.
+- **Boards:** the light UI boards were remapped to the new values; the solid blue `main` badge in ChangesLight stays blue (a ref, not the accent). Dark boards still show the Blue accent.
+- **Not verified:** no display here, so the new light theme was not looked at in the running app.

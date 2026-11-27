@@ -423,8 +423,8 @@ test('workspace reducer: retrying the first load clears the error and shows load
 
 test('parseAccent and parseFont fall back to the default for anything unknown', () => {
   assert.equal(parseAccent('violet'), 'violet')
-  assert.equal(parseAccent('hotpink'), 'blue')
-  assert.equal(parseAccent(null), 'blue')
+  assert.equal(parseAccent('hotpink'), 'orange')
+  assert.equal(parseAccent(null), 'orange')
   assert.equal(parseFont('roboto'), 'roboto')
   assert.equal(parseFont('Comic Sans'), 'inter')
   assert.equal(parseFont(undefined), 'inter')
@@ -439,7 +439,7 @@ test('accent and font storage survive a store that throws', () => {
       throw new Error('blocked')
     }
   }
-  assert.equal(readAccent(broken), 'blue')
+  assert.equal(readAccent(broken), 'orange')
   assert.equal(readFont(broken), 'inter')
   assert.doesNotThrow(() => writeAccent(broken, 'rose'))
   assert.doesNotThrow(() => writeFont(broken, 'system'))

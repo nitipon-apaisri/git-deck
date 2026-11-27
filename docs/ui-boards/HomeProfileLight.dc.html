@@ -287,19 +287,19 @@ class Component extends DCLogic {
   themeVars(theme) {
     const d = {
       window: '#141517', island: '#1e1f22', 'island-raised': '#26282c', hover: '#2b2d31', line: '#303338',
-      'border-strong': '#727783', text: '#dfe1e5', 'text-muted': '#9498a2', accent: '#5b93f8', 'accent-text': '#7fa6fa',
-      primary: '#2e69dc', 'on-primary': '#ffffff', selection: '#5b93f838', 'focus-ring': '#8fb3ff', success: '#6fcb8b',
+      'border-strong': '#727783', text: '#dfe1e5', 'text-muted': '#9498a2', accent: '#f0903c', 'accent-text': '#f5a560',
+      primary: '#b4540a', 'on-primary': '#ffffff', selection: '#f0903c38', 'focus-ring': '#f8bb82', success: '#6fcb8b',
       'warning-text': '#f0c27a', 'warning-bg': '#e9b05a29', neutral: '#3a3d44', 'host-github': '#2c2f34',
       'host-gitlab': '#3a2f2a', 'host-selfhosted': '#2a3440', 'lane-1': '#5b93f8', 'lane-2': '#3fbfa8', 'lane-3': '#a57af0',
       'lane-4': '#e9b05a', 'lane-5': '#f58a8e', 'lane-6': '#6fcb8b', 'avatar-1': '#8fb3ff', 'avatar-ink': '#12131a'
     };
     const l = {
-      window: '#e9ebf0', island: '#ffffff', 'island-raised': '#f3f4f7', hover: '#ebedf2', line: '#dde0e6',
-      'border-strong': '#858b97', text: '#1f2329', 'text-muted': '#5f6672', accent: '#2e69dc', 'accent-text': '#2658c2',
-      primary: '#2e69dc', 'on-primary': '#ffffff', selection: '#2e69dc1f', 'focus-ring': '#1f4fb0', success: '#2fa05a',
-      'warning-text': '#7a4e00', 'warning-bg': '#c4821424', neutral: '#e3e5ea', 'host-github': '#e3e5ea',
-      'host-gitlab': '#fbe3d6', 'host-selfhosted': '#dce7f7', 'lane-1': '#3574f0', 'lane-2': '#12a38a', 'lane-3': '#8b5cf6',
-      'lane-4': '#b87408', 'lane-5': '#d94c54', 'lane-6': '#2fa05a', 'avatar-1': '#8fb3ff', 'avatar-ink': '#12131a'
+      window: '#efe0c8', island: '#f7ebd7', 'island-raised': '#f2e3ca', hover: '#eddcc0', line: '#e0cba8',
+      'border-strong': '#8c7358', text: '#2a1a0e', 'text-muted': '#5e4a3a', accent: '#b5501a', 'accent-text': '#9a4414',
+      primary: '#b5501a', 'on-primary': '#ffffff', selection: '#b5501a1f', 'focus-ring': '#7f360f', success: '#288a4e',
+      'warning-text': '#7a4e00', 'warning-bg': '#c4821424', neutral: '#e6d3b3', 'host-github': '#e6d3b3',
+      'host-gitlab': '#f6d2b8', 'host-selfhosted': '#d9dfe0', 'lane-1': '#3574f0', 'lane-2': '#0f8a75', 'lane-3': '#8b5cf6',
+      'lane-4': '#b87408', 'lane-5': '#d94c54', 'lane-6': '#288a4e', 'avatar-1': '#8fb3ff', 'avatar-ink': '#12131a'
     };
     const t = theme === 'light' ? l : d;
     return Object.keys(t).map((k) => '--' + k + ':' + t[k] + ';').join('');
