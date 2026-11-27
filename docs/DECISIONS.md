@@ -777,3 +777,9 @@ Layout follows `docs/ui-boards/RepoOverview.dc.html` (wide) and `RepoOverviewNar
 - **Contrast:** 120 pairs checked from the CSS files: text and text-muted on every ground, success/danger/warning/merged text, lanes, ref badges, and all five accents in both themes (white on primary 4.5:1, accent-text 4.5:1 on island, island-raised, hover and selection, accent and focus ring 3:1). All pass. Project icon glyphs on their 20% tile are about 2.3–3.3:1, as they were on white; they are decorative beside the project name.
 - **Boards:** the light UI boards were remapped to the new values; the solid blue `main` badge in ChangesLight stays blue (a ref, not the accent). Dark boards still show the Blue accent.
 - **Not verified:** no display here, so the new light theme was not looked at in the running app.
+
+## Dark palette follows the accent
+
+In dark theme the ref pills (`--ref-main-*`, `--ref-head-*`) and the heatmap (`--heat-*`) use `var(--accent)`, and `--lane-1` (the mainline) too, so they follow the chosen accent. The other lanes and `--proj-*` are re-tuned to muted cool tones that stay clear of orange. Semantic green and red are unchanged. The light theme is untouched. Not checked visually: there is no display here, so the new lane hues need one look in the running app.
+
+The light theme keeps its blue `--lane-1`, `--ref-head-bg` and `--ref-main-*` on purpose for now: this change is dark only. The commit message box uses the `--island` fill with no resting edge, because `--line` is decorative and must not be the sole edge of an input.
