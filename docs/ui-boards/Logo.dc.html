@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GitDeck app icon</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Nunito',system-ui,sans-serif}
+</style>
+</helmet>
+<div style="width:1280px;height:860px;box-sizing:border-box;padding:56px 64px;background:#060914;color:#FFFFFF;display:flex;flex-direction:column;gap:40px">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+<clipPath id="sq"><rect width="512" height="512" rx="120"/></clipPath>
+<symbol id="iconA" viewBox="0 0 512 512">
+<g clip-path="url(#sq)">
+<rect width="512" height="512" fill="{{bg}}"/>
+<rect x="118" y="112" width="276" height="276" rx="60" fill="{{back}}" transform="rotate(-10 256 256)"/>
+<rect x="118" y="112" width="276" height="276" rx="60" fill="{{middle}}" transform="rotate(10 256 256)"/>
+<rect x="118" y="120" width="276" height="276" rx="60" fill="{{front}}"/>
+</g>
+</symbol>
+</defs>
+</svg>
+
+<div style="display:flex;flex-direction:column;gap:8px">
+<h1 style="margin:0;font-size:44px;font-weight:800;letter-spacing:-0.5px">GitDeck app icon</h1>
+<p style="margin:0;font-size:18px;color:#B9C4E8">Sun: yellow ground, the stack warm to dark.</p>
+</div>
+
+<div style="display:flex;gap:64px;align-items:center">
+<svg role="img" aria-label="GitDeck icon: a stack of orange, indigo and navy cards on yellow" width="400" height="400"><use href="#iconA"/></svg>
+<div style="display:flex;flex-direction:column;gap:12px;max-width:520px">
+<div style="font-size:26px;font-weight:800">Deck</div>
+<div style="font-size:17px;color:#B9C4E8;line-height:1.5">Three flat cards fanned on a yellow #FFC85C ground: orange #FF653F at the back, indigo #3730AA in the middle, deep navy #16115E in front.</div>
+</div>
+</div>
+
+<div style="display:flex;align-items:flex-end;gap:28px;border-top:1px solid #1E2745;padding-top:28px">
+<div style="font-size:16px;font-weight:800;color:#B9C4E8;width:150px">Size check</div>
+<svg role="img" aria-label="Icon at 128px" width="128" height="128"><use href="#iconA"/></svg>
+<svg role="img" aria-label="Icon at 96px" width="96" height="96"><use href="#iconA"/></svg>
+<svg role="img" aria-label="Icon at 48px" width="48" height="48"><use href="#iconA"/></svg>
+<svg role="img" aria-label="Icon at 32px" width="32" height="32"><use href="#iconA"/></svg>
+<svg role="img" aria-label="Icon at 24px" width="24" height="24"><use href="#iconA"/></svg>
+<svg role="img" aria-label="Icon at 16px" width="16" height="16"><use href="#iconA"/></svg>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"bg":{"editor":"color","default":"#FFC85C"},"back":{"editor":"color","default":"#FF653F"},"middle":{"editor":"color","default":"#3730AA"},"front":{"editor":"color","default":"#16115E"},"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+renderVals() { return { bg: this.props.bg ?? '#FFC85C', back: this.props.back ?? '#FF653F', middle: this.props.middle ?? '#3730AA', front: this.props.front ?? '#16115E' }; }
+}
+</script>
+</body>
+</html>
