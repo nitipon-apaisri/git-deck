@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="build/icon.svg" alt="GitDeck" width="128" height="128" />
+<img src="build/icons/sun.png" alt="GitDeck" width="128" height="128" />
 
 # GitDeck
 
@@ -42,7 +42,7 @@ Browse every repository you can reach, read its commit graph, group repositories
 - **Terminal.** A shell per pane, opened with the Terminal button or Ctrl+\`, in the repository's folder.
 - **Command palette.** `Mod+Shift+P` jumps to repositories, branches and tags and runs actions such as fetch, pull and theme switch.
 - **Split View.** Each pane keeps its own tab, graph and scroll position, with a draggable divider.
-- **Appearance.** Light, dark or system theme, five accent colours and a choice of font. Accounts are connected in Settings too.
+- **Appearance.** Light, dark or system theme, five accent colours and a choice of font. Accounts are connected in Settings too. The app icon picker has six built-in icons, with Sun as the default. The choice sets the Dock and window icon and is kept between launches.
 
 </details>
 
@@ -180,6 +180,7 @@ docs           Design system, UI boards, DECISIONS.md.
 - Only the first 25 contributors of each repository are read, so contributor totals are approximate.
 - Split View has two panes at most.
 - A squash merge that conflicts is undone and reported. Merge normally to resolve it; the in-app conflict editor does not cover squashes.
+- The app icon changes the Dock and window icon only while GitDeck runs. The Finder and `.app` icon is always the default, Sun (`build/icon.icns`). Windows and Linux are not packaged, so the icon is not checked there.
 - The graph shows the history that `git log` reports for the linked folder. Detached HEAD and graphs with more than about ten lanes at once were not checked.
 - Worktrees were tested against temporary repositories. The Worktrees dialog and the nested sidebar rows were not run in a window. Moving a worktree is not supported.
 - The GitLab heatmap is an estimate counted from events. It reads the last 12 months in 31-day windows, each capped at 1000 events, so a window busier than that is undercounted.

@@ -3,6 +3,7 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { pruneAccount, removeRepos } from '../shared/projects'
+import { DEFAULT_APP_ICON, isAppIconId, type AppIconId } from '../shared/appIcon'
 import type { InboxItem } from '../shared/inbox'
 import type { Account, Cached, Project, Repo, RepoSummary } from '../shared/types'
 
@@ -25,6 +26,8 @@ interface Config {
   aiKeys: Record<string, string>
   /** App-wide switch for PR/MR notifications. Missing means on: projects opt in one by one. */
   notifications?: boolean
+  /** Dock and window icon. Missing or unknown means the default. */
+  appIcon?: string
 }
 
 interface CacheFile {
@@ -230,6 +233,15 @@ export class Store {
 
   notificationsEnabled(): boolean {
     return this.config.notifications !== false
+  }
+
+  getAppIcon(): AppIconId {
+    return isAppIconId(this.config.appIcon) ? this.config.appIcon : DEFAULT_APP_ICON
+  }
+
+  async setAppIcon(id: AppIconId): Promise<void> {
+    this.config.appIcon = id
+    await this.persist('config')
   }
 
   async setNotificationsEnabled(on: boolean): Promise<void> {

@@ -1,6 +1,7 @@
 // The Electron side of IPC: dialogs, shell, sender checks and handler registration.
 import { app, BrowserWindow, dialog, ipcMain, Notification, shell } from 'electron'
 import { IPC } from '../shared/api'
+import { appIconPath } from './appIcon'
 import { buildHandlers, respond, type RequestChannel } from './ipcTable'
 import { createService, type Ui } from './service'
 import type { Store } from './store'
@@ -35,6 +36,11 @@ const electronUi: Ui = {
   },
   reveal: (path) => shell.showItemInFolder(path),
   openExternal: (url) => shell.openExternal(url),
+  applyAppIcon(id) {
+    const path = appIconPath(id)
+    app.dock?.setIcon(path)
+    for (const win of BrowserWindow.getAllWindows()) win.setIcon(path)
+  },
   version: app.getVersion()
 }
 

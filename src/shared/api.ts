@@ -51,6 +51,7 @@ import type {
   VerifiedUser
 } from './types'
 import type { AiConfig, AiProviderId } from './ai'
+import type { AppIconId } from './appIcon'
 
 export type CloneProtocol = 'https' | 'ssh'
 
@@ -295,6 +296,11 @@ export interface Api {
   checkForUpdate(): Promise<UpdateCheck>
   /** Notes of releases newer than the installed version, from GitHub. Only when asked. */
   releaseNotes(): Promise<ReleaseNote[]>
+  appIcon: {
+    get(): Promise<AppIconId>
+    /** Saves the choice and applies it to the Dock and windows. */
+    set(id: AppIconId): Promise<void>
+  }
   notify: {
     /** The app-wide switch in Settings. On unless turned off. */
     enabled(): Promise<boolean>
@@ -428,6 +434,8 @@ export const IPC = {
   openExternal: 'openExternal',
   checkForUpdate: 'checkForUpdate',
   releaseNotes: 'releaseNotes',
+  appIconGet: 'appIcon:get',
+  appIconSet: 'appIcon:set',
   notifyEnabled: 'notify:enabled',
   notifySetEnabled: 'notify:setEnabled',
   notifyTest: 'notify:test',

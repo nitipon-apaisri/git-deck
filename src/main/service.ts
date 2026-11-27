@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto'
 import { readdir } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { basename, join } from 'node:path'
+import { isAppIconId, type AppIconId } from '../shared/appIcon'
 import type { Api, CloneProtocol, GitProgress, GitProgressOp } from '../shared/api'
 import {
   addRepos,
@@ -71,6 +72,8 @@ export interface Ui {
   confirm(options: { message: string; detail: string; confirmLabel: string }): Promise<boolean>
   reveal(path: string): void
   openExternal(url: string): Promise<void>
+  /** Shows the icon in the Dock and on every window. */
+  applyAppIcon?(id: AppIconId): void
   /** The installed app version, for the update check. */
   version?: string
 }
@@ -1732,6 +1735,14 @@ export function createService(deps: ServiceDeps): {
       }
       await ui.openExternal(url)
     }),
+    appIcon: {
+      get: guard(async () => store.getAppIcon()),
+      set: guard(async (id) => {
+        if (!isAppIconId(id)) throw new Error('Unknown app icon')
+        await store.setAppIcon(id)
+        ui.applyAppIcon?.(id)
+      })
+    },
     notify: {
       enabled: guard(async () => store.notificationsEnabled()),
       setEnabled: guard(async (on) => {

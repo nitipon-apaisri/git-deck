@@ -838,6 +838,8 @@ test('notify: test sends a fixed notification, the switch is checked and silence
   const r = await rig()
   assert.match((await r.api.notify.test()) ?? '', /not available/, 'no notifier: nothing shown')
   await assert.rejects(r.api.notify.setEnabled('yes' as never), /Invalid notifications setting/)
+  await assert.rejects(r.api.appIcon.set('../x' as never), /Unknown app icon/)
+  assert.equal(await r.api.appIcon.get(), 'sun')
 
   let lists = 0
   r.provider.listChangeRequests = async () => {

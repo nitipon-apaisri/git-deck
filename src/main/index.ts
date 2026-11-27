@@ -1,5 +1,6 @@
 import { join } from 'node:path'
 import { app, BrowserWindow, net, safeStorage, screen, session, shell } from 'electron'
+import { appIconPath } from './appIcon'
 import { configureFetch } from './http'
 import { registerIpc } from './ipc'
 import { loadLoginPath } from './shellPath'
@@ -22,11 +23,9 @@ const tokenCrypto: TokenCrypto = {
   decrypt: (data) => safeStorage.decryptString(data)
 }
 
-// Source of the packaged icons too: build/icon.{icns,ico,png}. Used for the window on Windows/Linux
-// and the dock in dev on macOS (packaged macOS builds take icon.icns from the bundle).
-const iconPath = join(app.getAppPath(), 'build', 'icon.png')
-
-function createWindow(saved: WindowState): BrowserWindow {
+// Icons: build/icons/*.png (see appIcon.ts) set the window and the dock; the packaged macOS file icon
+// is build/icon.icns, a copy of the default (sun).
+function createWindow(saved: WindowState, iconPath: string): BrowserWindow {
   const dir = app.getPath('userData')
   const start = fitToDisplays(
     saved,
@@ -101,7 +100,6 @@ if (!app.requestSingleInstanceLock()) {
   })
 
   void app.whenReady().then(async () => {
-    if (process.platform === 'darwin') app.dock?.setIcon(iconPath)
     await loadLoginPath()
     // net.fetch uses the OS certificate store, so internal CAs work.
     configureFetch((input, init) => net.fetch(input, init))
@@ -111,10 +109,14 @@ if (!app.requestSingleInstanceLock()) {
     // Register before the window exists so the first renderer call finds a handler.
     registerIpc(store)()
     const saved = await loadWindowState(app.getPath('userData'))
-    createWindow(saved)
+    const iconPath = appIconPath(store.getAppIcon())
+    app.dock?.setIcon(iconPath)
+    createWindow(saved, iconPath)
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {
-        void loadWindowState(app.getPath('userData')).then(createWindow)
+        void loadWindowState(app.getPath('userData')).then((s) =>
+          createWindow(s, appIconPath(store.getAppIcon()))
+        )
       }
     })
   })
