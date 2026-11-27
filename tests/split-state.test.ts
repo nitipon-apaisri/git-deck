@@ -375,9 +375,9 @@ test('trackTemplate gives the minimum and a share to each pane', () => {
   assert.equal(trackTemplate(0.25, 'vertical'), 'minmax(240px, 250fr) 12px minmax(240px, 750fr)')
 })
 
-test('isNarrow is under 640 px and never for an unmeasured pane', () => {
-  assert.equal(isNarrow(639), true)
-  assert.equal(isNarrow(640), false)
+test('isNarrow is under 760 px and never for an unmeasured pane', () => {
+  assert.equal(isNarrow(759), true)
+  assert.equal(isNarrow(760), false)
   assert.equal(isNarrow(0), false)
 })
 

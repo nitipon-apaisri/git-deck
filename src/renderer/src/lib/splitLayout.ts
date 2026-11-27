@@ -7,7 +7,7 @@ export const MIN_PANE_HEIGHT = 240
 /** The divider track, `--divider-width`. */
 export const DIVIDER = 12
 /** Under this width a pane switches to its compact layout. */
-export const NARROW_PANE = 640
+export const NARROW_PANE = 760
 
 export const minPane = (orientation: Orientation): number =>
   orientation === 'horizontal' ? MIN_PANE_WIDTH : MIN_PANE_HEIGHT
