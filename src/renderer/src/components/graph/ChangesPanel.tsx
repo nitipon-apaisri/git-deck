@@ -217,7 +217,10 @@ export function ChangesPanel({
             placeholder={amend ? 'Leave empty to keep the current message' : 'Commit message'}
             value={message}
             disabled={busy}
-            className={aiEnabled ? 'pr-10' : undefined}
+            className={cn(
+              'bg-(--window) ring-1 ring-(--line) focus-visible:ring-(--accent)',
+              aiEnabled && 'pr-10'
+            )}
             onChange={(e) => setMessage(e.target.value)}
           />
           {aiEnabled ? (
