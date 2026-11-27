@@ -1,7 +1,9 @@
 // Accent colour presets. Pure: storage is passed in, so tests need no DOM.
 import type { KeyValueStore } from './theme'
 
+/** The key from before accents were per theme: it still seeds both themes until one is chosen. */
 export const ACCENT_KEY = 'gitdeck.accent'
+export const accentKey = (theme: 'dark' | 'light'): string => `${ACCENT_KEY}.${theme}`
 
 export interface AccentPreset {
   id: string
@@ -29,17 +31,21 @@ export function parseAccent(value: string | null | undefined): Accent | null {
 }
 
 /** Storage can throw (blocked site data), so a failure means no choice. */
-export function readAccent(store: KeyValueStore | null): Accent | null {
+export function readAccent(store: KeyValueStore | null, theme: 'dark' | 'light'): Accent | null {
   try {
-    return parseAccent(store?.getItem(ACCENT_KEY))
+    return parseAccent(store?.getItem(accentKey(theme))) ?? parseAccent(store?.getItem(ACCENT_KEY))
   } catch {
     return null
   }
 }
 
-export function writeAccent(store: KeyValueStore | null, accent: Accent): void {
+export function writeAccent(
+  store: KeyValueStore | null,
+  theme: 'dark' | 'light',
+  accent: Accent
+): void {
   try {
-    store?.setItem(ACCENT_KEY, accent)
+    store?.setItem(accentKey(theme), accent)
   } catch {
     // Not persisted; the choice still applies for this session.
   }

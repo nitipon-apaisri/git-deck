@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { errorMessage } from '../src/renderer/src/lib/errors'
 import {
+  ACCENT_KEY,
   ACCENTS,
   defaultAccent,
   parseAccent,
@@ -441,19 +442,33 @@ test('accent and font storage survive a store that throws', () => {
       throw new Error('blocked')
     }
   }
-  assert.equal(readAccent(broken), null)
+  assert.equal(readAccent(broken, 'dark'), null)
   assert.equal(readFont(broken), 'inter')
-  assert.doesNotThrow(() => writeAccent(broken, 'rose'))
+  assert.doesNotThrow(() => writeAccent(broken, 'dark', 'rose'))
   assert.doesNotThrow(() => writeFont(broken, 'system'))
   const mem = new Map<string, string>()
   const store = {
     getItem: (k: string) => mem.get(k) ?? null,
     setItem: (k: string, v: string) => void mem.set(k, v)
   }
-  writeAccent(store, 'green')
+  writeAccent(store, 'dark', 'green')
   writeFont(store, 'open-sans')
-  assert.equal(readAccent(store), 'green')
+  assert.equal(readAccent(store, 'dark'), 'green')
+  assert.equal(readAccent(store, 'light'), null)
   assert.equal(readFont(store), 'open-sans')
+})
+
+test('accents are kept per theme and the old single key seeds both', () => {
+  const mem = new Map<string, string>([[ACCENT_KEY, 'violet']])
+  const store = {
+    getItem: (k: string) => mem.get(k) ?? null,
+    setItem: (k: string, v: string) => void mem.set(k, v)
+  }
+  assert.equal(readAccent(store, 'dark'), 'violet')
+  assert.equal(readAccent(store, 'light'), 'violet')
+  writeAccent(store, 'dark', 'rose')
+  assert.equal(readAccent(store, 'dark'), 'rose')
+  assert.equal(readAccent(store, 'light'), 'violet')
 })
 
 test('every accent has dark and light overrides for all five tokens', () => {

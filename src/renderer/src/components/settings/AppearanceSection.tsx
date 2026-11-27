@@ -69,8 +69,8 @@ interface AppearanceSectionProps {
 }
 
 export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionProps) {
-  const { accent: chosen, setAccent } = useAccent()
-  const accent = chosen ?? defaultAccent(document.documentElement.dataset['theme'])
+  const { accent: chosen, theme: shown, setAccent } = useAccent()
+  const accent = chosen ?? defaultAccent(shown)
   const { font, setFont } = useFont()
   const themeKeys = useRadioKeys<ThemeSetting>(THEME_ORDER, theme, onThemeChange)
   const accentIds = ACCENTS.map((a) => a.id)
@@ -129,9 +129,11 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
 
       <section className={BLOCK} aria-labelledby="set-accent">
         <h3 id="set-accent" className={LABEL}>
-          Accent colour
+          Accent colour ({shown})
         </h3>
-        <p className={HINT}>Used for the primary button, selection and focus ring.</p>
+        <p className={HINT}>
+          Used for the primary button, selection and focus ring. Dark and light each keep their own.
+        </p>
         <div role="radiogroup" aria-labelledby="set-accent" className="flex items-center gap-3">
           {ACCENTS.map((a, index) => (
             <button

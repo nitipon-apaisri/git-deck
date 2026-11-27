@@ -787,3 +787,7 @@ The light theme keeps its blue `--lane-1`, `--ref-head-bg` and `--ref-main-*` on
 ## Dark theme is blue again
 
 Dark goes back to the original blue palette (accent, pills, lanes, project colours, heatmap), restored from `origin/develop`. Light keeps the warm orange. With no saved accent the theme picks the default: blue in dark, orange in light (`defaultAccent` in `lib/accent.ts`; `data-accent` is left off until someone chooses one). Every accent now has explicit dark and light rules in `appearance.css`. Choosing Orange in dark brings back the orange-with-blue-pills mix. Not checked visually: there is no display here.
+
+## Accent is kept per theme
+
+Each theme saves its own accent (`gitdeck.accent.dark`, `gitdeck.accent.light`). The old single `gitdeck.accent` still seeds both until a theme gets its own choice. `data-accent` follows the resolved theme: `initAppearance` watches `data-theme`, so a pick or an OS light/dark flip re-applies it. Settings edits the accent of the theme in use and says which. Not checked visually: there is no display here.
