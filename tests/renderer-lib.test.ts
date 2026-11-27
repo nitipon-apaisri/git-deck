@@ -4,7 +4,7 @@ import { test } from 'node:test'
 import { errorMessage } from '../src/renderer/src/lib/errors'
 import {
   ACCENTS,
-  DEFAULT_ACCENT,
+  defaultAccent,
   parseAccent,
   readAccent,
   writeAccent
@@ -423,8 +423,10 @@ test('workspace reducer: retrying the first load clears the error and shows load
 
 test('parseAccent and parseFont fall back to the default for anything unknown', () => {
   assert.equal(parseAccent('violet'), 'violet')
-  assert.equal(parseAccent('hotpink'), 'orange')
-  assert.equal(parseAccent(null), 'orange')
+  assert.equal(parseAccent('hotpink'), null)
+  assert.equal(parseAccent(null), null)
+  assert.equal(defaultAccent('dark'), 'blue')
+  assert.equal(defaultAccent('light'), 'orange')
   assert.equal(parseFont('roboto'), 'roboto')
   assert.equal(parseFont('Comic Sans'), 'inter')
   assert.equal(parseFont(undefined), 'inter')
@@ -439,7 +441,7 @@ test('accent and font storage survive a store that throws', () => {
       throw new Error('blocked')
     }
   }
-  assert.equal(readAccent(broken), 'orange')
+  assert.equal(readAccent(broken), null)
   assert.equal(readFont(broken), 'inter')
   assert.doesNotThrow(() => writeAccent(broken, 'rose'))
   assert.doesNotThrow(() => writeFont(broken, 'system'))
@@ -454,14 +456,10 @@ test('accent and font storage survive a store that throws', () => {
   assert.equal(readFont(store), 'open-sans')
 })
 
-test('every accent except the default has dark and light overrides for all five tokens', () => {
+test('every accent has dark and light overrides for all five tokens', () => {
   const css = readFileSync(new URL('../src/renderer/src/appearance.css', import.meta.url), 'utf8')
   assert.equal(new Set(ACCENTS.map((a) => a.id)).size, ACCENTS.length)
   for (const { id } of ACCENTS) {
-    if (id === DEFAULT_ACCENT) {
-      assert.ok(!css.includes(`data-accent='${id}'`), 'the default lives in tokens.css')
-      continue
-    }
     for (const theme of ['dark', 'light']) {
       const at = css.indexOf(`:root[data-accent='${id}'][data-theme='${theme}']`)
       assert.ok(at >= 0, `${id} ${theme} block`)

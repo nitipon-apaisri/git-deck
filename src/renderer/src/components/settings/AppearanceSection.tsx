@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { APP_ICONS, DEFAULT_APP_ICON, type AppIconId } from '@shared/appIcon'
-import { ACCENTS, type Accent } from '../../lib/accent'
+import { ACCENTS, defaultAccent, type Accent } from '../../lib/accent'
 import { FONTS, type FontId } from '../../lib/font'
 import { errorMessage } from '../../lib/errors'
 import type { ThemeSetting } from '../../lib/theme'
@@ -69,7 +69,8 @@ interface AppearanceSectionProps {
 }
 
 export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionProps) {
-  const { accent, setAccent } = useAccent()
+  const { accent: chosen, setAccent } = useAccent()
+  const accent = chosen ?? defaultAccent(document.documentElement.dataset['theme'])
   const { font, setFont } = useFont()
   const themeKeys = useRadioKeys<ThemeSetting>(THEME_ORDER, theme, onThemeChange)
   const accentIds = ACCENTS.map((a) => a.id)

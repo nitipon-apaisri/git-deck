@@ -8,7 +8,7 @@ export interface AccentPreset {
   label: string
 }
 
-/** The first one is the default and has no overrides (`accents.css` only has the others). */
+/** Each theme's default accent lives in `tokens.css`; the rest are in `appearance.css`. */
 export const ACCENTS = [
   { id: 'orange', label: 'Orange' },
   { id: 'blue', label: 'Blue' },
@@ -18,19 +18,22 @@ export const ACCENTS = [
 ] as const satisfies readonly AccentPreset[]
 
 export type Accent = (typeof ACCENTS)[number]['id']
-export const DEFAULT_ACCENT: Accent = 'orange'
-
-export function parseAccent(value: string | null | undefined): Accent {
-  const found = ACCENTS.find((a) => a.id === value)
-  return found ? found.id : DEFAULT_ACCENT
+/** With no saved choice the theme decides: blue in dark, orange in light. */
+export function defaultAccent(theme: string | undefined): Accent {
+  return theme === 'dark' ? 'blue' : 'orange'
 }
 
-/** Storage can throw (blocked site data), so a failure means the default. */
-export function readAccent(store: KeyValueStore | null): Accent {
+/** The saved accent, or null when the person never chose one. */
+export function parseAccent(value: string | null | undefined): Accent | null {
+  return ACCENTS.find((a) => a.id === value)?.id ?? null
+}
+
+/** Storage can throw (blocked site data), so a failure means no choice. */
+export function readAccent(store: KeyValueStore | null): Accent | null {
   try {
     return parseAccent(store?.getItem(ACCENT_KEY))
   } catch {
-    return DEFAULT_ACCENT
+    return null
   }
 }
 

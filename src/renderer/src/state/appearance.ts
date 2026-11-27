@@ -3,8 +3,10 @@ import { readAccent, writeAccent, type Accent } from '../lib/accent'
 import { readFont, writeFont, type FontId } from '../lib/font'
 import { browserStorage } from './storage'
 
-function applyAccent(accent: Accent): void {
-  document.documentElement.dataset['accent'] = accent
+/** No choice: drop the attribute, so the theme's own default shows. */
+function applyAccent(accent: Accent | null): void {
+  if (accent) document.documentElement.dataset['accent'] = accent
+  else delete document.documentElement.dataset['accent']
 }
 
 function applyFont(font: FontId): void {
@@ -17,8 +19,8 @@ export function initAppearance(): void {
   applyFont(readFont(browserStorage()))
 }
 
-export function useAccent(): { accent: Accent; setAccent: (next: Accent) => void } {
-  const [accent, setState] = useState<Accent>(() => readAccent(browserStorage()))
+export function useAccent(): { accent: Accent | null; setAccent: (next: Accent) => void } {
+  const [accent, setState] = useState<Accent | null>(() => readAccent(browserStorage()))
   const setAccent = useCallback((next: Accent) => {
     setState(next)
     writeAccent(browserStorage(), next)

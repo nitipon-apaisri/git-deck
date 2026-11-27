@@ -1,5 +1,5 @@
 /* Appearance choices on <html>: data-accent and data-font.
-   Orange is the default and lives in tokens.css. Each other accent overrides only the five
+   Blue is the dark default and orange the light default, both in tokens.css. Each accent overrides only the five
    accent tokens, per theme. The swatches in Settings and the theme previews reuse them. Contrast was checked against --island,
    --island-raised and --hover (light: the warm #f7ebd7 / #f2e3ca / #eddcc0) and --on-primary:
    primary >= 4.5:1 with white, accent text >= 4.5:1, accent and focus ring >= 3:1. */
@@ -80,6 +80,25 @@
   --focus-ring: #8f1943;
 }
 
+:root[data-accent='orange'][data-theme='dark'],
+:root[data-accent='orange'] [data-theme='dark'],
+[data-theme='dark'] [data-accent-dot='orange'] {
+  --primary: #b4540a;
+  --accent: #f0903c;
+  --accent-text: #f5a560;
+  --selection: #f0903c38;
+  --focus-ring: #f8bb82;
+}
+:root[data-accent='orange'][data-theme='light'],
+:root[data-accent='orange'] [data-theme='light'],
+[data-theme='light'] [data-accent-dot='orange'] {
+  --primary: #b5501a;
+  --accent: #b5501a;
+  --accent-text: #9a4414;
+  --selection: #b5501a1f;
+  --focus-ring: #7f360f;
+}
+
 :root[data-font='roboto'] {
   --font-sans: 'Roboto', system-ui, sans-serif;
 }
@@ -88,12 +107,4 @@
 }
 :root[data-font='system'] {
   --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
-}
-
-/* The default accent has no root rule, but its swatch must not inherit another accent. */
-[data-theme='dark'] [data-accent-dot='orange'] {
-  --primary: #b4540a;
-}
-[data-theme='light'] [data-accent-dot='orange'] {
-  --primary: #b5501a;
 }
