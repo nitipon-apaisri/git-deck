@@ -455,6 +455,9 @@ export interface ConflictSaveResult {
   fingerprint: string
 }
 
+/** `ff` may fast-forward, `no-ff` always makes a merge commit, `squash` makes one plain commit. */
+export type MergeMode = 'ff' | 'no-ff' | 'squash'
+
 export interface OperationResult {
   /** The run stopped on conflicts. Abort or continue through `local.operation`. */
   conflicted: boolean

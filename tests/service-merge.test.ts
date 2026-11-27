@@ -51,7 +51,7 @@ test('stash, merge and operation calls need a linked folder and valid arguments'
   await assert.rejects(s.api.local.stashPush(other, '', false), /not linked/)
   await assert.rejects(s.api.local.stashDrop(other, 0, 'abcdef0'), /not linked/)
   await assert.rejects(s.api.local.cherryPick(other, s.featureHash), /not linked/)
-  await assert.rejects(s.api.local.merge(other, 'feature', false), /not linked/)
+  await assert.rejects(s.api.local.merge(other, 'feature', 'ff'), /not linked/)
   await assert.rejects(s.api.local.operation(other), /not linked/)
   await assert.rejects(s.api.local.continueOperation(other), /not linked/)
   await assert.rejects(s.api.local.abortOperation(other), /not linked/)
@@ -63,8 +63,8 @@ test('stash, merge and operation calls need a linked folder and valid arguments'
   await assert.rejects(s.api.local.stashPop(s.dir, 1.5, 'abcdef0'), /not valid/)
   await assert.rejects(s.api.local.stashPop(s.dir, 0, '--all'), /not valid/)
   await assert.rejects(s.api.local.cherryPick(s.dir, 7 as never), /Invalid commit/)
-  await assert.rejects(s.api.local.merge(s.dir, '', false), /not valid/)
-  await assert.rejects(s.api.local.merge(s.dir, 'feature', 'yes' as never), /true or false/)
+  await assert.rejects(s.api.local.merge(s.dir, '', 'ff'), /not valid/)
+  await assert.rejects(s.api.local.merge(s.dir, 'feature', 'yes' as never), /ff, no-ff or squash/)
   assert.equal(s.confirmed(), 0)
 })
 
@@ -81,7 +81,7 @@ test('stash drop asks first and does nothing when declined', async () => {
 
 test('a conflicting merge is reported, then aborted only after confirming', async () => {
   const s = await setup([false, true])
-  assert.deepEqual(await s.api.local.merge(s.dir, 'feature', false), { conflicted: true })
+  assert.deepEqual(await s.api.local.merge(s.dir, 'feature', 'ff'), { conflicted: true })
   const state = await s.api.local.operation(s.dir)
   assert.equal(state?.kind, 'merge')
   assert.deepEqual(state?.conflicted, ['shared.txt'])

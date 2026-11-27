@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { errorMessage } from '../lib/errors'
 import type { ActivityKind } from '../lib/operationView'
 import type { CloneProtocol, GitProgress } from '@shared/api'
-import type { BisectMark, CheckoutTarget, PullMode, ResetMode } from '@shared/types'
+import type { BisectMark, CheckoutTarget, MergeMode, PullMode, ResetMode } from '@shared/types'
 
 /** How long the check and the cross stay on a button after a write ends. */
 const SUCCESS_MS = 4000
@@ -51,7 +51,7 @@ export interface LocalActions {
   refresh: () => void
   /** A conflict does not fail: the pane's banner (from `operation`) takes it from there. */
   cherryPick: (hash: string) => void
-  merge: (branch: string, noFf: boolean) => void
+  merge: (branch: string, mode: MergeMode) => void
   /** `onto` is a branch, a remote branch or a commit hash. May stop on conflicts. */
   rebase: (onto: string) => void
   revert: (hash: string) => void
@@ -321,8 +321,8 @@ export function useLocalActions(
     [operate]
   )
   const merge = useCallback(
-    (branch: string, noFf: boolean) =>
-      operate((path) => window.api.local.merge(path, branch, noFf)),
+    (branch: string, mode: MergeMode) =>
+      operate((path) => window.api.local.merge(path, branch, mode)),
     [operate]
   )
   const rebase = useCallback(

@@ -279,7 +279,7 @@ export function LocalActions({
         case 'fast-forward-branch':
           return actions.fastForwardBranch(action.name)
         case 'merge':
-          return actions.merge(action.branch, action.noFf)
+          return actions.merge(action.branch, action.mode)
         case 'rebase':
           return actions.rebase(action.onto)
         case 'copy':

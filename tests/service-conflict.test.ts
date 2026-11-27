@@ -93,7 +93,7 @@ test('conflict calls need a linked folder and valid arguments', async () => {
 
 test('the whole flow through the api: regions, delete with a confirm, then Continue', async () => {
   const s = await setup([false, true])
-  assert.deepEqual(await s.api.local.merge(s.dir, 'feature', false), { conflicted: true })
+  assert.deepEqual(await s.api.local.merge(s.dir, 'feature', 'ff'), { conflicted: true })
 
   const file = await s.api.local.conflictFile(s.dir, 'shared.txt')
   assert.equal(file.segments?.filter((x) => x.type === 'conflict').length, 1)
@@ -124,7 +124,7 @@ test('the whole flow through the api: regions, delete with a confirm, then Conti
 
 test('keep and the side actions need no confirm', async () => {
   const s = await setup()
-  await s.api.local.merge(s.dir, 'feature', false)
+  await s.api.local.merge(s.dir, 'feature', 'ff')
   assert.equal(await s.api.local.resolveConflictFile(s.dir, 'gone.txt', 'keep'), true)
   assert.equal(await s.api.local.resolveConflictFile(s.dir, 'shared.txt', 'ours'), true)
   assert.equal(s.confirmed(), 0)

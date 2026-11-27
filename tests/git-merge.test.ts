@@ -165,7 +165,7 @@ test('a conflicting cherry-pick can be resolved and continued', async () => {
   assert.equal(git(dir, 'status', '--porcelain'), '')
 })
 
-test('a clean merge fast-forwards, or makes a merge commit with noFf', async () => {
+test('a clean merge fast-forwards, or makes a merge commit with no-ff', async () => {
   const dir = emptyRepo()
   commit(dir, 'a.txt', 'first')
   git(dir, 'checkout', '-q', '-b', 'feature')
@@ -177,9 +177,34 @@ test('a clean merge fast-forwards, or makes a merge commit with noFf', async () 
   git(dir, 'checkout', '-q', '-b', 'more')
   commit(dir, 'c.txt', 'more work')
   git(dir, 'checkout', '-q', 'main')
-  await merge(dir, 'more', { noFf: true })
+  await merge(dir, 'more', 'no-ff')
   assert.equal(git(dir, 'rev-list', '--parents', '-n', '1', 'HEAD').split(' ').length, 3)
   assert.match(git(dir, 'log', '-1', '--format=%s'), /^Merge branch 'more'/)
+})
+
+test('a squash merge makes one plain commit with the merge message', async () => {
+  const dir = emptyRepo()
+  commit(dir, 'a.txt', 'first')
+  git(dir, 'checkout', '-q', '-b', 'feature')
+  commit(dir, 'b.txt', 'one')
+  commit(dir, 'c.txt', 'two')
+  git(dir, 'checkout', '-q', 'main')
+  assert.deepEqual(await merge(dir, 'feature', 'squash'), { conflicted: false })
+  assert.equal(git(dir, 'rev-list', '--parents', '-n', '1', 'HEAD').split(' ').length, 2)
+  assert.equal(git(dir, 'log', '-1', '--format=%s'), '🔀 (merge): Squash merge feature')
+  assert.equal(git(dir, 'rev-list', '--count', 'main'), '2')
+  assert.ok(existsSync(join(dir, 'b.txt')) && existsSync(join(dir, 'c.txt')))
+  await assert.rejects(merge(dir, 'feature', 'squash'), /Nothing to merge/)
+})
+
+test('a conflicting squash merge is undone and reported', async () => {
+  const { dir } = conflictRepo()
+  const before = git(dir, 'rev-parse', 'HEAD')
+  await assert.rejects(merge(dir, 'feature', 'squash'), /has conflicts and was undone/)
+  assert.equal(git(dir, 'rev-parse', 'HEAD'), before)
+  assert.equal(await getOperation(dir), null)
+  assert.equal(read(dir, 'shared.txt'), 'from main\n')
+  assert.equal(git(dir, 'status', '--porcelain'), '')
 })
 
 test('merge rejects an unknown branch and one that looks like an option', async () => {
@@ -215,7 +240,7 @@ test('a conflicting merge stops, then abort restores the branch', async () => {
 
 test('a conflicting merge can be resolved and continued, and an old state is found again', async () => {
   const { dir } = conflictRepo()
-  await merge(dir, 'feature', { noFf: true })
+  await merge(dir, 'feature', 'no-ff')
   // A fresh call (as on opening the repo) finds the state from the files git left.
   assert.equal((await getOperation(dir))?.kind, 'merge')
   writeFileSync(join(dir, 'shared.txt'), 'both\n')

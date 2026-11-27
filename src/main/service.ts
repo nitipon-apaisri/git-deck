@@ -1429,11 +1429,13 @@ export function createService(deps: ServiceDeps): {
         if (typeof hash !== 'string') throw new Error('Invalid commit hash')
         return serial(path, () => git.cherryPick(path, hash))
       }),
-      merge: guard(async (path, branch, noFf) => {
+      merge: guard(async (path, branch, mode) => {
         linkedRepoKey(path)
         const name = checkBranchName(branch)
-        if (typeof noFf !== 'boolean') throw new Error('No fast-forward must be true or false')
-        return serial(path, () => git.merge(path, name, { noFf }))
+        if (mode !== 'ff' && mode !== 'no-ff' && mode !== 'squash') {
+          throw new Error('Merge mode must be ff, no-ff or squash')
+        }
+        return serial(path, () => git.merge(path, name, mode))
       }),
       operation: guard(async (path) => {
         linkedRepoKey(path)

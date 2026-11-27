@@ -726,3 +726,11 @@ Layout follows `docs/ui-boards/RepoOverview.dc.html` (wide) and `RepoOverviewNar
 - **Removed:** the eight stat cards (`statItems`), as the plan says. Stars, forks and open issues are no longer shown in the repo pane; open PRs/MRs stay in the project overview and the PR/MR tab, local branch counts in Info.
 - **Tags:** About shows the latest 3 tags (`MAX_TAGS`), then "+n" for the rest of the summary's tag count.
 - **Heatmap:** the grid, tooltip and legend moved from `HomeProfile` into `ui/Heatmap.tsx`, shared by both screens.
+
+## Squash merge in the branch menu
+
+- **Option, not a rule change:** "Merge into <branch> (squash)" is a third merge entry beside the fast-forward and no-fast-forward ones. The project's own merges to `develop` still use `--no-ff`.
+- **Mode:** the `noFf` flag became `MergeMode` (`'ff' | 'no-ff' | 'squash'`) through the IPC, service and `git.merge`.
+- **Commit:** `git merge --squash` only stages, so GitDeck commits at once as `🔀 (merge): Squash merge <branch>`. No message dialog. An already-merged branch stops with "Nothing to merge".
+- **Conflicts:** a squash leaves no `MERGE_HEAD`, so the operation banner cannot track it. A conflict is undone (`reset --merge`) and reported; the user merges normally to resolve it. Upgrade if users ask to resolve a squash in the app.
+- **Menu rules:** separators now fall between Check out / Delete, Push / Fast-forward, the merge and rebase entries, and the commit actions.

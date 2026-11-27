@@ -67,6 +67,7 @@ import type {
   LocalInfo,
   LocalRemote,
   OperationKind,
+  MergeMode,
   OperationResult,
   RebasePlan,
   RebaseTodoItem,
@@ -1292,7 +1293,7 @@ export async function cherryPick(cwd: string, hash: string): Promise<OperationRe
 export async function merge(
   cwd: string,
   branch: string,
-  options: { noFf?: boolean } = {}
+  mode: MergeMode = 'ff'
 ): Promise<OperationResult> {
   if (typeof branch !== 'string' || !branch || branch.startsWith('-')) {
     throw new Error('Invalid branch name')
@@ -1302,13 +1303,39 @@ export async function merge(
     throw new Error(`There is no branch named "${branch}"`)
   }
   await assertNoOperation(cwd)
+  if (mode === 'squash') return squashMerge(cwd, branch)
   // `--no-edit` keeps an editor out of it. Without `--no-ff` git may fast-forward.
-  const args = ['merge', '--no-edit', options.noFf ? '--no-ff' : '--ff', branch]
+  const args = ['merge', '--no-edit', mode === 'no-ff' ? '--no-ff' : '--ff', branch]
   try {
     await run(cwd, args)
     return { conflicted: false }
   } catch (err) {
     return settle(cwd, ['merge', '--abort'], err)
+  }
+}
+
+/**
+ * `git merge --squash` only stages the result, so commit it here.
+ * shortcut: a conflict is undone and reported, there is no resolve flow (a squash leaves no
+ * MERGE_HEAD for the operation banner), upgrade when users ask to resolve a squash in the app.
+ */
+async function squashMerge(cwd: string, branch: string): Promise<OperationResult> {
+  try {
+    await run(cwd, ['merge', '--squash', branch])
+    if ((await tryRun(cwd, ['diff', '--cached', '--quiet'])) !== null) {
+      throw new Error('Nothing to merge: the branch has no changes the current branch lacks.')
+    }
+    await run(cwd, ['commit', '-m', `🔀 (merge): Squash merge ${branch}`])
+    return { conflicted: false }
+  } catch (err) {
+    const conflict = Boolean(await tryRun(cwd, ['diff', '--name-only', '--diff-filter=U']))
+    await tryRun(cwd, ['reset', '--merge'])
+    throw conflict
+      ? new Error(
+          `Squash merge of "${branch}" has conflicts and was undone. Merge it normally to resolve them.`,
+          { cause: err }
+        )
+      : err
   }
 }
 
