@@ -95,11 +95,12 @@ const subContentClass =
 function renderEntries(entries: readonly MenuEntry[]): ReactNode {
   return entries.map((entry) => {
     if (entry.kind === 'separator') {
-      // --line is too close to the menu background to show, so tint the text colour instead.
+      // shrink-0: in this flex column a 1px rule shrinks to nothing when the menu is full. --line is
+      // too close to the menu background to show, so tint the text colour instead.
       return (
         <DropdownMenu.Separator
           key={entry.id}
-          className="-mx-1.5 my-1.5 h-px bg-[color-mix(in_srgb,var(--text)_18%,transparent)]"
+          className="-mx-1.5 my-1.5 h-px shrink-0 bg-[color-mix(in_srgb,var(--text)_18%,transparent)]"
         />
       )
     }
