@@ -8,6 +8,17 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-27: README sync for the app icon picker
+
+- **Question:** commit 19f6410 adds an app icon choice in Settings > Appearance. How should README describe it, and what must it say it does not change?
+- **Options considered:** a Features table change; a More detail bullet under Appearance; a Known limits line for what the icon does not change.
+- **Decision and why:**
+  - A sentence in the Appearance bullet of More detail: seven choices (Default and six built-in icons), kept between launches, set on the Dock and window icon.
+  - A Known limits line: the icon changes only while GitDeck runs, the Finder and `.app` icon stays `build/icon.icns`, and Windows and Linux are not packaged.
+  - No change to the Features table. The Extras row names themes and accents, and the icon is a small part of Appearance. Adding words to that row would also have shifted its table padding, and no formatter could be run to re-align it.
+  - Progress is unchanged. No phase was added, and PLAN.md has no box for this change.
+- **Not verified:** the icon is not checked visually in the running app. There has been no Dock check yet, so the Dock and window icon, and the six PNGs, were read from the code only. Prettier was not run on README.md.
+
 ## 2026-11-27: README sync for squash merge and menu dividers
 
 - **Question:** the branch adds "Merge into <branch> (squash)" to the branch menu and new menu dividers. Does README need to say so, and where?
