@@ -204,7 +204,10 @@ function GraphRowViewBase({
             : undefined
         }
       />
-      <div className="w-(--col-graph) flex-none overflow-hidden">
+      <div
+        className="w-(--col-graph) flex-none overflow-hidden"
+        title={pills.map((p) => p.title).join('\n') || undefined}
+      >
         <Lanes row={row} lanes={lanes} />
       </div>
       <span className="min-w-0 flex-[1_0_12ch] truncate" title={commit.subject}>
