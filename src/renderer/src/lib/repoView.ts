@@ -1,15 +1,14 @@
 // Pure view-model helpers for the repository pane. No DOM, so they run under tsx.
 import type {
   AccountType,
+  ActivityDay,
   Contributor,
   LanguageShare,
   LocalInfo,
-  Repo,
-  RepoSummary,
   Visibility
 } from '../../../shared/types'
 
-export const TOP_CONTRIBUTORS = 10
+export const TOP_CONTRIBUTORS = 5
 
 const number = new Intl.NumberFormat('en-US')
 
@@ -63,39 +62,39 @@ export function unixDateText(seconds: number | null, locale = 'en-GB', timeZone?
   return seconds === null ? '—' : dateText(seconds * 1000, locale, timeZone)
 }
 
-export interface StatItem {
-  id: string
-  label: string
-  /** A number, `—` while loading, or `null` when the host could not say. */
-  value: number | string | null
+export interface ActivityStats {
+  commits: number
+  activeDays: number
+  /** Weekday with the most commits, `null` with none. */
+  busiestDay: string | null
+  /** Days in a row with a commit, ending today (or yesterday, if today has none yet). */
+  streak: number
 }
 
-/**
- * The overview cards. `summary` is `null` while nothing has loaded: that shows `—`
- * while a load is running and "Unavailable" (null) once it has failed.
- */
-export function statItems(
-  repo: Repo,
-  summary: RepoSummary | null,
-  accountType: AccountType,
-  loading: boolean
-): StatItem[] {
-  const fromSummary = (pick: (s: RepoSummary) => number | null): number | string | null =>
-    summary ? pick(summary) : loading ? '—' : null
-  return [
-    { id: 'commits', label: 'Commits', value: fromSummary((s) => s.commitCount) },
-    { id: 'contributors', label: 'Contributors', value: fromSummary((s) => s.contributorCount) },
-    { id: 'branches', label: 'Branches', value: fromSummary((s) => s.branchCount) },
-    { id: 'tags', label: 'Tags', value: fromSummary((s) => s.tagCount) },
-    {
-      id: 'changes',
-      label: changeRequestLabel(accountType),
-      value: fromSummary((s) => s.openChangeRequests)
-    },
-    { id: 'stars', label: 'Stars', value: repo.stars },
-    { id: 'forks', label: 'Forks', value: repo.forks },
-    { id: 'issues', label: 'Open issues', value: repo.openIssues }
-  ]
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+/** Every stat on the Commits card, from the per-day counts (oldest first). */
+export function activityStats(days: readonly ActivityDay[]): ActivityStats {
+  const byWeekday = Array<number>(7).fill(0)
+  let commits = 0
+  let activeDays = 0
+  for (const d of days) {
+    commits += d.count
+    if (d.count > 0) activeDays++
+    const weekday = new Date(`${d.date}T00:00:00Z`).getUTCDay()
+    if (!Number.isNaN(weekday)) byWeekday[weekday] += d.count
+  }
+  let end = days.length - 1
+  if (end >= 0 && days[end].count === 0) end--
+  let streak = 0
+  while (end - streak >= 0 && days[end - streak].count > 0) streak++
+  const top = Math.max(...byWeekday)
+  return {
+    commits,
+    activeDays,
+    busiestDay: top > 0 ? WEEKDAYS[byWeekday.indexOf(top)] : null,
+    streak
+  }
 }
 
 export interface ContributorRow {

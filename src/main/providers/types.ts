@@ -4,6 +4,8 @@ import type {
   CreateChangeRequestInput,
   ProfileInfo,
   Repo,
+  RepoActivity,
+  RepoReadme,
   RepoSummary,
   VerifiedUser
 } from '../../shared/types'
@@ -24,6 +26,12 @@ export interface GitProvider {
   createChangeRequest(repo: Repo, input: CreateChangeRequestInput): Promise<ChangeRequest>
   /** CI for a ref. A host or version without the endpoint answers `none`, not an error. */
   getChecks(repo: Repo, ref: string): Promise<ChecksInfo>
+  /** The README on the default branch, capped. `null` when there is none (404). */
+  readme(repo: Repo): Promise<Omit<RepoReadme, 'source'> | null>
+  /** Commits per day for the last 12 months. */
+  activity(repo: Repo): Promise<Omit<RepoActivity, 'source'>>
+  /** The latest tag names, newest first, at most `MAX_TAGS`. */
+  latestTags(repo: Repo): Promise<string[]>
 }
 
 export const MAX_CONTRIBUTORS = 25

@@ -8,9 +8,12 @@ import type {
   LanguageShare,
   ProfileInfo,
   Repo,
+  RepoActivity,
+  RepoReadme,
   RepoSummary,
   Visibility
 } from '../../shared/types'
+import { capReadme, countDates, fillDays, MAX_TAGS } from '../../shared/overview'
 import { MAX_CONTRIBUTORS, MAX_LANGUAGES, type GitProvider, type VerifiedUser } from './types'
 import { encodePath, ok, percent, required, sameOrigin, throwIfAllFailed } from './util'
 
@@ -402,6 +405,53 @@ export class GitHubProvider implements GitProvider {
       ok(settled[0], null)?.check_runs ?? [],
       ok(settled[1], null)?.statuses ?? []
     )
+  }
+
+  async readme(repo: Repo): Promise<Omit<RepoReadme, 'source'> | null> {
+    const url = `${this.root}/repos/${encodePath(repo.fullName)}/readme`
+    let body: { name?: string; content?: string; encoding?: string } | null
+    try {
+      body = await getJson(url, this.headers)
+    } catch (err) {
+      if (err instanceof HttpError && err.status === 404) return null
+      throw err
+    }
+    if (!body || typeof body.content !== 'string') return null
+    const text =
+      body.encoding === 'base64'
+        ? Buffer.from(body.content, 'base64').toString('utf8')
+        : body.content
+    return { name: body.name || 'README.md', ...capReadme(text) }
+  }
+
+  /** `retryMs` is how long to wait before asking again after a 202 (tests pass 0). */
+  async activity(repo: Repo, retryMs = 2000): Promise<Omit<RepoActivity, 'source'>> {
+    const url = `${this.root}/repos/${encodePath(repo.fullName)}/stats/commit_activity`
+    type Week = { week: number; days: number[] }
+    let body = await getJson<Week[] | Record<string, never>>(url, this.headers)
+    // 202 with `{}`: GitHub is computing the statistics. Ask once more, then say so.
+    if (body !== null && !Array.isArray(body)) {
+      await new Promise((r) => setTimeout(r, retryMs))
+      body = await getJson<Week[] | Record<string, never>>(url, this.headers)
+    }
+    if (body !== null && !Array.isArray(body)) {
+      return { days: fillDays(new Map()), truncated: false, computing: true }
+    }
+    // 204 (an empty repository) is no commits. `week` is a Sunday at 00:00 UTC.
+    const dates: string[] = []
+    for (const w of body ?? []) {
+      w.days.forEach((n, i) => {
+        const date = new Date((w.week + i * 86_400) * 1000).toISOString()
+        for (let k = 0; k < n; k++) dates.push(date)
+      })
+    }
+    return { days: fillDays(countDates(dates)), truncated: false, computing: false }
+  }
+
+  async latestTags(repo: Repo): Promise<string[]> {
+    const url = `${this.root}/repos/${encodePath(repo.fullName)}/tags?per_page=${MAX_TAGS}`
+    const tags = await getJson<{ name: string }[]>(url, this.headers)
+    return (Array.isArray(tags) ? tags : []).slice(0, MAX_TAGS).map((t) => t.name)
   }
 }
 

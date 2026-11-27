@@ -8,6 +8,17 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-27: Overview tab for local repositories
+
+- **Question:** Local repositories had no Overview tab and opened on Graph. Should they get one, and what can it show without a host?
+- **Options considered:** not recorded. The commit message gives the decision only.
+- **Decision and why:**
+  - A clone-only Overview (commit cc80579). It shows the README, the 12-month commit heatmap, the latest tags and the About rows the clone can fill. Languages and contributors are hidden. License, created and size show "—". Nothing is read from a host.
+  - Local tabs are Overview, Graph and Info. PR/MR stays hidden.
+  - A saved PR/MR tab on a local repository opens on Graph (`RepoPane.tsx`).
+  - Still left out: languages and contributors from git alone.
+- **Not verified:** the Overview was not run in a window, so the "—" values and the README and heatmap output were read from code only. Not verified: which tab a newly opened local repository starts on.
+
 ## 2026-11-27: README sync for the narrow pane threshold (640 to 760 px)
 
 - **Question:** `NARROW_PANE` in `src/renderer/src/lib/splitLayout.ts` moved from 640 to 760 px on `fix/split-header-narrow` (commit 2c48520), so panes under 760 px use the compact layout (no Author and Date columns, icon-only header buttons). Does README need to say so?
@@ -149,8 +160,8 @@ Newest first. Template:
 - **Decision and why:**
   - Yes. Open adds a local-only repository: main resolves the folder's git root, gives it the key `local:<12 hex of sha1(root)>` (so the same folder is one entry) and stores it in `config.json` (`localRepos`) plus the existing `links` table. Because every read-only git call is gated by that table, the graph, Info, Fetch and Reveal work unchanged.
   - A real account id is a UUID, so `local` cannot collide with one. `local.unlink` refuses local keys and `local.remove` refuses everything else.
-  - Local repositories show under a "Local" group at the top of the sidebar, have no Overview tab (no host summary), no Open on web and no Unlink, and open on the Graph tab. Remove only forgets the entry.
-  - Left out: local repositories in Projects, an Overview built from git alone, matching a folder's remote to an account repository, and drag-and-drop of a folder.
+  - Local repositories show under a "Local" group at the top of the sidebar, have no PR/MR tab (no host), no Open on web and no Unlink. Remove only forgets the entry. Amended 2026-11-27: they now have a clone-only Overview tab.
+  - Left out: local repositories in Projects, languages and contributors for local repositories, matching a folder's remote to an account repository, and drag-and-drop of a folder.
   - Not checked in the window: the native folder picker itself (the service tests use a fake picker), and Windows and Linux paths.
 
 ## 2026-11-06: Settings, accents, fonts and motion
@@ -699,3 +710,19 @@ Layout follows `docs/ui-boards/HomeProfile.dc.html`.
   - Design-system lines that still described an edge on these controls were changed to match the code: `docs/design-system/README.md` (focus, edges, button colour, activity), `components/Button/README.md` (default variant) and `components/Field/README.md` (input edge and focus). Previews (`preview.html`) still draw borders and were not changed.
   - The older "Focus ring on text fields" entry above is kept as history. This entry supersedes its border part.
 - **Not verified:** no display here, so the look, the contrast of the fills in both themes and the focus outline were not checked by eye. The `border-strong` 3:1 rule was not re-measured against the new fills.
+
+## 2026-11-27, Phase 44 Repo Overview dashboard
+
+Layout follows `docs/ui-boards/RepoOverview.dc.html` (wide) and `RepoOverviewNarrow.dc.html` (narrow).
+
+- **`marked` as a devDependency:** Vite bundles it into the renderer, so `dependencies` stays `react`, `react-dom` and `node-pty`. No HTML sanitizer library: `lib/markdown.ts` overrides marked's renderer so that raw HTML in a README is dropped (never parsed), links and images are kept only when they are absolute `https:`, relative images become an "Image: alt" placeholder, and a click on a link calls `openExternal`. Only tags marked itself writes can reach the page. The renderer CSP (`img-src https:`, no inline script) is a second line of defence.
+- **Raw HTML dropped:** README badges and centred logos written in HTML do not show. Escaping them as text looked broken; parsing them would need a DOM sanitizer.
+- **Sources:** README, commit activity and tags come from the linked clone when its folder is still a repository, else from the host API. The README is the top-level `README*` (any case, `.md` preferred, symlinks skipped), capped at 512 KB on both paths. GitHub reads `/readme` (base64) and GitLab the file named by the project's `readme_url` (else `README.md`) from `/repository/files/:path/raw` on the default branch.
+- **Local commit counts use HEAD**, the checked-out branch. GitHub's `/stats/commit_activity` counts the default branch, so the two can differ.
+- **Host activity:** GitHub's 202 ("computing") is retried once after 2 s, then the card shows a loading state with Try again; a "computing" answer is never cached. GitLab reads `commits?since=` in sequence, 10 pages of 100, and flags the card ("first 1,000 commits") when it hits that cap.
+- **Cache:** the three answers are kept in memory in main, per repo and linked path, so switching tabs or panes never refetches and linking a clone reads it at once. Not persisted like the summary: a README can be 512 KB, too much for the JSON store. Each card's retry skips the cache.
+- **Header:** the Overview header shows name, visibility, default branch, namespace, description and topics. `RepoHeader` hides its description on the Overview tab only, and there is no second "Open on GitHub" button: the header's globe button does it.
+- **Narrow:** under 760px the order is Commits, About, README, Languages, Contributors, and the stats sit above the heatmap, as on the narrow board. The heatmap keeps the full year and scrolls sideways, opening on the latest weeks.
+- **Removed:** the eight stat cards (`statItems`), as the plan says. Stars, forks and open issues are no longer shown in the repo pane; open PRs/MRs stay in the project overview and the PR/MR tab, local branch counts in Info.
+- **Tags:** About shows the latest 3 tags (`MAX_TAGS`), then "+n" for the rest of the summary's tag count.
+- **Heatmap:** the grid, tooltip and legend moved from `HomeProfile` into `ui/Heatmap.tsx`, shared by both screens.

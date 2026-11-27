@@ -6,7 +6,10 @@ import type {
   BranchList,
   LocalInfo,
   OperationState,
+  RepoActivity,
+  RepoReadme,
   RepoSummary,
+  RepoTags,
   StashEntry
 } from '@shared/types'
 
@@ -242,3 +245,59 @@ export function useBisect(path: string | null, reloadToken: number): BisectState
   }, [path, reloadToken])
   return path === null || state.key !== path ? null : (state.data ?? null)
 }
+
+export interface OverviewCardState<T> {
+  data: T | null
+  loading: boolean
+  error: string | null
+  /** Ask again, skipping the main-process cache. */
+  reload: () => void
+}
+
+type OverviewLoad<T> = (repoKey: string, refresh?: boolean) => Promise<T>
+
+/**
+ * One Overview card (README, commit activity or tags) for one repository. Main caches the
+ * answer per repo and link, so switching tabs never refetches. `linkedPath` re-reads when a
+ * clone is linked or unlinked.
+ */
+function useOverviewCard<T>(
+  repoKey: string,
+  linkedPath: string | undefined,
+  load: OverviewLoad<T>
+): OverviewCardState<T> {
+  const [state, dispatch] = useReducer(resourceReducer<T>, emptyResource<T>())
+  const [nonce, setNonce] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      dispatch({ type: 'start', key: repoKey })
+      try {
+        const data = await load(repoKey, nonce > 0)
+        if (!cancelled) dispatch({ type: 'data', key: repoKey, data, fetchedAt: null, done: true })
+      } catch (err) {
+        if (!cancelled) dispatch({ type: 'failed', key: repoKey, error: errorMessage(err) })
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [repoKey, linkedPath, nonce, load])
+
+  const reload = useCallback(() => setNonce((n) => n + 1), [])
+  if (state.key !== repoKey) return { data: null, loading: true, error: null, reload }
+  return { data: state.data, loading: state.loading, error: state.error, reload }
+}
+
+// Stable references, so the effect above does not re-run on every render.
+const loadReadme: OverviewLoad<RepoReadme | null> = (k, r) => window.api.repo.readme(k, r)
+const loadActivity: OverviewLoad<RepoActivity> = (k, r) => window.api.repo.activity(k, r)
+const loadTags: OverviewLoad<RepoTags> = (k, r) => window.api.repo.tags(k, r)
+
+export const useRepoReadme = (repoKey: string, linkedPath: string | undefined) =>
+  useOverviewCard(repoKey, linkedPath, loadReadme)
+export const useRepoActivity = (repoKey: string, linkedPath: string | undefined) =>
+  useOverviewCard(repoKey, linkedPath, loadActivity)
+export const useRepoTags = (repoKey: string, linkedPath: string | undefined) =>
+  useOverviewCard(repoKey, linkedPath, loadTags)

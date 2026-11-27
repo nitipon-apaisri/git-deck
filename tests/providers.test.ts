@@ -6,6 +6,7 @@ import { HttpError } from '../src/main/http'
 import { createProvider, normalizeBaseUrl } from '../src/main/providers'
 import { GitHubProvider, githubApiRoot } from '../src/main/providers/github'
 import { GitLabProvider, eventHeatmap } from '../src/main/providers/gitlab'
+import type { Repo } from '../src/shared/types'
 
 const TOKEN = 'test-token-abc'
 let server: Server
@@ -114,6 +115,8 @@ function github(url: URL, send: Send): void {
 }
 
 let pins = true
+/** A test's own answers, tried before the shared ones. Returns true when it answered. */
+let route: ((url: URL, send: Send) => boolean) | null = null
 let graphqlDown = false
 
 function graphql(send: Send): void {
@@ -152,27 +155,28 @@ function graphql(send: Send): void {
   })
 }
 
+const glProject = (id: number, path: string, extra: Record<string, unknown> = {}): unknown => ({
+  id,
+  name: path.split('/').pop(),
+  path_with_namespace: path,
+  namespace: { full_path: path.split('/').slice(0, -1).join('/') },
+  description: 'desc',
+  visibility: 'internal',
+  default_branch: 'main',
+  web_url: `https://gl.example/${path}`,
+  http_url_to_repo: `https://gl.example/${path}.git`,
+  ssh_url_to_repo: `git@gl.example:${path}.git`,
+  star_count: 1,
+  forks_count: 0,
+  open_issues_count: 4,
+  last_activity_at: '2026-02-01T00:00:00Z',
+  created_at: '2021-01-01T00:00:00Z',
+  topics: ['ops'],
+  ...extra
+})
+
 function gitlab(url: URL, send: Send): void {
   const p = url.pathname.replace('/gitlab/api/v4', '')
-  const glProject = (id: number, path: string, extra: Record<string, unknown> = {}): unknown => ({
-    id,
-    name: path.split('/').pop(),
-    path_with_namespace: path,
-    namespace: { full_path: path.split('/').slice(0, -1).join('/') },
-    description: 'desc',
-    visibility: 'internal',
-    default_branch: 'main',
-    web_url: `https://gl.example/${path}`,
-    http_url_to_repo: `https://gl.example/${path}.git`,
-    ssh_url_to_repo: `git@gl.example:${path}.git`,
-    star_count: 1,
-    forks_count: 0,
-    open_issues_count: 4,
-    last_activity_at: '2026-02-01T00:00:00Z',
-    created_at: '2021-01-01T00:00:00Z',
-    topics: ['ops'],
-    ...extra
-  })
   switch (p) {
     case '/user':
       return send(200, {
@@ -261,6 +265,7 @@ before(async () => {
       ? req.headers['private-token'] !== TOKEN
       : req.headers['authorization'] !== `Bearer ${TOKEN}`
     if (wrongAuth) return send(401, { message: 'bad credentials' })
+    if (route?.(url, send)) return
     if (url.pathname === '/api/graphql') return graphql(send)
     if (url.pathname.startsWith('/api/v3/')) return github(url, send)
     if (url.pathname.startsWith('/gitlab/api/v4/')) return gitlab(url, send)
@@ -272,6 +277,7 @@ before(async () => {
 
 beforeEach(() => {
   seen = []
+  route = null
 })
 
 after(() => server.close())
@@ -584,4 +590,133 @@ test('eventHeatmap: 365 days ending today, events counted by UTC day', () => {
   assert.deepEqual(h.days[364], { date: '2026-03-10', count: 2 })
   assert.equal(h.days[0].date, '2025-03-11')
   assert.equal(h.total, 2)
+})
+
+// Overview cards
+
+const ghHello = { fullName: 'octo/hello', remoteId: '1', defaultBranch: 'main' } as Repo
+const glFull = { fullName: 'team/full', remoteId: '10', defaultBranch: 'main' } as Repo
+
+test('GitHub: readme decodes base64, keeps a plain body, and a 404 is no README', async () => {
+  const p = new GitHubProvider('acc', base, TOKEN)
+  let body: unknown = {
+    name: 'Readme.md',
+    encoding: 'base64',
+    content: Buffer.from('# Hi \u00e9').toString('base64')
+  }
+  route = (url, send) => {
+    if (url.pathname !== '/api/v3/repos/octo/hello/readme') return false
+    if (body === null) send(404, { message: 'Not Found' })
+    else send(200, body)
+    return true
+  }
+  assert.deepEqual(await p.readme(ghHello), {
+    name: 'Readme.md',
+    markdown: '# Hi \u00e9',
+    truncated: false
+  })
+  body = { name: 'README', content: 'plain' }
+  assert.equal((await p.readme(ghHello))?.markdown, 'plain')
+  body = {
+    name: 'README.md',
+    encoding: 'base64',
+    content: Buffer.from('x'.repeat(600_000)).toString('base64')
+  }
+  const big = await p.readme(ghHello)
+  assert.equal(big?.truncated, true)
+  assert.equal(big?.markdown.length, 512 * 1024)
+  body = null
+  assert.equal(await p.readme(ghHello), null)
+})
+
+test('GitHub: activity retries a 202 once, then reports computing; weeks become days', async () => {
+  const p = new GitHubProvider('acc', base, TOKEN)
+  const today = new Date()
+  const sunday =
+    Date.UTC(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay()) / 1000
+  let answers: unknown[] = [{}, [{ week: sunday, total: 3, days: [1, 2, 0, 0, 0, 0, 0] }]]
+  route = (url, send) => {
+    if (url.pathname !== '/api/v3/repos/octo/hello/stats/commit_activity') return false
+    const next = answers.shift()
+    if (next && !Array.isArray(next)) send(202, next)
+    else send(200, next)
+    return true
+  }
+  const a = await p.activity(ghHello, 0)
+  assert.equal(a.computing, false)
+  assert.equal(a.days.length, 365)
+  assert.equal(
+    a.days.reduce((n, d) => n + d.count, 0),
+    // Days after today fall outside the window.
+    today.getDay() === 0 ? 1 : 3
+  )
+  answers = [{}, {}]
+  const still = await p.activity(ghHello, 0)
+  assert.equal(still.computing, true)
+  assert.ok(still.days.every((d) => d.count === 0))
+})
+
+test('GitHub: latestTags asks for three and keeps at most three names', async () => {
+  const p = new GitHubProvider('acc', base, TOKEN)
+  route = (url, send) => {
+    if (url.pathname !== '/api/v3/repos/octo/hello/tags') return false
+    // A host that ignores per_page still yields three.
+    send(200, [{ name: 'v4' }, { name: 'v3' }, { name: 'v2' }, { name: 'v1' }])
+    return true
+  }
+  assert.deepEqual(await p.latestTags(ghHello), ['v4', 'v3', 'v2'])
+  assert.match(seen.at(-1)?.url ?? '', /per_page=3/)
+})
+
+test('GitLab: readme follows readme_url to the raw file on the default branch; a 404 is no README', async () => {
+  const p = new GitLabProvider('acc', `${base}/gitlab`, TOKEN)
+  let readmeUrl: string | null = 'https://gl.example/team/full/-/blob/main/ReadMe.markdown'
+  route = (url, send) => {
+    if (url.pathname === '/gitlab/api/v4/projects/10') {
+      send(200, glProject(10, 'team/full', { readme_url: readmeUrl }))
+      return true
+    }
+    if (url.pathname === '/gitlab/api/v4/projects/10/repository/files/ReadMe.markdown/raw') {
+      assert.equal(url.searchParams.get('ref'), 'main')
+      send(200, '# raw')
+      return true
+    }
+    return false
+  }
+  const got = await p.readme(glFull)
+  assert.equal(got?.name, 'ReadMe.markdown')
+  // The mock JSON-encodes bodies, so the raw text arrives quoted.
+  assert.equal(got?.markdown, '"# raw"')
+  readmeUrl = null
+  assert.equal(await p.readme(glFull), null, 'README.md is tried and 404s')
+})
+
+test('GitLab: activity pages in sequence and flags the 1,000-commit cap', async () => {
+  const p = new GitLabProvider('acc', `${base}/gitlab`, TOKEN)
+  const today = new Date()
+  const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}T09:00:00+07:00`
+  let pages = 2
+  route = (url, send) => {
+    if (url.pathname !== '/gitlab/api/v4/projects/10/repository/commits') return false
+    const page = Number(url.searchParams.get('page') ?? '1')
+    if (page === 1) assert.ok(url.searchParams.get('since'))
+    const next: Record<string, string> =
+      page < pages
+        ? { link: `</gitlab/api/v4/projects/10/repository/commits?page=${page + 1}>; rel="next"` }
+        : {}
+    send(
+      200,
+      Array.from({ length: 100 }, () => ({ authored_date: iso })),
+      next
+    )
+    return true
+  }
+  const small = await p.activity(glFull)
+  assert.equal(small.truncated, false)
+  assert.equal(small.days.at(-1)?.count, 200)
+  pages = 50
+  seen = []
+  const capped = await p.activity(glFull)
+  assert.equal(capped.truncated, true)
+  assert.equal(seen.filter((r) => r.url.includes('/commits')).length, 10)
 })

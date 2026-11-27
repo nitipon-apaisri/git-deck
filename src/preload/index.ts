@@ -45,6 +45,11 @@ const api: Api = {
     cached: (repoKey) => call(IPC.summaryCached, repoKey),
     fetch: (repoKey) => call(IPC.summaryFetch, repoKey)
   },
+  repo: {
+    readme: (repoKey, refresh) => call(IPC.repoReadme, repoKey, refresh),
+    activity: (repoKey, refresh) => call(IPC.repoActivity, repoKey, refresh),
+    tags: (repoKey, refresh) => call(IPC.repoTags, repoKey, refresh)
+  },
   profile: {
     get: (accountId) => call(IPC.profileGet, accountId)
   },

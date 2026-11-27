@@ -9,6 +9,8 @@ interface RepoHeaderProps {
   local?: boolean
   /** A narrow pane: buttons show only their icon. */
   compact?: boolean
+  /** The Overview tab shows the description in its own header. */
+  hideDescription?: boolean
   onOpenWeb: () => void
   /** Shows a close button when set (Split View only). */
   onClose?: () => void
@@ -21,6 +23,7 @@ export function RepoHeader({
   // account,
   local = false,
   // compact,
+  hideDescription = false,
   onOpenWeb,
   onClose,
   children
@@ -44,7 +47,9 @@ export function RepoHeader({
           ) : null}
         </div>
       </div>
-      {repo.description && !local ? <p className="m-0 wrap-anywhere">{repo.description}</p> : null}
+      {repo.description && !local && !hideDescription ? (
+        <p className="m-0 wrap-anywhere">{repo.description}</p>
+      ) : null}
     </header>
   )
 }

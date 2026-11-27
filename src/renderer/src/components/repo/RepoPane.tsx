@@ -51,8 +51,8 @@ const TABS: { id: TabName; label: string }[] = [
 /** The last path segment, so a long path does not fill the tab strip. */
 const fileLabel = (path: string): string => path.slice(path.lastIndexOf('/') + 1)
 
-/** A local repository has no host summary, so no Overview. */
-const LOCAL_TABS = TABS.filter((t) => t.id !== 'overview' && t.id !== 'pulls')
+/** A local repository has no host, so no PR/MR. Its Overview shows only what the clone holds. */
+const LOCAL_TABS = TABS.filter((t) => t.id !== 'pulls')
 
 interface RepoPaneProps {
   repo: Repo
@@ -97,12 +97,9 @@ export function RepoPane({
   className
 }: RepoPaneProps) {
   const isLocal = isLocalRepo(repo)
-  // A saved "overview" tab means nothing here: start on the graph. Changes moved into
+  // A saved "pulls" tab means nothing here: start on the graph. Changes moved into
   // the graph as its "// WIP" row, so a saved "changes" tab opens the graph too.
-  const tab =
-    savedTab === 'changes' || (isLocal && (savedTab === 'overview' || savedTab === 'pulls'))
-      ? 'graph'
-      : savedTab
+  const tab = savedTab === 'changes' || (isLocal && savedTab === 'pulls') ? 'graph' : savedTab
   // The open file's tab is local to this pane: it is not saved with the layout.
   const [file, setFile] = useState<FileRequest | null>(null)
   const [fileShown, setFileShown] = useState(false)
@@ -245,6 +242,7 @@ export function RepoPane({
           account={account}
           local={isLocal}
           compact={narrow}
+          hideDescription={tab === 'overview' && !showFile}
           onOpenWeb={() => void openWeb()}
           onClose={split ? onClose : undefined}
         >
@@ -459,10 +457,12 @@ export function RepoPane({
             {tab === 'overview' ? (
               <OverviewTab
                 repo={repo}
-                accountType={account?.type ?? 'github'}
+                account={account}
                 summary={summary}
                 loading={loading}
+                linkedPath={linkedPath}
                 narrow={narrow}
+                local={isLocal}
               />
             ) : (
               <InfoTab

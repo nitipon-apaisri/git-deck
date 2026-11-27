@@ -88,6 +88,11 @@ export async function getJson<T>(url: string, headers: Headers_ = {}): Promise<T
   return readJson<T>(await request(url, headers))
 }
 
+/** A raw text body, such as a file from GitLab's `/raw` endpoint. */
+export async function getText(url: string, headers: Headers_ = {}): Promise<string> {
+  return (await request(url, headers)).text()
+}
+
 export async function postJson<T>(
   url: string,
   headers: Headers_,
