@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useState } from 'react'
 import type { GraphRow } from '@shared/graph-layout'
 import type { AccountType, GraphCommit } from '@shared/types'
 import {
@@ -7,6 +7,7 @@ import {
   authorLabel,
   type BadgeView,
   type BranchCheck,
+  type RefPill,
   commitDateText,
   commitDateTitle,
   edgePath,
@@ -64,6 +65,8 @@ interface GraphRowViewProps {
   onMenu?: (commit: GraphCommit, at: { x: number; y: number }, ref: BadgeView | null) => void
   /** Double-click on a badge. Absent: badges do nothing. */
   onActivate?: (badge: BadgeView) => void
+  /** The branch a commit with no refs sits on, by row index. Called on hover only. */
+  ghostFor?: (index: number) => RefPill | null
 }
 
 /** Lane drawing for one row: lines first, then the node on top. */
@@ -130,9 +133,11 @@ function GraphRowViewBase({
   id,
   onSelect,
   onMenu,
-  onActivate
+  onActivate,
+  ghostFor
 }: GraphRowViewProps) {
   const { commit } = row
+  const [hovered, setHovered] = useState(false)
   if (isWipHash(commit.hash)) {
     return (
       <div
@@ -167,6 +172,7 @@ function GraphRowViewBase({
   }
   const author = authorLabel(commit.author, commit.email)
   const pills = refPills(commit.refs, defaultBranch)
+  const ghost = hovered && pills.length === 0 && ghostFor ? ghostFor(index) : null
   return (
     <div
       id={id}
@@ -178,6 +184,8 @@ function GraphRowViewBase({
       data-selected={selected ? 'true' : undefined}
       style={{ top: index * ROW_HEIGHT, height: ROW_HEIGHT }}
       onClick={() => onSelect(commit.hash)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       onContextMenu={
         onMenu
           ? (event) => {
@@ -190,6 +198,7 @@ function GraphRowViewBase({
     >
       <RefPills
         pills={pills}
+        ghost={ghost}
         host={host}
         ci={ci}
         onActivate={onActivate}
@@ -204,7 +213,10 @@ function GraphRowViewBase({
             : undefined
         }
       />
-      <div className="w-(--col-graph) flex-none overflow-hidden">
+      <div
+        className="w-(--col-graph) flex-none overflow-hidden"
+        title={pills.map((p) => p.title).join('\n') || undefined}
+      >
         <Lanes row={row} lanes={lanes} />
       </div>
       <span className="min-w-0 flex-[1_0_12ch] truncate" title={commit.subject}>

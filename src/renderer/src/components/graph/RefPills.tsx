@@ -16,6 +16,8 @@ interface RefPillsProps {
   onMenu?: (event: React.MouseEvent, badge: BadgeView) => void
   /** Double-click on a pill, or a pick from the "+n" list. */
   onActivate?: (badge: BadgeView) => void
+  /** The branch a ref-less commit sits on, drawn faded while the pointer is over the row. */
+  ghost?: RefPill | null
 }
 
 // The checked-out branch keeps its own colour, filled solid: the kind's text colour becomes the
@@ -53,8 +55,21 @@ function Marks({ pill, host }: { pill: RefPill; host: AccountType | null }) {
 }
 
 /** The first pill (name cut with "…") and a "+n" for the rest. The column is a container. */
-export function RefPills({ pills, host, ci, onMenu, onActivate }: RefPillsProps) {
+export function RefPills({ pills, host, ci, onMenu, onActivate, ghost }: RefPillsProps) {
   const [first, ...rest] = pills
+  if (!first && ghost) {
+    return (
+      <span className="@container flex w-(--col-refs) flex-none items-center overflow-hidden">
+        <span
+          className={cn(PILL, REF_KINDS[ghost.kind], 'pointer-events-none font-medium opacity-50')}
+          aria-hidden="true"
+        >
+          <span className={NAME}>{ghost.name}</span>
+          <Marks pill={ghost} host={host} />
+        </span>
+      </span>
+    )
+  }
   return (
     <span className="@container flex w-(--col-refs) flex-none items-center gap-1 overflow-hidden">
       {first ? (
