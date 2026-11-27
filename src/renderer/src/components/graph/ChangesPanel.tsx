@@ -218,7 +218,7 @@ export function ChangesPanel({
             value={message}
             disabled={busy}
             className={cn(
-              'bg-(--window) ring-1 ring-(--line) focus-visible:ring-(--accent)',
+              'bg-(--island) ring-1 ring-(--line) focus-visible:ring-(--accent)',
               aiEnabled && 'pr-10'
             )}
             onChange={(e) => setMessage(e.target.value)}
