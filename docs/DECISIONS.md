@@ -8,6 +8,17 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-27: Overview tab for local repositories
+
+- **Question:** Local repositories had no Overview tab and opened on Graph. Should they get one, and what can it show without a host?
+- **Options considered:** not recorded. The commit message gives the decision only.
+- **Decision and why:**
+  - A clone-only Overview (commit cc80579). It shows the README, the 12-month commit heatmap, the latest tags and the About rows the clone can fill. Languages and contributors are hidden. License, created and size show "—". Nothing is read from a host.
+  - Local tabs are Overview, Graph and Info. PR/MR stays hidden.
+  - A saved PR/MR tab on a local repository opens on Graph (`RepoPane.tsx`).
+  - Still left out: languages and contributors from git alone.
+- **Not verified:** the Overview was not run in a window, so the "—" values and the README and heatmap output were read from code only. Not verified: which tab a newly opened local repository starts on.
+
 ## 2026-11-27: README sync for the narrow pane threshold (640 to 760 px)
 
 - **Question:** `NARROW_PANE` in `src/renderer/src/lib/splitLayout.ts` moved from 640 to 760 px on `fix/split-header-narrow` (commit 2c48520), so panes under 760 px use the compact layout (no Author and Date columns, icon-only header buttons). Does README need to say so?
@@ -149,8 +160,8 @@ Newest first. Template:
 - **Decision and why:**
   - Yes. Open adds a local-only repository: main resolves the folder's git root, gives it the key `local:<12 hex of sha1(root)>` (so the same folder is one entry) and stores it in `config.json` (`localRepos`) plus the existing `links` table. Because every read-only git call is gated by that table, the graph, Info, Fetch and Reveal work unchanged.
   - A real account id is a UUID, so `local` cannot collide with one. `local.unlink` refuses local keys and `local.remove` refuses everything else.
-  - Local repositories show under a "Local" group at the top of the sidebar, have no Overview tab (no host summary), no Open on web and no Unlink, and open on the Graph tab. Remove only forgets the entry.
-  - Left out: local repositories in Projects, an Overview built from git alone, matching a folder's remote to an account repository, and drag-and-drop of a folder.
+  - Local repositories show under a "Local" group at the top of the sidebar, have no PR/MR tab (no host), no Open on web and no Unlink. Remove only forgets the entry. Amended 2026-11-27: they now have a clone-only Overview tab.
+  - Left out: local repositories in Projects, languages and contributors for local repositories, matching a folder's remote to an account repository, and drag-and-drop of a folder.
   - Not checked in the window: the native folder picker itself (the service tests use a fake picker), and Windows and Linux paths.
 
 ## 2026-11-06: Settings, accents, fonts and motion
