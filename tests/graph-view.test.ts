@@ -499,7 +499,7 @@ test('laneBranchPill names the branch at the tip of the commit lane', () => {
   assert.equal(laneBranchPill(list, 4, 'main')?.name, 'main')
 })
 
-test('laneBranchPill is null when the lane opened at a merge with no branch ref on it', () => {
+test('laneBranchPill names the merging branch when the merged branch has no ref', () => {
   const layout = new GraphLayout()
   const list = layout.add([
     commitAt('m2', ['m1', 's1'], [ref('main', 'branch', true)]),
@@ -507,5 +507,11 @@ test('laneBranchPill is null when the lane opened at a merge with no branch ref 
     commitAt('s1', ['m0']),
     commitAt('m0', [])
   ])
-  assert.equal(laneBranchPill(list, 2, 'main'), null)
+  assert.equal(laneBranchPill(list, 2, 'main')?.name, 'main')
+})
+
+test('laneBranchPill is null for a ref-less tip nothing merged', () => {
+  const list = new GraphLayout().add([commitAt('a', ['b']), commitAt('b', [])])
+  assert.equal(laneBranchPill(list, 0, 'main'), null)
+  assert.equal(laneBranchPill(list, 1, 'main'), null)
 })

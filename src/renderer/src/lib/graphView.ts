@@ -259,8 +259,9 @@ export function refPills(refs: readonly GraphRef[], defaultBranch: string): RefP
 
 /**
  * The branch a commit is drawn on, for the faded pill shown while the pointer is over a commit with
- * no refs of its own: the branch ref at the tip of the commit's lane. Walks up the lane. Null when
- * the lane starts at a merge's second parent (the branch is gone) or its tip has no branch.
+ * no refs of its own: the branch ref at the tip of the commit's lane. Walks up the lane. When the
+ * lane starts at a merge's second parent (the branch was deleted) it names the branch that merged
+ * it. Null when the tip has no branch.
  */
 export function laneBranchPill(
   rows: readonly GraphRow[],
@@ -281,7 +282,8 @@ export function laneBranchPill(
       r.edges.some((e) => e.part === 'bottom' && e.to === lane) &&
       !r.edges.some((e) => e.part === 'through' && e.from === lane)
     ) {
-      return null
+      // The branch is gone: name the one that merged it.
+      return laneBranchPill(rows, k, defaultBranch)
     }
   }
   return null
