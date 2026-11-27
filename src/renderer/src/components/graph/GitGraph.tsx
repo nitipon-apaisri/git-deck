@@ -20,6 +20,7 @@ import type {
   DiffRequest,
   GraphCommit,
   HunkRequest,
+  MergeMode,
   ResetMode
 } from '@shared/types'
 import { errorMessage } from '../../lib/errors'
@@ -86,7 +87,7 @@ export interface GraphMenuOps {
   createBranch: (startPoint: string, startLabel: string) => void
   renameBranch: (name: string) => void
   cherryPick: (hash: string) => void
-  merge: (branch: string, noFf: boolean) => void
+  merge: (branch: string, mode: MergeMode) => void
   rebase: (onto: string) => void
   /** Opens the interactive rebase dialog on the commits after `base`. */
   rebaseInteractive: (base: string) => void
@@ -294,7 +295,7 @@ export function GitGraph({
       case 'fast-forward-branch':
         return menuOps.fastForwardBranch(action.name)
       case 'merge':
-        return menuOps.merge(action.branch, action.noFf)
+        return menuOps.merge(action.branch, action.mode)
       case 'cherry-pick':
         return menuOps.cherryPick(action.hash)
       case 'rebase':

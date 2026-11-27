@@ -10,6 +10,7 @@ import type {
   ConflictAction,
   ConflictRequest,
   HunkRequest,
+  MergeMode,
   RebaseTodoItem,
   PullMode,
   BranchDeleteItem,
@@ -123,8 +124,8 @@ export function buildHandlers(api: MainApi): Record<RequestChannel, Handler> {
     localStashDrop: ([path, index, hash]) =>
       api.local.stashDrop(path as string, index as number, hash as string),
     localCherryPick: ([path, hash]) => api.local.cherryPick(path as string, hash as string),
-    localMerge: ([path, branch, noFf]) =>
-      api.local.merge(path as string, branch as string, noFf as boolean),
+    localMerge: ([path, branch, mode]) =>
+      api.local.merge(path as string, branch as string, mode as MergeMode),
     localTags: ([path]) => api.local.tags(path as string),
     localCreateTag: ([path, name, hash, message]) =>
       api.local.createTag(

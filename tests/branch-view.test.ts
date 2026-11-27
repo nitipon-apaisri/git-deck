@@ -137,9 +137,13 @@ const ids = (items: { id: string }[]): string[] => items.map((i) => i.id)
 
 test('refActions offers merge for other branches and remote branches, not the current one', () => {
   const other = refActions({ kind: 'branch', name: 'feature' }, 'abc1234', ctx)
-  assert.ok(ids(other).includes('merge') && ids(other).includes('merge-no-ff'))
+  assert.ok(
+    ids(other).includes('merge') &&
+      ids(other).includes('merge-no-ff') &&
+      ids(other).includes('merge-squash')
+  )
   const merge = other.find((i) => i.id === 'merge')
-  assert.deepEqual(merge?.action, { type: 'merge', branch: 'feature', noFf: false })
+  assert.deepEqual(merge?.action, { type: 'merge', branch: 'feature', mode: 'ff' })
   assert.equal(merge?.label, 'Merge into main')
   assert.equal(other.find((i) => i.id === 'merge-no-ff')?.action.type, 'merge')
 
@@ -251,7 +255,7 @@ test('refActions: a remote branch can be deleted on its remote, the selector has
   })
   assert.equal(remote.find((i) => i.id === 'delete-remote')?.danger, true)
   // Without a hash only ref actions remain: no commit, reset or hash copy.
-  assert.ok(remote.every((i) => i.group === 'ref'))
+  assert.ok(remote.every((i) => i.group !== 'commit'))
   assert.ok(!ids(remote).includes('reset-hard') && !ids(remote).includes('copy-hash'))
   const local = refActions({ kind: 'branch', name: 'topic' }, null, ctx)
   assert.deepEqual(
@@ -264,8 +268,8 @@ test('refActions: a remote branch can be deleted on its remote, the selector has
 test('menuLayout: ref and commit actions, then Reset and Copy submenus', () => {
   const rows = menuLayout(refActions({ kind: 'branch', name: 'feature' }, 'abc1234', ctx), 'main')
   const kinds = rows.map((r) => r.kind)
-  // A rule between the ref and commit groups, and another before the submenus.
-  assert.equal(kinds.filter((k) => k === 'separator').length, 2)
+  // A rule between branch, remote, merge and commit groups, and another before the submenus.
+  assert.equal(kinds.filter((k) => k === 'separator').length, 4)
   assert.deepEqual(kinds.slice(-2), ['submenu', 'submenu'])
   const reset = rows.find((r) => r.kind === 'submenu' && r.id === 'reset')
   assert.ok(reset?.kind === 'submenu')

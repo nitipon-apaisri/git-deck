@@ -8,6 +8,17 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-27: README sync for squash merge and menu dividers
+
+- **Question:** the branch adds "Merge into <branch> (squash)" to the branch menu and new menu dividers. Does README need to say so, and where?
+- **Options considered:** a Features table change (the "Change" row already names merge); a bullet under More detail; a Known limits line for a squash that conflicts; no change, since menu dividers are not a feature.
+- **Decision and why:**
+  - A "Merge" bullet under More detail (History operations). It names the three merge modes, that a squash makes one commit with no dialog, and that a squash that conflicts is undone and reported.
+  - A Known limits line: a squash conflict is not resolved in the app. The "Resolve" row stays as it is, since it is still true for other merges.
+  - No change for the menu dividers. They are visual only and the README does not describe the menu layout.
+  - Progress is unchanged. PLAN.md has 222 ticked boxes and none open, and the squash merge is not a phase.
+- **Not verified:** the squash flow and its conflict undo in a running window. This sync was done from the branch's `git diff develop...HEAD --stat`, the DECISIONS entry "Squash merge in the branch menu" The source files were not read and nothing was run.
+
 ## 2026-11-27: Overview tab for local repositories
 
 - **Question:** Local repositories had no Overview tab and opened on Graph. Should they get one, and what can it show without a host?
@@ -726,3 +737,11 @@ Layout follows `docs/ui-boards/RepoOverview.dc.html` (wide) and `RepoOverviewNar
 - **Removed:** the eight stat cards (`statItems`), as the plan says. Stars, forks and open issues are no longer shown in the repo pane; open PRs/MRs stay in the project overview and the PR/MR tab, local branch counts in Info.
 - **Tags:** About shows the latest 3 tags (`MAX_TAGS`), then "+n" for the rest of the summary's tag count.
 - **Heatmap:** the grid, tooltip and legend moved from `HomeProfile` into `ui/Heatmap.tsx`, shared by both screens.
+
+## Squash merge in the branch menu
+
+- **Option, not a rule change:** "Merge into <branch> (squash)" is a third merge entry beside the fast-forward and no-fast-forward ones. The project's own merges to `develop` still use `--no-ff`.
+- **Mode:** the `noFf` flag became `MergeMode` (`'ff' | 'no-ff' | 'squash'`) through the IPC, service and `git.merge`.
+- **Commit:** `git merge --squash` only stages, so GitDeck commits at once as `🔀 (merge): Squash merge <branch>`. No message dialog. An already-merged branch stops with "Nothing to merge".
+- **Conflicts:** a squash leaves no `MERGE_HEAD`, so the operation banner cannot track it. A conflict is undone (`reset --merge`) and reported; the user merges normally to resolve it. Upgrade if users ask to resolve a squash in the app.
+- **Menu rules:** separators now fall between Check out / Delete, Push / Fast-forward, the merge and rebase entries, and the commit actions.

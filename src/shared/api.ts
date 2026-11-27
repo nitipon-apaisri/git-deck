@@ -24,6 +24,7 @@ import type {
   ConflictFile,
   ConflictRequest,
   ConflictSaveResult,
+  MergeMode,
   OperationResult,
   RebasePlan,
   RebaseTodoItem,
@@ -203,8 +204,8 @@ export interface Api {
     stashDrop(path: string, index: number, hash: string): Promise<boolean>
     /** `conflicted` means it stopped: read `operation`, then continue or abort. */
     cherryPick(path: string, hash: string): Promise<OperationResult>
-    /** `branch` is local or remote (`origin/x`). `noFf` always makes a merge commit. */
-    merge(path: string, branch: string, noFf: boolean): Promise<OperationResult>
+    /** `branch` is local or remote (`origin/x`). */
+    merge(path: string, branch: string, mode: MergeMode): Promise<OperationResult>
     tags(path: string): Promise<TagEntry[]>
     /** `hash` is a commit, or `null` for HEAD. A message makes an annotated tag. */
     createTag(

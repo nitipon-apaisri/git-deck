@@ -1,6 +1,6 @@
 // Pure: no DOM, so it runs under tsx tests. Decides what the branch menu and the
 // Push and Pull buttons show for one repository.
-import type { BranchList, GraphRef, LocalBranch, ResetMode } from '../../../shared/types'
+import type { BranchList, GraphRef, LocalBranch, MergeMode, ResetMode } from '../../../shared/types'
 
 export function currentBranch(list: BranchList | null): LocalBranch | null {
   return list?.local.find((b) => b.current) ?? null
@@ -108,7 +108,7 @@ export type RefAction =
   | { type: 'delete-remote-branch'; name: string }
   | { type: 'push-branch'; name: string }
   | { type: 'fast-forward-branch'; name: string }
-  | { type: 'merge'; branch: string; noFf: boolean }
+  | { type: 'merge'; branch: string; mode: MergeMode }
   | { type: 'cherry-pick'; hash: string }
   | { type: 'create-tag'; hash: string }
   | { type: 'bisect-bad'; hash: string }
@@ -124,8 +124,8 @@ export interface RefActionItem {
   label: string
   action: RefAction
   danger?: boolean
-  /** A separator goes before this item. */
-  group: 'ref' | 'commit'
+  /** A separator goes where the group changes. */
+  group: 'branch' | 'remote' | 'merge' | 'ref' | 'commit'
   /** Shown inside a submenu with this name instead of at the top level. */
   submenu?: 'reset' | 'copy'
 }
@@ -161,35 +161,35 @@ export function refActions(
         id: 'rename',
         label: 'Rename…',
         action: { type: 'rename-branch', name: ref.name },
-        group: 'ref'
+        group: 'branch'
       })
     } else {
       items.push({
         id: 'checkout',
         label: 'Check out',
         action: { type: 'checkout-branch', name: ref.name },
-        group: 'ref'
+        group: 'branch'
       })
       items.push({
         id: 'delete',
         label: 'Delete…',
         action: { type: 'delete-branch', name: ref.name },
         danger: true,
-        group: 'ref'
+        group: 'branch'
       })
     }
     items.push({
       id: 'push',
       label: 'Push to remote',
       action: { type: 'push-branch', name: ref.name },
-      group: 'ref'
+      group: 'remote'
     })
     if (!ref.current) {
       items.push({
         id: 'fast-forward',
         label: 'Fast-forward from remote',
         action: { type: 'fast-forward-branch', name: ref.name },
-        group: 'ref'
+        group: 'remote'
       })
     }
   } else if (ref?.kind === 'remote') {
@@ -197,14 +197,14 @@ export function refActions(
       id: 'checkout',
       label: 'Check out as a tracking branch',
       action: { type: 'checkout-remote', name: ref.name },
-      group: 'ref'
+      group: 'branch'
     })
     items.push({
       id: 'delete-remote',
       label: 'Delete on the remote…',
       action: { type: 'delete-remote-branch', name: ref.name },
       danger: true,
-      group: 'ref'
+      group: 'branch'
     })
   }
   if (
@@ -217,20 +217,26 @@ export function refActions(
       {
         id: 'merge',
         label: `Merge into ${context.currentBranch}`,
-        action: { type: 'merge', branch: ref.name, noFf: false },
-        group: 'ref'
+        action: { type: 'merge', branch: ref.name, mode: 'ff' },
+        group: 'merge'
       },
       {
         id: 'merge-no-ff',
         label: `Merge into ${context.currentBranch} (no fast-forward)`,
-        action: { type: 'merge', branch: ref.name, noFf: true },
-        group: 'ref'
+        action: { type: 'merge', branch: ref.name, mode: 'no-ff' },
+        group: 'merge'
+      },
+      {
+        id: 'merge-squash',
+        label: `Merge into ${context.currentBranch} (squash)`,
+        action: { type: 'merge', branch: ref.name, mode: 'squash' },
+        group: 'merge'
       },
       {
         id: 'rebase',
         label: `Rebase ${context.currentBranch} onto this branch`,
         action: { type: 'rebase', onto: ref.name },
-        group: 'ref'
+        group: 'merge'
       }
     )
   }
