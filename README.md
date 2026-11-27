@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="build/icon.svg" alt="GitDeck" width="128" height="128" />
+<img src="build/icons/sun.png" alt="GitDeck" width="128" height="128" />
 
 # GitDeck
 
