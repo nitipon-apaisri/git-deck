@@ -133,7 +133,7 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
           Accent colour ({shown})
         </h3>
         <p className={HINT}>
-          Used for the primary button, selection and focus ring. Dark and light each keep their own.
+          Used for the primary button, selection and focus ring. Each theme keeps its own.
         </p>
         <div role="radiogroup" aria-labelledby="set-accent" className="flex items-center gap-3">
           {ACCENTS.map((a, index) => (
@@ -164,7 +164,7 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
           Font family
         </h3>
         <p className={HINT}>Applies to the whole app. Code and hashes stay monospaced.</p>
-        <div role="radiogroup" aria-labelledby="set-font" className={cn(GROUP, 'grid-cols-4')}>
+        <div role="radiogroup" aria-labelledby="set-font" className={cn(GROUP, 'grid-cols-2')}>
           {FONTS.map((f, index) => (
             <button
               key={f.id}
@@ -195,7 +195,7 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
         <p className={HINT}>
           Changes the Dock and window icon while GitDeck runs. The icon in Finder stays the same.
         </p>
-        <div role="radiogroup" aria-labelledby="set-icon" className={cn(GROUP, 'grid-cols-4')}>
+        <div role="radiogroup" aria-labelledby="set-icon" className={cn(GROUP, 'grid-cols-3')}>
           {APP_ICONS.map((icon, index) => (
             <button
               key={icon.id}

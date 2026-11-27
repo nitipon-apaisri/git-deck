@@ -4,7 +4,7 @@ export type ThemeSetting = 'system' | 'dark' | 'light' | 'warm'
 export type ResolvedTheme = 'dark' | 'light' | 'warm'
 
 export const THEME_KEY = 'gitdeck.theme'
-export const THEME_SETTINGS: readonly ThemeSetting[] = ['system', 'dark', 'light', 'warm']
+export const THEME_SETTINGS: readonly ThemeSetting[] = ['system', 'light', 'dark', 'warm']
 
 export interface KeyValueStore {
   getItem(key: string): string | null
