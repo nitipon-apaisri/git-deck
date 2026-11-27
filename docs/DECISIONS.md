@@ -8,6 +8,17 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-27: macOS installer window (DMG design E-1 Sunrise)
+
+- **Question:** how the DMG installer window is built, what is tied to what, and whether README must change.
+- **Options considered:** keep the SVG source in the repo and render it at build time; ship a pre-rendered PNG; add a Windows NSIS installer with the same look.
+- **Decision and why:**
+  - Design E-1 "Sunrise", in the Sun colours. The background is a pre-rendered PNG: `build/background.png` and `build/background@2x.png`, 660 x 400, with a commit line between the app and Applications. The SVG source is not kept in the repo.
+  - The `dmg` block in `electron-builder.yml` sets the window to 660 x 400, icon size 80, the volume icon to `build/icon.icns`, and the icon positions to x 180 and x 480 at y 210. These are icon centres, on the ends of the commit line in the image. Changing the image layout or those positions means changing both.
+  - macOS DMG only. There is no Windows NSIS installer. Windows and Linux are not packaged, as README already says.
+  - README: no change. Install still says to drag GitDeck to Applications, which the window now shows. Known limits already says Windows and Linux are not packaged. Features and Progress are unchanged, and PLAN.md has no box for this work.
+- **Not verified:** the user reports the window was checked in a mounted DMG. This entry was written from `electron-builder.yml` and the branch diff stat. The PNG files were not opened and the DMG was not built here.
+
 ## 2026-11-27: README sync for the app icon picker
 
 - **Question:** commit 19f6410 adds an app icon choice in Settings > Appearance. How should README describe it, and what must it say it does not change?
