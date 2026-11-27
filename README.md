@@ -208,7 +208,7 @@ Most of the total is cache reads, which are billed at a much lower rate, so the 
 
 ## Progress
 
-**45 of 45 phases done.** Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
+**45 of 46 phases done.** Tick a phase here when its PLAN.md checkboxes are done and its branch is merged.
 
 <details>
 <summary>Phase checklist</summary>
@@ -258,5 +258,6 @@ Most of the total is cache reads, which are billed at a much lower rate, so the 
 - [x] Phase 41: Hide branches and tags
 - [x] Phase 42: Git worktrees
 - [x] Phase 43: Home profile
+- [ ] Phase 44: Repo Overview dashboard
 
 </details>
