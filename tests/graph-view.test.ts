@@ -27,6 +27,7 @@ import {
   fileTotalsText,
   graphWidth,
   isHeadCommit,
+  laneBranchPill,
   laneTone,
   laneX,
   loadedText,
@@ -469,4 +470,42 @@ test('pillClickable allows branches and remote branches, not tags or HEAD', () =
     [true, true, false]
   )
   assert.equal(pillClickable(refPills([{ name: 'HEAD', kind: 'head' }], 'main')[0]), false)
+})
+
+// lane branch (ghost pill)
+
+const commitAt = (hash: string, parents: string[], refs: GraphRef[] = []): GraphCommit => ({
+  hash,
+  parents,
+  author: 'A',
+  email: 'a@x',
+  date: 0,
+  refs,
+  subject: hash
+})
+
+test('laneBranchPill names the branch at the tip of the commit lane', () => {
+  // main: m2 (main) -> m1 -> m0, and side: s1 (feat) -> s0, merged into m2 as a second parent.
+  const layout = new GraphLayout()
+  const list = layout.add([
+    commitAt('m2', ['m1', 's1'], [ref('main', 'branch', true)]),
+    commitAt('s1', ['s0'], [ref('feat/x', 'branch')]),
+    commitAt('m1', ['m0']),
+    commitAt('s0', ['m0']),
+    commitAt('m0', [])
+  ])
+  assert.equal(laneBranchPill(list, 2, 'main')?.name, 'main')
+  assert.equal(laneBranchPill(list, 3, 'main')?.name, 'feat/x')
+  assert.equal(laneBranchPill(list, 4, 'main')?.name, 'main')
+})
+
+test('laneBranchPill is null when the lane opened at a merge with no branch ref on it', () => {
+  const layout = new GraphLayout()
+  const list = layout.add([
+    commitAt('m2', ['m1', 's1'], [ref('main', 'branch', true)]),
+    commitAt('m1', ['m0']),
+    commitAt('s1', ['m0']),
+    commitAt('m0', [])
+  ])
+  assert.equal(laneBranchPill(list, 2, 'main'), null)
 })

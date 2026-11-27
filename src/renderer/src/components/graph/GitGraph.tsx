@@ -29,6 +29,7 @@ import { refMenuEntries } from '../../lib/refMenu'
 import {
   badgeCheckoutTarget,
   graphWidth as lanesWidth,
+  laneBranchPill,
   type BadgeView,
   type BranchCheck
 } from '../../lib/graphView'
@@ -253,6 +254,10 @@ export function GitGraph({
   const graphColWidth = graphCol ?? lanesWidth(lanes)
 
   const select = useCallback((hash: string) => setSelectedHash(hash), [])
+  const ghostFor = useCallback(
+    (index: number) => laneBranchPill(rows, index, defaultBranch),
+    [rows, defaultBranch]
+  )
 
   const [menu, setMenu] = useState<{
     x: number
@@ -466,6 +471,7 @@ export function GitGraph({
                   onSelect={select}
                   onMenu={menuOps ? openMenu : undefined}
                   onActivate={menuOps ? activateBadge : undefined}
+                  ghostFor={ghostFor}
                 />
               ))}
             </div>

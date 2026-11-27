@@ -1,5 +1,5 @@
 // Pure view-model helpers for the commit graph. No DOM, so they run under tsx.
-import type { GraphEdge } from '../../../shared/graph-layout'
+import type { GraphEdge, GraphRow } from '../../../shared/graph-layout'
 import type {
   CheckoutTarget,
   CheckState,
@@ -255,6 +255,36 @@ export function refPills(refs: readonly GraphRef[], defaultBranch: string): RefP
   for (const r of remotes) if (!twin.has(r)) pills.push(pill(r, { remote: true }, [r.name]))
   for (const t of views) if (t.refKind === 'tag') pills.push(pill(t, { tag: true }, [t.name]))
   return pills
+}
+
+/**
+ * The branch a commit is drawn on, for the faded pill shown while the pointer is over a commit with
+ * no refs of its own: the branch ref at the tip of the commit's lane. Walks up the lane. Null when
+ * the lane starts at a merge's second parent (the branch is gone) or its tip has no branch.
+ */
+export function laneBranchPill(
+  rows: readonly GraphRow[],
+  index: number,
+  defaultBranch: string
+): RefPill | null {
+  const lane = rows[index].lane
+  for (let k = index; k >= 0; k--) {
+    const r = rows[k]
+    if (r.lane === lane) {
+      const pill = refPills(r.commit.refs, defaultBranch).find(
+        (p) => !p.tag && p.badge.refKind !== 'head'
+      )
+      if (pill) return pill
+      if (!r.edges.some((e) => e.part === 'top')) return null // a tip with no branch
+    } else if (
+      // A merge's second parent opened this lane; a "through" edge means it was already open.
+      r.edges.some((e) => e.part === 'bottom' && e.to === lane) &&
+      !r.edges.some((e) => e.part === 'through' && e.from === lane)
+    ) {
+      return null
+    }
+  }
+  return null
 }
 
 /** What a double-click on a badge checks out: a branch, or a remote branch (git reuses a local twin). HEAD and tags: nothing. */
