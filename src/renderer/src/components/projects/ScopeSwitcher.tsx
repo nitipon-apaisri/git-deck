@@ -65,7 +65,7 @@ export function ScopeSwitcher({ projects, scope, onSelect, onNew, onManage }: Sc
       <button
         ref={button}
         type="button"
-        className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-lg border-0 bg-secondary pr-2.5 pl-1.5 text-left text-foreground hover:bg-accent aria-expanded:bg-(--selection) [&_svg:last-child]:text-muted-foreground aria-expanded:[&_svg:last-child]:text-primary"
+        className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-lg border border-border bg-card pr-2.5 pl-1.5 text-left text-foreground hover:bg-accent aria-expanded:bg-(--selection) [&_svg:last-child]:text-muted-foreground aria-expanded:[&_svg:last-child]:text-primary"
         aria-haspopup="menu"
         aria-expanded={at !== null}
         aria-label={`Scope: ${scope ? scope.name : 'All repositories'}. Change scope`}
