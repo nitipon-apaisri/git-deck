@@ -13,7 +13,7 @@ import {
 } from '../../lib/repoView'
 import { useRepoTags } from '../../state/repoData'
 import { useNow } from '../../state/useNow'
-import { Avatar, Badge, Button, Icon, Skeleton } from '../ui'
+import { Avatar, Badge, Button, Icon, RefBadge, Skeleton } from '../ui'
 import { CARD, CARD_HEADING, CommitsCard, MUTED } from './CommitsCard'
 import { ReadmeCard } from './ReadmeCard'
 
@@ -202,17 +202,18 @@ function AboutCard({
         ) : tags.loading && !tags.data ? (
           <Skeleton width="70%" label="Loading tags" />
         ) : names.length > 0 ? (
-          <ul className="m-0 flex list-none flex-wrap gap-1.5 p-0" aria-label="Latest tags">
+          <ul
+            className="m-0 flex list-none flex-wrap items-center gap-1.5 p-0"
+            aria-label="Latest tags"
+          >
+            {/* The same tag badge as the graph and the Info tab. */}
             {names.map((name) => (
-              <li
-                key={name}
-                className={cn(CHIP, 'hash bg-(--ref-tag-bg) font-mono text-(--ref-tag-fg)')}
-              >
-                {name}
+              <li key={name} className="flex">
+                <RefBadge kind="tag" name={name} maxLength={16} />
               </li>
             ))}
             {tagCount > names.length ? (
-              <li className={cn(MUTED, 'leading-5')}>+{countText(tagCount - names.length)}</li>
+              <li className={MUTED}>+{countText(tagCount - names.length)}</li>
             ) : null}
           </ul>
         ) : (
