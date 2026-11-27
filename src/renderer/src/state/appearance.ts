@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { readAccent, writeAccent, type Accent } from '../lib/accent'
 import { readFont, writeFont, type FontId } from '../lib/font'
+import type { ResolvedTheme } from '../lib/theme'
 import { browserStorage } from './storage'
 
 /** No choice: drop the attribute, so the theme's own default shows. */
@@ -13,8 +14,9 @@ function applyFont(font: FontId): void {
   document.documentElement.dataset['font'] = font
 }
 
-function currentTheme(): 'dark' | 'light' {
-  return document.documentElement.dataset['theme'] === 'dark' ? 'dark' : 'light'
+function currentTheme(): ResolvedTheme {
+  const theme = document.documentElement.dataset['theme']
+  return theme === 'dark' || theme === 'warm' ? theme : 'light'
 }
 
 /** Runs `fn` now and whenever the resolved theme changes (a pick, or the OS flipping). */
@@ -34,7 +36,7 @@ export function initAppearance(): void {
 /** The accent of the theme in use: each theme keeps its own. */
 export function useAccent(): {
   accent: Accent | null
-  theme: 'dark' | 'light'
+  theme: ResolvedTheme
   setAccent: (next: Accent) => void
 } {
   const [theme, setTheme] = useState(currentTheme)

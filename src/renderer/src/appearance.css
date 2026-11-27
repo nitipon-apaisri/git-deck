@@ -22,6 +22,15 @@
   --selection: #2e69dc1f;
   --focus-ring: #1f4fb0;
 }
+:root[data-accent='blue'][data-theme='warm'],
+:root[data-accent='blue'] [data-theme='warm'],
+[data-theme='warm'] [data-accent-dot='blue'] {
+  --primary: #2e69dc;
+  --accent: #2e69dc;
+  --accent-text: #2658c2;
+  --selection: #2e69dc1f;
+  --focus-ring: #1f4fb0;
+}
 
 :root[data-accent='violet'][data-theme='dark'],
 :root[data-accent='violet'] [data-theme='dark'],
@@ -35,6 +44,15 @@
 :root[data-accent='violet'][data-theme='light'],
 :root[data-accent='violet'] [data-theme='light'],
 [data-theme='light'] [data-accent-dot='violet'] {
+  --primary: #6d3fc8;
+  --accent: #6d3fc8;
+  --accent-text: #5b30b0;
+  --selection: #6d3fc81f;
+  --focus-ring: #4c2a9e;
+}
+:root[data-accent='violet'][data-theme='warm'],
+:root[data-accent='violet'] [data-theme='warm'],
+[data-theme='warm'] [data-accent-dot='violet'] {
   --primary: #6d3fc8;
   --accent: #6d3fc8;
   --accent-text: #5b30b0;
@@ -60,6 +78,15 @@
   --selection: #1a7f451f;
   --focus-ring: #115c31;
 }
+:root[data-accent='green'][data-theme='warm'],
+:root[data-accent='green'] [data-theme='warm'],
+[data-theme='warm'] [data-accent-dot='green'] {
+  --primary: #1a7f45;
+  --accent: #1a7f45;
+  --accent-text: #166a3a;
+  --selection: #1a7f451f;
+  --focus-ring: #115c31;
+}
 
 :root[data-accent='rose'][data-theme='dark'],
 :root[data-accent='rose'] [data-theme='dark'],
@@ -79,6 +106,15 @@
   --selection: #c2255c1f;
   --focus-ring: #8f1943;
 }
+:root[data-accent='rose'][data-theme='warm'],
+:root[data-accent='rose'] [data-theme='warm'],
+[data-theme='warm'] [data-accent-dot='rose'] {
+  --primary: #c2255c;
+  --accent: #c2255c;
+  --accent-text: #a81e4e;
+  --selection: #c2255c1f;
+  --focus-ring: #8f1943;
+}
 
 :root[data-accent='orange'][data-theme='dark'],
 :root[data-accent='orange'] [data-theme='dark'],
@@ -92,6 +128,15 @@
 :root[data-accent='orange'][data-theme='light'],
 :root[data-accent='orange'] [data-theme='light'],
 [data-theme='light'] [data-accent-dot='orange'] {
+  --primary: #b4540a;
+  --accent: #b4540a;
+  --accent-text: #9a4608;
+  --selection: #b4540a1f;
+  --focus-ring: #7f3a06;
+}
+:root[data-accent='orange'][data-theme='warm'],
+:root[data-accent='orange'] [data-theme='warm'],
+[data-theme='warm'] [data-accent-dot='orange'] {
   --primary: #b5501a;
   --accent: #b5501a;
   --accent-text: #9a4414;

@@ -36,9 +36,10 @@ const CARD =
 const THEME_LABELS: Record<ThemeSetting, { title: string; sub: string }> = {
   system: { title: 'System', sub: 'Follows your OS' },
   light: { title: 'Light', sub: 'Always light' },
+  warm: { title: 'Warm', sub: 'Soft sand tones' },
   dark: { title: 'Dark', sub: 'Always dark' }
 }
-const THEME_ORDER: readonly ThemeSetting[] = ['system', 'light', 'dark']
+const THEME_ORDER: readonly ThemeSetting[] = ['system', 'light', 'warm', 'dark']
 
 /** Arrow keys move the choice and the focus, like a native radio group. */
 function useRadioKeys<T extends string>(values: readonly T[], value: T, onChange: (v: T) => void) {
@@ -105,7 +106,7 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
           Theme
         </h3>
         <p className={HINT}>System follows your OS appearance.</p>
-        <div role="radiogroup" aria-labelledby="set-theme" className={cn(GROUP, 'grid-cols-3')}>
+        <div role="radiogroup" aria-labelledby="set-theme" className={cn(GROUP, 'grid-cols-2')}>
           {THEME_ORDER.map((value, index) => (
             <button
               key={value}
@@ -194,7 +195,7 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
         <p className={HINT}>
           Changes the Dock and window icon while GitDeck runs. The icon in Finder stays the same.
         </p>
-        <div role="radiogroup" aria-labelledby="set-icon" className={cn(GROUP, 'grid-cols-3')}>
+        <div role="radiogroup" aria-labelledby="set-icon" className={cn(GROUP, 'grid-cols-2')}>
           {APP_ICONS.map((icon, index) => (
             <button
               key={icon.id}

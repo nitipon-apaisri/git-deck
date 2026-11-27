@@ -1,4 +1,4 @@
-import type { ThemeSetting } from '../../lib/theme'
+import type { ResolvedTheme, ThemeSetting } from '../../lib/theme'
 
 const LINE = 'h-1 rounded-[2px] bg-(--line)'
 
@@ -6,7 +6,7 @@ const LINE = 'h-1 rounded-[2px] bg-(--line)'
  * A tiny mock of the app shell. It carries its own `data-theme`, so it draws with that theme's
  * tokens. It uses the raw tokens: they re-resolve inside a `data-theme` element.
  */
-function Mock({ theme }: { theme: 'dark' | 'light' }) {
+function Mock({ theme }: { theme: ResolvedTheme }) {
   return (
     <span
       className="flex h-16 w-full gap-1 rounded-sm bg-(--window) p-[5px]"

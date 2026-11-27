@@ -427,7 +427,8 @@ test('parseAccent and parseFont fall back to the default for anything unknown', 
   assert.equal(parseAccent('hotpink'), null)
   assert.equal(parseAccent(null), null)
   assert.equal(defaultAccent('dark'), 'blue')
-  assert.equal(defaultAccent('light'), 'orange')
+  assert.equal(defaultAccent('light'), 'blue')
+  assert.equal(defaultAccent('warm'), 'orange')
   assert.equal(parseFont('roboto'), 'roboto')
   assert.equal(parseFont('Comic Sans'), 'inter')
   assert.equal(parseFont(undefined), 'inter')
@@ -475,7 +476,7 @@ test('every accent has dark and light overrides for all five tokens', () => {
   const css = readFileSync(new URL('../src/renderer/src/appearance.css', import.meta.url), 'utf8')
   assert.equal(new Set(ACCENTS.map((a) => a.id)).size, ACCENTS.length)
   for (const { id } of ACCENTS) {
-    for (const theme of ['dark', 'light']) {
+    for (const theme of ['dark', 'light', 'warm']) {
       const at = css.indexOf(`:root[data-accent='${id}'][data-theme='${theme}']`)
       assert.ok(at >= 0, `${id} ${theme} block`)
       const block = css.slice(at, css.indexOf('}', at))

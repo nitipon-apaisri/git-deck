@@ -1,9 +1,10 @@
 // Pure theme logic. Storage and the media query are passed in, so tests need no DOM.
-export type ThemeSetting = 'system' | 'dark' | 'light'
-export type ResolvedTheme = 'dark' | 'light'
+export type ThemeSetting = 'system' | 'dark' | 'light' | 'warm'
+/** What `data-theme` holds. "System" resolves to dark or light, never warm. */
+export type ResolvedTheme = 'dark' | 'light' | 'warm'
 
 export const THEME_KEY = 'gitdeck.theme'
-export const THEME_SETTINGS: readonly ThemeSetting[] = ['system', 'dark', 'light']
+export const THEME_SETTINGS: readonly ThemeSetting[] = ['system', 'dark', 'light', 'warm']
 
 export interface KeyValueStore {
   getItem(key: string): string | null
@@ -11,7 +12,7 @@ export interface KeyValueStore {
 }
 
 export function parseThemeSetting(value: string | null | undefined): ThemeSetting {
-  return value === 'dark' || value === 'light' || value === 'system' ? value : 'system'
+  return THEME_SETTINGS.find((t) => t === value) ?? 'system'
 }
 
 export function resolveTheme(setting: ThemeSetting, systemPrefersDark: boolean): ResolvedTheme {
