@@ -23,8 +23,8 @@ const tokenCrypto: TokenCrypto = {
   decrypt: (data) => safeStorage.decryptString(data)
 }
 
-// Icons: build/icon.{icns,ico,png} plus build/icons/*.png (see appIcon.ts). The PNG is used for the
-// window on Windows/Linux and the dock on macOS; the packaged macOS file icon stays icon.icns.
+// Icons: build/icons/*.png (see appIcon.ts) set the window and the dock; the packaged macOS file icon
+// is build/icon.icns, a copy of the default (sun).
 function createWindow(saved: WindowState, iconPath: string): BrowserWindow {
   const dir = app.getPath('userData')
   const start = fitToDisplays(

@@ -8,7 +8,6 @@ import { useAccent, useFont } from '../../state/appearance'
 import { Icon } from '../ui'
 import { ThemePreview } from './ThemePreview'
 import { cn } from '@/lib/cn'
-import defaultIcon from '../../../../../build/icon.png'
 import ember from '../../../../../build/icons/ember.png'
 import honey from '../../../../../build/icons/honey.png'
 import lantern from '../../../../../build/icons/lantern.png'
@@ -17,7 +16,6 @@ import sun from '../../../../../build/icons/sun.png'
 import sunset from '../../../../../build/icons/sunset.png'
 
 const ICON_SRC: Record<AppIconId, string> = {
-  default: defaultIcon,
   ember,
   honey,
   lantern,

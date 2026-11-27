@@ -5,7 +5,6 @@ directories:
 files:
   - out/**
   - package.json
-  - build/icon.png
   - build/icons/*.png
 # node-pty loads a native addon and spawn-helper: both must live outside app.asar.
 asarUnpack:

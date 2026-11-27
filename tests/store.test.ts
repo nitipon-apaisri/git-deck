@@ -178,7 +178,7 @@ test('notifications are on by default and the switch survives a reload', async (
 
 test('app icon defaults, survives a reload and falls back on an unknown id', async () => {
   const { store, dir } = await newStore()
-  assert.equal(store.getAppIcon(), 'default')
+  assert.equal(store.getAppIcon(), 'sun')
   await store.setAppIcon('sunset')
   const again = new Store(dir, fakeCrypto())
   await again.load()
