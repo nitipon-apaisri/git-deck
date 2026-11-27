@@ -151,6 +151,20 @@
       "w": 520,
       "h": 1720,
       "title": "Repo overview, narrow pane (Split View, under 760px)"
+    },
+    "Logo.dc.html": {
+      "x": 0,
+      "y": 11660,
+      "w": 1280,
+      "h": 860,
+      "title": "App icon"
+    },
+    "LogoCombinations.dc.html": {
+      "x": 1360,
+      "y": 11660,
+      "w": 1280,
+      "h": 960,
+      "title": "App icon: palette combinations"
     }
   },
   "order": [
@@ -171,7 +185,9 @@
     "HomeProfile.dc.html",
     "HomeProfileLight.dc.html",
     "RepoOverview.dc.html",
-    "RepoOverviewNarrow.dc.html"
+    "RepoOverviewNarrow.dc.html",
+    "Logo.dc.html",
+    "LogoCombinations.dc.html"
   ],
   "notes": {
     "t1": {
@@ -229,6 +245,13 @@
       "text": "Repo overview dashboard: wide and narrow (dark)",
       "kind": "title1",
       "maxW": 1720
+    },
+    "t9": {
+      "x": 0,
+      "y": 11420,
+      "text": "App icon: Sun, and palette combinations",
+      "kind": "title1",
+      "maxW": 2640
     }
   },
   "designSystems": []
