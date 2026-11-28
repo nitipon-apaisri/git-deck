@@ -81,6 +81,7 @@ export function ProjectFormDialog({
   const [iconQuery, setIconQuery] = useState('')
   const [color, setColor] = useState(editing?.color ?? PROJECT_COLORS[0])
   const [repoQuery, setRepoQuery] = useState('')
+  const [hostFilter, setHostFilter] = useState('all')
   const [chosen, setChosen] = useState<Set<string>>(
     () => new Set(editing ? editing.repoKeys : initialRepoKeys)
   )
@@ -107,15 +108,19 @@ export function ProjectFormDialog({
   const { groups, missing } = useMemo(
     () =>
       pickerGroups(
-        accounts.map((a) => a.id),
+        accounts.filter((a) => hostFilter === 'all' || a.id === hostFilter).map((a) => a.id),
         reposByAccount,
         chosen,
-        repoQuery
+        repoQuery,
+        Object.fromEntries(accounts.map((a) => [a.id, `${a.label} ${a.host}`]))
       ),
-    [accounts, reposByAccount, chosen, repoQuery]
+    [accounts, reposByAccount, chosen, repoQuery, hostFilter]
   )
 
-  const pickerRows = useMemo(() => flattenPicker(groups, missing), [groups, missing])
+  const pickerRows = useMemo(
+    () => flattenPicker(groups, hostFilter === 'all' ? missing : []),
+    [groups, missing, hostFilter]
+  )
   const pickerRef = useRef<HTMLDivElement>(null)
   const picker = useVirtualizer({
     count: pickerRows.length,
@@ -409,6 +414,19 @@ export function ProjectFormDialog({
                 {chosen.size} selected
               </span>
             </div>
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by host">
+              {[{ id: 'all', label: 'All' }, ...accounts].map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  aria-pressed={hostFilter === a.id}
+                  className="h-7 cursor-pointer rounded-full border border-border bg-transparent px-3 text-[12px] text-foreground hover:bg-accent aria-pressed:border-(--accent) aria-pressed:bg-(--selection) aria-pressed:text-(--accent-text)"
+                  onClick={() => setHostFilter(a.id)}
+                >
+                  {a.label}
+                </button>
+              ))}
+            </div>
             <div
               ref={pickerRef}
               className="max-h-96 overflow-y-auto rounded-lg border border-border"
@@ -430,7 +448,7 @@ export function ProjectFormDialog({
                   </div>
                 ))}
               </div>
-              {groups.length === 0 && missing.length === 0 ? (
+              {pickerRows.length === 0 ? (
                 <p className="m-0 p-3 text-muted-foreground">
                   {repoQuery.trim() !== ''
                     ? `No repositories match “${repoQuery.trim()}”.`

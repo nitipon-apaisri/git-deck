@@ -108,7 +108,8 @@ export function pickerGroups(
   accountIds: readonly string[],
   reposByAccount: Readonly<Record<string, readonly Repo[]>>,
   chosen: ReadonlySet<string>,
-  query: string
+  query: string,
+  hostText: Readonly<Record<string, string>> = {}
 ): { groups: RepoGroup[]; missing: string[] } {
   const q = query.trim().toLowerCase()
   const known = new Set<string>()
@@ -116,10 +117,12 @@ export function pickerGroups(
   for (const accountId of accountIds) {
     const all = reposByAccount[accountId] ?? []
     for (const r of all) known.add(r.key)
+    const hostHit = q !== '' && (hostText[accountId] ?? '').toLowerCase().includes(q)
     const repos = all
       .filter(
         (r) =>
           q === '' ||
+          hostHit ||
           r.name.toLowerCase().includes(q) ||
           r.fullName.toLowerCase().includes(q) ||
           r.description.toLowerCase().includes(q)
