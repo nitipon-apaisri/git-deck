@@ -18,8 +18,9 @@ You write project documents. Follow `CLAUDE.md` and `AGENTS.md`.
 
 Run before a branch merges to `develop`, and before `/stage` and `/release`.
 
-- Use Bash only for read-only git: `git log develop..HEAD --oneline`, `git diff develop...HEAD --stat`, `git log <last tag>..HEAD`. Never run anything else.
+- Use Bash only for read-only git: `git log develop..HEAD --oneline`, `git diff develop...HEAD --stat`, `git log <last tag>..HEAD`. The one other command is `pnpm usage` (prints the token-use block and updates `docs/token-usage.json`, this machine's entry only; report that file as changed). Never run anything else.
 - Update only `README.md` Features (table and "More detail"), Install, Known limits and the Progress checklist. Tick a phase only when its `PLAN.md` boxes are ticked; refresh the "N of M phases done" line. Remove a "not planned" item when it has shipped.
 - Keep the style: centred header, short intro, a table for Features, long reference inside `<details>`, no external badge images, no screenshots unless the files exist. Keep the heading names (`#security-model`, `#known-limits-and-roadmap`, `#features`, `#install`).
+- Replace the intro sentence, table and closing sentence under `## Built with Claude Code` with the output of `pnpm usage`, unchanged. If it fails, leave the section and log why in `docs/DECISIONS.md`.
 - Add only what the diff or `CHANGELOG.md` shows. If a change is unclear, leave the README as is and log it in `docs/DECISIONS.md`.
 - Report what you changed and what you could not verify. The caller commits it as `📝 (docs): sync README`.

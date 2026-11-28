@@ -39,7 +39,7 @@ Desktop Git client (Electron + React + TypeScript) for GitHub, GitLab.com and se
 - Names: `phase/<n>-<slug>` for a PLAN.md phase (for example `phase/1-scaffold`), `feat/<slug>` for a feature, `fix/<slug>` for a bug fix, `chore/<slug>` for tooling or docs.
 - Finish a branch by running its Verify steps, ticking the PLAN.md boxes and the `README.md` progress checklist, then stop. Merging to `develop` is the user's call. Never push.
 - Merge with `git merge --no-ff <branch>`, never fast-forward, so every phase or feature shows as one merge commit and `git log --first-parent` reads as one line per branch. Message: `🔀 (merge): <what the branch did>`, for example `🔀 (merge): phase 6, repo pane, overview and info`. Features merge into `develop`. Run a merge only when the user asks. Keep branches short-lived: start each from the latest `develop` and, when the user asks to merge, merge it before starting the next, so branches do not run in parallel and the graph shows one short loop per branch.
-- Keep `README.md` current. Before a branch merges to `develop`, and before `/stage` and `/release`, the README must match the code: Features, Install, Known limits and the Progress checklist. Run the `doc-writer` subagent ("README sync"), commit its change on the branch as `📝 (docs): sync README`, then merge.
+- Keep `README.md` current. Before a branch merges to `develop`, and before `/stage` and `/release`, the README must match the code: Features, Install, Known limits, the Progress checklist and the token-use table (`pnpm usage`, which also updates `docs/token-usage.json`). Run the `doc-writer` subagent ("README sync"), commit its change on the branch as `📝 (docs): sync README`, then merge.
 
 ## Commits (gitmoji)
 

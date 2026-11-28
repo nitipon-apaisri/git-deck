@@ -20,7 +20,8 @@
     "format:check": "prettier --check .",
     "prepare": "husky",
     "package": "electron-vite build && electron-builder --mac --publish never",
-    "audit:secrets": "gitleaks detect --redact --verbose"
+    "audit:secrets": "gitleaks detect --redact --verbose",
+    "usage": "node --import tsx scripts/claude-usage.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
