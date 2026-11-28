@@ -813,6 +813,14 @@ Layout follows `docs/ui-boards/RepoOverview.dc.html` (wide) and `RepoOverviewNar
 - **Boards:** the light UI boards were remapped to the new values; the solid blue `main` badge in ChangesLight stays blue (a ref, not the accent). Dark boards still show the Blue accent.
 - **Not verified:** no display here, so the new light theme was not looked at in the running app.
 
+## 2026-11-28, Stash row buttons and the danger-ghost variant
+
+- **Question:** the Stash dialog's Apply, Pop and Drop buttons are icon-only now. Does the README or the design system need to say so, and where does the new `danger-ghost` variant go in the Button docs?
+- **Decision:** the README has no mention of the per-stash buttons or of button variants, so it is unchanged. `docs/design-system/components/Button/README.md` lists the variants, so it gets one line for `danger-ghost` (red-text label, `danger-bg` on hover, for a non-primary destructive inline action). Its variant list also has no `danger` entry; that gap was already there and was left alone.
+- **Gap:** the stash row buttons are ghost or default buttons with an icon, `px-2.5` and an `aria-label`. They are not the 32 px "Icon button" in the Button docs. Not changed.
+- **Gap:** `danger-bg` and `danger-text` are defined in `src/renderer/src/tokens.css`, not in `docs/design-system/tokens.css`, which the design-system README calls the source of truth. Not changed here.
+- **Not verified:** the Stash dialog was not run in a window, so the look of the icon-only row and its tooltips is unchecked.
+
 ## Dark palette follows the accent
 
 In dark theme the ref pills (`--ref-main-*`, `--ref-head-*`) and the heatmap (`--heat-*`) use `var(--accent)`, and `--lane-1` (the mainline) too, so they follow the chosen accent. The other lanes and `--proj-*` are re-tuned to muted cool tones that stay clear of orange. Semantic green and red are unchanged. The light theme is untouched. Not checked visually: there is no display here, so the new lane hues need one look in the running app.
