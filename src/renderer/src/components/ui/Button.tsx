@@ -50,6 +50,7 @@ const buttonVariants = cva(
           'bg-primary font-medium text-primary-foreground hover:brightness-110 disabled:hover:brightness-100',
         danger:
           'bg-destructive font-medium text-(--window) hover:brightness-110 disabled:hover:brightness-100',
+        'danger-ghost': 'bg-transparent px-3 text-(--danger-text) hover:bg-(--danger-bg)',
         ghost: 'bg-transparent px-3 text-(--accent-text) hover:bg-accent'
       }
     },
