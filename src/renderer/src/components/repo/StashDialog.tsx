@@ -106,33 +106,36 @@ export function StashDialog({ path, stashes, onChanged, onClose }: StashDialogPr
                   </div>
                   <Button
                     variant="ghost"
+                    icon="download"
+                    className="px-2.5"
+                    aria-label="Apply"
                     disabled={busy}
                     title="Apply and keep the stash"
                     onClick={() =>
                       void act(() => window.api.local.stashApply(path, entry.index, entry.hash))
                     }
-                  >
-                    Apply
-                  </Button>
+                  />
                   <Button
+                    icon="arrow-up"
+                    className="px-2.5"
+                    aria-label="Pop"
                     disabled={busy}
                     title="Apply and remove the stash"
                     onClick={() =>
                       void act(() => window.api.local.stashPop(path, entry.index, entry.hash))
                     }
-                  >
-                    Pop
-                  </Button>
+                  />
                   <Button
                     variant="danger-soft"
                     icon="trash"
+                    className="px-2.5"
+                    aria-label="Drop"
+                    title="Delete the stash"
                     disabled={busy}
                     onClick={() =>
                       void act(() => window.api.local.stashDrop(path, entry.index, entry.hash))
                     }
-                  >
-                    Drop
-                  </Button>
+                  />
                 </li>
               ))}
             </ul>
