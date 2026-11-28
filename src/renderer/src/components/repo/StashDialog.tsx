@@ -124,7 +124,7 @@ export function StashDialog({ path, stashes, onChanged, onClose }: StashDialogPr
                     Pop
                   </Button>
                   <Button
-                    variant="danger"
+                    variant="danger-soft"
                     icon="trash"
                     disabled={busy}
                     onClick={() =>
