@@ -8,6 +8,16 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-28: Origin check for app URLs and minimatch override
+
+- **Question:** branch `fix/app-url-origin-minimatch` (commit fbc5fd7) changes `isAppUrl` in `src/main/urls.ts` and pins minimatch. Does README change?
+- **Options considered:** keep the prefix check; compare origins (chosen); add a Security model line about lookalike hosts; put the pnpm override in `pnpm-workspace.yaml`.
+- **Decision and why:**
+  - `isAppUrl` compares `URL.origin` with the dev server origin, so `http://localhost:5173.evil.com/` no longer counts as the app. In a packaged build it still accepts `file:` only. This is an internal window guard, and the README Security model already says navigation is limited to the app itself, so no README line was added.
+  - minimatch is pinned to `^11.0.1` through `pnpm.overrides` in `package.json`, for `minimatch@9` and `minimatch@10`. The override is in `package.json` because pnpm 10.0.0 (the `packageManager` field) ignored the same override in `pnpm-workspace.yaml` when tried.
+  - README: no change. Features, Install and Known limits do not change. Progress stays at 46 of 46: every PLAN.md phase box read is ticked and this branch is not a phase. The README states no test count, so the 648 figure was not added.
+- **Checked on the branch:** `pnpm test` (648 pass), `pnpm typecheck`, `pnpm build` and `osv-scanner` (no issues) pass. A `pnpm-workspace.yaml` override had no effect under pnpm 10.0.0; the `package.json` one did. minimatch is dev tooling only.
+
 ## 2026-11-28: Focus ring removed from text fields
 
 - **Question:** the branch removes the focus ring from text fields (commit 9c0d1ce). This changes the 2026-11-26 "Borderless controls" rule, which gave text fields a 2px `accent-text` outline. What do text fields show now?
