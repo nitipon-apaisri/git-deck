@@ -3,7 +3,15 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
-import { renderBlock, sumUsage } from '../scripts/claude-usage'
+import {
+  loadStore,
+  machineId,
+  mergeMachine,
+  renderBlock,
+  sumUsage,
+  totalOf,
+  type Usage
+} from '../scripts/claude-usage'
 
 const line = (id: string, out: number): string =>
   JSON.stringify({
@@ -35,4 +43,41 @@ test('sums once per message id, includes subagents', () => {
 
 test('missing folder fails clearly', () => {
   assert.throws(() => sumUsage(join(tmpdir(), 'no-such-usage-dir')), /No Claude Code transcripts/)
+})
+
+const u = (n: number, since = '2026-11-05'): Usage => ({
+  output: n,
+  input: n,
+  cacheWrite: n,
+  cacheRead: n,
+  sessions: n,
+  subagents: n,
+  since
+})
+
+test('merge keeps the larger count and leaves other machines alone', () => {
+  const a = mergeMachine({ machines: { other: u(9) } }, 'me', u(5))
+  const b = mergeMachine(a, 'me', u(3, '2026-12-01'))
+  assert.equal(b.machines['me'].output, 5)
+  assert.equal(b.machines['me'].since, '2026-11-05')
+  assert.deepEqual(b.machines['other'], u(9))
+})
+
+test('total sums machines and takes the earliest date', () => {
+  const t = totalOf({ machines: { a: u(2, '2026-11-09'), b: u(3, '2026-11-02') } })
+  assert.deepEqual([t.output, t.sessions, t.since], [5, 5, '2026-11-02'])
+  assert.match(renderBlock(t, '2026-01-01', 2), /on 2 machines on/)
+})
+
+test('machine id is stable and hides the hostname', () => {
+  assert.equal(machineId('my-mac'), machineId('my-mac'))
+  assert.notEqual(machineId('my-mac'), machineId('other-mac'))
+  assert.match(machineId('my-mac'), /^[0-9a-f]{6}$/)
+})
+
+test('invalid store file fails clearly', () => {
+  const f = join(mkdtempSync(join(tmpdir(), 'store-')), 'u.json')
+  writeFileSync(f, '{nope')
+  assert.throws(() => loadStore(f), /not a valid token-usage file/)
+  assert.deepEqual(loadStore(join(tmpdir(), 'missing-store.json')), { machines: {} })
 })

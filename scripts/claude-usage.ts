@@ -1,7 +1,8 @@
 // Prints the README "Built with Claude Code" block from local Claude Code transcripts.
 // Totals only: no paths, prompts or session ids. Run: pnpm usage
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { homedir } from 'node:os'
+import { createHash } from 'node:crypto'
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { homedir, hostname } from 'node:os'
 import { join } from 'node:path'
 
 export interface Usage {
@@ -75,7 +76,7 @@ const fmt = (n: number): string =>
       ? `${(n / 1e3).toFixed(1)}K`
       : `${n}`
 
-export function renderBlock(u: Usage, today: string): string {
+export function renderBlock(u: Usage, today: string, machines = 1): string {
   const total = u.output + u.input + u.cacheWrite + u.cacheRead
   const rows: [string, string][] = [
     ['Output', fmt(u.output)],
@@ -85,7 +86,7 @@ export function renderBlock(u: Usage, today: string): string {
     ['**Total**', `**${fmt(total)}**`]
   ]
   return [
-    `GitDeck was written with Claude Code. Token use for this repository, read from the local Claude Code transcripts on ${today} (${u.sessions} sessions and ${u.subagents} subagent runs since ${u.since}):`,
+    `GitDeck was written with Claude Code. Token use for this repository, read from Claude Code transcripts on ${machines} machine${machines === 1 ? '' : 's'} on ${today} (${u.sessions} sessions and ${u.subagents} subagent runs since ${u.since}):`,
     '',
     '| Tokens | Amount |',
     '| --- | ---: |',
@@ -95,10 +96,86 @@ export function renderBlock(u: Usage, today: string): string {
   ].join('\n')
 }
 
+export interface Store {
+  machines: Record<string, Usage>
+}
+
+/** Short, stable id from the hostname: distinct per machine, never the hostname itself. */
+export const machineId = (host = hostname()): string =>
+  createHash('sha1').update(host).digest('hex').slice(0, 6)
+
+export function loadStore(file: string): Store {
+  if (!existsSync(file)) return { machines: {} }
+  try {
+    const s = JSON.parse(readFileSync(file, 'utf8')) as Store
+    if (typeof s.machines !== 'object' || s.machines === null) throw new Error()
+    return s
+  } catch {
+    throw new Error(`${file} is not a valid token-usage file; fix or delete it`)
+  }
+}
+
+/** Writes one machine's entry. Each count keeps its larger value: cleaned-up transcripts never lower it. */
+export function mergeMachine(store: Store, id: string, local: Usage): Store {
+  const old = store.machines[id]
+  const max = (
+    k: 'output' | 'input' | 'cacheWrite' | 'cacheRead' | 'sessions' | 'subagents'
+  ): number => Math.max(old?.[k] ?? 0, local[k])
+  const since = [old?.since, local.since].filter(Boolean).sort()[0] ?? ''
+  const entry: Usage = {
+    output: max('output'),
+    input: max('input'),
+    cacheWrite: max('cacheWrite'),
+    cacheRead: max('cacheRead'),
+    sessions: max('sessions'),
+    subagents: max('subagents'),
+    since
+  }
+  return { machines: { ...store.machines, [id]: entry } }
+}
+
+export function totalOf(store: Store): Usage {
+  const t: Usage = {
+    output: 0,
+    input: 0,
+    cacheWrite: 0,
+    cacheRead: 0,
+    sessions: 0,
+    subagents: 0,
+    since: ''
+  }
+  for (const m of Object.values(store.machines)) {
+    t.output += m.output
+    t.input += m.input
+    t.cacheWrite += m.cacheWrite
+    t.cacheRead += m.cacheRead
+    t.sessions += m.sessions
+    t.subagents += m.subagents
+    if (m.since && (!t.since || m.since < t.since)) t.since = m.since
+  }
+  return t
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   try {
+    const flag = process.argv.indexOf('--machine')
+    const id = flag > 0 ? process.argv[flag + 1] : machineId()
     const dir = join(homedir(), '.claude', 'projects', process.cwd().replace(/[/.]/g, '-'))
-    console.log(renderBlock(sumUsage(dir), new Date().toISOString().slice(0, 10)))
+    const file = join(process.cwd(), 'docs', 'token-usage.json')
+    const merged = mergeMachine(loadStore(file), id, sumUsage(dir))
+    const sorted: Store = {
+      machines: Object.fromEntries(
+        Object.entries(merged.machines).sort(([a], [b]) => a.localeCompare(b))
+      )
+    }
+    writeFileSync(file, JSON.stringify(sorted, null, 2) + '\n')
+    console.log(
+      renderBlock(
+        totalOf(merged),
+        new Date().toISOString().slice(0, 10),
+        Object.keys(merged.machines).length
+      )
+    )
   } catch (err) {
     console.error((err as Error).message)
     process.exit(1)

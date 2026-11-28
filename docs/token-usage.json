@@ -1,0 +1,13 @@
+{
+  "machines": {
+    "8b306b": {
+      "output": 3375860,
+      "input": 10715,
+      "cacheWrite": 13670735,
+      "cacheRead": 556653635,
+      "sessions": 86,
+      "subagents": 61,
+      "since": "2026-11-05"
+    }
+  }
+}
