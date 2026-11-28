@@ -126,7 +126,7 @@ export function StashDialog({ path, stashes, onChanged, onClose }: StashDialogPr
                     }
                   />
                   <Button
-                    variant="danger-soft"
+                    variant="danger-ghost"
                     icon="trash"
                     className="px-2.5"
                     aria-label="Drop"
