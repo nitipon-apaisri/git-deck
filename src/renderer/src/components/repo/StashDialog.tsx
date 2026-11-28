@@ -105,6 +105,7 @@ export function StashDialog({ path, stashes, onChanged, onClose }: StashDialogPr
                     </p>
                   </div>
                   <Button
+                    variant="ghost"
                     disabled={busy}
                     title="Apply and keep the stash"
                     onClick={() =>
@@ -123,7 +124,7 @@ export function StashDialog({ path, stashes, onChanged, onClose }: StashDialogPr
                     Pop
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="danger"
                     icon="trash"
                     disabled={busy}
                     onClick={() =>
