@@ -21,6 +21,7 @@ import {
   type PickerRow,
   type ProjectFormValue
 } from '../../lib/projectForm'
+import { BrandLogo } from '../ui/BrandLogo'
 import {
   Button,
   Dialog,
@@ -139,7 +140,11 @@ export function ProjectFormDialog({
           : null
       return (
         <div className="flex h-8 items-center gap-2.5 bg-secondary px-3 font-semibold text-foreground">
-          {tile ? <HostTile tile={tile.tile} host={tile.host} /> : <Icon name="folder" size="sm" />}
+          {tile ? (
+            <HostTile tile={tile.tile} host={tile.host} brand={account?.type} />
+          ) : (
+            <Icon name="folder" size="sm" />
+          )}
           <span className="min-w-0 truncate">{account?.label ?? row.accountId}</span>
           <span className="ml-auto flex-none text-[12px] font-normal text-muted-foreground">
             {account?.host}
@@ -415,17 +420,25 @@ export function ProjectFormDialog({
               </span>
             </div>
             <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by host">
-              {[{ id: 'all', label: 'All' }, ...accounts].map((a) => (
-                <button
-                  key={a.id}
-                  type="button"
-                  aria-pressed={hostFilter === a.id}
-                  className="h-7 cursor-pointer rounded-full border border-border bg-transparent px-3 text-[12px] text-foreground hover:bg-accent aria-pressed:border-(--accent) aria-pressed:bg-(--selection) aria-pressed:text-(--accent-text)"
-                  onClick={() => setHostFilter(a.id)}
-                >
-                  {a.label}
-                </button>
-              ))}
+              {[{ id: 'all', label: 'All' }, ...accounts].map((a) => {
+                const account = accounts.find((x) => x.id === a.id)
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    aria-pressed={hostFilter === a.id}
+                    className="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-full border border-border bg-transparent px-3 text-[12px] text-foreground hover:bg-accent aria-pressed:border-(--accent) aria-pressed:bg-(--selection) aria-pressed:text-(--accent-text)"
+                    onClick={() => setHostFilter(a.id)}
+                  >
+                    {account && account.id === LOCAL_ACCOUNT_ID ? (
+                      <Icon name="folder" size="sm" />
+                    ) : account ? (
+                      <BrandLogo brand={account.type} />
+                    ) : null}
+                    {a.label}
+                  </button>
+                )
+              })}
             </div>
             <div
               ref={pickerRef}
