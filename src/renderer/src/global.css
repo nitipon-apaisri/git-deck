@@ -38,17 +38,16 @@ body {
 }
 
 @layer base {
-  /* Focus is a solid 2px ring with a 2px offset on everything focusable, except text fields. */
+  /* Focus is a solid 2px ring with a 2px offset on everything focusable, except text fields (see below). */
   :focus-visible {
     outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
   }
 
-  /* Fields have no border, so a text field shows focus with a flush ring instead of an offset one. */
+  /* Text fields show focus with the caret only: no ring. */
   input:focus-visible,
   textarea:focus-visible {
-    outline: 2px solid var(--accent-text);
-    outline-offset: 0;
+    outline: none;
   }
 
   a {
