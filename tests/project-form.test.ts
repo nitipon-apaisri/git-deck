@@ -215,3 +215,15 @@ test('flattenPicker: a header per account, its repos, then the missing group', (
   assert.deepEqual(rows.map(pickerRowHeight), [32, 34, 34, 32, 34, 32, 34])
   assert.deepEqual(flattenPicker([], []), [])
 })
+
+test('pickerGroups: a query that matches the host label keeps all of its repos', () => {
+  const lists = { a: [repo('a', '1', 'org/zeta')], b: [repo('b', '9', 'team/beta')] }
+  const found = pickerGroups(['a', 'b'], lists, new Set(), 'gitlab', {
+    a: 'GitHub github.com',
+    b: 'GitLab gitlab.com'
+  })
+  assert.deepEqual(
+    found.groups.map((g) => g.accountId),
+    ['b']
+  )
+})

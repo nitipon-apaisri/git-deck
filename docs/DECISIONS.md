@@ -8,6 +8,25 @@ Newest first. Template:
 - **Options considered:**
 - **Decision and why:**
 
+## 2026-11-28: Focus ring removed from text fields
+
+- **Question:** the branch removes the focus ring from text fields (commit 9c0d1ce). This changes the 2026-11-26 "Borderless controls" rule, which gave text fields a 2px `accent-text` outline. What do text fields show now?
+- **Options considered:** keep the `accent-text` outline; remove it so only the caret shows; a lighter tint.
+- **Decision and why:** text fields and textareas show no outline on focus. The caret is the only focus cue. Other focusable elements keep the 2px `focus-ring` outline with an offset (`global.css`, `@layer base`). The 2026-11-26 entry is kept as history and its focus part is superseded.
+- **Not verified:** keyboard focus on a text field is now visible only through the caret. Contrast and the look in a running window were not checked. `docs/design-system/README.md` (focus line) and `components/Field/README.md` (input focus) still describe the 2px `accent-text` outline. They were not edited in this sync, so they are out of date and need a separate change.
+
+## 2026-11-28: README sync for the project form tabs and host filter
+
+- **Question:** the project form now has General, Repositories (with the selected count) and, when editing, Notifications. The Repositories tab has host chips with logos, and search matches the account name or host. Which README parts change?
+- **Options considered:** a Features table change; a More detail bullet; a change to the "Projects" section below Features; a Progress change.
+- **Decision and why:**
+  - A "Project form" bullet in Features More detail, under Notifications. It names the tabs and the chips, and says search matches the account name or host.
+  - No Features table change. The Organise row still holds.
+  - The "Projects" section (steps 1 to 4) is outside the sections this sync covers. Its step 2 ("tick the repositories") is still true, so it was left as it is.
+  - Known limits: no change. Nothing new in the branch is a limit that the README does not already cover.
+  - Progress: unchanged at 46 of 46. PLAN.md has no open boxes, and this change is not a phase.
+- **Not verified:** the form and its chips were not run in a window. The chips are described from `ProjectFormDialog.tsx` and `lib/projectForm.ts` (`pickerGroups`) only.
+
 ## 2026-11-28: README sync for the four themes and per-theme accents
 
 - **Question:** branch `fix/dark-restore-blue` adds Warm, restores the original Light theme, sets the default accent per theme and keeps each theme's accent apart. Which README parts change?

@@ -21,6 +21,7 @@ import {
   type PickerRow,
   type ProjectFormValue
 } from '../../lib/projectForm'
+import { BrandLogo } from '../ui/BrandLogo'
 import {
   Button,
   Dialog,
@@ -81,12 +82,13 @@ export function ProjectFormDialog({
   const [iconQuery, setIconQuery] = useState('')
   const [color, setColor] = useState(editing?.color ?? PROJECT_COLORS[0])
   const [repoQuery, setRepoQuery] = useState('')
+  const [hostFilter, setHostFilter] = useState('all')
   const [chosen, setChosen] = useState<Set<string>>(
     () => new Set(editing ? editing.repoKeys : initialRepoKeys)
   )
   const [notify, setNotify] = useState<NotifyEvent[]>(editing?.notify ?? [])
   const [notifyOff, setNotifyOff] = useState(false)
-  const [tab, setTab] = useState<'general' | 'notifications'>('general')
+  const [tab, setTab] = useState<'general' | 'repositories' | 'notifications'>('general')
   const tabPrefix = useId()
   useEffect(() => {
     window.api.notify.enabled().then(
@@ -107,15 +109,19 @@ export function ProjectFormDialog({
   const { groups, missing } = useMemo(
     () =>
       pickerGroups(
-        accounts.map((a) => a.id),
+        accounts.filter((a) => hostFilter === 'all' || a.id === hostFilter).map((a) => a.id),
         reposByAccount,
         chosen,
-        repoQuery
+        repoQuery,
+        Object.fromEntries(accounts.map((a) => [a.id, `${a.label} ${a.host}`]))
       ),
-    [accounts, reposByAccount, chosen, repoQuery]
+    [accounts, reposByAccount, chosen, repoQuery, hostFilter]
   )
 
-  const pickerRows = useMemo(() => flattenPicker(groups, missing), [groups, missing])
+  const pickerRows = useMemo(
+    () => flattenPicker(groups, hostFilter === 'all' ? missing : []),
+    [groups, missing, hostFilter]
+  )
   const pickerRef = useRef<HTMLDivElement>(null)
   const picker = useVirtualizer({
     count: pickerRows.length,
@@ -134,7 +140,11 @@ export function ProjectFormDialog({
           : null
       return (
         <div className="flex h-8 items-center gap-2.5 bg-secondary px-3 font-semibold text-foreground">
-          {tile ? <HostTile tile={tile.tile} host={tile.host} /> : <Icon name="folder" size="sm" />}
+          {tile ? (
+            <HostTile tile={tile.tile} host={tile.host} brand={account?.type} />
+          ) : (
+            <Icon name="folder" size="sm" />
+          )}
           <span className="min-w-0 truncate">{account?.label ?? row.accountId}</span>
           <span className="ml-auto flex-none text-[12px] font-normal text-muted-foreground">
             {account?.host}
@@ -232,18 +242,20 @@ export function ProjectFormDialog({
         </>
       }
     >
-      {editing ? (
-        <Tabs
-          tabs={[
-            { id: 'general', label: 'General' },
-            { id: 'notifications', label: 'Notifications' }
-          ]}
-          value={tab}
-          onChange={(id) => setTab(id === 'notifications' ? 'notifications' : 'general')}
-          label="Project sections"
-          idPrefix={tabPrefix}
-        />
-      ) : null}
+      <Tabs
+        tabs={[
+          { id: 'general', label: 'General' },
+          {
+            id: 'repositories',
+            label: chosen.size > 0 ? `Repositories · ${chosen.size}` : 'Repositories'
+          },
+          ...(editing ? [{ id: 'notifications', label: 'Notifications' }] : [])
+        ]}
+        value={tab}
+        onChange={(id) => setTab(id === 'notifications' || id === 'repositories' ? id : 'general')}
+        label="Project sections"
+        idPrefix={tabPrefix}
+      />
       <form
         id={formId}
         className="mt-4 flex flex-col gap-4"
@@ -291,7 +303,7 @@ export function ProjectFormDialog({
           <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
             <legend className="mb-2 p-0 font-medium">Icon</legend>
             <div className="flex items-center gap-2">
-              <label className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md bg-secondary px-2.5 text-muted-foreground focus-within:outline-2 focus-within:outline-(--accent-text)">
+              <label className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md bg-secondary px-2.5 text-muted-foreground">
                 <Icon name="search" size="sm" />
                 <input
                   type="search"
@@ -378,13 +390,21 @@ export function ProjectFormDialog({
               </span>
             </div>
           </div>
+        </div>
 
+        <div
+          role="tabpanel"
+          id={panelId(tabPrefix, 'repositories')}
+          aria-labelledby={tabId(tabPrefix, 'repositories')}
+          hidden={tab !== 'repositories'}
+          className="flex flex-col gap-4"
+        >
           <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
             <legend className="mb-2 p-0 font-medium">
               Repositories <span className="font-normal text-muted-foreground">(optional)</span>
             </legend>
             <div className="flex items-center gap-2">
-              <label className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md bg-secondary px-2.5 text-muted-foreground focus-within:outline-2 focus-within:outline-(--accent-text)">
+              <label className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md bg-secondary px-2.5 text-muted-foreground">
                 <Icon name="search" size="sm" />
                 <input
                   type="search"
@@ -399,9 +419,30 @@ export function ProjectFormDialog({
                 {chosen.size} selected
               </span>
             </div>
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by host">
+              {[{ id: 'all', label: 'All' }, ...accounts].map((a) => {
+                const account = accounts.find((x) => x.id === a.id)
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    aria-pressed={hostFilter === a.id}
+                    className="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-full border border-border bg-transparent px-3 text-[12px] text-foreground hover:bg-accent aria-pressed:border-(--accent) aria-pressed:bg-(--selection) aria-pressed:text-(--accent-text)"
+                    onClick={() => setHostFilter(a.id)}
+                  >
+                    {account && account.id === LOCAL_ACCOUNT_ID ? (
+                      <Icon name="folder" size="sm" />
+                    ) : account ? (
+                      <BrandLogo brand={account.type} />
+                    ) : null}
+                    {a.label}
+                  </button>
+                )
+              })}
+            </div>
             <div
               ref={pickerRef}
-              className="max-h-60 overflow-y-auto rounded-lg border border-border"
+              className="max-h-96 overflow-y-auto rounded-lg border border-border"
             >
               <div
                 role="list"
@@ -420,7 +461,7 @@ export function ProjectFormDialog({
                   </div>
                 ))}
               </div>
-              {groups.length === 0 && missing.length === 0 ? (
+              {pickerRows.length === 0 ? (
                 <p className="m-0 p-3 text-muted-foreground">
                   {repoQuery.trim() !== ''
                     ? `No repositories match “${repoQuery.trim()}”.`
