@@ -203,17 +203,17 @@ Not planned for this version: a full-file three-way editor, OAuth sign-in (token
 
 ## Built with Claude Code
 
-GitDeck was written with Claude Code. Token use for this repository, read from the local Claude Code transcripts on 2026-11-26 (68 sessions and 38 subagent runs since 2026-11-05):
+GitDeck was written with Claude Code. Token use for this repository, read from the local Claude Code transcripts on 2026-11-28 (86 sessions and 61 subagent runs since 2026-11-05):
 
 | Tokens      |   Amount |
 | ----------- | -------: |
-| Output      |    2.74M |
-| Fresh input |     8.4K |
-| Cache write |    10.0M |
-| Cache read  |     448M |
-| **Total**   | **461M** |
+| Output      |    3.37M |
+| Fresh input |    10.7K |
+| Cache write |   13.66M |
+| Cache read  |     556M |
+| **Total**   | **573M** |
 
-Most of the total is cache reads, which are billed at a much lower rate, so the total is not a measure of cost. This is a snapshot and is not updated automatically.
+Most of the total is cache reads, which are billed at a much lower rate, so the total is not a measure of cost. This is a snapshot, refreshed on each README sync.
 
 ## Progress
 
