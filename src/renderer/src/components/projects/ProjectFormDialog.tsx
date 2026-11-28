@@ -86,7 +86,7 @@ export function ProjectFormDialog({
   )
   const [notify, setNotify] = useState<NotifyEvent[]>(editing?.notify ?? [])
   const [notifyOff, setNotifyOff] = useState(false)
-  const [tab, setTab] = useState<'general' | 'notifications'>('general')
+  const [tab, setTab] = useState<'general' | 'repositories' | 'notifications'>('general')
   const tabPrefix = useId()
   useEffect(() => {
     window.api.notify.enabled().then(
@@ -232,18 +232,20 @@ export function ProjectFormDialog({
         </>
       }
     >
-      {editing ? (
-        <Tabs
-          tabs={[
-            { id: 'general', label: 'General' },
-            { id: 'notifications', label: 'Notifications' }
-          ]}
-          value={tab}
-          onChange={(id) => setTab(id === 'notifications' ? 'notifications' : 'general')}
-          label="Project sections"
-          idPrefix={tabPrefix}
-        />
-      ) : null}
+      <Tabs
+        tabs={[
+          { id: 'general', label: 'General' },
+          {
+            id: 'repositories',
+            label: chosen.size > 0 ? `Repositories · ${chosen.size}` : 'Repositories'
+          },
+          ...(editing ? [{ id: 'notifications', label: 'Notifications' }] : [])
+        ]}
+        value={tab}
+        onChange={(id) => setTab(id === 'notifications' || id === 'repositories' ? id : 'general')}
+        label="Project sections"
+        idPrefix={tabPrefix}
+      />
       <form
         id={formId}
         className="mt-4 flex flex-col gap-4"
@@ -378,7 +380,15 @@ export function ProjectFormDialog({
               </span>
             </div>
           </div>
+        </div>
 
+        <div
+          role="tabpanel"
+          id={panelId(tabPrefix, 'repositories')}
+          aria-labelledby={tabId(tabPrefix, 'repositories')}
+          hidden={tab !== 'repositories'}
+          className="flex flex-col gap-4"
+        >
           <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
             <legend className="mb-2 p-0 font-medium">
               Repositories <span className="font-normal text-muted-foreground">(optional)</span>
@@ -401,7 +411,7 @@ export function ProjectFormDialog({
             </div>
             <div
               ref={pickerRef}
-              className="max-h-60 overflow-y-auto rounded-lg border border-border"
+              className="max-h-96 overflow-y-auto rounded-lg border border-border"
             >
               <div
                 role="list"
